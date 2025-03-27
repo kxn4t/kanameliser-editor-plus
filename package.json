@@ -1,0 +1,14 @@
+{
+  "name": "net.kanameliser.editor-plus",
+  "version": "0.1.0",
+  "displayName": "Kanameliser Editor Plus",
+  "description": "A small set of useful Unity & VRChat editor extensions by kxn4t",
+  "unity": "2022.3",
+  "author": {
+    "name": "kxn4t",
+    "url": "https://github.com/kxn4t"
+  },
+  "license": "MIT",
+  "licenseUrl": "https://github.com/kxn4t/kanameliser-editor-plus/blob/main/LICENSE",
+  "vpmDependencies": {}
+}
