@@ -6,8 +6,9 @@ A small set of useful Unity & VRChat editor extensions.
 
 ### Via VRChat Creator Companion (Recommended)
 
-1. Click [this link](vcc://vpm/addRepo?url=https%3A%2F%2Fkxn4t.github.io%2Fvpm-repos%2Findex.json) to add the "Kanameliser VPM Packages" repository to your VCC or ALCOM
-2. Add "Kanameliser Editor Plus" to your project from the package list in Manage Project
+1. Visit [https://kxn4t.github.io/vpm-repos/](https://kxn4t.github.io/vpm-repos/)
+2. Click the "Add to VCC" button to add the "Kanameliser VPM Packages" repository to your VCC or ALCOM
+3. Add "Kanameliser Editor Plus" to your project from the package list in Manage Project
 
 ### Manual Installation
 
