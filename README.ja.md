@@ -1,0 +1,78 @@
+# Kanameliser Editor Plus
+
+UnityおよびVRChatのための便利なエディタ拡張機能セット。
+
+## 🚩 インストール方法
+
+### VRChat Creator Companion経由（推奨）
+
+1. [https://kxn4t.github.io/vpm-repos/](https://kxn4t.github.io/vpm-repos/) にアクセス
+2. 「Add to VCC」ボタンをクリックして、「Kanameliser VPM Packages」リポジトリをVCCまたはALCOMに追加
+3. Manage Projectからパッケージ一覧上の「Kanameliser Editor Plus」をプロジェクトに追加
+
+### 手動インストール
+
+手動インストールする場合：
+
+1. [GitHub Releases](https://github.com/kxn4t/kanameliser-editor-plus/releases) から最新リリースをダウンロード
+2. パッケージをUnityプロジェクトにインポート
+
+## 📌 機能
+
+### 🔍 Mesh Info Display
+
+- 選択したオブジェクトとその子オブジェクトの詳細なメッシュ情報を表示
+- ポリゴン数、マテリアル数、マテリアルスロット、メッシュ数を表示
+- シーンビューの左上に表示
+- `Tools > Kanameliser Editor Plus > Show Mesh Info Display` で表示/非表示を切り替え
+
+### 🔄 Toggle Objects Active
+
+- GameObjectのアクティブ状態とEditorOnlyタグをすばやく切り替え
+- ショートカット：`Ctrl+G`
+
+### 🧩 Component Manager
+
+- 選択したオブジェクトとその子オブジェクトのすべてのコンポーネントをリスト表示
+- 特定のオブジェクトやコンポーネントタイプを検索
+- どのコンポーネントがどのオブジェクトに付いているかを瞬時に確認
+- 複数のオブジェクトを同時に選択して一括編集
+- 不要なコンポーネントを簡単に一括削除
+- `Tools > Kanameliser Editor Plus > Component Manager` からアクセス
+
+### 😀 Missing BlendShape Inserter
+
+- アニメーションファイル間で不足しているBlendShapeキーを自動検出して修正
+- シェイプキーによる表情の破綻や破損したアニメーションを防止
+- 複数のアニメーションファイルの一括処理をサポート
+- `Tools > Kanameliser Editor Plus > Missing BlendShape Inserter` からアクセス
+- この機能は拡張ワークフローオプションのため [Zatools](https://zatools.kb10uy.dev/) とも統合されています
+- 詳しい説明は [Zatools/missing-blendshape-inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/) を参照してください
+
+## 🔧 使用上のヒント
+
+### Missing BlendShape Inserter
+
+複数のAnimationClip間で変更したBlendShapeの対象を標準化するツールです。主に以下の場合に使用します：
+
+- アバターの顔のBlendShapeを変更したけど、表情アニメーションで使用していない場合
+- ジェスチャーなどによる表情アニメーション切り替え時に表情が崩れたり破綻する場合
+- すべてのアニメーションファイルで一貫したBlendShape操作を確保する必要がある場合
+
+このツールは、すべてのアニメーション間で同じBlendShapeを操作するようにアニメーションファイルを更新することで、表情の歪みを防止し、異なる表情状態間のスムーズな遷移を確保します。
+
+## 📋 必要環境
+
+- Unity 2022.3.22f1以上
+
+## 🤝 貢献
+
+お気軽にIssueまたはPull Requestを送信してください。
+
+## 📄 ライセンス
+
+MITライセンス - 詳細はLICENSEファイルをご覧ください。
+
+## 👋 連絡先
+
+質問やフィードバックがある場合は、GitHubでissueを開くか、Xでお問い合わせください。

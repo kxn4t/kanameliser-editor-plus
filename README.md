@@ -47,6 +47,7 @@ If you prefer manual installation:
 - Supports batch processing of multiple animation files
 - Access via `Tools > Kanameliser Editor Plus > Missing BlendShape Inserter`
 - This functionality is also integrated with [Zatools](https://zatools.kb10uy.dev/) for expanded workflow options
+- For more detailed information, please refer to [Zatools/missing-blendshape-inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/)
 
 ## 🔧 Usage Tips
 
