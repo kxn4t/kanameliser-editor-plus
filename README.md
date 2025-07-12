@@ -26,6 +26,12 @@ If you prefer manual installation:
 - Appears in the top-left corner of the Scene view
 - Toggle visibility via `Tools > Kanameliser Editor Plus > Show Mesh Info Display`
 
+#### 🔮 NDMF Preview Support
+
+- **Build-time Statistics**: Shows preview mesh data when NDMF preview is active
+- **Optimization Visualization**: Displays both original and optimized mesh counts side-by-side with visual diff indicators
+- **Preview Detection**: Automatically detects NDMF proxy meshes and shows clear green dot indicator during preview
+
 ### 🔄 Toggle Objects Active
 
 - Quickly toggle between GameObject active state and EditorOnly tag
@@ -64,6 +70,7 @@ The tool works by updating Animation files to operate on the same BlendShapes ac
 ## 📋 Requirements
 
 - Unity 2022.3.22f1 or higher
+- Optional: NDMF (Non-Destructive Modular Framework) for enhanced build preview support
 
 ## 🤝 Contributing
 
