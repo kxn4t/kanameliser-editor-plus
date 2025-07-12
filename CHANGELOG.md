@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.2.0] - 2025-07-12
+
 ### Added / 追加
 
 - Added changelog documentation (CHANGELOG.md)  
