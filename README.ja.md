@@ -26,6 +26,12 @@ UnityおよびVRChatのための便利なエディタ拡張機能セット。
 - シーンビューの左上に表示
 - `Tools > Kanameliser Editor Plus > Show Mesh Info Display` で表示/非表示を切り替え
 
+#### 🔮 NDMFプレビュー対応
+
+- **ビルド時統計**: NDMFプレビューがアクティブな時、プレビュー表示状態のメッシュデータを表示
+- **最適化の可視化**: 元のメッシュ数と最適化後のメッシュ数を視覚的な差分と併せて並列表示
+- **プレビュー中検出**: NDMFプロキシメッシュを自動検出し、緑のドットでプレビュー中かわかりやすく
+
 ### 🔄 Toggle Objects Active
 
 - GameObjectのアクティブ状態とEditorOnlyタグをすばやく切り替え
@@ -64,6 +70,7 @@ UnityおよびVRChatのための便利なエディタ拡張機能セット。
 ## 📋 必要環境
 
 - Unity 2022.3.22f1以上
+- オプション: NDMF（Non-Destructive Modular Framework）でビルドプレビュー機能拡張
 
 ## 🤝 貢献
 
