@@ -46,6 +46,13 @@ If you prefer manual installation:
 - Easily remove unwanted components
 - Access via `Tools > Kanameliser Editor Plus > Component Manager`
 
+### 🎨 Material Copier
+
+- Copy & paste materials from multiple selected GameObjects to GameObjects with matching names
+- Perfect for instant FBX setup and outfit color variations
+- Supports both MeshRenderer and SkinnedMeshRenderer components
+- Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy/Paste Materials`
+
 ### 😀 Missing BlendShape Inserter
 
 - Automatically detects and fixes missing BlendShape keys across animation files
@@ -56,6 +63,17 @@ If you prefer manual installation:
 - For more detailed information, please refer to [Zatools/missing-blendshape-inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/)
 
 ## 🔧 Usage Tips
+
+### Material Copier
+
+Perfect for managing materials across multiple similar objects:
+
+1. **Copy**: Select source GameObjects (e.g., Avatar_A, Avatar_B) → Right-click → `Copy Materials`
+2. **Paste**: Select target GameObjects (e.g., Avatar_C, Avatar_D) → Right-click → `Paste Materials`
+3. **Matching**: Materials are applied to objects with matching names (e.g., "Head" → "Head", "Body" → "body")
+
+Common use cases:
+- Copying outfit materials between different avatar variants
 
 ### Missing BlendShape Inserter
 
