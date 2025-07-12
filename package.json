@@ -10,5 +10,6 @@
   },
   "license": "MIT",
   "licenseUrl": "https://github.com/kxn4t/kanameliser-editor-plus/blob/main/LICENSE",
+  "changelogUrl": "https://github.com/kxn4t/kanameliser-editor-plus/main/CHANGELOG.md",
   "vpmDependencies": {}
 }
