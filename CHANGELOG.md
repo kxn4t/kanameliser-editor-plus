@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.2.1] - 2025-07-12
+
+### Fixed / 修正
+
+- Fixed incorrect changelog URL in package.json  
+  package.json の changelog URL の修正
+
 ## [0.2.0] - 2025-07-12
 
 ### Added / 追加
