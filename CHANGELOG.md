@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added / 追加
 
+- Added changelog documentation (CHANGELOG.md)  
+  変更履歴ドキュメント（CHANGELOG.md）を追加
 - Added NDMF preview support to Mesh Info Display  
   Mesh Info Display に NDMF プレビュー対応を追加
 - Shows optimized mesh information when NDMF preview is active  
