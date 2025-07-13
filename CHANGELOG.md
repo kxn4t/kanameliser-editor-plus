@@ -12,12 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.3.0-rc.3] - 2025-07-13
+
+### Fixed / 修正
+
+- Corrected Modular Avatar minimum version requirement from 1.8.0 to 1.13.0  
+  Modular Avatar 最小バージョン要件を1.8.0から1.13.0に修正
+
 ## [0.3.0-rc.2] - 2025-07-13
 
 ### Fixed / 修正
 
-- Added missing Modular Avatar minimum version requirement (1.8.0+) to assembly definition  
-  アセンブリ定義に不足していた Modular Avatar 最小バージョン要件（1.8.0以上）を追加
+- Added missing Modular Avatar minimum version requirement (1.13.0+) to assembly definition  
+  アセンブリ定義に不足していた Modular Avatar 最小バージョン要件（1.13.0以上）を追加
 
 ## [0.3.0-rc.1] - 2025-07-13
 
