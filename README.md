@@ -59,7 +59,7 @@ If you prefer manual installation:
 - Generate menu items from color variation prefabs with just a few clicks
 - Support for multiple color variation prefabs to create menus simultaneously
 - Two creation modes: unified and per-object Material Swap components
-- Requires [Modular Avatar](https://modular-avatar.nadena.dev/) 1.8.0 or higher to be installed
+- Requires [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher to be installed
 - Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy/Create Material Swap`
 
 ### 😀 Missing BlendShape Inserter
@@ -115,7 +115,7 @@ The tool works by updating Animation files to operate on the same BlendShapes ac
 
 - Unity 2022.3.22f1 or higher
 - Optional: NDMF (Non-Destructive Modular Framework) for enhanced build preview support
-- Optional: Modular Avatar 1.8.0 or higher for Material Swap Helper feature
+- Optional: Modular Avatar 1.13.0 or higher for Material Swap Helper feature
 
 ## 🤝 Contributing
 
