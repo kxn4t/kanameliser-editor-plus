@@ -53,6 +53,15 @@ If you prefer manual installation:
 - Supports both MeshRenderer and SkinnedMeshRenderer components
 - Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy/Paste Materials`
 
+### 🔄 Material Swap Helper
+
+- Automatically create color change menus using Modular Avatar's Material Swap components
+- Generate menu items from color variation prefabs with just a few clicks
+- Support for multiple color variation prefabs to create menus simultaneously
+- Two creation modes: unified and per-object Material Swap components
+- Requires [Modular Avatar](https://modular-avatar.nadena.dev/) to be installed
+- Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy/Create Material Swap`
+
 ### 😀 Missing BlendShape Inserter
 
 - Automatically detects and fixes missing BlendShape keys across animation files
@@ -74,6 +83,23 @@ Perfect for managing materials across multiple similar objects:
 
 Common use cases:
 - Copying outfit materials between different avatar variants
+
+### Material Swap Helper
+
+Perfect for creating avatar color change menus from existing color variations:
+
+1. **Copy**: Select color variation prefabs → Right-click → `Copy Material Setup`  
+   Tips: Works with multiple color variation prefabs selected simultaneously
+2. **Create**: Select target outfit → Right-click → `Create Material Swap` or `Create Material Swap (Per Object)`
+3. **Menu Generation**: Automatically creates "Color Menu" with numbered color variations (Color1, Color2, etc.)
+
+**Creation Modes:**
+- **Standard Mode**: Creates unified Material Swap components for better performance
+- **Per-Object Mode**: Creates individual Material Swap components for each object (useful for complex setups)
+
+Common use cases:
+- Creating color change menus for avatar outfits
+- Batch creation of color change menus from existing color variation prefabs
 
 ### Missing BlendShape Inserter
 
