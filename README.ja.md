@@ -53,6 +53,15 @@ UnityおよびVRChatのための便利なエディタ拡張機能セット。
 - MeshRendererとSkinnedMeshRendererコンポーネントの両方に対応
 - ヒエラルキー上右クリックメニューからアクセス：`Kanameliser Editor Plus > Copy/Paste Materials`
 
+### 🔄 Material Swap Helper
+
+- Modular AvatarのMaterial Swapコンポーネントを使用した色変更メニューの自動作成
+- カラーバリエーションのPrefabから数クリックでメニューアイテムを生成
+- 複数のカラーバリエーションPrefabから同時にメニュー生成が可能
+- 2つの作成モード：統合型と個別オブジェクト型のMaterial Swapコンポーネント
+- [Modular Avatar](https://modular-avatar.nadena.dev/) のインストールが必要
+- ヒエラルキー上右クリックメニューからアクセス：`Kanameliser Editor Plus > Copy/Create Material Swap`
+
 ### 😀 Missing BlendShape Inserter
 
 - アニメーションファイル間で不足しているBlendShapeキーを自動検出して修正
@@ -74,6 +83,23 @@ UnityおよびVRChatのための便利なエディタ拡張機能セット。
 
 よくある使用例：
 - 異なるアバターバリアント間での衣装マテリアルのコピー
+
+### Material Swap Helper
+
+既存のカラーバリエーションからアバターの色変更メニューを作成するのに最適：
+
+1. **コピー**: カラーバリエーションPrefabを選択 → 右クリック → `Copy Material Setup`  
+  Tips: カラーバリエーションPrefabを複数選択しても動作します
+2. **作成**: ターゲットとなる衣装を選択 → 右クリック → `Create Material Swap` または `Create Material Swap (Per Object)`
+3. **メニュー生成**: 番号付きカラーバリエーション（Color1、Color2など）を含む「Color Menu」を自動作成
+
+**作成モード:**
+- **標準モード**: パフォーマンスが良い統合型Material Swapコンポーネントを作成
+- **個別オブジェクトモード**: 各オブジェクト毎に個別のMaterial Swapコンポーネントを作成（複雑なセットアップに有用）
+
+よくある使用例：
+- アバター衣装の色変更メニューの作成
+- 既存のカラーバリエーションPrefabからの色変更メニューの一括作成
 
 ### Missing BlendShape Inserter
 

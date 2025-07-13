@@ -25,6 +25,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Context menu : `Kanameliser Editor Plus > Copy/Paste Materials`  
   コンテキストメニュー：`Kanameliser Editor Plus > Copy/Paste Materials`
 
+- Material Swap Helper feature for automatic color change menu creation using Modular Avatar  
+  Modular Avatar を使用した色変更メニュー自動生成機能 Material Swap Helper を追加
+- Creates color variation menus from color prefabs with automatic object matching  
+  カラーバリエーションの Prefab から色変更メニューを作成
+- Two creation modes: unified Material Swap components and per-object components  
+  統合型と個別オブジェクト型の2つの Material Swap コンポーネント作成モード
+- Usage:
+  - (Step1) Select color variation prefabs → Right-click → Copy Material Setup
+  - (Step2) Select target avatar → Right-click → Create Material Swap  
+  使用方法：  
+  - (Step1) カラーバリエーション Prefab を選択 → 右クリック → Copy Material Setup
+  - (Step2) ターゲット Avatar を選択 → 右クリック → Create Material Swap
+- Context menu: `Kanameliser Editor Plus > Copy Material Setup / Create Material Swap`  
+  コンテキストメニュー：`Kanameliser Editor Plus > Copy Material Setup / Create Material Swap`
+- Requires Modular Avatar package to be installed  
+  利用には Modular Avatar パッケージのインストールが必要
+
 ## [0.2.1] - 2025-07-12
 
 ### Fixed / 修正

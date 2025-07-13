@@ -1,7 +1,9 @@
 {
     "name": "Kanameliser.EditorPlus.Editor",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "nadena.dev.modular-avatar.core"
+    ],
     "includePlatforms": [
         "Editor"
     ],
@@ -16,6 +18,11 @@
             "name": "nadena.dev.ndmf",
             "expression": "",
             "define": "NDMF_INSTALLED"
+        },
+        {
+            "name": "nadena.dev.modular-avatar",
+            "expression": "",
+            "define": "MODULAR_AVATAR_INSTALLED"
         }
     ],
     "noEngineReferences": false
