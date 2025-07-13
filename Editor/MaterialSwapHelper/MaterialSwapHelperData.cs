@@ -100,5 +100,56 @@ namespace Kanameliser.Editor.MaterialSwapHelper
 
             return $"Copied from '{_copiedData.sourceRootName}': {objectCount} objects, {totalMaterials} materials";
         }
+
+        /// <summary>
+        /// Gets the groups from copied material data
+        /// </summary>
+        public static List<List<MaterialSetupData>> GetCopiedDataGroups()
+        {
+            if (!HasCopiedData) return new List<List<MaterialSetupData>>();
+
+            var groups = new List<List<MaterialSetupData>>();
+            var currentGroup = new List<MaterialSetupData>();
+
+            foreach (var setup in _copiedData.materialSetups)
+            {
+                if (setup.objectName.StartsWith("__GROUP_START_"))
+                {
+                    // Start a new group
+                    if (currentGroup.Count > 0)
+                    {
+                        groups.Add(currentGroup);
+                    }
+                    currentGroup = new List<MaterialSetupData>();
+                }
+                else
+                {
+                    // Add to current group
+                    currentGroup.Add(setup);
+                }
+            }
+
+            // Add the last group if it has content
+            if (currentGroup.Count > 0)
+            {
+                groups.Add(currentGroup);
+            }
+
+            // If no groups were found (legacy single object), treat all as one group
+            if (groups.Count == 0 && _copiedData.materialSetups.Count > 0)
+            {
+                groups.Add(new List<MaterialSetupData>(_copiedData.materialSetups));
+            }
+
+            return groups;
+        }
+
+        /// <summary>
+        /// Gets the number of groups in the copied data
+        /// </summary>
+        public static int GetGroupCount()
+        {
+            return GetCopiedDataGroups().Count;
+        }
     }
 }

@@ -89,6 +89,49 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         }
 
         /// <summary>
+        /// Copies material setup from multiple GameObjects
+        /// </summary>
+        public static CopiedMaterialData CopyMaterialSetupFromMultiple(GameObject[] sourceRoots)
+        {
+            if (sourceRoots == null || sourceRoots.Length == 0)
+                throw new System.ArgumentException("Source roots array cannot be null or empty", nameof(sourceRoots));
+
+            var copiedData = new CopiedMaterialData();
+
+            // Process each source root as a separate group
+            for (int i = 0; i < sourceRoots.Length; i++)
+            {
+                var sourceRoot = sourceRoots[i];
+                if (sourceRoot == null) continue;
+
+                // Create a group marker to separate different source objects
+                var groupStartMarker = new MaterialSetupData
+                {
+                    objectName = $"__GROUP_START_{i}__",
+                    relativePath = sourceRoot.name,
+                    materials = new Material[0],
+                    materialSlots = new int[0]
+                };
+                copiedData.materialSetups.Add(groupStartMarker);
+
+                // Scan hierarchy for this source root
+                ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0);
+
+                // Update source root name to include group info
+                if (i == 0)
+                {
+                    copiedData.sourceRootName = sourceRoot.name;
+                }
+                else
+                {
+                    copiedData.sourceRootName += $", {sourceRoot.name}";
+                }
+            }
+
+            return copiedData;
+        }
+
+        /// <summary>
         /// Gets statistics about materials in a GameObject hierarchy
         /// </summary>
         public static (int objectCount, int materialCount) GetMaterialStats(GameObject gameObject)

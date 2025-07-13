@@ -40,26 +40,72 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             try
             {
                 var (colorMenu, isNewMenu) = EnsureColorMenu(targetRoot);
-                var (colorVariation, nextColorNumber, newColorName) = SetupColorVariation(colorMenu, targetRoot.name, false);
+                var groups = MaterialSwapHelperSession.GetCopiedDataGroups();
 
-                int successfulMatches = SetupMaterialSwaps(colorVariation, targetRoot, copiedData);
-
-                if (successfulMatches == 0)
+                if (groups.Count == 0)
                 {
-                    return HandleGenerationFailure(colorVariation, colorMenu, isNewMenu, "No matching objects found between source and target");
+                    return new GenerationResult
+                    {
+                        success = false,
+                        message = "No material setup groups found"
+                    };
+                }
+
+                var createdVariations = new List<GameObject>();
+                int totalSuccessfulMatches = 0;
+                int startingColorNumber = DetermineNextColorNumber(colorMenu);
+
+                // Create color variations for each group
+                for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
+                {
+                    var group = groups[groupIndex];
+                    int colorNumber = startingColorNumber + groupIndex;
+                    string colorName = $"{COLOR_PREFIX}{colorNumber}";
+
+                    var colorVariation = ModularAvatarIntegration.CreateColorVariation(colorMenu, colorName, colorNumber, targetRoot.name);
+                    createdVariations.Add(colorVariation);
+
+                    // Create material swaps for this group
+                    int groupMatches = SetupMaterialSwapsForGroup(colorVariation, targetRoot, group);
+                    totalSuccessfulMatches += groupMatches;
+
+                    if (groupMatches == 0)
+                    {
+                        Debug.LogWarning($"[Material Swap Helper] No matching objects found for group {groupIndex + 1}");
+                    }
+                }
+
+                if (totalSuccessfulMatches == 0)
+                {
+                    // Clean up all created variations
+                    foreach (var variation in createdVariations)
+                    {
+                        UnityEngine.Object.DestroyImmediate(variation);
+                    }
+
+                    if (isNewMenu)
+                    {
+                        UnityEngine.Object.DestroyImmediate(colorMenu.gameObject);
+                    }
+
+                    return new GenerationResult
+                    {
+                        success = false,
+                        message = "No matching objects found between source and target"
+                    };
                 }
 
                 EditorUtility.SetDirty(targetRoot);
 
                 string resultMessage = isNewMenu
-                    ? $"Created Color Menu with {newColorName}"
-                    : $"Added {newColorName} (total: {nextColorNumber} variations)";
+                    ? $"Created Color Menu with {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})"
+                    : $"Added {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})";
 
                 return new GenerationResult
                 {
                     success = true,
                     message = resultMessage,
-                    createdObject = colorVariation
+                    createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
                 };
             }
             catch (Exception e)
@@ -83,26 +129,78 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             try
             {
                 var (colorMenu, isNewMenu) = EnsureColorMenu(targetRoot);
-                var (colorVariation, nextColorNumber, newColorName) = SetupColorVariation(colorMenu, targetRoot.name, true);
+                var groups = MaterialSwapHelperSession.GetCopiedDataGroups();
 
-                int successfulMatches = SetupMaterialSwapsPerObject(colorVariation, targetRoot, copiedData);
-
-                if (successfulMatches == 0)
+                if (groups.Count == 0)
                 {
-                    return HandleGenerationFailure(colorVariation, colorMenu, isNewMenu, "No matching objects found between source and target");
+                    return new GenerationResult
+                    {
+                        success = false,
+                        message = "No material setup groups found"
+                    };
+                }
+
+                var createdVariations = new List<GameObject>();
+                int totalSuccessfulMatches = 0;
+                int startingColorNumber = DetermineNextColorNumber(colorMenu);
+
+                // Create color variations for each group
+                for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
+                {
+                    var group = groups[groupIndex];
+                    int colorNumber = startingColorNumber + groupIndex;
+                    string colorName = $"{COLOR_PREFIX}{colorNumber}";
+
+                    var colorVariation = new GameObject(colorName);
+                    colorVariation.transform.SetParent(colorMenu, false);
+
+#if MODULAR_AVATAR_INSTALLED
+                    var menuItem = colorVariation.AddComponent<ModularAvatarMenuItem>();
+                    ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, colorName, colorNumber, targetRoot.name);
+#endif
+                    createdVariations.Add(colorVariation);
+
+                    // Create material swaps for this group (per-object mode)
+                    int groupMatches = SetupMaterialSwapsPerObjectForGroup(colorVariation, targetRoot, group);
+                    totalSuccessfulMatches += groupMatches;
+
+                    if (groupMatches == 0)
+                    {
+                        Debug.LogWarning($"[Material Swap Helper] No matching objects found for group {groupIndex + 1}");
+                    }
+                }
+
+                if (totalSuccessfulMatches == 0)
+                {
+                    // Clean up all created variations
+                    foreach (var variation in createdVariations)
+                    {
+                        UnityEngine.Object.DestroyImmediate(variation);
+                    }
+
+                    if (isNewMenu)
+                    {
+                        UnityEngine.Object.DestroyImmediate(colorMenu.gameObject);
+                    }
+
+                    return new GenerationResult
+                    {
+                        success = false,
+                        message = "No matching objects found between source and target"
+                    };
                 }
 
                 EditorUtility.SetDirty(targetRoot);
 
                 string resultMessage = isNewMenu
-                    ? $"Created Color Menu with {newColorName} (per-object components)"
-                    : $"Added {newColorName} with per-object components (total: {nextColorNumber} variations)";
+                    ? $"Created Color Menu with {groups.Count} color variations (per-object components)"
+                    : $"Added {groups.Count} color variations with per-object components";
 
                 return new GenerationResult
                 {
                     success = true,
                     message = resultMessage,
-                    createdObject = colorVariation
+                    createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
                 };
             }
             catch (Exception e)
@@ -329,6 +427,61 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         }
 
         /// <summary>
+        /// Sets up material swaps for a specific group
+        /// </summary>
+        private static int SetupMaterialSwapsForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group)
+        {
+            var materialSwapData = new Dictionary<Material, MaterialSwapInfo>();
+            int totalMatchCount = 0;
+
+            // Process each material setup in the group
+            foreach (var sourceSetup in group)
+            {
+                // Try to find matching object in target
+                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName);
+                if (matchedTransform == null)
+                {
+                    Debug.LogWarning($"[Material Swap Helper] Could not find match for '{sourceSetup.objectName}'");
+                    continue;
+                }
+
+                // Get renderer from matched object
+                var renderer = matchedTransform.GetComponent<Renderer>();
+                if (renderer == null || renderer.sharedMaterials == null)
+                {
+                    continue;
+                }
+
+                // Create material swaps
+                var currentMaterials = renderer.sharedMaterials;
+                int maxSlots = Mathf.Min(currentMaterials.Length, sourceSetup.materials.Length);
+
+                for (int i = 0; i < maxSlots; i++)
+                {
+                    if (currentMaterials[i] != null && sourceSetup.materials[i] != null)
+                    {
+                        var fromMaterial = currentMaterials[i];
+                        var toMaterial = sourceSetup.materials[i];
+
+                        // Group material swaps by source material
+                        if (!materialSwapData.ContainsKey(fromMaterial))
+                        {
+                            materialSwapData[fromMaterial] = new MaterialSwapInfo();
+                        }
+
+                        materialSwapData[fromMaterial].AddMapping(toMaterial, matchedTransform.gameObject);
+                        totalMatchCount++;
+                    }
+                }
+            }
+
+            // Process grouped material swaps and handle conflicts
+            ProcessMaterialSwapGroups(colorVariation, targetRoot, materialSwapData);
+
+            return totalMatchCount;
+        }
+
+        /// <summary>
         /// Sets up material swaps by matching objects between source and target
         /// </summary>
         private static int SetupMaterialSwaps(GameObject colorVariation, GameObject targetRoot, CopiedMaterialData copiedData)
@@ -379,6 +532,59 @@ namespace Kanameliser.Editor.MaterialSwapHelper
 
             // Process grouped material swaps and handle conflicts
             ProcessMaterialSwapGroups(colorVariation, targetRoot, materialSwapData);
+
+            return totalMatchCount;
+        }
+
+        /// <summary>
+        /// Sets up material swaps with individual components per object for a specific group
+        /// </summary>
+        private static int SetupMaterialSwapsPerObjectForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group)
+        {
+            int totalMatchCount = 0;
+
+            // Process each material setup in the group
+            foreach (var sourceSetup in group)
+            {
+                // Try to find matching object in target
+                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName);
+                if (matchedTransform == null)
+                {
+                    Debug.LogWarning($"[Material Swap Helper] Could not find match for '{sourceSetup.objectName}'");
+                    continue;
+                }
+
+                // Get renderer from matched object
+                var renderer = matchedTransform.GetComponent<Renderer>();
+                if (renderer == null || renderer.sharedMaterials == null)
+                {
+                    continue;
+                }
+
+                // Create material swaps for this specific object
+                var objectSwaps = new List<(Material from, Material to)>();
+                var currentMaterials = renderer.sharedMaterials;
+                int maxSlots = Mathf.Min(currentMaterials.Length, sourceSetup.materials.Length);
+
+                for (int i = 0; i < maxSlots; i++)
+                {
+                    if (currentMaterials[i] != null && sourceSetup.materials[i] != null)
+                    {
+                        objectSwaps.Add((currentMaterials[i], sourceSetup.materials[i]));
+                    }
+                }
+
+                // Only create component if there are valid swaps
+                if (objectSwaps.Count > 0)
+                {
+                    ModularAvatarIntegration.AddMaterialSwapComponentToObject(
+                        colorVariation,
+                        matchedTransform.gameObject,
+                        objectSwaps
+                    );
+                    totalMatchCount += objectSwaps.Count;
+                }
+            }
 
             return totalMatchCount;
         }

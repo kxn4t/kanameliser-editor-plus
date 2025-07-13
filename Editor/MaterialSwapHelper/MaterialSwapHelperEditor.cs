@@ -17,15 +17,30 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         [MenuItem(MENU_PATH_COPY, false, MENU_PRIORITY)]
         public static void CopyMaterialSetup()
         {
-            var selected = Selection.activeGameObject;
-            if (selected == null) return;
+            var selectedObjects = Selection.gameObjects;
+            if (selectedObjects == null || selectedObjects.Length == 0) return;
 
             MaterialSwapHelperUtils.TryExecute(() =>
             {
-                var copiedData = MaterialSetupCopier.CopyMaterialSetup(selected);
+                CopiedMaterialData copiedData;
+
+                if (selectedObjects.Length == 1)
+                {
+                    // Single object - use existing method
+                    copiedData = MaterialSetupCopier.CopyMaterialSetup(selectedObjects[0]);
+                }
+                else
+                {
+                    // Multiple objects - use new method
+                    copiedData = MaterialSetupCopier.CopyMaterialSetupFromMultiple(selectedObjects);
+                }
+
                 MaterialSwapHelperSession.StoreCopiedData(copiedData);
 
-                MaterialSwapHelperUtils.LogSuccess($"Copied material setup from '{selected.name}' ({copiedData.materialSetups.Count} objects)");
+                string objectNames = selectedObjects.Length == 1
+                    ? selectedObjects[0].name
+                    : $"{selectedObjects.Length} objects";
+                MaterialSwapHelperUtils.LogSuccess($"Copied material setup from {objectNames} ({copiedData.materialSetups.Count} material setups)");
             }, "copy material setup");
         }
 
@@ -87,7 +102,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         [MenuItem(MENU_PATH_COPY, true)]
         public static bool ValidateCopyMaterialSetup()
         {
-            return Selection.activeGameObject != null;
+            return Selection.gameObjects != null && Selection.gameObjects.Length > 0;
         }
 
         [MenuItem(MENU_PATH_CREATE, true)]
