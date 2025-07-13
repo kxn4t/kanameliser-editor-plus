@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.3.0-rc.1] - 2025-07-13
+
 ### Added / 追加
 
 - Material Copier feature for copying materials between GameObjects via right-click context menu  
