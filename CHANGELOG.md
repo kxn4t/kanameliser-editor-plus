@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+### Added / 追加
+
+- Material Copier feature for copying materials between GameObjects via right-click context menu  
+  右クリックメニューから GameObject 間でマテリアルをコピーする Material Copier 機能を追加
+- Usage:
+  - (Step1) Select source objects in Hierarchy → Right-click → Copy Materials
+  - (Step2) Select target objects → Right-click → Paste Materials  
+  使用方法：  
+  - (Step1) ヒエラルキーでコピー元オブジェクトを選択 → 右クリック → Copy Materials
+  - (Step2) ペースト先オブジェクトを選択 → 右クリック → Paste Materials
+- Context menu : `Kanameliser Editor Plus > Copy/Paste Materials`  
+  コンテキストメニュー：`Kanameliser Editor Plus > Copy/Paste Materials`
+
 ## [0.2.1] - 2025-07-12
 
 ### Fixed / 修正
