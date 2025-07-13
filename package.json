@@ -1,6 +1,6 @@
 {
   "name": "net.kanameliser.editor-plus",
-  "version": "0.3.0-rc.1",
+  "version": "0.3.0-rc.2",
   "displayName": "Kanameliser Editor Plus",
   "description": "A small set of useful Unity & VRChat editor extensions by kxn4t",
   "unity": "2022.3",
