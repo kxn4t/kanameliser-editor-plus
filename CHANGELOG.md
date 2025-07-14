@@ -12,6 +12,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.3.0] - 2025-07-14
+
+### Added / 追加
+
+- Material Copier feature for copying materials between GameObjects via right-click context menu  
+  右クリックメニューから GameObject 間でマテリアルをコピーする Material Copier 機能を追加
+- Usage:
+  - (Step1) Select source objects in Hierarchy → Right-click → Copy Materials
+  - (Step2) Select target objects → Right-click → Paste Materials  
+  使用方法：  
+  - (Step1) ヒエラルキーでコピー元オブジェクトを選択 → 右クリック → Copy Materials
+  - (Step2) ペースト先オブジェクトを選択 → 右クリック → Paste Materials
+- Context menu : `Kanameliser Editor Plus > Copy/Paste Materials`  
+  コンテキストメニュー：`Kanameliser Editor Plus > Copy/Paste Materials`
+
+- Material Swap Helper feature for automatic color change menu creation using Modular Avatar  
+  Modular Avatar を使用した色変更メニュー自動生成機能 Material Swap Helper を追加
+- Creates color variation menus from color prefabs with automatic object matching  
+  カラーバリエーションの Prefab から色変更メニューを作成
+- Two creation modes: unified Material Swap components and per-object components  
+  統合型と個別オブジェクト型の2つの Material Swap コンポーネント作成モード
+- Usage:
+  - (Step1) Select color variation prefabs → Right-click → Copy Material Setup
+  - (Step2) Select target avatar → Right-click → Create Material Swap  
+  使用方法：  
+  - (Step1) カラーバリエーション Prefab を選択 → 右クリック → Copy Material Setup
+  - (Step2) ターゲット Avatar を選択 → 右クリック → Create Material Swap
+- Context menu: `Kanameliser Editor Plus > Copy Material Setup / Create Material Swap`  
+  コンテキストメニュー：`Kanameliser Editor Plus > Copy Material Setup / Create Material Swap`
+- Requires Modular Avatar 1.13.0 or later to be installed  
+  利用には Modular Avatar 1.13.0以上のインストールが必要
+
+
 ## [0.3.0-rc.3] - 2025-07-13
 
 ### Fixed / 修正
