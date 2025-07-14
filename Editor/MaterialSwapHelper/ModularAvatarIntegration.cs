@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEditor;
 
 #if MODULAR_AVATAR_INSTALLED
 using System.Reflection;
@@ -105,11 +106,14 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             var colorMenu = new GameObject(menuName);
             colorMenu.transform.SetParent(parent.transform, false);
 
+            // Register the created GameObject with Undo system
+            Undo.RegisterCreatedObjectUndo(colorMenu, "Create Color Menu");
+
             // Add Menu Installer
-            var menuInstaller = colorMenu.AddComponent<ModularAvatarMenuInstaller>();
+            var menuInstaller = Undo.AddComponent<ModularAvatarMenuInstaller>(colorMenu);
 
             // Add Menu Item
-            var menuItem = colorMenu.AddComponent<ModularAvatarMenuItem>();
+            var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorMenu);
             ConfigureMenuItemAsSubmenu(menuItem, menuName);
 
             return colorMenu;
@@ -123,11 +127,14 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             var colorVariation = new GameObject(name);
             colorVariation.transform.SetParent(parent, false);
 
+            // Register the created GameObject with Undo system
+            Undo.RegisterCreatedObjectUndo(colorVariation, "Create Color Variation");
+
             // Add Material Swap component
-            var materialSwap = colorVariation.AddComponent<ModularAvatarMaterialSwap>();
+            var materialSwap = Undo.AddComponent<ModularAvatarMaterialSwap>(colorVariation);
 
             // Add Menu Item component
-            var menuItem = colorVariation.AddComponent<ModularAvatarMenuItem>();
+            var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
             ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName);
 
             return colorVariation;
@@ -140,6 +147,9 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         {
             var materialSwap = swapObject.GetComponent<ModularAvatarMaterialSwap>();
             if (materialSwap == null) return;
+
+            // Record the object before modifying it
+            Undo.RecordObject(materialSwap, "Setup Material Swap");
 
             // Set root reference
             materialSwap.Root.Set(rootObject);
@@ -158,7 +168,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         public static ModularAvatarMaterialSwap AddMaterialSwapComponentToObject(GameObject colorVariation, GameObject targetObject, List<(Material from, Material to)> swaps)
         {
             // Add Material Swap component directly to the colorVariation object
-            var materialSwap = colorVariation.AddComponent<ModularAvatarMaterialSwap>();
+            var materialSwap = Undo.AddComponent<ModularAvatarMaterialSwap>(colorVariation);
 
             // Set target object reference
             materialSwap.Root.Set(targetObject);

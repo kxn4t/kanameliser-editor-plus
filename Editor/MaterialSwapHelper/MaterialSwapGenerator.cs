@@ -39,6 +39,10 @@ namespace Kanameliser.Editor.MaterialSwapHelper
 
             try
             {
+                // Set up Undo group for this operation
+                Undo.SetCurrentGroupName("Create Material Swap");
+                int undoGroup = Undo.GetCurrentGroup();
+
                 var (colorMenu, isNewMenu) = EnsureColorMenu(targetRoot);
                 var groups = MaterialSwapHelperSession.GetCopiedDataGroups();
 
@@ -97,6 +101,9 @@ namespace Kanameliser.Editor.MaterialSwapHelper
 
                 EditorUtility.SetDirty(targetRoot);
 
+                // Collapse all Undo operations into a single operation
+                Undo.CollapseUndoOperations(undoGroup);
+
                 string resultMessage = isNewMenu
                     ? $"Created Color Menu with {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})"
                     : $"Added {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})";
@@ -128,6 +135,10 @@ namespace Kanameliser.Editor.MaterialSwapHelper
 
             try
             {
+                // Set up Undo group for this operation
+                Undo.SetCurrentGroupName("Create Material Swap Per Object");
+                int undoGroup = Undo.GetCurrentGroup();
+
                 var (colorMenu, isNewMenu) = EnsureColorMenu(targetRoot);
                 var groups = MaterialSwapHelperSession.GetCopiedDataGroups();
 
@@ -154,8 +165,11 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                     var colorVariation = new GameObject(colorName);
                     colorVariation.transform.SetParent(colorMenu, false);
 
+                    // Register the created GameObject with Undo system
+                    Undo.RegisterCreatedObjectUndo(colorVariation, "Create Color Variation");
+
 #if MODULAR_AVATAR_INSTALLED
-                    var menuItem = colorVariation.AddComponent<ModularAvatarMenuItem>();
+                    var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
                     ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, colorName, colorNumber, targetRoot.name);
 #endif
                     createdVariations.Add(colorVariation);
@@ -191,6 +205,9 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                 }
 
                 EditorUtility.SetDirty(targetRoot);
+
+                // Collapse all Undo operations into a single operation
+                Undo.CollapseUndoOperations(undoGroup);
 
                 string resultMessage = isNewMenu
                     ? $"Created Color Menu with {groups.Count} color variations (per-object components)"
@@ -310,8 +327,11 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                 colorVariation = new GameObject(newColorName);
                 colorVariation.transform.SetParent(colorMenu, false);
 
+                // Register the created GameObject with Undo system
+                Undo.RegisterCreatedObjectUndo(colorVariation, "Create Color Variation");
+
 #if MODULAR_AVATAR_INSTALLED
-                var menuItem = colorVariation.AddComponent<ModularAvatarMenuItem>();
+                var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
                 ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, newColorName, nextColorNumber, gameObjectName);
 #endif
             }
