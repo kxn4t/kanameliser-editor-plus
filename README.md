@@ -97,6 +97,19 @@ Perfect for creating avatar color change menus from existing color variations:
 - **Standard Mode**: Creates unified Material Swap components for better performance
 - **Per-Object Mode**: Creates individual Material Swap components for each object (useful for complex setups)
 
+**Matching Specifications:**
+
+The matching between source and target objects follows this priority order:
+
+1. **Priority 1**: Exact relative path match + MeshRenderer/SkinnedMeshRenderer present
+   - Perfect match including hierarchy structure (e.g., `Outfit/Jacket` matches `Outfit/Jacket`)
+2. **Priority 2**: Same directory + cleaned name match + Renderer present
+   - Matches objects in same hierarchy level with similar names (e.g., `Hat.001` matches `Hat`)
+3. **Priority 3**: Exact name match + Renderer present
+   - Direct name matching across different hierarchy levels
+4. **Priority 4**: Cleaned name match + Renderer present
+   - Falls back to name matching with suffix removal (`.001`, `_1`, etc.)
+
 Common use cases:
 - Creating color change menus for avatar outfits
 - Batch creation of color change menus from existing color variation prefabs

@@ -458,7 +458,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             foreach (var sourceSetup in group)
             {
                 // Try to find matching object in target
-                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName);
+                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath);
                 if (matchedTransform == null)
                 {
                     Debug.LogWarning($"[Material Swap Helper] Could not find match for '{sourceSetup.objectName}'");
@@ -513,7 +513,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             foreach (var sourceSetup in copiedData.materialSetups)
             {
                 // Try to find matching object in target
-                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName);
+                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath);
                 if (matchedTransform == null)
                 {
                     Debug.LogWarning($"[Material Swap Helper] Could not find match for '{sourceSetup.objectName}'");
@@ -567,7 +567,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             foreach (var sourceSetup in group)
             {
                 // Try to find matching object in target
-                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName);
+                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath);
                 if (matchedTransform == null)
                 {
                     Debug.LogWarning($"[Material Swap Helper] Could not find match for '{sourceSetup.objectName}'");
@@ -620,7 +620,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             foreach (var sourceSetup in copiedData.materialSetups)
             {
                 // Try to find matching object in target
-                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName);
+                var matchedTransform = FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath);
                 if (matchedTransform == null)
                 {
                     Debug.LogWarning($"[Material Swap Helper] Could not find match for '{sourceSetup.objectName}'");
@@ -666,22 +666,146 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// <summary>
         /// Finds a matching object in the target hierarchy
         /// </summary>
-        private static Transform FindMatchingObject(Transform root, string objectName)
+        private static Transform FindMatchingObject(Transform root, string objectName, string sourceRelativePath)
         {
-            // Try exact match first
-            var exactMatch = root.GetComponentsInChildren<Transform>(true)
-                .FirstOrDefault(t => t.name == objectName);
+            Debug.Log($"[Material Swap Helper] MATCH: Looking for '{objectName}' (path: '{sourceRelativePath}') in '{root.name}'");
 
-            if (exactMatch != null)
-                return exactMatch;
+            // Get all transforms
+            var allTransforms = root.GetComponentsInChildren<Transform>(true);
 
-            // Try partial matches
-            var transforms = root.GetComponentsInChildren<Transform>(true);
+            // Filter to only include objects with Renderer components
+            var transformsWithRenderer = allTransforms
+                .Where(t => t.GetComponent<Renderer>() != null)
+                .ToList();
+            Debug.Log($"[Material Swap Helper] MATCH: Objects with Renderer: {transformsWithRenderer.Count}");
 
-            // Remove common prefixes/suffixes and try again
-            string cleanedName = CleanObjectName(objectName);
+            // Extract the relative path without root name
+            string sourcePathWithoutRoot = GetPathWithoutRoot(sourceRelativePath);
+            Debug.Log($"[Material Swap Helper] MATCH: Source path without root: '{sourcePathWithoutRoot}'");
 
-            return transforms.FirstOrDefault(t => CleanObjectName(t.name) == cleanedName);
+            // Priority 1: Exact relative path match (without root) with Renderer
+            foreach (var transform in transformsWithRenderer)
+            {
+                string targetPath = GetRelativePathFromRoot(transform, root);
+                if (targetPath == sourcePathWithoutRoot)
+                {
+                    Debug.Log($"[Material Swap Helper] MATCH: ✓ Priority 1 - Exact path match with Renderer: '{transform.name}' at '{GetFullPath(transform)}'");
+                    return transform;
+                }
+            }
+
+            // Priority 2: Relative path match with cleaned names (same hierarchy level) with Renderer
+            string sourceDir = System.IO.Path.GetDirectoryName(sourcePathWithoutRoot)?.Replace('\\', '/') ?? "";
+            string sourceCleanedName = CleanObjectName(objectName);
+            Debug.Log($"[Material Swap Helper] MATCH: Checking same directory '{sourceDir}' with cleaned name '{sourceCleanedName}'");
+
+            foreach (var transform in transformsWithRenderer)
+            {
+                string targetPath = GetRelativePathFromRoot(transform, root);
+                string targetDir = System.IO.Path.GetDirectoryName(targetPath)?.Replace('\\', '/') ?? "";
+                string targetCleanedName = CleanObjectName(transform.name);
+
+                if (targetDir == sourceDir && targetCleanedName == sourceCleanedName)
+                {
+                    Debug.Log($"[Material Swap Helper] MATCH: ✓ Priority 2 - Same directory + cleaned name match with Renderer: '{transform.name}' at '{GetFullPath(transform)}'");
+                    return transform;
+                }
+            }
+
+            // Priority 3: Exact name match with Renderer
+            var exactNameMatches = transformsWithRenderer.Where(t => t.name == objectName).ToList();
+            if (exactNameMatches.Count > 0)
+            {
+                var selected = exactNameMatches.First();
+                Debug.Log($"[Material Swap Helper] MATCH: ✓ Priority 3 - Exact name match with Renderer: '{selected.name}' at '{GetFullPath(selected)}'");
+                if (exactNameMatches.Count > 1)
+                {
+                    Debug.Log($"[Material Swap Helper] MATCH: Warning - {exactNameMatches.Count} objects found with same name, selected first one");
+                }
+                return selected;
+            }
+
+            // Priority 4: Cleaned name match with Renderer
+            var cleanedNameMatches = transformsWithRenderer
+                .Where(t => CleanObjectName(t.name) == sourceCleanedName)
+                .ToList();
+            if (cleanedNameMatches.Count > 0)
+            {
+                var selected = cleanedNameMatches.First();
+                Debug.Log($"[Material Swap Helper] MATCH: ✓ Priority 4 - Cleaned name match with Renderer: '{selected.name}' at '{GetFullPath(selected)}'");
+                if (cleanedNameMatches.Count > 1)
+                {
+                    Debug.Log($"[Material Swap Helper] MATCH: Warning - {cleanedNameMatches.Count} objects found with cleaned name, selected first one");
+                }
+                return selected;
+            }
+
+            // Log objects that were excluded due to no Renderer
+            var excludedNoRenderer = allTransforms
+                .Where(t => t.GetComponent<Renderer>() == null && (t.name == objectName || CleanObjectName(t.name) == sourceCleanedName))
+                .ToList();
+            if (excludedNoRenderer.Count > 0)
+            {
+                Debug.LogWarning($"[Material Swap Helper] MATCH: Found {excludedNoRenderer.Count} matching objects without Renderer (excluded):");
+                foreach (var excluded in excludedNoRenderer.Take(5))
+                {
+                    Debug.LogWarning($"[Material Swap Helper] MATCH:   - '{excluded.name}' at '{GetFullPath(excluded)}'");
+                }
+            }
+
+            Debug.Log($"[Material Swap Helper] MATCH: ✗ No match found for '{objectName}'");
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the relative path from a specific root
+        /// </summary>
+        private static string GetRelativePathFromRoot(Transform transform, Transform root)
+        {
+            if (transform == null || root == null) return "";
+
+            var path = new List<string>();
+            var current = transform;
+
+            while (current != null && current != root)
+            {
+                path.Insert(0, current.name);
+                current = current.parent;
+            }
+
+            return string.Join("/", path);
+        }
+
+        /// <summary>
+        /// Removes the root object name from a path
+        /// </summary>
+        private static string GetPathWithoutRoot(string fullPath)
+        {
+            if (string.IsNullOrEmpty(fullPath)) return "";
+
+            int firstSlash = fullPath.IndexOf('/');
+            if (firstSlash < 0) return fullPath;
+
+            return fullPath.Substring(firstSlash + 1);
+        }
+
+        /// <summary>
+        /// Gets the full hierarchy path of a transform
+        /// </summary>
+        private static string GetFullPath(Transform transform)
+        {
+            if (transform == null) return "";
+
+            var path = transform.name;
+            var parent = transform.parent;
+
+            while (parent != null)
+            {
+                path = parent.name + "/" + path;
+                parent = parent.parent;
+            }
+
+            return path;
         }
 
         /// <summary>
@@ -689,19 +813,42 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// </summary>
         private static string CleanObjectName(string name)
         {
+            string originalName = name;
+
             // Remove common suffixes
             name = Regex.Replace(name, @"\.\d+$", ""); // Remove .001, .002, etc.
-            name = Regex.Replace(name, @"_\d+$", "");  // Remove _1, _2, etc.
+            if (originalName != name)
+            {
+                Debug.Log($"[Material Swap Helper] CLEAN: Removed number suffix: '{originalName}' -> '{name}'");
+            }
 
-            // Remove common prefixes
+            string afterSuffix = name;
+            name = Regex.Replace(name, @"_\d+$", "");  // Remove _1, _2, etc.
+            if (afterSuffix != name)
+            {
+                Debug.Log($"[Material Swap Helper] CLEAN: Removed underscore number: '{afterSuffix}' -> '{name}'");
+            }
+
+            // Remove common prefixes - THIS MIGHT BE TOO AGGRESSIVE
+            // Temporarily disabled due to overly aggressive matching
+            /*
+            string beforePrefix = name;
             if (name.Contains("_"))
             {
                 var parts = name.Split('_');
                 if (parts.Length > 1)
                 {
                     // Try without first part (prefix)
-                    return string.Join("_", parts.Skip(1));
+                    string withoutPrefix = string.Join("_", parts.Skip(1));
+                    Debug.Log($"[Material Swap Helper] CLEAN: WARNING - Aggressive prefix removal: '{beforePrefix}' -> '{withoutPrefix}'");
+                    return withoutPrefix;
                 }
+            }
+            */
+
+            if (originalName != name)
+            {
+                Debug.Log($"[Material Swap Helper] CLEAN: Final result: '{originalName}' -> '{name}'");
             }
 
             return name;
