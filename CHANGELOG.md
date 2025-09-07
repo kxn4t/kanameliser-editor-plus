@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.3.1] - 2025-09-07
+
 ### Fixed / 修正
 
 - **Material Swap Helper: Fixed Object Matching Issues**  
