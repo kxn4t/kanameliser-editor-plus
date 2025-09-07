@@ -12,6 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+### Fixed / 修正
+
+- **Material Swap Helper: Fixed Object Matching Issues**  
+  **Material Swap Helper: オブジェクトマッチングの問題を修正**
+  - Fixed incorrect matching with Armature bones that have similar names to mesh objects  
+    メッシュオブジェクトと類似名のArmatureボーンとの誤マッチング問題を修正
+  - Fixed matching algorithm  
+    マッチングアルゴリズムを修正
+  - **Priority 1**: Exact relative path match + Renderer present  
+    **優先度1**: 相対パスの完全一致 + Renderer有り
+  - **Priority 2**: Same directory + cleaned name match + Renderer present  
+    **優先度2**: 同階層でクリーニング後の名前一致 + Renderer有り
+  - **Priority 3**: Exact name match + Renderer present  
+    **優先度3**: 名前の完全一致 + Renderer有り
+  - **Priority 4**: Cleaned name match + Renderer present  
+    **優先度4**: クリーニング後の名前一致 + Renderer有り
+
 ## [0.3.0] - 2025-07-14
 
 ### Added / 追加
