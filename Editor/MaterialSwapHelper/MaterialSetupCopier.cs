@@ -24,7 +24,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             };
 
             // Scan hierarchy and collect material data
-            ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0);
+            ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0, sourceRoot);
 
             return copiedData;
         }
@@ -32,15 +32,22 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// <summary>
         /// Recursively scans the hierarchy for renderers and their materials
         /// </summary>
-        private static void ScanHierarchy(Transform current, string relativePath, List<MaterialSetupData> materialSetups, int depth)
+        private static void ScanHierarchy(Transform current, string relativePath, List<MaterialSetupData> materialSetups, int depth, GameObject rootObject)
         {
             if (depth >= MAX_HIERARCHY_DEPTH)
                 return;
 
-            // Build current relative path
+            // Build current relative path (without root name)
             string currentPath = string.IsNullOrEmpty(relativePath)
-                ? current.name
-                : $"{relativePath}/{current.name}";
+                ? ""
+                : relativePath;
+
+            if (depth > 0)
+            {
+                currentPath = string.IsNullOrEmpty(currentPath)
+                    ? current.name
+                    : $"{currentPath}/{current.name}";
+            }
 
             // Check for Renderer components
             Renderer renderer = current.GetComponent<Renderer>();
@@ -52,7 +59,9 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                     var setupData = new MaterialSetupData(
                         current.name,
                         currentPath,
-                        materials
+                        materials,
+                        depth,
+                        rootObject.name
                     );
                     materialSetups.Add(setupData);
                 }
@@ -64,7 +73,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                 Transform child = current.GetChild(i);
                 if (child != null)
                 {
-                    ScanHierarchy(child, currentPath, materialSetups, depth + 1);
+                    ScanHierarchy(child, currentPath, materialSetups, depth + 1, rootObject);
                 }
             }
         }
@@ -115,7 +124,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                 copiedData.materialSetups.Add(groupStartMarker);
 
                 // Scan hierarchy for this source root
-                ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0);
+                ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0, sourceRoot);
 
                 // Update source root name to include group info
                 if (i == 0)

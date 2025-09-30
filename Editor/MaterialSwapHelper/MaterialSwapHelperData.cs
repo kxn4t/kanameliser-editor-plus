@@ -14,6 +14,8 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         public string relativePath;
         public Material[] materials;
         public int[] materialSlots;
+        public int hierarchyDepth;
+        public string rootObjectName;
 
         public MaterialSetupData()
         {
@@ -21,12 +23,14 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             materialSlots = new int[0];
         }
 
-        public MaterialSetupData(string objectName, string relativePath, Material[] materials)
+        public MaterialSetupData(string objectName, string relativePath, Material[] materials, int depth = 0, string rootName = "")
         {
             this.objectName = objectName;
             this.relativePath = relativePath;
             this.materials = materials ?? new Material[0];
             this.materialSlots = new int[this.materials.Length];
+            this.hierarchyDepth = depth;
+            this.rootObjectName = rootName;
             for (int i = 0; i < this.materials.Length; i++)
             {
                 this.materialSlots[i] = i;
