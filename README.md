@@ -101,14 +101,38 @@ Perfect for creating avatar color change menus from existing color variations:
 
 The matching between source and target objects follows this priority order:
 
-1. **Priority 1**: Exact relative path match + MeshRenderer/SkinnedMeshRenderer present
-   - Perfect match including hierarchy structure (e.g., `Outfit/Jacket` matches `Outfit/Jacket`)
-2. **Priority 2**: Same directory + cleaned name match + Renderer present
-   - Matches objects in same hierarchy level with similar names (e.g., `Hat.001` matches `Hat`)
+1. **Priority 1**: Exact relative path match (without root name) + Renderer present
+   - Example: Source `Outfit/Jacket` → Target `Outfit/Jacket`
+   - Example: Source `Accessories/Earing/Left` → Target `Accessories/Earing/Left`
+
+2. **Priority 2**: Same hierarchy depth + exact name match + Renderer present
+   - Example: Source `Outfit_A/Outer/Accessories/Earing` (depth=3) → Target `Outfit_B/Inner/Accessories/Earing` (depth=3)
+   - Both objects are named `Earing` and at the same depth, even though parent names differ
+   - Applies hierarchy filtering if multiple candidates exist at the same depth
+
 3. **Priority 3**: Exact name match + Renderer present
-   - Direct name matching across different hierarchy levels
-4. **Priority 4**: Cleaned name match + Renderer present
-   - Falls back to name matching with suffix removal (`.001`, `_1`, etc.)
+   - Example: Source `Outfit/Outer/Jacket` (depth=3) → Target `Jacket` (depth=1)
+   - Selects by closest depth if multiple `Jacket` objects exist
+   - If source is depth 3 and targets are depth 1, 2, 4: prefers depth 2 or 4 (difference=1)
+   - Applies hierarchy filtering if multiple candidates exist
+
+4. **Priority 4**: Case-insensitive name match + Renderer present
+   - Example: Source `earing` → Target `Earing`
+   - Example: Source `JACKET` → Target `Jacket`
+   - Selects by closest depth and applies hierarchy filtering
+
+**Advanced Matching:**
+
+When multiple candidates remain after priority matching:
+- **Parent hierarchy filtering**: Matches parent names from bottom to top
+  - Example: Looking for `Outfit/Outer/Jacket`
+    - Candidates: `Outfit/Outer/Jacket`, `Costume/Outer/Jacket`, `Outfit/Inner/Jacket`
+    - Filters by immediate parent: prefers candidates under `Outer` → 2 candidates remain
+    - Filters by grandparent: prefers candidates under `Outfit` → `Outfit/Outer/Jacket` selected
+- **Similarity scoring**: Uses Levenshtein distance for final selection
+  - Example: Pasting to `Outfit_C` with candidates from `Outfit_A` and `Outfit_C`
+    - Compares root names: `Outfit_C` vs `Outfit_A` and `Outfit_C` vs `Outfit_C`
+    - Prefers `Outfit_C` source (distance=0) over `Outfit_A` source (distance=2)
 
 Common use cases:
 - Creating color change menus for avatar outfits

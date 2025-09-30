@@ -12,6 +12,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+### Improved / 改善
+
+- **Material Copier & Material Swap Helper: Enhanced Object Matching Algorithm**
+  **Material Copier & Material Swap Helper: オブジェクトマッチングアルゴリズムを強化**
+
+  - Improved 4-stage priority matching system
+    4段階優先度マッチングシステムを改善
+  - Added hierarchy depth tracking for better matching accuracy
+    マッチング精度向上のため階層深度追跡を追加
+  - Added parent hierarchy filtering to narrow down candidates
+    候補を絞り込むための親階層フィルタリングを追加
+  - Added Levenshtein distance-based similarity scoring as final tiebreaker
+    最終的な判定基準としてLevenshtein距離ベースの類似度スコアリングを追加
+  - Added rootObjectName tracking for multiple object copy operations
+    複数オブジェクトコピー操作用のrootObjectName追跡を追加
+  - Updated Priority 2 from "same directory + cleaned name" to "same depth + exact name"
+    優先度2を「同階層+クリーニング後の名前」から「同じ深さ+完全名前一致」に変更
+  - Added Priority 4: Case-insensitive name matching
+    優先度4を追加: 大文字小文字を区別しない名前マッチング
+  - Fixed issue where same-name objects in different branches could match incorrectly
+    異なるブランチ内の同名オブジェクトが誤マッチする問題を修正
+  - Improved matching accuracy for hierarchies with different depths
+    異なる深さの階層でのマッチング精度を向上
+
 ## [0.3.1] - 2025-09-07
 
 ### Fixed / 修正
