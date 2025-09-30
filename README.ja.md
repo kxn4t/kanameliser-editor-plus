@@ -99,16 +99,41 @@ UnityおよびVRChatのための便利なエディタ拡張機能セット。
 
 **マッチング仕様:**
 
-コピー元とコピー先のオブジェクトのマッチングは以下のような順番で行われます：
+コピー元とコピー先のオブジェクトのマッチングは以下の優先順位で行われます：
 
-1. **優先度1**: 相対パスの完全一致 + MeshRenderer/SkinnedMeshRenderer有り
-   - 階層構造を含む完全一致（例：`Outfit/Jacket` が `Outfit/Jacket` とマッチ）
-2. **優先度2**: 同階層でクリーニング後の名前一致 + Renderer有り
-   - 同じ階層レベルで類似名前のオブジェクトとマッチ（例：`Hat.001` が `Hat` とマッチ）
-3. **優先度3**: 名前の完全一致 + Renderer有り
-   - 異なる階層レベル間での直接名前マッチング
-4. **優先度4**: クリーニング後の名前一致 + Renderer有り
-   - サフィックス削除（`.001`、`_1`など）による名前マッチング
+1. **優先度1**: 相対パスの完全一致（ルート名除外） + Renderer有り
+   - 例: コピー元 `Outfit/Jacket` → ターゲット `Outfit/Jacket`
+   - 例: コピー元 `Accessories/Earing/Left` → ターゲット `Accessories/Earing/Left`
+
+2. **優先度2**: 同じ階層深度 + 完全名前一致 + Renderer有り
+   - 例: コピー元 `Outfit_A/Outer/Accessories/Earing`（深度=3） → ターゲット `Outfit_B/Inner/Accessories/Earing`（深度=3）
+   - 親の名前が異なっていても、どちらも `Earing` という名前で同じ深度
+   - 同じ深度に複数候補がある場合は階層フィルタリングを適用
+
+3. **優先度3**: 完全名前一致 + Renderer有り
+   - 例: コピー元 `Outfit/Outer/Jacket`（深度=3） → ターゲット `Jacket`（深度=1）
+   - 複数の `Jacket` が存在する場合、最も近い深度を選択
+   - コピー元が深度3で、ターゲット候補が深度1, 2, 4の場合: 深度2または4を優先（差=1）
+   - 複数候補がある場合は階層フィルタリングを適用
+
+4. **優先度4**: 大文字小文字を区別しない名前一致 + Renderer有り
+   - 例: コピー元 `earing` → ターゲット `Earing`
+   - 例: コピー元 `JACKET` → ターゲット `Jacket`
+   - 最も近い深度を選択し、階層フィルタリングを適用
+
+**追加のマッチング:**
+
+優先度マッチング後も複数候補が残る場合：
+
+- **親階層フィルタリング**: 下から上へ親の名前をマッチング
+  - 例: `Outfit/Outer/Jacket` を探している場合
+    - 候補: `Outfit/Outer/Jacket`、`Costume/Outer/Jacket`、`Outfit/Inner/Jacket`
+    - 直接の親でフィルタ: `Outer` 配下を優先 → 2候補が残る
+    - その更に親でフィルタ: `Outfit` 配下を優先 → `Outfit/Outer/Jacket` が選択される
+- **類似度スコアリング**: Levenshtein距離を使用した最終選択
+  - 例: `Outfit_C` にペーストする場合、`Outfit_A` と `Outfit_C` 由来の候補がある
+    - ルート名を比較: `Outfit_C` vs `Outfit_A` と `Outfit_C` vs `Outfit_C`
+    - `Outfit_C` 由来のコピー元（距離=0）を `Outfit_A` 由来（距離=2）より優先
 
 よくある使用例：
 - アバター衣装の色変更メニューの作成
