@@ -682,9 +682,10 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             string targetRelativePath = sourceRelativePath;
             int targetDepth = sourceDepth;
 
-            // Priority 1: Exact relative path match
+            // Priority 1: Exact relative path AND object name match
             var exactPathMatches = transformsWithRenderer
-                .Where(t => GetRelativePathFromRoot(t, root) == targetRelativePath)
+                .Where(t => GetRelativePathFromRoot(t, root) == targetRelativePath &&
+                           t.name == objectName)
                 .ToList();
             if (exactPathMatches.Count > 0)
             {

@@ -206,8 +206,10 @@ namespace Kanameliser.EditorPlus
             string targetName = targetObj.name;
             string targetRelativePath = GetRelativePath(targetObj, rootObject);
 
-            // Priority 1: Exact relative path match
-            var exactPathMatches = copiedMaterials.Where(data => data.relativePath == targetRelativePath).ToList();
+            // Priority 1: Exact relative path AND object name match
+            var exactPathMatches = copiedMaterials.Where(data =>
+                data.relativePath == targetRelativePath &&
+                data.objectName == targetName).ToList();
             if (exactPathMatches.Count > 0)
             {
                 // If multiple matches, prefer those with matching rootObjectName
