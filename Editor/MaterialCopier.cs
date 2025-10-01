@@ -444,7 +444,11 @@ namespace Kanameliser.EditorPlus
             }
 
             // Get maximum depth among candidates
-            int maxDepth = candidates.Max(c => c.relativePath.Split('/').Length);
+            int maxDepth = candidates.Max(c =>
+            {
+                if (string.IsNullOrEmpty(c.relativePath)) return 0;
+                return c.relativePath.Split('/').Length;
+            });
 
             // Start from parent level (one level up from the object itself)
             // We compare backwards, matching parent hierarchy
@@ -452,7 +456,9 @@ namespace Kanameliser.EditorPlus
             {
                 var filtered = candidates.Where(data =>
                 {
-                    string[] sourceParts = data.relativePath.Split('/');
+                    string[] sourceParts = string.IsNullOrEmpty(data.relativePath)
+                        ? new string[0]
+                        : data.relativePath.Split('/');
 
                     // Check if source has enough depth for this level
                     if (sourceParts.Length <= level) return false;

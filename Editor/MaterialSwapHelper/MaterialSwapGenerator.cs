@@ -848,15 +848,6 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                 ? new string[0]
                 : targetRelativePath.Split('/');
 
-            // Level 0: Filter by rootObjectName first
-            var rootNameFiltered = candidates.Where(t =>
-                rootObject.name == rootName).ToList();
-            if (rootNameFiltered.Count > 0)
-            {
-                candidates = rootNameFiltered;
-                if (candidates.Count == 1) return candidates;
-            }
-
             // Get maximum depth among candidates
             int maxDepth = candidates.Max(c =>
             {
