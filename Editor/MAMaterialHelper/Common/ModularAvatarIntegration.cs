@@ -9,7 +9,7 @@ using System.Reflection;
 using nadena.dev.modular_avatar.core;
 #endif
 
-namespace Kanameliser.Editor.MaterialSwapHelper
+namespace Kanameliser.Editor.MAMaterialHelper.Common
 {
     /// <summary>
     /// Unified integration layer for Modular Avatar functionality
@@ -80,13 +80,13 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                 }
                 else
                 {
-                    Debug.LogWarning("[Material Swap Helper] InitSettings method not found, using fallback initialization");
+                    Debug.LogWarning("[MA Material Helper] InitSettings method not found, using fallback initialization");
                     return false;
                 }
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[Material Swap Helper] Failed to call InitSettings via reflection: {e.Message}");
+                Debug.LogWarning($"[MA Material Helper] Failed to call InitSettings via reflection: {e.Message}");
                 return false;
             }
         }
@@ -120,7 +120,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         }
 
         /// <summary>
-        /// Creates a color variation GameObject with components
+        /// Creates a color variation GameObject with Material Swap components
         /// </summary>
         public static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName)
         {
@@ -135,7 +135,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
 
             // Add Menu Item component
             var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
-            ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName);
+            ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName, "KEP_MaterialSwap");
 
             return colorVariation;
         }
@@ -207,14 +207,14 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         #endregion
 
         /// <summary>
-        /// Configures a MenuItem as a toggle (public access for MaterialSwapGenerator)
+        /// Configures a MenuItem as a toggle (public access for generators)
         /// </summary>
-        public static void ConfigureMenuItemAsToggle(object menuItem, string name, int colorNumber, string gameObjectName)
+        public static void ConfigureMenuItemAsToggle(object menuItem, string name, int colorNumber, string gameObjectName, string parameterName)
         {
 #if MODULAR_AVATAR_INSTALLED
             if (menuItem is ModularAvatarMenuItem item)
             {
-                ConfigureMenuItemAsToggle(item, name, colorNumber, gameObjectName);
+                ConfigureMenuItemAsToggle(item, name, colorNumber, gameObjectName, parameterName);
             }
 #endif
         }
@@ -252,7 +252,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// <summary>
         /// Configures a MenuItem as a toggle using InitSettings + custom overrides
         /// </summary>
-        private static void ConfigureMenuItemAsToggle(ModularAvatarMenuItem menuItem, string name, int colorNumber, string gameObjectName)
+        private static void ConfigureMenuItemAsToggle(ModularAvatarMenuItem menuItem, string name, int colorNumber, string gameObjectName, string parameterName)
         {
             // Try to use InitSettings first for proper initialization
             bool initSuccess = TryInitializeMenuItem(menuItem);
@@ -273,7 +273,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             // Override specific settings for toggle
             menuItem.label = "";
             menuItem.PortableControl.Type = PortableControlType.Toggle;
-            menuItem.PortableControl.Parameter = MaterialSwapGenerator.MENU_ITEM_PARAMETER;
+            menuItem.PortableControl.Parameter = parameterName;
             menuItem.PortableControl.Value = colorNumber;
             menuItem.automaticValue = true;
         }

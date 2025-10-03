@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Kanameliser.Editor.MaterialSwapHelper
+namespace Kanameliser.Editor.MAMaterialHelper.Common
 {
     /// <summary>
     /// Handles copying material setup from GameObjects

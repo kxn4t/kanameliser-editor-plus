@@ -1,15 +1,15 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Kanameliser.Editor.MaterialSwapHelper
+namespace Kanameliser.Editor.MAMaterialHelper.Common
 {
     /// <summary>
-    /// Utility functions for Material Swap Helper
+    /// Utility functions for MA Material Helper
     /// </summary>
-    public static class MaterialSwapHelperUtils
+    public static class MAMaterialHelperUtils
     {
         /// <summary>
-        /// Validates if all requirements are met for Material Swap functionality
+        /// Validates if all requirements are met for MA Material Helper functionality
         /// </summary>
         public static ValidationResult ValidateRequirements()
         {
@@ -31,7 +31,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// <summary>
         /// Shows an error dialog with consistent styling
         /// </summary>
-        public static void ShowErrorDialog(string message, string title = "Material Swap Helper - Error")
+        public static void ShowErrorDialog(string message, string title = "MA Material Helper - Error")
         {
             EditorUtility.DisplayDialog(title, message, "OK");
         }
@@ -39,7 +39,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// <summary>
         /// Shows a warning dialog with OK/Cancel options
         /// </summary>
-        public static bool ShowWarningDialog(string message, string title = "Material Swap Helper - Warning")
+        public static bool ShowWarningDialog(string message, string title = "MA Material Helper - Warning")
         {
             return EditorUtility.DisplayDialog(title, message, "Continue", "Cancel");
         }
@@ -47,7 +47,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// <summary>
         /// Shows an info dialog
         /// </summary>
-        public static void ShowInfoDialog(string message, string title = "Material Swap Helper")
+        public static void ShowInfoDialog(string message, string title = "MA Material Helper")
         {
             EditorUtility.DisplayDialog(title, message, "OK");
         }
@@ -57,7 +57,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// </summary>
         public static void LogSuccess(string message)
         {
-            Debug.Log($"[Material Swap Helper] {message}");
+            Debug.Log($"[MA Material Helper] {message}");
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// </summary>
         public static void LogWarning(string message)
         {
-            Debug.LogWarning($"[Material Swap Helper] {message}");
+            Debug.LogWarning($"[MA Material Helper] {message}");
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         /// </summary>
         public static void LogError(string message)
         {
-            Debug.LogError($"[Material Swap Helper] {message}");
+            Debug.LogError($"[MA Material Helper] {message}");
         }
 
         /// <summary>
@@ -107,9 +107,9 @@ namespace Kanameliser.Editor.MaterialSwapHelper
         }
 
         /// <summary>
-        /// Validates a GameObject for material swap creation
+        /// Validates a GameObject for material operation creation
         /// </summary>
-        public static ValidationResult ValidateForSwapCreation(GameObject gameObject)
+        public static ValidationResult ValidateForCreation(GameObject gameObject)
         {
             if (gameObject == null)
             {
@@ -120,7 +120,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
                 };
             }
 
-            if (!MaterialSwapHelperSession.HasCopiedData)
+            if (!MAMaterialHelperSession.HasCopiedData)
             {
                 return new ValidationResult
                 {
@@ -132,7 +132,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
             return new ValidationResult
             {
                 isValid = true,
-                message = "Valid for swap creation"
+                message = "Valid for creation"
             };
         }
 
