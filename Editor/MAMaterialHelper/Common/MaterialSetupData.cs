@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Kanameliser.Editor.MaterialSwapHelper
+namespace Kanameliser.Editor.MAMaterialHelper.Common
 {
     /// <summary>
     /// Data structure for storing material setup information from a GameObject
@@ -58,7 +58,7 @@ namespace Kanameliser.Editor.MaterialSwapHelper
     /// <summary>
     /// Session storage for material setup data
     /// </summary>
-    public static class MaterialSwapHelperSession
+    public static class MAMaterialHelperSession
     {
         private static CopiedMaterialData _copiedData;
 
