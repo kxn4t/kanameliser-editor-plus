@@ -12,30 +12,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+### Added / 追加
+
+- **MA Material Helper: Material Setter Support**  
+  **MA Material Helper: Material Setter 対応**
+
+  - Added Material Setter automatic generation feature alongside existing Material Swap  
+    既存のMaterial Swapに加えてMaterial Setter自動生成機能を追加
+  - Allows changing from the same source material to different materials within the same mesh by specifying per-slot  
+    スロット単位で指定するため、同じメッシュ内で同一の元マテリアルから異なるマテリアルへの変更が可能
+  - More accurately reproduces the material layout of the source prefab compared to Material Swap  
+    Material Swapより正確にコピー元Prefabのマテリアル配置を再現
+  - Context menu: `Kanameliser Editor Plus > Create Material Setter`  
+    右クリックメニュー：`Kanameliser Editor Plus > Create Material Setter`
+
+### Changed / 変更
+
+- **MA Material Helper: Refactored codebase**  
+  **MA Material Helper: コードベースをリファクタリング**
+
+  - Renamed from "Material Swap Helper" to "MA Material Helper" to reflect expanded functionality  
+    拡張された機能を反映するため「Material Swap Helper」から「MA Material Helper」に名称変更
+  - Reorganized namespace from `MaterialSwapHelper` to `MAMaterialHelper`  
+    名前空間を `MaterialSwapHelper` から `MAMaterialHelper` に再編成
+  - Extracted common functionality into shared modules:  
+    共通機能を共有モジュールに抽出:
+    - `ObjectMatcher` - Object matching logic for both Material Swap and Material Setter  
+      `ObjectMatcher` - Material SwapとMaterial Setter両方のオブジェクトマッチングロジック
+    - `GenerationResult` - Unified result structure  
+      `GenerationResult` - 統合された結果構造
+    - `ModularAvatarIntegration` - Enhanced MA component integration with parameter support  
+      `ModularAvatarIntegration` - パラメーター対応を含むMAコンポーネント統合の強化
+  - Improved code maintainability and reusability  
+    コードの保守性と再利用性を向上
+
 ## [0.3.2-beta.2] - 2025-10-01
 
 ### Improved / 改善
 
-- **Material Copier & Material Swap Helper: Enhanced Object Matching Algorithm**
+- **Material Copier & Material Swap Helper: Enhanced Object Matching Algorithm**  
   **Material Copier & Material Swap Helper: オブジェクトマッチングアルゴリズムを強化**
 
-  - Improved 4-stage priority matching system
+  - Improved 4-stage priority matching system  
     4段階優先度マッチングシステムを改善
-  - Added hierarchy depth tracking for better matching accuracy
+  - Added hierarchy depth tracking for better matching accuracy  
     マッチング精度向上のため階層深度追跡を追加
-  - Added parent hierarchy filtering to narrow down candidates
+  - Added parent hierarchy filtering to narrow down candidates  
     候補を絞り込むための親階層フィルタリングを追加
-  - Added Levenshtein distance-based similarity scoring as final tiebreaker
+  - Added Levenshtein distance-based similarity scoring as final tiebreaker  
     最終的な判定基準としてLevenshtein距離ベースの類似度スコアリングを追加
-  - Added rootObjectName tracking for multiple object copy operations
+  - Added rootObjectName tracking for multiple object copy operations  
     複数オブジェクトコピー操作用のrootObjectName追跡を追加
-  - Updated Priority 2 from "same directory + cleaned name" to "same depth + exact name"
+  - Updated Priority 2 from "same directory + cleaned name" to "same depth + exact name"  
     優先度2を「同階層+クリーニング後の名前」から「同じ深さ+完全名前一致」に変更
-  - Added Priority 4: Case-insensitive name matching
+  - Added Priority 4: Case-insensitive name matching  
     優先度4を追加: 大文字小文字を区別しない名前マッチング
-  - Fixed issue where same-name objects in different branches could match incorrectly
+  - Fixed issue where same-name objects in different branches could match incorrectly  
     異なるブランチ内の同名オブジェクトが誤マッチする問題を修正
-  - Improved matching accuracy for hierarchies with different depths
+  - Improved matching accuracy for hierarchies with different depths  
     異なる深さの階層でのマッチング精度を向上
 
 ## [0.3.1] - 2025-09-07

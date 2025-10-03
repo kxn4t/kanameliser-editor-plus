@@ -53,14 +53,26 @@ UnityおよびVRChatのための便利なエディタ拡張機能セット。
 - MeshRendererとSkinnedMeshRendererコンポーネントの両方に対応
 - ヒエラルキー上右クリックメニューからアクセス：`Kanameliser Editor Plus > Copy/Paste Materials`
 
-### 🔄 Material Swap Helper
+### 🔄 MA Material Helper
 
+Modular Avatarのマテリアル制御コンポーネントを使用した色変更メニューの自動作成ツール。
+
+#### Material Swap
 - Modular AvatarのMaterial Swapコンポーネントを使用した色変更メニューの自動作成
 - カラーバリエーションのPrefabから数クリックでメニューアイテムを生成
 - 複数のカラーバリエーションPrefabから同時にメニュー生成が可能
 - 2つの作成モード：統合型と個別オブジェクト型のMaterial Swapコンポーネント
+
+#### Material Setter
+- Modular AvatarのMaterial Setterコンポーネントを使用した色変更メニューの自動作成
+- カラーバリエーションのPrefabから直接マテリアルを設定するメニューを生成
+- Material Swapと異なり、メッシュの各マテリアルスロットに対して直接置き換える方式で動作
+  - スロット単位で指定するため、同じメッシュ内で同一の元マテリアルから異なるマテリアルへの変更が可能
+  - Material Swapより正確にコピー元Prefabのマテリアル配置を再現
+
+**共通仕様:**
 - [Modular Avatar](https://modular-avatar.nadena.dev/ja) 1.13.0以上のインストールが必要
-- ヒエラルキー上右クリックメニューからアクセス：`Kanameliser Editor Plus > Copy/Create Material Swap`
+- ヒエラルキー上右クリックメニューからアクセス：`Kanameliser Editor Plus > Copy Material Setup / Create Material Swap / Create Material Setter`
 
 ### 😀 Missing BlendShape Inserter
 
@@ -84,18 +96,24 @@ UnityおよびVRChatのための便利なエディタ拡張機能セット。
 よくある使用例：
 - 異なるアバターバリアント間での衣装マテリアルのコピー
 
-### Material Swap Helper
+### MA Material Helper
 
 既存のカラーバリエーションからアバターの色変更メニューを作成するのに最適：
 
-1. **コピー**: カラーバリエーションPrefabを選択 → 右クリック → `Copy Material Setup`  
+1. **コピー**: カラーバリエーションPrefabを選択 → 右クリック → `Copy Material Setup`
   Tips: カラーバリエーションPrefabを複数選択しても動作します
-2. **作成**: ターゲットとなる衣装を選択 → 右クリック → `Create Material Swap` または `Create Material Swap (Per Object)`
+2. **作成**: ターゲットとなる衣装を選択 → 右クリック → 以下のいずれかを選択
+   - `Create Material Swap` - 標準のMaterial Swapモード
+   - `Create Material Swap (Per Object)` - 個別オブジェクトのMaterial Swapモード
+   - `Create Material Setter` - Material Setterモード
 3. **メニュー生成**: 番号付きカラーバリエーション（Color1、Color2など）を含む「Color Menu」を自動作成
 
-**作成モード:**
+**Material Swap モード:**
 - **標準モード**: パフォーマンスが良い統合型Material Swapコンポーネントを作成
 - **個別オブジェクトモード**: 各オブジェクト毎に個別のMaterial Swapコンポーネントを作成（複雑なセットアップに有用）
+
+**Material Setter モード:**
+- マテリアルを直接置き換える方式で、各オブジェクトにMaterial Setterコンポーネントを作成
 
 **マッチング仕様:**
 

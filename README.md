@@ -53,14 +53,26 @@ If you prefer manual installation:
 - Supports both MeshRenderer and SkinnedMeshRenderer components
 - Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy/Paste Materials`
 
-### 🔄 Material Swap Helper
+### 🔄 MA Material Helper
 
+Automatic color change menu creation tools using Modular Avatar's material control components.
+
+#### Material Swap
 - Automatically create color change menus using Modular Avatar's Material Swap components
 - Generate menu items from color variation prefabs with just a few clicks
 - Support for multiple color variation prefabs to create menus simultaneously
 - Two creation modes: unified and per-object Material Swap components
+
+#### Material Setter
+- Automatically create color change menus using Modular Avatar's Material Setter components
+- Generate menus that directly set materials from color variation prefabs
+- Operates differently from Material Swap by directly replacing materials on each material slot of meshes
+  - Allows changing from the same source material to different materials within the same mesh by specifying per-slot
+  - More accurately reproduces the material layout of the source prefab compared to Material Swap
+
+**Common Specifications:**
 - Requires [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher to be installed
-- Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy/Create Material Swap`
+- Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy Material Setup / Create Material Swap / Create Material Setter`
 
 ### 😀 Missing BlendShape Inserter
 
@@ -84,18 +96,25 @@ Perfect for managing materials across multiple similar objects:
 Common use cases:
 - Copying outfit materials between different avatar variants
 
-### Material Swap Helper
+### MA Material Helper
 
 Perfect for creating avatar color change menus from existing color variations:
 
-1. **Copy**: Select color variation prefabs → Right-click → `Copy Material Setup`  
+1. **Copy**: Select color variation prefabs → Right-click → `Copy Material Setup`
    Tips: Works with multiple color variation prefabs selected simultaneously
-2. **Create**: Select target outfit → Right-click → `Create Material Swap` or `Create Material Swap (Per Object)`
+2. **Create**: Select target outfit → Right-click → Choose one of the following:
+   - `Create Material Swap` - Standard Material Swap mode
+   - `Create Material Swap (Per Object)` - Per-object Material Swap mode
+   - `Create Material Setter` - Material Setter mode
 3. **Menu Generation**: Automatically creates "Color Menu" with numbered color variations (Color1, Color2, etc.)
 
-**Creation Modes:**
+**Material Swap Modes:**
 - **Standard Mode**: Creates unified Material Swap components for better performance
 - **Per-Object Mode**: Creates individual Material Swap components for each object (useful for complex setups)
+
+**Material Setter Mode:**
+- Directly replaces materials by creating Material Setter components for each object
+- Uses a different parameter (`KEP_MaterialSetter`) from Material Swap
 
 **Matching Specifications:**
 
