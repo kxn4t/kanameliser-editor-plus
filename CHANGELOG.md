@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.3.2-beta.3] - 2025-10-03
+
 ### Added / 追加
 
 - **MA Material Helper: Material Setter Support**  
@@ -25,28 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Material Swapより正確にコピー元Prefabのマテリアル配置を再現
   - Context menu: `Kanameliser Editor Plus > Create Material Setter`  
     右クリックメニュー：`Kanameliser Editor Plus > Create Material Setter`
-
-### Changed / 変更
-
-- **MA Material Helper: Refactored codebase**  
-  **MA Material Helper: コードベースをリファクタリング**
-
-  - Renamed from "Material Swap Helper" to "MA Material Helper" to reflect expanded functionality  
-    拡張された機能を反映するため「Material Swap Helper」から「MA Material Helper」に名称変更
-  - Reorganized namespace from `MaterialSwapHelper` to `MAMaterialHelper`  
-    名前空間を `MaterialSwapHelper` から `MAMaterialHelper` に再編成
-  - Extracted common functionality into shared modules:  
-    共通機能を共有モジュールに抽出:
-    - `ObjectMatcher` - Object matching logic for both Material Swap and Material Setter  
-      `ObjectMatcher` - Material SwapとMaterial Setter両方のオブジェクトマッチングロジック
-    - `GenerationResult` - Unified result structure  
-      `GenerationResult` - 統合された結果構造
-    - `ModularAvatarIntegration` - Enhanced MA component integration with parameter support  
-      `ModularAvatarIntegration` - パラメーター対応を含むMAコンポーネント統合の強化
-  - Improved code maintainability and reusability  
-    コードの保守性と再利用性を向上
-
-## [0.3.2-beta.2] - 2025-10-01
 
 ### Improved / 改善
 
@@ -71,6 +51,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     異なるブランチ内の同名オブジェクトが誤マッチする問題を修正
   - Improved matching accuracy for hierarchies with different depths  
     異なる深さの階層でのマッチング精度を向上
+
+### Changed / 変更
+
+- **MA Material Helper: Refactored codebase**  
+  **MA Material Helper: コードベースをリファクタリング**
+
+  - Renamed from "Material Swap Helper" to "MA Material Helper" to reflect expanded functionality  
+    拡張された機能を反映するため「Material Swap Helper」から「MA Material Helper」に名称変更
+  - Reorganized namespace from `MaterialSwapHelper` to `MAMaterialHelper`  
+    名前空間を `MaterialSwapHelper` から `MAMaterialHelper` に再編成
+  - Extracted common functionality into shared modules:  
+    共通機能を共有モジュールに抽出:
+    - `ObjectMatcher` - Object matching logic for both Material Swap and Material Setter  
+      `ObjectMatcher` - Material SwapとMaterial Setter両方のオブジェクトマッチングロジック
+    - `GenerationResult` - Unified result structure  
+      `GenerationResult` - 統合された結果構造
+    - `ModularAvatarIntegration` - Enhanced MA component integration with parameter support  
+      `ModularAvatarIntegration` - パラメーター対応を含むMAコンポーネント統合の強化
+  - Improved code maintainability and reusability  
+    コードの保守性と再利用性を向上
 
 ## [0.3.1] - 2025-09-07
 
