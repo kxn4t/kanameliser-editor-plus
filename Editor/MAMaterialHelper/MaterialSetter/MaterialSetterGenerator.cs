@@ -22,7 +22,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
         /// <summary>
         /// Creates material setter setup on the target GameObject
         /// </summary>
-        public static GenerationResult CreateMaterialSetter(GameObject targetRoot, CopiedMaterialData copiedData)
+        /// <param name="skipUnchanged">If true, only creates setters for materials that differ from current materials</param>
+        public static GenerationResult CreateMaterialSetter(GameObject targetRoot, CopiedMaterialData copiedData, bool skipUnchanged = true)
         {
             if (!ValidateParameters(targetRoot, copiedData, out var validationResult))
                 return validationResult;
@@ -60,7 +61,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                     createdVariations.Add(colorVariation);
 
                     // Create material setters for this group
-                    int groupMatches = SetupMaterialSettersForGroup(colorVariation, targetRoot, group);
+                    int groupMatches = SetupMaterialSettersForGroup(colorVariation, targetRoot, group, skipUnchanged);
                     totalSuccessfulMatches += groupMatches;
 
                     if (groupMatches == 0)
@@ -212,7 +213,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
         /// <summary>
         /// Sets up material setters for a specific group
         /// </summary>
-        private static int SetupMaterialSettersForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group)
+        private static int SetupMaterialSettersForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group, bool skipUnchanged)
         {
             int totalMatchCount = 0;
 
@@ -244,6 +245,11 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                     // Add the material from the source setup (skip null materials)
                     if (sourceSetup.materials[i] != null)
                     {
+                        // Skip if skipUnchanged is enabled and the material is the same as current
+                        if (skipUnchanged && sourceSetup.materials[i] == currentMaterials[i])
+                        {
+                            continue;
+                        }
                         materials.Add(sourceSetup.materials[i]);
                     }
                 }

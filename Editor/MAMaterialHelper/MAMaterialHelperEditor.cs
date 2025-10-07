@@ -15,6 +15,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
         private const string MENU_PATH_CREATE_SWAP = "GameObject/Kanameliser Editor Plus/Create Material Swap";
         private const string MENU_PATH_CREATE_SWAP_PER_OBJECT = "GameObject/Kanameliser Editor Plus/Create Material Swap (Per Object)";
         private const string MENU_PATH_CREATE_SETTER = "GameObject/Kanameliser Editor Plus/Create Material Setter";
+        private const string MENU_PATH_CREATE_SETTER_ALL_SLOTS = "GameObject/Kanameliser Editor Plus/Create Material Setter (All Slots)";
         private const int MENU_PRIORITY = 100;
 
 #if MODULAR_AVATAR_INSTALLED
@@ -116,7 +117,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
             MAMaterialHelperUtils.TryExecute(() =>
             {
-                var result = MaterialSetterGenerator.CreateMaterialSetter(selected, MAMaterialHelperSession.CopiedData);
+                var result = MaterialSetterGenerator.CreateMaterialSetter(selected, MAMaterialHelperSession.CopiedData, skipUnchanged: true);
 
                 if (result.success)
                 {
@@ -127,6 +128,33 @@ namespace Kanameliser.Editor.MAMaterialHelper
                     MAMaterialHelperUtils.ShowWarningDialog(result.message);
                 }
             }, "create material setter");
+        }
+
+        [MenuItem(MENU_PATH_CREATE_SETTER_ALL_SLOTS, false, MENU_PRIORITY + 4)]
+        public static void CreateMaterialSetterAllSlots()
+        {
+            var selected = Selection.activeGameObject;
+            if (selected == null) return;
+
+            if (!MAMaterialHelperSession.HasCopiedData)
+            {
+                MAMaterialHelperUtils.ShowErrorDialog("No material setup has been copied. Please copy a material setup first.");
+                return;
+            }
+
+            MAMaterialHelperUtils.TryExecute(() =>
+            {
+                var result = MaterialSetterGenerator.CreateMaterialSetter(selected, MAMaterialHelperSession.CopiedData, skipUnchanged: false);
+
+                if (result.success)
+                {
+                    MAMaterialHelperUtils.LogSuccess(result.message);
+                }
+                else
+                {
+                    MAMaterialHelperUtils.ShowWarningDialog(result.message);
+                }
+            }, "create material setter (all slots)");
         }
 
         // Validation methods
@@ -150,6 +178,12 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
         [MenuItem(MENU_PATH_CREATE_SETTER, true)]
         public static bool ValidateCreateMaterialSetter()
+        {
+            return Selection.activeGameObject != null && MAMaterialHelperSession.HasCopiedData;
+        }
+
+        [MenuItem(MENU_PATH_CREATE_SETTER_ALL_SLOTS, true)]
+        public static bool ValidateCreateMaterialSetterAllSlots()
         {
             return Selection.activeGameObject != null && MAMaterialHelperSession.HasCopiedData;
         }

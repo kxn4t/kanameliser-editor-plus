@@ -69,6 +69,9 @@ Modular Avatarのマテリアル制御コンポーネントを使用した色変
 - Material Swapと異なり、メッシュの各マテリアルスロットに対して直接置き換える方式で動作
   - スロット単位で指定するため、同じメッシュ内で同一の元マテリアルから異なるマテリアルへの変更が可能
   - Material Swapより正確にコピー元Prefabのマテリアル配置を再現
+- 2つの作成モード：
+  - **標準モード**: 現在のマテリアルと異なるマテリアルスロットのみにSetterを作成
+  - **全スロットモード**: 現在のマテリアルとの差異に関係なくすべてのマテリアルスロットにSetterを作成
 
 **共通仕様:**
 - [Modular Avatar](https://modular-avatar.nadena.dev/ja) 1.13.0以上のインストールが必要
@@ -105,7 +108,8 @@ Modular Avatarのマテリアル制御コンポーネントを使用した色変
 2. **作成**: ターゲットとなる衣装を選択 → 右クリック → 以下のいずれかを選択
    - `Create Material Swap` - 標準のMaterial Swapモード
    - `Create Material Swap (Per Object)` - 個別オブジェクトのMaterial Swapモード
-   - `Create Material Setter` - Material Setterモード
+   - `Create Material Setter` - 標準のMaterial Setterモード
+   - `Create Material Setter (All Slots)` - Material Setterモード（全スロット）
 3. **メニュー生成**: 番号付きカラーバリエーション（Color1、Color2など）を含む「Color Menu」を自動作成
 
 **Material Swap モード:**
@@ -113,6 +117,9 @@ Modular Avatarのマテリアル制御コンポーネントを使用した色変
 - **個別オブジェクトモード**: 各オブジェクト毎に個別のMaterial Swapコンポーネントを作成（複雑なセットアップに有用）
 
 **Material Setter モード:**
+- **標準モード**: 現在のマテリアルと異なるマテリアルスロットのみを設定
+- **全スロットモード**: 現在のマテリアルとの差異に関係なくすべてのマテリアルスロットを設定
+  - パフォーマンスに影響を及ぼす可能性があるため、自分でカスタマイズしたい場合のみ利用を推奨
 - マテリアルを直接置き換える方式で、各オブジェクトにMaterial Setterコンポーネントを作成
 
 **Material SwapとMaterial Setterの使い分け:**
