@@ -12,6 +12,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+### Added / 追加
+
+- **MA Material Helper: Material Setter All Slots Mode**
+  **MA Material Helper: Material Setter 全スロットモード**
+
+  - Added All Slots mode to Material Setter for cases where all material slots need to be set regardless of changes
+    変更の有無に関係なく全マテリアルスロットを設定する必要がある場合のために全スロットモードを追加
+  - Standard mode only sets material slots that differ from current materials
+    標準モードは現在のマテリアルと異なるスロットのみを設定
+  - Context menu: `[Optional] Create Material Setter (All Slots)`
+    右クリックメニュー：`[Optional] Create Material Setter (All Slots)`
+
+### Changed / 変更
+
+- **MA Material Helper: Menu Reorganization**
+  **MA Material Helper: メニュー構成の変更**
+
+  - Reordered menu items to prioritize Material Setter as the recommended option
+    Material Setterを推奨オプションとして優先するようにメニュー項目を並び替え
+  - Added `[Optional]` prefix to special case options (All Slots mode, Per Object mode)
+    特殊なケース向けオプション（全スロットモード、個別オブジェクトモード）に`[Optional]`接頭辞を追加
+  - Material Setter is now recommended for most use cases
+    ほとんどのケースでMaterial Setterが推奨されるようになりました
+
 ## [0.3.2-beta.3] - 2025-10-03
 
 ### Added / 追加
