@@ -12,19 +12,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.4.0-beta.1] - 2025-10-07
+
 ### Added / 追加
 
-- **MA Material Helper: Material Setter All Slots Mode**
-  **MA Material Helper: Material Setter 全スロットモード**
+- **MA Material Helper: Material Setter Support**  
+  **MA Material Helper: Material Setter対応**
+
+  - Added Material Setter automatic generation feature alongside existing Material Swap  
+    既存のMaterial Swapに加えてMaterial Setter自動生成機能を追加
+  - Allows changing from the same source material to different materials within the same mesh by specifying per-slot  
+    スロット単位で指定するため、同じメッシュ内で同一の元マテリアルから異なるマテリアルへの変更が可能
+  - More accurately reproduces the material layout of the source prefab compared to Material Swap  
+    Material Swapより正確にコピー元Prefabのマテリアル配置を再現
+  - Context menu: `Kanameliser Editor Plus > Create Material Setter`  
+    右クリックメニュー：`Kanameliser Editor Plus > Create Material Setter`
+
+- **MA Material Helper: Material Setter All Slots Mode**  
+  **MA Material Helper: Material Setter全スロットモード**
 
   - Added All Slots mode to Material Setter for cases where all material slots need to be set regardless of changes  
     変更の有無に関係なく全マテリアルスロットを設定する必要がある場合のために全スロットモードを追加
   - Standard mode only sets material slots that differ from current materials  
     標準モードは現在のマテリアルと異なるスロットのみを設定
-  - Context menu: `[Optional] Create Material Setter (All Slots)`  
+  - Context menu: `[Optional] Create Material Setter (All Slots)`
     右クリックメニュー：`[Optional] Create Material Setter (All Slots)`
 
-- **MA Material Helper: Material Swap vs Material Setter - Usage Guide**
+- **MA Material Helper: Material Swap vs Material Setter - Usage Guide**  
   **MA Material Helper: Material Swap と Material Setter - 使い分けガイド**
 
   - **Material Setter (Recommended / 推奨)**:
@@ -46,34 +60,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       同じ元マテリアルが異なるスロットで異なるターゲットに対応する必要がある場合、正しく動作しない可能性があります
     - Use `[Optional] Create Material Swap (Per Object)` for more granular control if needed  
       必要に応じて `[Optional] Create Material Swap (Per Object)` でより細かい制御が可能
-
-### Changed / 変更
-
-- **MA Material Helper: Menu Reorganization**
-  **MA Material Helper: メニュー構成の変更**
-
-  - Reordered menu items to prioritize Material Setter as the recommended option  
-    Material Setterを推奨オプションとして優先するようにメニュー項目を並び替え
-  - Added `[Optional]` prefix to special case options (All Slots mode, Per Object mode)  
-    特殊なケース向けオプション（全スロットモード、個別オブジェクトモード）に`[Optional]`接頭辞を追加
-  - Material Setter is now recommended for most use cases  
-    ほとんどのケースでMaterial Setterが推奨されるようになりました
-
-## [0.3.2-beta.3] - 2025-10-03
-
-### Added / 追加
-
-- **MA Material Helper: Material Setter Support**  
-  **MA Material Helper: Material Setter 対応**
-
-  - Added Material Setter automatic generation feature alongside existing Material Swap  
-    既存のMaterial Swapに加えてMaterial Setter自動生成機能を追加
-  - Allows changing from the same source material to different materials within the same mesh by specifying per-slot  
-    スロット単位で指定するため、同じメッシュ内で同一の元マテリアルから異なるマテリアルへの変更が可能
-  - More accurately reproduces the material layout of the source prefab compared to Material Swap  
-    Material Swapより正確にコピー元Prefabのマテリアル配置を再現
-  - Context menu: `Kanameliser Editor Plus > Create Material Setter`  
-    右クリックメニュー：`Kanameliser Editor Plus > Create Material Setter`
 
 ### Improved / 改善
 
@@ -118,6 +104,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       `ModularAvatarIntegration` - パラメーター対応を含むMAコンポーネント統合の強化
   - Improved code maintainability and reusability  
     コードの保守性と再利用性を向上
+
+- **MA Material Helper: Menu Reorganization**  
+  **MA Material Helper: メニュー構成の変更**
+
+  - Reordered menu items to prioritize Material Setter as the recommended option  
+    Material Setterを推奨オプションとして優先するようにメニュー項目を並び替え
+  - Added `[Optional]` prefix to special case options (All Slots mode, Per Object mode)  
+    特殊なケース向けオプション（全スロットモード、個別オブジェクトモード）に `[Optional]` 接頭辞を追加
+  - Material Setter is now recommended for most use cases  
+    ほとんどのケースでMaterial Setterが推奨されるようになりました
 
 ## [0.3.1] - 2025-09-07
 
