@@ -57,22 +57,25 @@ If you prefer manual installation:
 
 Automatic color change menu creation tools using Modular Avatar's material control components.
 
+#### Material Setter (Recommended for most use cases)
+- Automatically create color change menus using Modular Avatar's Material Setter components
+- Generate menus that directly set materials from color variation prefabs
+- Operates differently from Material Swap by directly replacing materials on each material slot of meshes
+  - Allows changing from the same source material to different materials within the same mesh by specifying per-slot
+  - More accurately reproduces the material layout of the source prefab compared to Material Swap
+- Two creation modes:
+  - **Standard Mode**: Only creates setters for material slots that differ from the current materials
+  - **All Slots Mode**: Creates setters for all material slots regardless of whether they differ from current materials
+
 #### Material Swap
 - Automatically create color change menus using Modular Avatar's Material Swap components
 - Generate menu items from color variation prefabs with just a few clicks
 - Support for multiple color variation prefabs to create menus simultaneously
 - Two creation modes: unified and per-object Material Swap components
 
-#### Material Setter
-- Automatically create color change menus using Modular Avatar's Material Setter components
-- Generate menus that directly set materials from color variation prefabs
-- Operates differently from Material Swap by directly replacing materials on each material slot of meshes
-  - Allows changing from the same source material to different materials within the same mesh by specifying per-slot
-  - More accurately reproduces the material layout of the source prefab compared to Material Swap
-
 **Common Specifications:**
 - Requires [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher to be installed
-- Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy Material Setup / Create Material Swap / Create Material Setter`
+- Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
 
 ### 😀 Missing BlendShape Inserter
 
@@ -103,18 +106,21 @@ Perfect for creating avatar color change menus from existing color variations:
 1. **Copy**: Select color variation prefabs → Right-click → `Copy Material Setup`
    Tips: Works with multiple color variation prefabs selected simultaneously
 2. **Create**: Select target outfit → Right-click → Choose one of the following:
+   - `Create Material Setter` - Standard Material Setter mode (recommended for most use cases)
+   - `[Optional] Create Material Setter (All Slots)` - Material Setter mode (all slots)
    - `Create Material Swap` - Standard Material Swap mode
-   - `Create Material Swap (Per Object)` - Per-object Material Swap mode
-   - `Create Material Setter` - Material Setter mode
+   - `[Optional] Create Material Swap (Per Object)` - Per-object Material Swap mode
 3. **Menu Generation**: Automatically creates "Color Menu" with numbered color variations (Color1, Color2, etc.)
+
+**Material Setter Modes:**
+- **Standard Mode** (recommended): Only sets material slots that differ from current materials
+- **All Slots Mode**: Sets all material slots regardless of whether they differ from current materials
+  - May affect performance, recommended only when you need to customize manually
+- Directly replaces materials by creating Material Setter components for each object
 
 **Material Swap Modes:**
 - **Standard Mode**: Creates unified Material Swap components for better performance
 - **Per-Object Mode**: Creates individual Material Swap components for each object (useful for complex setups)
-
-**Material Setter Mode:**
-- Directly replaces materials by creating Material Setter components for each object
-- Uses a different parameter (`KEP_MaterialSetter`) from Material Swap
 
 **Choosing Between Material Swap and Material Setter:**
 

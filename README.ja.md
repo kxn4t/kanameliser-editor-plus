@@ -57,22 +57,25 @@ UnityおよびVRChatのための便利なエディタ拡張機能セット。
 
 Modular Avatarのマテリアル制御コンポーネントを使用した色変更メニューの自動作成ツール。
 
+#### Material Setter（ほとんどのケースで推奨）
+- Modular AvatarのMaterial Setterコンポーネントを使用した色変更メニューの自動作成
+- カラーバリエーションのPrefabから直接マテリアルを設定するメニューを生成
+- Material Swapと異なり、メッシュの各マテリアルスロットに対して直接置き換える方式で動作
+  - スロット単位で指定するため、同じメッシュ内で同一の元マテリアルから異なるマテリアルへの変更が可能
+  - Material Swapより正確にコピー元Prefabのマテリアル配置を再現
+- 2つの作成モード：
+  - **標準モード**: 現在のマテリアルと異なるマテリアルスロットのみにSetterを作成
+  - **全スロットモード**: 現在のマテリアルとの差異に関係なくすべてのマテリアルスロットにSetterを作成
+
 #### Material Swap
 - Modular AvatarのMaterial Swapコンポーネントを使用した色変更メニューの自動作成
 - カラーバリエーションのPrefabから数クリックでメニューアイテムを生成
 - 複数のカラーバリエーションPrefabから同時にメニュー生成が可能
 - 2つの作成モード：統合型と個別オブジェクト型のMaterial Swapコンポーネント
 
-#### Material Setter
-- Modular AvatarのMaterial Setterコンポーネントを使用した色変更メニューの自動作成
-- カラーバリエーションのPrefabから直接マテリアルを設定するメニューを生成
-- Material Swapと異なり、メッシュの各マテリアルスロットに対して直接置き換える方式で動作
-  - スロット単位で指定するため、同じメッシュ内で同一の元マテリアルから異なるマテリアルへの変更が可能
-  - Material Swapより正確にコピー元Prefabのマテリアル配置を再現
-
 **共通仕様:**
 - [Modular Avatar](https://modular-avatar.nadena.dev/ja) 1.13.0以上のインストールが必要
-- ヒエラルキー上右クリックメニューからアクセス：`Kanameliser Editor Plus > Copy Material Setup / Create Material Swap / Create Material Setter`
+- ヒエラルキー上右クリックメニューからアクセス：`Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
 
 ### 😀 Missing BlendShape Inserter
 
@@ -103,17 +106,21 @@ Modular Avatarのマテリアル制御コンポーネントを使用した色変
 1. **コピー**: カラーバリエーションPrefabを選択 → 右クリック → `Copy Material Setup`
   Tips: カラーバリエーションPrefabを複数選択しても動作します
 2. **作成**: ターゲットとなる衣装を選択 → 右クリック → 以下のいずれかを選択
+   - `Create Material Setter` - Material Setterモード（ほとんどのケースで推奨）
+   - `[Optional] Create Material Setter (All Slots)` - Material Setterモード（全スロット）
    - `Create Material Swap` - 標準のMaterial Swapモード
-   - `Create Material Swap (Per Object)` - 個別オブジェクトのMaterial Swapモード
-   - `Create Material Setter` - Material Setterモード
+   - `[Optional] Create Material Swap (Per Object)` - 個別オブジェクトのMaterial Swapモード
 3. **メニュー生成**: 番号付きカラーバリエーション（Color1、Color2など）を含む「Color Menu」を自動作成
+
+**Material Setter モード:**
+- **標準モード**（推奨）: 現在のマテリアルと異なるマテリアルスロットのみを設定
+- **全スロットモード**: 現在のマテリアルとの差異に関係なくすべてのマテリアルスロットを設定
+  - パフォーマンスに影響を及ぼす可能性があるため、自分でカスタマイズしたい場合のみ利用を推奨
+- マテリアルを直接置き換える方式で、各オブジェクトにMaterial Setterコンポーネントを作成
 
 **Material Swap モード:**
 - **標準モード**: パフォーマンスが良い統合型Material Swapコンポーネントを作成
 - **個別オブジェクトモード**: 各オブジェクト毎に個別のMaterial Swapコンポーネントを作成（複雑なセットアップに有用）
-
-**Material Setter モード:**
-- マテリアルを直接置き換える方式で、各オブジェクトにMaterial Setterコンポーネントを作成
 
 **Material SwapとMaterial Setterの使い分け:**
 
