@@ -17,23 +17,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MA Material Helper: Material Setter All Slots Mode**
   **MA Material Helper: Material Setter 全スロットモード**
 
-  - Added All Slots mode to Material Setter for cases where all material slots need to be set regardless of changes
+  - Added All Slots mode to Material Setter for cases where all material slots need to be set regardless of changes  
     変更の有無に関係なく全マテリアルスロットを設定する必要がある場合のために全スロットモードを追加
-  - Standard mode only sets material slots that differ from current materials
+  - Standard mode only sets material slots that differ from current materials  
     標準モードは現在のマテリアルと異なるスロットのみを設定
-  - Context menu: `[Optional] Create Material Setter (All Slots)`
+  - Context menu: `[Optional] Create Material Setter (All Slots)`  
     右クリックメニュー：`[Optional] Create Material Setter (All Slots)`
+
+- **MA Material Helper: Material Swap vs Material Setter - Usage Guide**
+  **MA Material Helper: Material Swap と Material Setter - 使い分けガイド**
+
+  - **Material Setter (Recommended / 推奨)**:
+    - Sets materials per material slot, ensuring accurate material placement  
+      マテリアルスロット単位で設定するため、正確なマテリアル配置を保証
+    - Handles cases where the same source material maps to different target materials within the same mesh  
+      同じメッシュ内で同一の元マテリアルが異なるターゲットマテリアルに対応するケースに対応
+    - More reliable for complex prefab structures with mixed materials  
+      混合マテリアルを含む複雑なPrefab構造でより信頼性が高い
+    - **Use Material Setter when in doubt - it works in all scenarios**  
+      **迷ったら Material Setter を使用してください - すべてのシナリオで動作します**
+
+  - **Material Swap (Optional / オプション)**:
+    - Swaps materials by material reference, simpler configuration  
+      マテリアル参照による置換、よりシンプルな設定
+    - Suitable when each source material consistently maps to one target material across all meshes  
+      各元マテリアルがすべてのメッシュで一貫して1つのターゲットマテリアルに対応する場合に適しています
+    - May not work correctly if the same source material needs to map to different targets in different slots  
+      同じ元マテリアルが異なるスロットで異なるターゲットに対応する必要がある場合、正しく動作しない可能性があります
+    - Use `[Optional] Create Material Swap (Per Object)` for more granular control if needed  
+      必要に応じて `[Optional] Create Material Swap (Per Object)` でより細かい制御が可能
 
 ### Changed / 変更
 
 - **MA Material Helper: Menu Reorganization**
   **MA Material Helper: メニュー構成の変更**
 
-  - Reordered menu items to prioritize Material Setter as the recommended option
+  - Reordered menu items to prioritize Material Setter as the recommended option  
     Material Setterを推奨オプションとして優先するようにメニュー項目を並び替え
-  - Added `[Optional]` prefix to special case options (All Slots mode, Per Object mode)
+  - Added `[Optional]` prefix to special case options (All Slots mode, Per Object mode)  
     特殊なケース向けオプション（全スロットモード、個別オブジェクトモード）に`[Optional]`接頭辞を追加
-  - Material Setter is now recommended for most use cases
+  - Material Setter is now recommended for most use cases  
     ほとんどのケースでMaterial Setterが推奨されるようになりました
 
 ## [0.3.2-beta.3] - 2025-10-03
@@ -120,7 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added / 追加
 
 - Material Copier feature for copying materials between GameObjects via right-click context menu  
-  右クリックメニューから GameObject 間でマテリアルをコピーする Material Copier 機能を追加
+  右クリックメニューからGameObject間でマテリアルをコピーするMaterial Copier機能を追加
 - Usage:
   - (Step1) Select source objects in Hierarchy → Right-click → Copy Materials
   - (Step2) Select target objects → Right-click → Paste Materials  
@@ -131,21 +154,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   コンテキストメニュー：`Kanameliser Editor Plus > Copy/Paste Materials`
 
 - Material Swap Helper feature for automatic color change menu creation using Modular Avatar  
-  Modular Avatar を使用した色変更メニュー自動生成機能 Material Swap Helper を追加
+  Modular Avatarを使用した色変更メニュー自動生成機能Material Swap Helperを追加
 - Creates color variation menus from color prefabs with automatic object matching  
-  カラーバリエーションの Prefab から色変更メニューを作成
+  カラーバリエーションのPrefabから色変更メニューを作成
 - Two creation modes: unified Material Swap components and per-object components  
-  統合型と個別オブジェクト型の2つの Material Swap コンポーネント作成モード
+  統合型と個別オブジェクト型の2つのMaterial Swapコンポーネント作成モード
 - Usage:
   - (Step1) Select color variation prefabs → Right-click → Copy Material Setup
   - (Step2) Select target avatar → Right-click → Create Material Swap  
   使用方法：  
-  - (Step1) カラーバリエーション Prefab を選択 → 右クリック → Copy Material Setup
-  - (Step2) ターゲット Avatar を選択 → 右クリック → Create Material Swap
+  - (Step1) カラーバリエーションPrefabを選択 → 右クリック → Copy Material Setup
+  - (Step2) ターゲットAvatarを選択 → 右クリック → Create Material Swap
 - Context menu: `Kanameliser Editor Plus > Copy Material Setup / Create Material Swap`  
   コンテキストメニュー：`Kanameliser Editor Plus > Copy Material Setup / Create Material Swap`
 - Requires Modular Avatar 1.13.0 or later to be installed  
-  利用には Modular Avatar 1.13.0以上のインストールが必要
+  利用にはModular Avatar 1.13.0以上のインストールが必要
 
 
 ## [0.3.0-rc.3] - 2025-07-13
@@ -153,21 +176,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed / 修正
 
 - Corrected Modular Avatar minimum version requirement from 1.8.0 to 1.13.0  
-  Modular Avatar 最小バージョン要件を1.8.0から1.13.0に修正
+  Modular Avatar最小バージョン要件を1.8.0から1.13.0に修正
 
 ## [0.3.0-rc.2] - 2025-07-13
 
 ### Fixed / 修正
 
 - Added missing Modular Avatar minimum version requirement (1.8.0+) to assembly definition  
-  アセンブリ定義に不足していた Modular Avatar 最小バージョン要件（1.8.0以上）を追加
+  アセンブリ定義に不足していたModular Avatar最小バージョン要件（1.8.0以上）を追加
 
 ## [0.3.0-rc.1] - 2025-07-13
 
 ### Added / 追加
 
 - Material Copier feature for copying materials between GameObjects via right-click context menu  
-  右クリックメニューから GameObject 間でマテリアルをコピーする Material Copier 機能を追加
+  右クリックメニューからGameObject間でマテリアルをコピーするMaterial Copier機能を追加
 - Usage:
   - (Step1) Select source objects in Hierarchy → Right-click → Copy Materials
   - (Step2) Select target objects → Right-click → Paste Materials  
@@ -178,28 +201,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   コンテキストメニュー：`Kanameliser Editor Plus > Copy/Paste Materials`
 
 - Material Swap Helper feature for automatic color change menu creation using Modular Avatar  
-  Modular Avatar を使用した色変更メニュー自動生成機能 Material Swap Helper を追加
+  Modular Avatarを使用した色変更メニュー自動生成機能Material Swap Helperを追加
 - Creates color variation menus from color prefabs with automatic object matching  
-  カラーバリエーションの Prefab から色変更メニューを作成
+  カラーバリエーションのPrefabから色変更メニューを作成
 - Two creation modes: unified Material Swap components and per-object components  
-  統合型と個別オブジェクト型の2つの Material Swap コンポーネント作成モード
+  統合型と個別オブジェクト型の2つのMaterial Swapコンポーネント作成モード
 - Usage:
   - (Step1) Select color variation prefabs → Right-click → Copy Material Setup
   - (Step2) Select target avatar → Right-click → Create Material Swap  
   使用方法：  
-  - (Step1) カラーバリエーション Prefab を選択 → 右クリック → Copy Material Setup
-  - (Step2) ターゲット Avatar を選択 → 右クリック → Create Material Swap
+  - (Step1) カラーバリエーションPrefabを選択 → 右クリック → Copy Material Setup
+  - (Step2) ターゲットAvatarを選択 → 右クリック → Create Material Swap
 - Context menu: `Kanameliser Editor Plus > Copy Material Setup / Create Material Swap`  
   コンテキストメニュー：`Kanameliser Editor Plus > Copy Material Setup / Create Material Swap`
 - Requires Modular Avatar package to be installed  
-  利用には Modular Avatar パッケージのインストールが必要
+  利用にはModular Avatarパッケージのインストールが必要
 
 ## [0.2.1] - 2025-07-12
 
 ### Fixed / 修正
 
 - Fixed incorrect changelog URL in package.json  
-  package.json の changelog URL の修正
+  package.jsonのchangelog URLの修正
 
 ## [0.2.0] - 2025-07-12
 
@@ -208,15 +231,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added changelog documentation (CHANGELOG.md)  
   変更履歴ドキュメント（CHANGELOG.md）を追加
 - Added NDMF preview support to Mesh Info Display  
-  Mesh Info Display に NDMF プレビュー対応を追加
+  Mesh Info DisplayにNDMFプレビュー対応を追加
 - Shows optimized mesh information when NDMF preview is active  
-  NDMF プレビュー有効時に最適化後のメッシュ情報を表示
+  NDMFプレビュー有効時に最適化後のメッシュ情報を表示
 - Preview effects of optimization tools like AAO and TexTransTool before building  
-  AAO や TexTransTool などの最適化ツールの効果を事前確認可能に
+  AAOやTexTransToolなどの最適化ツールの効果を事前確認可能に
 - Green dot indicator appears when preview is active  
   プレビュー有効時は左上に緑のドットで表示
 - Only available when NDMF is installed  
-  NDMF がインストールされている場合のみ利用可能
+  NDMFがインストールされている場合のみ利用可能
 
 ### Changed / 変更
 
@@ -230,17 +253,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical / 技術的変更
 
 - Split monolithic MeshInfoDisplay into specialized classes:  
-  モノリシックな MeshInfoDisplay を各クラスに分割:
+  モノリシックなMeshInfoDisplayを各クラスに分割:
   - `MeshInfoCalculator` - Core calculation logic / コア計算ロジック
-  - `MeshInfoConstants` - UI constants and styling / UI 定数とスタイリング
+  - `MeshInfoConstants` - UI constants and styling / UI定数とスタイリング
   - `MeshInfoData` - Data structures / データ構造
-  - `MeshInfoNDMFIntegration` - NDMF integration / NDMF 統合
-  - `MeshInfoRenderer` - UI rendering / UI レンダリング
+  - `MeshInfoNDMFIntegration` - NDMF integration / NDMF統合
+  - `MeshInfoRenderer` - UI rendering / UIレンダリング
   - `MeshInfoUtility` - Utility functions / ユーティリティ関数
 - Added `NDMFPreviewHelper` for NDMF preview integration  
-  NDMF プレビュー統合のための`NDMFPreviewHelper`を追加
+  NDMFプレビュー統合のための`NDMFPreviewHelper`を追加
 - Conditional compilation support for optional NDMF dependency  
-  NDMF 依存関係の条件付きコンパイル
+  NDMF依存関係の条件付きコンパイル
 - Assembly definition updates with version define detection  
   バージョン定義検出を含むアセンブリ定義の更新
 
@@ -249,41 +272,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added / 追加
 
 - Japanese README documentation (README.ja.md)  
-  日本語 README ドキュメント（README.ja.md）
+  日本語READMEドキュメント（README.ja.md）
 
 ### Changed / 変更
 
 - Updated installation instructions for clarity  
   明確性のためのインストール手順の更新
 - Improved README documentation with usage tips  
-  使用上のヒントを含む README ドキュメントの改善
+  使用上のヒントを含むREADMEドキュメントの改善
 
 ## [0.1.0] - 2024-05-27
 
 ### Added / 追加
 
 - Initial release of Kanameliser Editor Plus  
-  Kanameliser Editor Plus の初回リリース
+  Kanameliser Editor Plusの初回リリース
 - Mesh Info Display feature with polygon and material counting  
-  ポリゴンとマテリアルカウント機能付き Mesh Info Display
+  ポリゴンとマテリアルカウント機能付きMesh Info Display
 - Toggle Objects Active functionality with Ctrl+G shortcut  
-  Ctrl+G ショートカット付き Toggle Objects Active 機能
+  Ctrl+Gショートカット付きToggle Objects Active機能
 - Component Manager for batch component operations  
-  一括コンポーネント操作のための Component Manager
+  一括コンポーネント操作のためのComponent Manager
 - Missing BlendShape Inserter for animation compatibility  
-  アニメーション互換性のための Missing BlendShape Inserter
+  アニメーション互換性のためのMissing BlendShape Inserter
 - VRChat Creator Companion package support  
-  VRChat Creator Companion パッケージサポート
+  VRChat Creator Companionパッケージサポート
 
 ### Features / 機能
 
 - Real-time mesh information display in Scene view  
   シーンビューでのリアルタイムメッシュ情報表示
 - GameObject active state and EditorOnly tag toggling  
-  GameObject アクティブ状態と EditorOnly タグの切り替え
+  GameObjectアクティブ状態とEditorOnlyタグの切り替え
 - Component listing and management across object hierarchies  
   オブジェクト階層全体でのコンポーネント一覧と管理
 - BlendShape key insertion for animation files  
-  アニメーションファイルの BlendShape キー挿入
+  アニメーションファイルのBlendShapeキー挿入
 - Search functionality in Component Manager  
-  Component Manager の検索機能
+  Component Managerの検索機能
