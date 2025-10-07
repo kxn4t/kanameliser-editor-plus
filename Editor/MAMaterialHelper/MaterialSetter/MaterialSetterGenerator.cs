@@ -236,7 +236,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                 }
 
                 // Create material setter for this object
-                var materials = new List<Material>();
+                var materials = new List<(Material material, int slotIndex)>();
                 var currentMaterials = renderer.sharedMaterials;
                 int maxSlots = Mathf.Min(currentMaterials.Length, sourceSetup.materials.Length);
 
@@ -250,7 +250,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                         {
                             continue;
                         }
-                        materials.Add(sourceSetup.materials[i]);
+                        materials.Add((sourceSetup.materials[i], i));
                     }
                 }
 
@@ -268,7 +268,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
         /// <summary>
         /// Adds a Material Setter component to the color variation
         /// </summary>
-        private static void AddMaterialSetterComponent(GameObject colorVariation, GameObject targetObject, List<Material> materials)
+        private static void AddMaterialSetterComponent(GameObject colorVariation, GameObject targetObject, List<(Material material, int slotIndex)> materials)
         {
 #if MODULAR_AVATAR_INSTALLED
             var materialSetter = Undo.AddComponent<ModularAvatarMaterialSetter>(colorVariation);
@@ -284,8 +284,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                 var switchObject = new MaterialSwitchObject
                 {
                     Object = objectRef.Clone(),
-                    Material = materials[i],
-                    MaterialIndex = i
+                    Material = materials[i].material,
+                    MaterialIndex = materials[i].slotIndex
                 };
                 materialSetter.Objects.Add(switchObject);
             }
