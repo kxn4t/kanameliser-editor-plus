@@ -116,6 +116,29 @@ Perfect for creating avatar color change menus from existing color variations:
 - Directly replaces materials by creating Material Setter components for each object
 - Uses a different parameter (`KEP_MaterialSetter`) from Material Swap
 
+**Choosing Between Material Swap and Material Setter:**
+
+When deciding which mode to use, consider the following:
+
+**Use Material Swap when:**
+- All material slots within the same mesh use the same material, both before and after the change
+- You prioritize performance (fewer components)
+- Your material setup is simple
+
+**Use Material Setter when:**
+- Different slots in the same mesh use the same material but need to change to different materials
+- You want to more accurately reproduce the material layout from the source prefab
+- Material Swap produces unintended behavior
+
+**Material Swap Limitation**
+```
+Mesh A:
+  Slot 0: Material X → want to change to Material Y
+  Slot 1: Material X → want to change to Material Z
+```
+In this case, Material Swap can only replace "Material X" with one material, so both slots will end up with the same material.  
+Material Setter can specify per-slot, allowing each to change to different materials.
+
 **Matching Specifications:**
 
 The matching between source and target objects follows this priority order:
