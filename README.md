@@ -119,7 +119,7 @@ Perfect for creating avatar color change menus from existing color variations:
 - Directly replaces materials by creating Material Setter components for each object
 
 **Material Swap Modes:**
-- **Standard Mode**: Creates unified Material Swap components for better performance
+- **Standard Mode**: Creates unified Material Swap components
 - **Per-Object Mode**: Creates individual Material Swap components for each object (useful for complex setups)
 
 **Choosing Between Material Swap and Material Setter:**
@@ -128,7 +128,6 @@ When deciding which mode to use, consider the following:
 
 **Use Material Swap when:**
 - All material slots within the same mesh use the same material, both before and after the change
-- You prioritize performance (fewer components)
 - Your material setup is simple
 
 **Use Material Setter when:**

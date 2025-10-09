@@ -1,6 +1,6 @@
 # Kanameliser Editor Plus
 
-UnityおよびVRChatのための便利なエディタ拡張機能セット。
+UnityおよびVRChatのための便利なエディター拡張機能セット。
 
 ## 🚩 インストール方法
 
@@ -119,16 +119,16 @@ Modular Avatarのマテリアル制御コンポーネントを使用した色変
 - マテリアルを直接置き換える方式で、各オブジェクトにMaterial Setterコンポーネントを作成
 
 **Material Swap モード:**
-- **標準モード**: パフォーマンスが良い統合型Material Swapコンポーネントを作成
+- **標準モード**: Material Swapコンポーネントを作成
 - **個別オブジェクトモード**: 各オブジェクト毎に個別のMaterial Swapコンポーネントを作成（複雑なセットアップに有用）
 
 **Material SwapとMaterial Setterの使い分け:**
 
-どちらのモードを使うべきか迷ったら、以下を参考にしてください：
+どちらのモードを使うべきか迷ったら、以下を参考にしてください。  
+基本的にはMaterial Setterを推奨します。
 
 **Material Swapを使う場合:**
-- 同一メッシュ内で同じマテリアルスロットが変更先含め全て同じマテリアルを使用している
-- パフォーマンスを重視したい（コンポーネント数が少ない）
+- 同一メッシュ内で同じマテリアルスロットが変更先含めすべて同じマテリアルを使用している
 - シンプルなマテリアル構成
 
 **Material Setterを使う場合:**
@@ -142,32 +142,32 @@ Modular Avatarのマテリアル制御コンポーネントを使用した色変
   スロット0: マテリアルX → マテリアルY に変更したい
   スロット1: マテリアルX → マテリアルZ に変更したい
 ```
-この場合、Material Swapでは「マテリアルX」を一つのマテリアルにしか置き換えられないため、両方のスロットが同じマテリアルになってしまいます。  
+この場合、Material Swapでは「マテリアルX」を1つのマテリアルにしか置き換えられないため、両方のスロットが同じマテリアルになってしまいます。  
 Material Setterではスロット単位で指定できるため、それぞれ異なるマテリアルに変更できます。
 
 **マッチング仕様:**
 
 コピー元とコピー先のオブジェクトのマッチングは以下の優先順位で行われます：
 
-1. **優先度1**: 相対パスの完全一致（ルート名除外） + Renderer有り
+1. **優先度1**: 相対パスの完全一致（ルート名除外）+ Renderer有り
    - 例: コピー元 `Outfit/Jacket` → ターゲット `Outfit/Jacket`
    - 例: コピー元 `Accessories/Earing/Left` → ターゲット `Accessories/Earing/Left`
 
 2. **優先度2**: 同じ階層深度 + 完全名前一致 + Renderer有り
-   - 例: コピー元 `Outfit_A/Outer/Accessories/Earing`（深度=3） → ターゲット `Outfit_B/Inner/Accessories/Earing`（深度=3）
+   - 例: コピー元 `Outfit_A/Outer/Accessories/Earing`（深度=3）→ ターゲット `Outfit_B/Inner/Accessories/Earing`（深度=3）
    - 親の名前が異なっていても、どちらも `Earing` という名前で同じ深度
    - 同じ深度に複数候補がある場合は階層フィルタリングを適用
 
 3. **優先度3**: 完全名前一致 + Renderer有り
-   - 例: コピー元 `Outfit/Outer/Jacket`（深度=3） → ターゲット `Jacket`（深度=1）
-   - 複数の `Jacket` が存在する場合、最も近い深度を選択
+   - 例: コピー元 `Outfit/Outer/Jacket`（深度=3）→ ターゲット `Jacket`（深度=1）
+   - 複数の `Jacket` が存在する場合、もっとも近い深度を選択
    - コピー元が深度3で、ターゲット候補が深度1, 2, 4の場合: 深度2または4を優先（差=1）
    - 複数候補がある場合は階層フィルタリングを適用
 
 4. **優先度4**: 大文字小文字を区別しない名前一致 + Renderer有り
    - 例: コピー元 `earing` → ターゲット `Earing`
    - 例: コピー元 `JACKET` → ターゲット `Jacket`
-   - 最も近い深度を選択し、階層フィルタリングを適用
+   - もっとも近い深度を選択し、階層フィルタリングを適用
 
 **追加のマッチング:**
 
@@ -176,8 +176,8 @@ Material Setterではスロット単位で指定できるため、それぞれ�
 - **親階層フィルタリング**: 下から上へ親の名前をマッチング
   - 例: `Outfit/Outer/Jacket` を探している場合
     - 候補: `Outfit/Outer/Jacket`、`Costume/Outer/Jacket`、`Outfit/Inner/Jacket`
-    - 直接の親でフィルタ: `Outer` 配下を優先 → 2候補が残る
-    - その更に親でフィルタ: `Outfit` 配下を優先 → `Outfit/Outer/Jacket` が選択される
+    - 直接の親でフィルター: `Outer` 配下を優先 → 2候補が残る
+    - そのさらに親でフィルター: `Outfit` 配下を優先 → `Outfit/Outer/Jacket` が選択される
 - **類似度スコアリング**: Levenshtein距離を使用した最終選択
   - 例: `Outfit_C` にペーストする場合、`Outfit_A` と `Outfit_C` 由来の候補がある
     - ルート名を比較: `Outfit_C` vs `Outfit_A` と `Outfit_C` vs `Outfit_C`
