@@ -77,6 +77,11 @@ Modular Avatarのマテリアル制御コンポーネントを使用した色変
 - [Modular Avatar](https://modular-avatar.nadena.dev/ja) 1.13.0以上のインストールが必要
 - ヒエラルキー上右クリックメニューからアクセス：`Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
 
+### 🎯 AO Bounds Setter
+
+- 複数のメッシュのAnchor Override、Root Bone、Boundsを一括設定
+- `Tools > Kanameliser Editor Plus > AO Bounds Setter` からアクセス
+
 ### 😀 Missing BlendShape Inserter
 
 - アニメーションファイル間で不足しているBlendShapeキーを自動検出して修正
@@ -186,6 +191,26 @@ Material Setterではスロット単位で指定できるため、それぞれ�
 よくある使用例：
 - アバター衣装の色変更メニューの作成
 - 既存のカラーバリエーションPrefabからの色変更メニューの一括作成
+
+### AO Bounds Setter
+
+衣装製作やアバター制作時の一括設定に最適：
+
+1. **ウィンドウを開く**: `Tools > Kanameliser Editor Plus > AO Bounds Setter`
+2. **ルートオブジェクトを選択**: ヒエラルキー上のオブジェクトをRoot Objectフィールドにドラッグ
+3. **設定**:
+   - **Anchor Override**: アンカーポイントとして使用するオブジェクトを設定
+     - ドロップダウンでルートオブジェクト配下のオブジェクトを検索・選択可能
+   - **Root Bone**（SkinnedMeshRendererのみ）: SkinnedMeshのルートボーンを設定
+     - ドロップダウンでルートオブジェクト配下のオブジェクトを検索・選択可能
+   - **Bounds**（SkinnedMeshRendererのみ）: Boundsを設定
+4. **メッシュを選択**: チェックボックスを使用して設定を適用するメッシュを選択
+5. **適用**:「Apply to Selected Meshes」をクリックして設定を一括適用
+
+**ヒント:**
+- オブジェクト名、Anchor Override、Root Boneのラベルをクリックすると、そのオブジェクトをヒエラルキー内で素早く選択できます
+- ドロップダウンの検索機能を使用して、ボーン/アンカーを素早く見つけられます
+- 設定はチェックされたメッシュにのみ適用されます
 
 ### Missing BlendShape Inserter
 

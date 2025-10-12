@@ -1,0 +1,202 @@
+/* AO Bounds Setter Window Styles */
+
+/* Main container */
+.main-container {
+    padding: 10px;
+}
+
+/* Root object section */
+.root-object-section {
+    margin-bottom: 10px;
+}
+
+.section-label {
+    -unity-font-style: bold;
+    margin-bottom: 5px;
+}
+
+.root-object-container {
+    flex-direction: row;
+    align-items: center;
+}
+
+.refresh-button {
+    width: 25px;
+    flex-shrink: 0;
+    margin-right: 0;
+}
+
+.root-object-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+/* Batch settings section */
+.section-container {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.section-title {
+    -unity-font-style: bold;
+    margin-bottom: 5px;
+}
+
+.field-label {
+    margin-top: 5px;
+}
+
+.field-label-with-spacing {
+    margin-top: 10px;
+}
+
+.transform-field-container {
+    flex-direction: row;
+}
+
+.transform-field {
+    flex-grow: 1;
+}
+
+.dropdown-button {
+    width: 20px;
+    margin-left: 0;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    padding: 0;
+    font-size: 10px;
+}
+
+.apply-button {
+    margin-top: 10px;
+    height: 30px;
+}
+
+/* Mesh list section */
+.mesh-list-section {
+    flex-grow: 1;
+}
+
+.list-container {
+    flex-grow: 1;
+    min-width: 750px;
+}
+
+.mesh-list-header {
+    flex-direction: row;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding-top: 5px;
+    padding-bottom: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-top-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-color: rgba(0, 0, 0, 0.5);
+    min-width: 750px;
+}
+
+.header-toggle {
+    width: 20px;
+    margin-right: 5px;
+}
+
+.header-label {
+    -unity-font-style: bold;
+}
+
+.header-label-object-name {
+    flex-grow: 1;
+    min-width: 150px;
+    -unity-font-style: bold;
+}
+
+.header-label-ao {
+    width: 130px;
+    -unity-font-style: bold;
+}
+
+.header-label-root-bone {
+    width: 130px;
+    -unity-font-style: bold;
+}
+
+.header-label-bounds {
+    width: 250px;
+    -unity-font-style: bold;
+}
+
+.mesh-list-scroll {
+    flex-grow: 1;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.5);
+}
+
+.mesh-list-row {
+    flex-direction: row;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.3);
+    min-width: 750px;
+}
+
+.mesh-list-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.row-toggle {
+    width: 20px;
+    margin-right: 5px;
+}
+
+.name-container {
+    flex-direction: row;
+    flex-grow: 1;
+    min-width: 150px;
+    align-items: center;
+}
+
+.name-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.name-label {
+    -unity-text-align: middle-left;
+    flex-grow: 1;
+}
+
+.ao-label {
+    width: 130px;
+    -unity-text-align: middle-left;
+}
+
+.root-bone-label {
+    width: 130px;
+    -unity-text-align: middle-left;
+}
+
+.bounds-label {
+    width: 250px;
+    -unity-text-align: middle-left;
+}
+
+.clickable-label {
+    cursor: link;
+}
+
+.clickable-label:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
