@@ -77,6 +77,11 @@ Automatic color change menu creation tools using Modular Avatar's material contr
 - Requires [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher to be installed
 - Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
 
+### 🎯 AO Bounds Setter
+
+- Batch configuration of Anchor Override, Root Bone, and Bounds for multiple meshes
+- Access via `Tools > Kanameliser Editor Plus > AO Bounds Setter`
+
 ### 😀 Missing BlendShape Inserter
 
 - Automatically detects and fixes missing BlendShape keys across animation files
@@ -184,6 +189,26 @@ When multiple candidates remain after priority matching:
 Common use cases:
 - Creating color change menus for avatar outfits
 - Batch creation of color change menus from existing color variation prefabs
+
+### AO Bounds Setter
+
+Perfect for batch configuration during outfit creation or avatar setup:
+
+1. **Open Window**: `Tools > Kanameliser Editor Plus > AO Bounds Setter`
+2. **Select Root Object**: Drag an object from the Hierarchy to the Root Object field
+3. **Configure Settings**:
+   - **Anchor Override**: Set the object to use as the anchor point
+     - Use the dropdown to search and select from objects under the root object
+   - **Root Bone** (SkinnedMeshRenderer only): Set the root bone for skinned meshes
+     - Use the dropdown to search and select from objects under the root object
+   - **Bounds** (SkinnedMeshRenderer only): Configure bounds
+4. **Select Meshes**: Use checkboxes to select which meshes to apply settings to
+5. **Apply**: Click "Apply to Selected Meshes" to batch apply settings
+
+**Tips:**
+- Click on object name, Anchor Override, or Root Bone labels to quickly select that object in the Hierarchy
+- Use the dropdown search function to quickly find bones/anchors
+- Settings only apply to checked meshes
 
 ### Missing BlendShape Inserter
 
