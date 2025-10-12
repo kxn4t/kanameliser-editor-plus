@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.4.0] - 2025-10-12
+
 ### Added / 追加
 
 - **AO Bounds Setter: Batch Anchor Override and Bounds Configuration**
@@ -21,10 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     メッシュのAnchor Override、Root Bone、Boundsを一括設定するAO Bounds Setterウィンドウを追加
   - Access via `Tools > Kanameliser Editor Plus > AO Bounds Setter`  
     `Tools > Kanameliser Editor Plus > AO Bounds Setter` からアクセス
-
-## [0.4.0-beta.1] - 2025-10-07
-
-### Added / 追加
 
 - **MA Material Helper: Material Setter Support**  
   **MA Material Helper: Material Setter対応**
