@@ -20,6 +20,48 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         #region Parameter Management
 
         /// <summary>
+        /// Determines the parameter name to use for a Color Menu
+        /// If the Color Menu already has child MenuItems, uses the most common parameter
+        /// Otherwise, generates a unique parameter name for the avatar
+        /// </summary>
+        /// <param name="colorMenu">The color menu Transform to check</param>
+        /// <param name="targetRoot">The target GameObject (will traverse up to find the actual avatar root)</param>
+        /// <param name="baseParameterName">The base parameter name</param>
+        /// <returns>The parameter name to use for new items in this Color Menu</returns>
+        public static string DetermineParameterNameForColorMenu(Transform colorMenu, GameObject targetRoot, string baseParameterName)
+        {
+#if MODULAR_AVATAR_INSTALLED
+            // Check existing MenuItems in this Color Menu
+            var parameterCounts = new Dictionary<string, int>();
+
+            foreach (Transform child in colorMenu)
+            {
+                var menuItem = child.GetComponent<ModularAvatarMenuItem>();
+                if (menuItem != null && !string.IsNullOrEmpty(menuItem.PortableControl.Parameter))
+                {
+                    string param = menuItem.PortableControl.Parameter;
+                    if (!parameterCounts.ContainsKey(param))
+                    {
+                        parameterCounts[param] = 0;
+                    }
+                    parameterCounts[param]++;
+                }
+            }
+
+            // If there are existing parameters, use the most common one
+            if (parameterCounts.Count > 0)
+            {
+                return parameterCounts.OrderByDescending(kvp => kvp.Value).First().Key;
+            }
+
+            // No existing parameters, generate a unique one for the avatar
+            return DetermineUniqueParameterName(targetRoot, baseParameterName);
+#else
+            return baseParameterName;
+#endif
+        }
+
+        /// <summary>
         /// Determines a unique parameter name for menu items in the avatar
         /// </summary>
         /// <param name="targetRoot">The target GameObject (will traverse up to find the actual avatar root)</param>

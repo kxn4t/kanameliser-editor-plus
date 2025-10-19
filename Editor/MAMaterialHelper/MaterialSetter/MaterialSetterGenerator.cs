@@ -16,7 +16,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
     {
         private const string COLOR_MENU_NAME = "Color Menu";
         private const string COLOR_PREFIX = "Color";
-        public const string MENU_ITEM_PARAMETER = "KEP_MaterialSetter";
+        public const string MENU_ITEM_PARAMETER = "KEP/MaterialSetter";
 
         /// <summary>
         /// Creates material setter setup on the target GameObject
@@ -48,7 +48,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                 var createdVariations = new List<GameObject>();
                 int totalSuccessfulMatches = 0;
                 int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
-                string uniqueParameterName = ModularAvatarIntegration.DetermineUniqueParameterName(targetRoot, MENU_ITEM_PARAMETER);
+                string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
 
                 // Create color variations for each group
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
