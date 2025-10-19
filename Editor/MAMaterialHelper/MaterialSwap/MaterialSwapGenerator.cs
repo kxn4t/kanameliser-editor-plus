@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using Kanameliser.Editor.MAMaterialHelper.Common;
@@ -18,7 +17,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
     {
         private const string COLOR_MENU_NAME = "Color Menu";
         private const string COLOR_PREFIX = "Color";
-        public const string MENU_ITEM_PARAMETER = "KEP_MaterialSwap";
+        public const string MENU_ITEM_PARAMETER = "KEP/MaterialSwap";
 
         /// <summary>
         /// Creates material swap setup on the target GameObject
@@ -48,7 +47,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
                 var createdVariations = new List<GameObject>();
                 int totalSuccessfulMatches = 0;
-                int startingColorNumber = DetermineNextColorNumber(colorMenu);
+                int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
+                string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
 
                 // Create color variations for each group
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
@@ -57,7 +57,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     int colorNumber = startingColorNumber + groupIndex;
                     string colorName = $"{COLOR_PREFIX}{colorNumber}";
 
-                    var colorVariation = ModularAvatarIntegration.CreateColorVariation(colorMenu, colorName, colorNumber, targetRoot.name);
+                    var colorVariation = ModularAvatarIntegration.CreateColorVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
                     createdVariations.Add(colorVariation);
 
                     // Create material swaps for this group
@@ -144,7 +144,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
                 var createdVariations = new List<GameObject>();
                 int totalSuccessfulMatches = 0;
-                int startingColorNumber = DetermineNextColorNumber(colorMenu);
+                int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
+                string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
 
                 // Create color variations for each group
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
@@ -161,7 +162,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
 #if MODULAR_AVATAR_INSTALLED
                     var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
-                    ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, colorName, colorNumber, targetRoot.name, MENU_ITEM_PARAMETER);
+                    ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, colorName, colorNumber, targetRoot.name, uniqueParameterName);
 #endif
                     createdVariations.Add(colorVariation);
 
@@ -301,33 +302,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
             }
 
             return (colorMenu, isNewMenu);
-        }
-
-        /// <summary>
-        /// Determines the next available color number
-        /// </summary>
-        private static int DetermineNextColorNumber(Transform colorMenu)
-        {
-            var existingNumbers = new HashSet<int>();
-            var colorRegex = new Regex($@"^{COLOR_PREFIX}(\d+)$");
-
-            foreach (Transform child in colorMenu)
-            {
-                var match = colorRegex.Match(child.name);
-                if (match.Success && int.TryParse(match.Groups[1].Value, out int number))
-                {
-                    existingNumbers.Add(number);
-                }
-            }
-
-            // Find the smallest available number starting from 1
-            int nextNumber = 1;
-            while (existingNumbers.Contains(nextNumber))
-            {
-                nextNumber++;
-            }
-
-            return nextNumber;
         }
 
         /// <summary>

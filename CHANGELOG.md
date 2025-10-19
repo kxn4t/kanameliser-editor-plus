@@ -12,6 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+### Fixed / 修正
+
+- **MA Material Helper: Fixed Parameter Name Conflicts in Multiple Color Menus**  
+  **MA Material Helper: 複数のColor Menuでのパラメーター名競合を修正**
+
+  - Fixed issue where creating Material Setter/Swap menus on multiple objects would cause parameter conflicts  
+    複数のオブジェクトでMaterial Setter/Swapメニューを作成するとパラメーターが競合する問題を修正
+    - Now allows independent color changes on multiple objects  
+      複数のオブジェクトで個別に色変更ができるようになりました
+  - Sub-menus within the same Color Menu now share the same parameter  
+    同じColor Menu内のサブメニューは同じパラメーターを共有するようになりました
+    - Now allows mixing Material Setter and Material Swap changes simultaneously  
+      MaterialSetterとMaterialSwapによる変更を混ぜて同時に利用できるようになりました
+  - When adding to an existing Color Menu, the most commonly used parameter is now reused  
+    既存のColor Menuに追加する場合、もっとも多く使用されているパラメーターを再利用するようになりました
+
 ## [0.4.0] - 2025-10-12
 
 ### Added / 追加

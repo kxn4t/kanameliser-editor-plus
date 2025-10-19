@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -169,6 +171,36 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 ShowErrorDialog($"Failed to {operationName}:\n{e.Message}");
                 return defaultValue;
             }
+        }
+
+        /// <summary>
+        /// Determines the next available color number based on existing children
+        /// </summary>
+        /// <param name="colorMenu">The color menu Transform to search</param>
+        /// <param name="colorPrefix">The prefix for color names</param>
+        /// <returns>The next available color number</returns>
+        public static int DetermineNextColorNumber(Transform colorMenu, string colorPrefix)
+        {
+            var existingNumbers = new HashSet<int>();
+            var colorRegex = new Regex($@"^{colorPrefix}(\d+)$");
+
+            foreach (Transform child in colorMenu)
+            {
+                var match = colorRegex.Match(child.name);
+                if (match.Success && int.TryParse(match.Groups[1].Value, out int number))
+                {
+                    existingNumbers.Add(number);
+                }
+            }
+
+            // Find the smallest available number starting from 1
+            int nextNumber = 1;
+            while (existingNumbers.Contains(nextNumber))
+            {
+                nextNumber++;
+            }
+
+            return nextNumber;
         }
     }
 
