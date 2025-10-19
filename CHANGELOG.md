@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+## [0.4.1] - 2025-10-19
+
 ### Added / 追加
 
 - **MA Material Helper: Material Swap Limitation Detection**
