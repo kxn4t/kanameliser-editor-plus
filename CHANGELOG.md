@@ -12,6 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] / [未リリース]
 
+### Added / 追加
+
+- **MA Material Helper: Material Swap Limitation Detection**
+  **MA Material Helper: Material Swap制限の自動検出**
+
+  - Added automatic detection of Material Swap limitations  
+    Material Swapの制限を自動検出する機能を追加
+  - Detects when the same material in a mesh needs to be swapped to different materials in different slots  
+    同じメッシュ内の同じマテリアルを異なるスロットで別のマテリアルに変更しようとする場合を検出
+  - User can choose to continue with Material Swap or cancel to use Material Setter instead  
+    ユーザーはMaterial Swapを続行するか、キャンセルしてMaterial Setterを使用するか選択可能
+  - Cancel option uses Undo to cleanly remove all created objects  
+    キャンセルした場合はUndoを使用してすべての作成オブジェクトを削除します
+
 ### Fixed / 修正
 
 - **MA Material Helper: Fixed Parameter Name Conflicts in Multiple Color Menus**  
