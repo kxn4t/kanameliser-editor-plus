@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 using Kanameliser.Editor.MAMaterialHelper.Common;
@@ -48,7 +47,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
 
                 var createdVariations = new List<GameObject>();
                 int totalSuccessfulMatches = 0;
-                int startingColorNumber = DetermineNextColorNumber(colorMenu);
+                int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
+                string uniqueParameterName = ModularAvatarIntegration.DetermineUniqueParameterName(targetRoot, MENU_ITEM_PARAMETER);
 
                 // Create color variations for each group
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
@@ -57,7 +57,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                     int colorNumber = startingColorNumber + groupIndex;
                     string colorName = $"{COLOR_PREFIX}{colorNumber}";
 
-                    var colorVariation = CreateColorVariation(colorMenu, colorName, colorNumber, targetRoot.name);
+                    var colorVariation = CreateColorVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
                     createdVariations.Add(colorVariation);
 
                     // Create material setters for this group
@@ -166,7 +166,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
         /// <summary>
         /// Creates a color variation GameObject with components
         /// </summary>
-        private static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName)
+        private static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName, string parameterName)
         {
 #if MODULAR_AVATAR_INSTALLED
             var colorVariation = new GameObject(name);
@@ -175,39 +175,12 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
             Undo.RegisterCreatedObjectUndo(colorVariation, "Create Color Variation");
 
             var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
-            ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName, MENU_ITEM_PARAMETER);
+            ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName, parameterName);
 
             return colorVariation;
 #else
             throw new InvalidOperationException("Modular Avatar is not installed");
 #endif
-        }
-
-        /// <summary>
-        /// Determines the next available color number
-        /// </summary>
-        private static int DetermineNextColorNumber(Transform colorMenu)
-        {
-            var existingNumbers = new HashSet<int>();
-            var colorRegex = new Regex($@"^{COLOR_PREFIX}(\d+)$");
-
-            foreach (Transform child in colorMenu)
-            {
-                var match = colorRegex.Match(child.name);
-                if (match.Success && int.TryParse(match.Groups[1].Value, out int number))
-                {
-                    existingNumbers.Add(number);
-                }
-            }
-
-            // Find the smallest available number starting from 1
-            int nextNumber = 1;
-            while (existingNumbers.Contains(nextNumber))
-            {
-                nextNumber++;
-            }
-
-            return nextNumber;
         }
 
         /// <summary>

@@ -17,6 +17,58 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
     /// </summary>
     public static class ModularAvatarIntegration
     {
+        #region Parameter Management
+
+        /// <summary>
+        /// Determines a unique parameter name for menu items in the avatar
+        /// </summary>
+        /// <param name="targetRoot">The target GameObject (will traverse up to find the actual avatar root)</param>
+        /// <param name="baseParameterName">The base parameter name</param>
+        /// <returns>A unique parameter name that is not already in use</returns>
+        public static string DetermineUniqueParameterName(GameObject targetRoot, string baseParameterName)
+        {
+#if MODULAR_AVATAR_INSTALLED
+            // Find the actual avatar root by traversing up the hierarchy
+            Transform current = targetRoot.transform;
+            while (current.parent != null)
+            {
+                current = current.parent;
+            }
+            GameObject avatarRoot = current.gameObject;
+
+            var existingParameters = new HashSet<string>();
+
+            // Search all ModularAvatarMenuItem components in the avatar hierarchy
+            var menuItems = avatarRoot.GetComponentsInChildren<ModularAvatarMenuItem>(true);
+            foreach (var item in menuItems)
+            {
+                if (!string.IsNullOrEmpty(item.PortableControl.Parameter))
+                {
+                    existingParameters.Add(item.PortableControl.Parameter);
+                }
+            }
+
+            // If base name is not in use, return it
+            if (!existingParameters.Contains(baseParameterName))
+            {
+                return baseParameterName;
+            }
+
+            // Otherwise, append a number to make it unique
+            int counter = 2;
+            while (existingParameters.Contains($"{baseParameterName}{counter}"))
+            {
+                counter++;
+            }
+
+            return $"{baseParameterName}{counter}";
+#else
+            return baseParameterName;
+#endif
+        }
+
+        #endregion
+
         #region Detection & Availability
 
 #if MODULAR_AVATAR_INSTALLED
@@ -122,7 +174,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         /// <summary>
         /// Creates a color variation GameObject with Material Swap components
         /// </summary>
-        public static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName)
+        public static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName, string parameterName)
         {
             var colorVariation = new GameObject(name);
             colorVariation.transform.SetParent(parent, false);
@@ -135,7 +187,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
 
             // Add Menu Item component
             var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
-            ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName, "KEP_MaterialSwap");
+            ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName, parameterName);
 
             return colorVariation;
         }
@@ -188,7 +240,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             throw new InvalidOperationException("Modular Avatar is not available");
         }
 
-        public static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName)
+        public static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName, string parameterName)
         {
             throw new InvalidOperationException("Modular Avatar is not available");
         }
