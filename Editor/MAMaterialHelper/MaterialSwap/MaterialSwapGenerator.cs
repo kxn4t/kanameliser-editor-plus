@@ -49,6 +49,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 int totalSuccessfulMatches = 0;
                 int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
                 string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
+                string limitationError = null;
 
                 // Create color variations for each group
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
@@ -61,7 +62,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     createdVariations.Add(colorVariation);
 
                     // Create material swaps for this group
-                    int groupMatches = SetupMaterialSwapsForGroup(colorVariation, targetRoot, group);
+                    int groupMatches = SetupMaterialSwapsForGroup(colorVariation, targetRoot, group, out limitationError);
+
                     totalSuccessfulMatches += groupMatches;
 
                     if (groupMatches == 0)
@@ -98,6 +100,17 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 string resultMessage = isNewMenu
                     ? $"Created Color Menu with {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})"
                     : $"Added {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})";
+
+                // If there were limitation errors, return them as warning
+                if (!string.IsNullOrEmpty(limitationError))
+                {
+                    return new GenerationResult
+                    {
+                        success = false,
+                        message = limitationError,
+                        createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
+                    };
+                }
 
                 return new GenerationResult
                 {
@@ -146,6 +159,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 int totalSuccessfulMatches = 0;
                 int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
                 string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
+                string limitationError = null;
 
                 // Create color variations for each group
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
@@ -167,7 +181,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     createdVariations.Add(colorVariation);
 
                     // Create material swaps for this group (per-object mode)
-                    int groupMatches = SetupMaterialSwapsPerObjectForGroup(colorVariation, targetRoot, group);
+                    int groupMatches = SetupMaterialSwapsPerObjectForGroup(colorVariation, targetRoot, group, out limitationError);
+
                     totalSuccessfulMatches += groupMatches;
 
                     if (groupMatches == 0)
@@ -205,6 +220,17 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     ? $"Created Color Menu with {groups.Count} color variations (per-object components)"
                     : $"Added {groups.Count} color variations with per-object components";
 
+                // If there were limitation errors, return them as warning
+                if (!string.IsNullOrEmpty(limitationError))
+                {
+                    return new GenerationResult
+                    {
+                        success = false,
+                        message = limitationError,
+                        createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
+                    };
+                }
+
                 return new GenerationResult
                 {
                     success = true,
@@ -229,15 +255,25 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
         /// </summary>
         private class MaterialSwapInfo
         {
-            private Dictionary<Material, HashSet<GameObject>> _targetMappings = new Dictionary<Material, HashSet<GameObject>>();
+            private class SlotMapping
+            {
+                public GameObject Object { get; set; }
+                public int SlotIndex { get; set; }
+            }
 
-            public void AddMapping(Material targetMaterial, GameObject sourceObject)
+            private readonly Dictionary<Material, List<SlotMapping>> _targetMappings = new();
+
+            public void AddMapping(Material targetMaterial, GameObject sourceObject, int slotIndex)
             {
                 if (!_targetMappings.ContainsKey(targetMaterial))
                 {
-                    _targetMappings[targetMaterial] = new HashSet<GameObject>();
+                    _targetMappings[targetMaterial] = new List<SlotMapping>();
                 }
-                _targetMappings[targetMaterial].Add(sourceObject);
+                _targetMappings[targetMaterial].Add(new SlotMapping
+                {
+                    Object = sourceObject,
+                    SlotIndex = slotIndex
+                });
             }
 
             public bool HasConflicts => _targetMappings.Count > 1;
@@ -246,18 +282,83 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
             public HashSet<GameObject> GetObjectsForTarget(Material targetMaterial)
             {
-                return _targetMappings.TryGetValue(targetMaterial, out var objects) ? objects : new HashSet<GameObject>();
+                if (_targetMappings.TryGetValue(targetMaterial, out var mappings))
+                {
+                    return new HashSet<GameObject>(mappings.Select(m => m.Object));
+                }
+                return new HashSet<GameObject>();
             }
 
             public Material GetMostCommonTarget()
             {
                 return _targetMappings.OrderByDescending(kvp => kvp.Value.Count).First().Key;
             }
+
+            /// <summary>
+            /// Checks if the same object has multiple slots with different target materials
+            /// This indicates a Material Swap limitation where the same source material
+            /// needs to be swapped to different materials in different slots
+            /// </summary>
+            public bool HasSameObjectMultipleTargets(out List<string> conflictDetails)
+            {
+                conflictDetails = new List<string>();
+
+                // Group mappings by object
+                var objectMappings = new Dictionary<GameObject, List<(Material targetMaterial, int slotIndex)>>();
+
+                foreach (var kvp in _targetMappings)
+                {
+                    var targetMaterial = kvp.Key;
+                    foreach (var mapping in kvp.Value)
+                    {
+                        if (!objectMappings.ContainsKey(mapping.Object))
+                        {
+                            objectMappings[mapping.Object] = new List<(Material, int)>();
+                        }
+                        objectMappings[mapping.Object].Add((targetMaterial, mapping.SlotIndex));
+                    }
+                }
+
+                bool hasConflict = false;
+                foreach (var kvp in objectMappings)
+                {
+                    var obj = kvp.Key;
+                    var targets = kvp.Value;
+
+                    // Check if this object has multiple different target materials
+                    var uniqueTargets = targets.Select(t => t.targetMaterial).Distinct().ToList();
+                    if (uniqueTargets.Count > 1)
+                    {
+                        hasConflict = true;
+                        var slotInfo = string.Join(", ", targets.Select(t => $"Slot{t.slotIndex}→{t.targetMaterial.name}"));
+                        conflictDetails.Add($"  - '{obj.name}': {slotInfo}");
+                    }
+                }
+
+                return hasConflict;
+            }
         }
 
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// Builds error message for Material Swap limitation
+        /// </summary>
+        private static string BuildLimitationErrorMessage(List<string> conflictDetails)
+        {
+            var errorMessage = "Material Swap Limitation Detected\n\n" +
+                               "Material Swapでは、同じメッシュ内の同じマテリアルを複数の異なるマテリアルに変更できません。\n" +
+                               "Material Swap cannot replace the same material in a mesh with multiple different materials.\n\n" +
+                               "Detected conflicts / 検出された競合:\n" +
+                               string.Join("\n", conflictDetails) +
+                               "\n\n" +
+                               "解決方法 / Solution:\n" +
+                               "代わりに「Create Material Setter」を使用してください。\n" +
+                               "Please use 'Create Material Setter' instead.";
+            return errorMessage;
+        }
 
         /// <summary>
         /// Validates input parameters for material swap generation
@@ -306,9 +407,11 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
         /// <summary>
         /// Sets up material swaps for a specific group
+        /// Returns the number of successful matches (errorMessage will be set if limitation was detected)
         /// </summary>
-        private static int SetupMaterialSwapsForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group)
+        private static int SetupMaterialSwapsForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group, out string errorMessage)
         {
+            errorMessage = null;
             var materialSwapData = new Dictionary<Material, MaterialSwapInfo>();
             int totalMatchCount = 0;
 
@@ -347,23 +450,47 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                             materialSwapData[fromMaterial] = new MaterialSwapInfo();
                         }
 
-                        materialSwapData[fromMaterial].AddMapping(toMaterial, matchedTransform.gameObject);
+                        materialSwapData[fromMaterial].AddMapping(toMaterial, matchedTransform.gameObject, i);
                         totalMatchCount++;
                     }
                 }
             }
 
             // Process grouped material swaps and handle conflicts
-            ProcessMaterialSwapGroups(colorVariation, targetRoot, materialSwapData);
+            ProcessMaterialSwapGroups(colorVariation, targetRoot, materialSwapData, out errorMessage);
 
             return totalMatchCount;
         }
 
         /// <summary>
         /// Processes grouped material swaps and handles conflicts
+        /// Returns error message if Material Swap limitation was detected, null otherwise
         /// </summary>
-        private static void ProcessMaterialSwapGroups(GameObject colorVariation, GameObject targetRoot, Dictionary<Material, MaterialSwapInfo> materialSwapData)
+        private static void ProcessMaterialSwapGroups(GameObject colorVariation, GameObject targetRoot, Dictionary<Material, MaterialSwapInfo> materialSwapData, out string errorMessage)
         {
+            errorMessage = null;
+
+            // First, check for Material Swap limitations
+            var limitationErrors = new List<string>();
+            foreach (var kvp in materialSwapData)
+            {
+                var fromMaterial = kvp.Key;
+                var swapInfo = kvp.Value;
+
+                if (swapInfo.HasSameObjectMultipleTargets(out var conflictDetails))
+                {
+                    limitationErrors.Add($"\nMaterial '{fromMaterial.name}' has the following conflicts:");
+                    limitationErrors.AddRange(conflictDetails);
+                }
+            }
+
+            // If limitations detected, build error message but continue processing
+            if (limitationErrors.Count > 0)
+            {
+                errorMessage = BuildLimitationErrorMessage(limitationErrors);
+                Debug.LogWarning($"[MA Material Helper] {errorMessage}");
+            }
+
             var mainSwaps = new List<(Material from, Material to)>();
 
             foreach (var kvp in materialSwapData)
@@ -418,10 +545,13 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
         /// <summary>
         /// Sets up material swaps with individual components per object for a specific group
+        /// Returns the number of successful matches (errorMessage will be set if limitation was detected)
         /// </summary>
-        private static int SetupMaterialSwapsPerObjectForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group)
+        private static int SetupMaterialSwapsPerObjectForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group, out string errorMessage)
         {
+            errorMessage = null;
             int totalMatchCount = 0;
+            var limitationErrors = new List<string>();
 
             // Process each material setup in the group
             foreach (var sourceSetup in group)
@@ -446,15 +576,43 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 var currentMaterials = renderer.sharedMaterials;
                 int maxSlots = Mathf.Min(currentMaterials.Length, sourceSetup.materials.Length);
 
+                // Track material mappings for this object to detect conflicts
+                var materialMappings = new Dictionary<Material, List<(int slotIndex, Material targetMaterial)>>();
+
                 for (int i = 0; i < maxSlots; i++)
                 {
                     if (currentMaterials[i] != null && sourceSetup.materials[i] != null)
                     {
-                        objectSwaps.Add((currentMaterials[i], sourceSetup.materials[i]));
+                        var fromMaterial = currentMaterials[i];
+                        var toMaterial = sourceSetup.materials[i];
+
+                        objectSwaps.Add((fromMaterial, toMaterial));
+
+                        // Track this mapping
+                        if (!materialMappings.ContainsKey(fromMaterial))
+                        {
+                            materialMappings[fromMaterial] = new List<(int, Material)>();
+                        }
+                        materialMappings[fromMaterial].Add((i, toMaterial));
                     }
                 }
 
-                // Only create component if there are valid swaps
+                // Check for Material Swap limitations in this object
+                foreach (var kvp in materialMappings)
+                {
+                    var fromMaterial = kvp.Key;
+                    var mappings = kvp.Value;
+
+                    // Check if same material maps to different targets
+                    var uniqueTargets = mappings.Select(m => m.targetMaterial).Distinct().ToList();
+                    if (uniqueTargets.Count > 1)
+                    {
+                        var slotInfo = string.Join(", ", mappings.Select(m => $"Slot{m.slotIndex}→{m.targetMaterial.name}"));
+                        limitationErrors.Add($"  - '{matchedTransform.name}': Material '{fromMaterial.name}' → {slotInfo}");
+                    }
+                }
+
+                // Create component if there are valid swaps
                 if (objectSwaps.Count > 0)
                 {
                     ModularAvatarIntegration.AddMaterialSwapComponentToObject(
@@ -464,6 +622,13 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     );
                     totalMatchCount += objectSwaps.Count;
                 }
+            }
+
+            // If limitations detected, build error message but continue
+            if (limitationErrors.Count > 0)
+            {
+                errorMessage = BuildLimitationErrorMessage(limitationErrors);
+                Debug.LogWarning($"[MA Material Helper] {errorMessage}");
             }
 
             return totalMatchCount;

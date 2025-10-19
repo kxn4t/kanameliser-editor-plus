@@ -125,7 +125,11 @@ namespace Kanameliser.Editor.MAMaterialHelper
                 }
                 else
                 {
-                    MAMaterialHelperUtils.ShowWarningDialog(result.message);
+                    if (!MAMaterialHelperUtils.ShowWarningDialog(result.message))
+                    {
+                        // User clicked Cancel - undo the creation
+                        Undo.PerformUndo();
+                    }
                 }
             }, "create material swap");
         }
@@ -152,7 +156,11 @@ namespace Kanameliser.Editor.MAMaterialHelper
                 }
                 else
                 {
-                    MAMaterialHelperUtils.ShowWarningDialog(result.message);
+                    if (!MAMaterialHelperUtils.ShowWarningDialog(result.message))
+                    {
+                        // User clicked Cancel - undo the creation
+                        Undo.PerformUndo();
+                    }
                 }
             }, "create material swap per object");
         }
