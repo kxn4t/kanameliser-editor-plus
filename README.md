@@ -1,8 +1,8 @@
 # Kanameliser Editor Plus
 
-A small set of useful Unity & VRChat editor extensions.
+A set of useful editor extensions for Unity and VRChat.
 
-## 🚩 Installation
+## Installation
 
 ### Via VRChat Creator Companion (Recommended)
 
@@ -12,228 +12,167 @@ A small set of useful Unity & VRChat editor extensions.
 
 ### Manual Installation
 
-If you prefer manual installation:
-
 1. Download the latest release from [GitHub Releases](https://github.com/kxn4t/kanameliser-editor-plus/releases)
 2. Import the package into your Unity project
 
-## 📌 Features
+## Features
 
-### 🔍 Mesh Info Display
+### Mesh Info Display
 
-- Displays detailed mesh information for selected objects and their children
-- Shows polygon count, material count, material slots, and mesh count
-- Appears in the top-left corner of the Scene view
-- Toggle visibility via `Tools > Kanameliser Editor Plus > Show Mesh Info Display`
+Displays mesh information for selected objects and their children in the top-left corner of the Scene view.
+You can check polygon count, material count, material slot count, and mesh count.
 
-#### 🔮 NDMF Preview Support
+#### NDMF Preview Support
 
-- **Build-time Statistics**: Shows preview mesh data when NDMF preview is active
-- **Optimization Visualization**: Displays both original and optimized mesh counts side-by-side with visual diff indicators
-- **Preview Detection**: Automatically detects NDMF proxy meshes and shows clear green dot indicator during preview
+When NDMF preview is active, you can check optimization results from AAO/TTT/Meshia and adjust accordingly.
 
-### 🔄 Toggle Objects Active
+- Displays original and optimized mesh counts side-by-side with diff indicators
+- Automatically detects NDMF proxy meshes and shows a green dot to indicate preview state
 
-- Quickly toggle between GameObject active state and EditorOnly tag
-- Shortcuts: `Ctrl+G`
+Toggle: `Tools > Kanameliser Editor Plus > Show Mesh Info Display`
 
-### 🧩 Component Manager
+### Toggle Objects Active
 
-- List all components on selected objects and their children
+Quickly toggle between GameObject active state and EditorOnly tag.
+
+Shortcut: `Ctrl+G`
+
+### Component Manager
+
+Lists all components on selected objects and their children.
+
 - Search for specific objects or component types
 - Instantly see which components are attached to which objects
 - Select multiple objects simultaneously for batch editing
-- Easily remove unwanted components
-- Access via `Tools > Kanameliser Editor Plus > Component Manager`
+- Easily remove unwanted components in bulk
 
-### 🎨 Material Copier
-
-- Copy & paste materials from multiple selected GameObjects to GameObjects with matching names
-- Perfect for instant FBX setup and outfit color variations
-- Supports both MeshRenderer and SkinnedMeshRenderer components
-- Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy/Paste Materials`
-
-### 🔄 MA Material Helper
-
-Automatic color change menu creation tools using Modular Avatar's material control components.
-
-#### Material Setter (Recommended for most use cases)
-- Automatically create color change menus using Modular Avatar's Material Setter components
-- Generate menus that directly set materials from color variation prefabs
-- Operates differently from Material Swap by directly replacing materials on each material slot of meshes
-  - Allows changing from the same source material to different materials within the same mesh by specifying per-slot
-  - More accurately reproduces the material layout of the source prefab compared to Material Swap
-- Two creation modes:
-  - **Standard Mode**: Only creates setters for material slots that differ from the current materials
-  - **All Slots Mode**: Creates setters for all material slots regardless of whether they differ from current materials
-
-#### Material Swap
-- Automatically create color change menus using Modular Avatar's Material Swap components
-- Generate menu items from color variation prefabs with just a few clicks
-- Support for multiple color variation prefabs to create menus simultaneously
-- Two creation modes: unified and per-object Material Swap components
-
-**Common Specifications:**
-- Requires [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher to be installed
-- Access via right-click context menu in Hierarchy: `Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
-
-### 🎯 AO Bounds Setter
-
-- Batch configuration of Anchor Override, Root Bone, and Bounds for multiple meshes
-- Access via `Tools > Kanameliser Editor Plus > AO Bounds Setter`
-
-### 😀 Missing BlendShape Inserter
-
-- Automatically detects and fixes missing BlendShape keys across animation files
-- Prevents facial expression glitches and broken animations
-- Supports batch processing of multiple animation files
-- Access via `Tools > Kanameliser Editor Plus > Missing BlendShape Inserter`
-- This functionality is also integrated with [Zatools](https://zatools.kb10uy.dev/) for expanded workflow options
-- For more detailed information, please refer to [Zatools/missing-blendshape-inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/)
-
-## 🔧 Usage Tips
+Access: `Tools > Kanameliser Editor Plus > Component Manager`
 
 ### Material Copier
 
-Perfect for managing materials across multiple similar objects:
+Copy & paste materials from multiple selected GameObjects to GameObjects with matching names.
 
-1. **Copy**: Select source GameObjects (e.g., Avatar_A, Avatar_B) → Right-click → `Copy Materials`
-2. **Paste**: Select target GameObjects (e.g., Avatar_C, Avatar_D) → Right-click → `Paste Materials`
-3. **Matching**: Materials are applied to objects with matching names (e.g., "Head" → "Head", "Body" → "body")
+- Instant FBX setup and outfit color variation support
+- Supports both MeshRenderer and SkinnedMeshRenderer
 
-Common use cases:
-- Copying outfit materials between different avatar variants
+#### Usage
+
+1. Select source GameObjects (multiple selection supported) → Right-click → `Copy Materials`
+2. Select target GameObjects → Right-click → `Paste Materials`
+
+Materials are applied to objects with matching names (e.g., `Head` → `Head`, `Body` → `body`).
+
+#### Matching Specifications
+
+Source and target objects are automatically matched in the following priority order. Only objects with a Renderer are considered.
+
+1. **Exact relative path match (excluding root name)** — `Outfit/Jacket` → `Outfit/Jacket`
+2. **Name match at the same hierarchy depth** — Matches objects with the same name and depth, even if parent names differ
+   - Example: `Outfit_A/Outer/Accessories/Earing` (depth 3) → `Outfit_B/Inner/Accessories/Earing` (depth 3)
+3. **Name match (any depth)** — When multiple candidates exist, the closest depth is preferred
+   - Example: `Outfit/Outer/Jacket` (depth 3) → `Jacket` (depth 1)
+4. **Case-insensitive name match** — `earing` → `Earing`
+
+When multiple candidates remain, parent names are matched from bottom to top to narrow down the results. If still ambiguous, the Levenshtein distance of root names is used for final selection.
+
+This matching specification is also shared by MA Material Helper.
+
+Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy/Paste Materials`
 
 ### MA Material Helper
 
-Perfect for creating avatar color change menus from existing color variations:
+Automatically generates color change menus using Modular Avatar's material control components. Create color change menus from color variation prefabs in just a few clicks, with support for simultaneous generation from multiple prefabs.
 
-1. **Copy**: Select color variation prefabs → Right-click → `Copy Material Setup`
-   Tips: Works with multiple color variation prefabs selected simultaneously
-2. **Create**: Select target outfit → Right-click → Choose one of the following:
-   - `Create Material Setter` - Standard Material Setter mode (recommended for most use cases)
-   - `[Optional] Create Material Setter (All Slots)` - Material Setter mode (all slots)
-   - `Create Material Swap` - Standard Material Swap mode
-   - `[Optional] Create Material Swap (Per Object)` - Per-object Material Swap mode
-3. **Menu Generation**: Automatically creates "Color Menu" with numbered color variations (Color1, Color2, etc.)
+Requirement: [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher
 
-**Material Setter Modes:**
-- **Standard Mode** (recommended): Only sets material slots that differ from current materials
-- **All Slots Mode**: Sets all material slots regardless of whether they differ from current materials
-  - May affect performance, recommended only when you need to customize manually
-- Directly replaces materials by creating Material Setter components for each object
+#### Usage
 
-**Material Swap Modes:**
-- **Standard Mode**: Creates unified Material Swap components
-- **Per-Object Mode**: Creates individual Material Swap components for each object (useful for complex setups)
+1. Select color variation prefabs → Right-click → `Copy Material Setup` (multiple selection supported)
+2. Select target outfit → Right-click → Choose one of the following:
+   - `Create Material Setter` — Directly set materials per slot (recommended)
+   - `[Optional] Create Material Setter (All Slots)` — Create setters for all slots (may affect performance, recommended only when you need to customize manually)
+   - `Create Material Swap` — Set materials by replacement rules
+   - `[Optional] Create Material Swap (Per Object)` — Create individual swaps per object
 
-**Choosing Between Material Swap and Material Setter:**
+A "Color Menu" with numbered color variations (Color1, Color2, etc.) is automatically created.
 
-When deciding which mode to use, consider the following:
+#### Difference Between Material Setter and Material Swap
 
-**Use Material Swap when:**
-- All material slots within the same mesh use the same material, both before and after the change
-- Your material setup is simple
+Material Setter is recommended for most use cases.
 
-**Use Material Setter when:**
+- **Material Setter**: Sets per slot, allowing different materials to be assigned from the same source material within the same mesh
+- **Material Swap**: Replaces by material name, so the same source material always maps to the same target. Best for simple configurations
+
+#### Which Should You Choose?
+
+**Use Material Setter (most cases):**
+
 - Different slots in the same mesh use the same material but need to change to different materials
 - You want to more accurately reproduce the material layout from the source prefab
 - Material Swap produces unintended behavior
 
-**Material Swap Limitation**
+**Use Material Swap:**
+
+- All slots using the same material within a mesh should change to the same target material
+- Simple material configurations
+
+Material Swap cannot handle cases like:
+
 ```
 Mesh A:
   Slot 0: Material X → want to change to Material Y
   Slot 1: Material X → want to change to Material Z
 ```
-In this case, Material Swap can only replace "Material X" with one material, so both slots will end up with the same material.  
-Material Setter can specify per-slot, allowing each to change to different materials.
 
-**Matching Specifications:**
+Material Swap can only replace "Material X" with one material, so both slots end up with the same result. Material Setter can specify per slot, allowing each to change to a different material.
 
-The matching between source and target objects follows this priority order:
-
-1. **Priority 1**: Exact relative path match (without root name) + Renderer present
-   - Example: Source `Outfit/Jacket` → Target `Outfit/Jacket`
-   - Example: Source `Accessories/Earing/Left` → Target `Accessories/Earing/Left`
-
-2. **Priority 2**: Same hierarchy depth + exact name match + Renderer present
-   - Example: Source `Outfit_A/Outer/Accessories/Earing` (depth=3) → Target `Outfit_B/Inner/Accessories/Earing` (depth=3)
-   - Both objects are named `Earing` and at the same depth, even though parent names differ
-   - Applies hierarchy filtering if multiple candidates exist at the same depth
-
-3. **Priority 3**: Exact name match + Renderer present
-   - Example: Source `Outfit/Outer/Jacket` (depth=3) → Target `Jacket` (depth=1)
-   - Selects by closest depth if multiple `Jacket` objects exist
-   - If source is depth 3 and targets are depth 1, 2, 4: prefers depth 2 or 4 (difference=1)
-   - Applies hierarchy filtering if multiple candidates exist
-
-4. **Priority 4**: Case-insensitive name match + Renderer present
-   - Example: Source `earing` → Target `Earing`
-   - Example: Source `JACKET` → Target `Jacket`
-   - Selects by closest depth and applies hierarchy filtering
-
-**Advanced Matching:**
-
-When multiple candidates remain after priority matching:
-- **Parent hierarchy filtering**: Matches parent names from bottom to top
-  - Example: Looking for `Outfit/Outer/Jacket`
-    - Candidates: `Outfit/Outer/Jacket`, `Costume/Outer/Jacket`, `Outfit/Inner/Jacket`
-    - Filters by immediate parent: prefers candidates under `Outer` → 2 candidates remain
-    - Filters by grandparent: prefers candidates under `Outfit` → `Outfit/Outer/Jacket` selected
-- **Similarity scoring**: Uses Levenshtein distance for final selection
-  - Example: Pasting to `Outfit_C` with candidates from `Outfit_A` and `Outfit_C`
-    - Compares root names: `Outfit_C` vs `Outfit_A` and `Outfit_C` vs `Outfit_C`
-    - Prefers `Outfit_C` source (distance=0) over `Outfit_A` source (distance=2)
-
-Common use cases:
-- Creating color change menus for avatar outfits
-- Batch creation of color change menus from existing color variation prefabs
+Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
 
 ### AO Bounds Setter
 
-Perfect for batch configuration during outfit creation or avatar setup:
+Batch configure Anchor Override, Root Bone, and Bounds for multiple meshes. Useful for outfit creation and avatar setup.
 
-1. **Open Window**: `Tools > Kanameliser Editor Plus > AO Bounds Setter`
-2. **Select Root Object**: Drag an object from the Hierarchy to the Root Object field
-3. **Configure Settings**:
+1. Drag an object from the Hierarchy to the Root Object field
+2. Configure settings:
    - **Anchor Override**: Set the object to use as the anchor point
-     - Use the dropdown to search and select from objects under the root object
    - **Root Bone** (SkinnedMeshRenderer only): Set the root bone for skinned meshes
-     - Use the dropdown to search and select from objects under the root object
    - **Bounds** (SkinnedMeshRenderer only): Configure bounds
-4. **Select Meshes**: Use checkboxes to select which meshes to apply settings to
-5. **Apply**: Click "Apply to Selected Meshes" to batch apply settings
+   - Use the dropdown search to quickly find bones/anchors under the root object
+3. Select target meshes with checkboxes and click "Apply to Selected Meshes" to batch apply
 
-**Tips:**
-- Click on object name, Anchor Override, or Root Bone labels to quickly select that object in the Hierarchy
-- Use the dropdown search function to quickly find bones/anchors
-- Settings only apply to checked meshes
+Click on object name, Anchor Override, or Root Bone labels to quickly select that object in the Hierarchy.
+
+Access: `Tools > Kanameliser Editor Plus > AO Bounds Setter`
 
 ### Missing BlendShape Inserter
 
-A tool that standardizes BlendShape targets across multiple AnimationClips. It's primarily used when:
+Automatically detects and fills in missing BlendShape keys across animation files.
+Updates all animations to operate on the same BlendShapes, ensuring smooth transitions between different expression states. Supports batch processing of multiple files.
 
-- You've modified your avatar's facial BlendShapes but kept the original animations
-- Your facial expressions break or glitch when switching between animations
+Common use cases:
+
+- You've modified your avatar's facial BlendShapes but haven't updated the expression animations
+- Facial expressions break or glitch when switching via gestures
 - You need to ensure consistent BlendShape manipulation across all animation files
 
-The tool works by updating Animation files to operate on the same BlendShapes across all animations, preventing facial distortions and ensuring smooth transitions between different expression states.
+This feature has been localized and integrated into [Zatools](https://zatools.kb10uy.dev/) by kb10uy. For details, see [Zatools/missing-blendshape-inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/).
 
-## 📋 Requirements
+Access: `Tools > Kanameliser Editor Plus > Missing BlendShape Inserter`
+
+## Requirements
 
 - Unity 2022.3.22f1 or higher
-- Optional: NDMF (Non-Destructive Modular Framework) for enhanced build preview support
-- Optional: Modular Avatar 1.13.0 or higher for Material Swap Helper feature
+- Optional: NDMF (enhanced build preview support)
+- Optional: Modular Avatar 1.13.0 or higher (required for MA Material Helper)
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Feel free to submit an Issue or Pull Request.
 
-## 📄 License
+## License
 
-MIT License - see the LICENSE file for details.
+MIT License — see the LICENSE file for details.
 
-## 👋 Contact
+## Contact
 
-If you have any questions or feedback, please open an issue on GitHub or contact me on X
+If you have any questions or feedback, please open an issue on GitHub or contact me on X.
