@@ -189,12 +189,13 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
         private static int SetupMaterialSettersForGroup(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group, bool skipUnchanged)
         {
             int totalMatchCount = 0;
+            var matchedPaths = new HashSet<string>();
 
             // Process each material setup in the group
             foreach (var sourceSetup in group)
             {
                 // Try to find matching object in target
-                var matchedTransform = ObjectMatcher.FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath, sourceSetup.hierarchyDepth, sourceSetup.rootObjectName);
+                var matchedTransform = ObjectMatcher.FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath, sourceSetup.hierarchyDepth, sourceSetup.rootObjectName, matchedPaths, sourceSetup.rendererType);
                 if (matchedTransform == null)
                 {
                     Debug.LogWarning($"[MA Material Helper] Could not find match for '{sourceSetup.objectName}'");

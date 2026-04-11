@@ -1,0 +1,8 @@
+# Auto detect text files and ensure LF in repository
+* text=auto
+
+# Unity/C# specific
+*.cs text diff=csharp
+
+# Keep these as LF even on Windows
+*.sh text eol=lf

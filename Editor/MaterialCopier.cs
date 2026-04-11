@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Kanameliser.Editor.MAMaterialHelper.Common;
 
 namespace Kanameliser.EditorPlus
 {
     /// <summary>
-    /// Material data storage for copy/paste operations
+    /// Material data storage for copy/paste operations.
     /// </summary>
     [Serializable]
     public class MaterialData
@@ -17,18 +18,22 @@ namespace Kanameliser.EditorPlus
         public int hierarchyDepth;
         public string relativePath;
         public string rootObjectName;
+        public string rendererType;
 
-        public MaterialData(string name, Material[] mats, int depth, string path, string rootName)
+        public MaterialData(string name, Material[] mats, int depth, string path, string rootName, string rendererTypeName = "")
         {
             objectName = name;
             materials = mats != null ? (Material[])mats.Clone() : new Material[0];
             hierarchyDepth = depth;
             relativePath = path;
             rootObjectName = rootName;
+            rendererType = rendererTypeName;
         }
     }
+
     /// <summary>
-    /// Material copy and paste functionality for Unity Editor
+    /// Material copy and paste functionality for Unity Editor.
+    /// Uses the same 5-tier matching algorithm as ObjectMatcher / RendererMatcher V3.
     /// </summary>
     internal class MaterialCopier
     {
@@ -119,7 +124,8 @@ namespace Kanameliser.EditorPlus
                         meshRenderer.sharedMaterials,
                         depth,
                         relativePath,
-                        rootObject.name
+                        rootObject.name,
+                        meshRenderer.GetType().Name
                     );
                     copiedMaterials.Add(materialData);
                     collected++;
@@ -135,7 +141,8 @@ namespace Kanameliser.EditorPlus
                         skinnedMeshRenderer.sharedMaterials,
                         depth,
                         relativePath,
-                        rootObject.name
+                        rootObject.name,
+                        skinnedMeshRenderer.GetType().Name
                     );
                     copiedMaterials.Add(materialData);
                     collected++;
@@ -173,7 +180,9 @@ namespace Kanameliser.EditorPlus
                 if (renderer != null)
                 {
                     // Find and apply matching material data
-                    var matchingData = FindMatchingMaterialData(obj, rootObject, depth);
+                    string targetRelativePath = GetRelativePath(obj, rootObject);
+                    string targetRendererType = renderer.GetType().Name;
+                    var matchingData = FindMatchingMaterialData(obj.name, targetRelativePath, depth, targetRendererType, rootObject.name);
                     if (matchingData != null)
                     {
                         applied += ApplyMaterialsToObject(obj, matchingData);
@@ -198,107 +207,141 @@ namespace Kanameliser.EditorPlus
             return applied;
         }
 
-        // Find matching material data with multi-stage matching prioritizing relative path
-        private static MaterialData FindMatchingMaterialData(GameObject targetObj, GameObject rootObject, int depth)
+        /// <summary>
+        /// Find matching material data using the same 5-tier algorithm as ObjectMatcher V3.
+        /// Direction is reversed: given a target object, find the best source MaterialData.
+        /// P1: Exact path + name, P2: Same depth + name, P3: Name (any depth),
+        /// P4: Case-insensitive name, P5: Similar name (scored).
+        /// All tiers apply rendererType filtering when non-empty.
+        /// </summary>
+        private static MaterialData FindMatchingMaterialData(string targetName, string targetRelativePath, int targetDepth, string targetRendererType = "", string targetRootName = "")
         {
-            if (targetObj == null || copiedMaterials == null) return null;
+            if (copiedMaterials == null || copiedMaterials.Count == 0) return null;
 
-            string targetName = targetObj.name;
-            string targetRelativePath = GetRelativePath(targetObj, rootObject);
+            // Apply renderer type filter to base candidates
+            var baseCandidates = copiedMaterials.Where(d =>
+                string.IsNullOrEmpty(targetRendererType) ||
+                string.IsNullOrEmpty(d.rendererType) ||
+                d.rendererType == targetRendererType).ToList();
 
-            // Priority 1: Exact relative path AND object name match
-            var exactPathMatches = copiedMaterials.Where(data =>
-                data.relativePath == targetRelativePath &&
-                data.objectName == targetName).ToList();
-            if (exactPathMatches.Count > 0)
+            // P1: Exact relative path AND exact name match
+            var p1 = baseCandidates.Where(d =>
+                d.relativePath == targetRelativePath && d.objectName == targetName).ToList();
+            if (p1.Count > 0)
+                return SelectBestSource(p1, targetRelativePath, targetDepth, targetRootName);
+
+            // P2: Same depth + exact name match
+            var p2 = baseCandidates.Where(d =>
+                d.hierarchyDepth == targetDepth && d.objectName == targetName).ToList();
+            if (p2.Count > 0)
+                return SelectBestSource(p2, targetRelativePath, targetDepth, targetRootName);
+
+            // P3: Exact name match (any depth)
+            var p3 = baseCandidates.Where(d => d.objectName == targetName).ToList();
+            if (p3.Count > 0)
+                return SelectBestSource(p3, targetRelativePath, targetDepth, targetRootName);
+
+            // P4: Case-insensitive name match
+            var p4 = baseCandidates.Where(d =>
+                string.Equals(d.objectName, targetName, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (p4.Count > 0)
+                return SelectBestSource(p4, targetRelativePath, targetDepth, targetRootName);
+
+            // P5: Similar name match (scored)
+            // Eligibility: NormalizeName match OR HasCommonBaseName(minToken=3)
+            string normalizedTarget = ObjectMatcher.NormalizeName(targetName);
+            var p5 = baseCandidates.Where(d =>
             {
-                // If multiple matches, prefer those with matching rootObjectName
-                if (exactPathMatches.Count > 1)
-                {
-                    var rootNameMatches = exactPathMatches.Where(data =>
-                        data.rootObjectName == rootObject.name).ToList();
-                    if (rootNameMatches.Count > 0)
-                    {
-                        return rootNameMatches.First();
-                    }
-                }
-                return exactPathMatches.First();
-            }
+                string normalizedSource = ObjectMatcher.NormalizeName(d.objectName);
+                return string.Equals(normalizedTarget, normalizedSource, StringComparison.OrdinalIgnoreCase) ||
+                       ObjectMatcher.HasCommonBaseName(d.objectName, targetName, 3);
+            }).ToList();
+            if (p5.Count > 0)
+                return SelectBestFuzzySource(p5, targetName, targetRelativePath, targetDepth, targetRootName);
 
-            // Priority 2: Same depth + exact name match
-            var sameDepthExactNameMatches = copiedMaterials.Where(data =>
-                data.hierarchyDepth == depth && data.objectName == targetName).ToList();
-            if (sameDepthExactNameMatches.Count > 0)
+            // P5 cross-type fallback: relax rendererType filter
+            // Catches cross-renderer-type matches (e.g. MeshRenderer ↔ SkinnedMeshRenderer)
+            // when source and target use different renderer types for the same logical mesh.
+            if (!string.IsNullOrEmpty(targetRendererType))
             {
-                // Filter by parent hierarchy if multiple matches
-                if (sameDepthExactNameMatches.Count > 1)
-                {
-                    sameDepthExactNameMatches = FilterByParentHierarchy(
-                        sameDepthExactNameMatches, targetRelativePath, rootObject);
-                }
-                return GetBestDepthMatch(sameDepthExactNameMatches, depth, rootObject, targetRelativePath);
-            }
+                var crossTypeCandidates = copiedMaterials.Where(d =>
+                    !string.IsNullOrEmpty(d.rendererType) &&
+                    d.rendererType != targetRendererType).ToList();
 
-            // Priority 3: Exact name match (any depth, closest depth preferred)
-            var exactNameMatches = copiedMaterials.Where(data => data.objectName == targetName).ToList();
-            if (exactNameMatches.Count > 0)
-            {
-                // Filter by parent hierarchy if multiple matches
-                if (exactNameMatches.Count > 1)
+                var p5CrossType = crossTypeCandidates.Where(d =>
                 {
-                    exactNameMatches = FilterByParentHierarchy(
-                        exactNameMatches, targetRelativePath, rootObject);
-                }
-                return GetBestDepthMatch(exactNameMatches, depth, rootObject, targetRelativePath);
-            }
-
-            // Priority 4: Case-insensitive name match (any depth, closest depth preferred)
-            var caseInsensitiveMatches = copiedMaterials.Where(data =>
-                string.Equals(data.objectName, targetName, StringComparison.OrdinalIgnoreCase)).ToList();
-            if (caseInsensitiveMatches.Count > 0)
-            {
-                // Filter by parent hierarchy if multiple matches
-                if (caseInsensitiveMatches.Count > 1)
-                {
-                    caseInsensitiveMatches = FilterByParentHierarchy(
-                        caseInsensitiveMatches, targetRelativePath, rootObject);
-                }
-                return GetBestDepthMatch(caseInsensitiveMatches, depth, rootObject, targetRelativePath);
+                    string normalizedSource = ObjectMatcher.NormalizeName(d.objectName);
+                    return string.Equals(normalizedTarget, normalizedSource, StringComparison.OrdinalIgnoreCase) ||
+                           ObjectMatcher.HasCommonBaseName(d.objectName, targetName, 3);
+                }).ToList();
+                if (p5CrossType.Count > 0)
+                    return SelectBestFuzzySource(p5CrossType, targetName, targetRelativePath, targetDepth, targetRootName);
             }
 
             return null;
         }
 
-        // Select best match based on hierarchy depth - prioritize same depth, then closest depth
-        private static MaterialData GetBestDepthMatch(List<MaterialData> candidates, int targetDepth, GameObject rootObject, string targetRelativePath)
+        /// <summary>
+        /// Selects the best source MaterialData for P1-P4 tiers using path segment scoring,
+        /// ancestor context, root name affinity, depth proximity, and Levenshtein distance.
+        /// Uses ObjectMatcher's shared scoring utilities.
+        /// </summary>
+        private static MaterialData SelectBestSource(List<MaterialData> candidates, string targetRelativePath, int targetDepth, string targetRootName = "")
         {
-            if (candidates == null || candidates.Count == 0) return null;
+            if (candidates.Count == 1) return candidates[0];
 
-            // Prefer same depth matches
-            var sameDepthMatches = candidates.Where(data => data.hierarchyDepth == targetDepth).ToList();
-            if (sameDepthMatches.Count > 0)
-            {
-                // If multiple with same depth, use similarity scoring
-                if (sameDepthMatches.Count > 1)
-                {
-                    return SelectBySimilarity(sameDepthMatches, rootObject, targetRelativePath);
-                }
-                return sameDepthMatches.First();
-            }
-
-            // Select by closest depth, then by similarity
-            var groupedByDepth = candidates
-                .GroupBy(data => Math.Abs(data.hierarchyDepth - targetDepth))
-                .OrderBy(g => g.Key)
+            return candidates
+                .OrderByDescending(d =>
+                    ObjectMatcher.PathSegmentScore(targetRelativePath, d.relativePath) +
+                    ObjectMatcher.AncestorContextScore(d.rootObjectName, targetRelativePath) +
+                    RootNameBonus(d.rootObjectName, targetRootName))
+                .ThenBy(d => Math.Abs(d.hierarchyDepth - targetDepth))
+                .ThenBy(d => ObjectMatcher.LevenshteinDistance(targetRelativePath ?? "", d.relativePath ?? ""))
                 .First();
+        }
 
-            var closestDepthCandidates = groupedByDepth.ToList();
-            if (closestDepthCandidates.Count > 1)
-            {
-                return SelectBySimilarity(closestDepthCandidates, rootObject, targetRelativePath);
-            }
+        /// <summary>
+        /// Selects the best source MaterialData for P5 fuzzy tier using combined name + path scoring.
+        /// Score: NameScore(norm=100, fuzzy=60) + PathSegmentScore + AncestorContextScore + RootNameBonus.
+        /// Tiebreakers: highest score, then depth proximity, then Levenshtein distance.
+        /// </summary>
+        private static MaterialData SelectBestFuzzySource(List<MaterialData> candidates, string targetName, string targetRelativePath, int targetDepth, string targetRootName = "")
+        {
+            if (candidates.Count == 1) return candidates[0];
 
-            return closestDepthCandidates.First();
+            string normalizedTarget = ObjectMatcher.NormalizeName(targetName);
+
+            return candidates
+                .OrderByDescending(d =>
+                {
+                    string normalizedSource = ObjectMatcher.NormalizeName(d.objectName);
+                    float nameScore = string.Equals(normalizedTarget, normalizedSource, StringComparison.OrdinalIgnoreCase)
+                        ? 100f
+                        : 60f;
+                    return nameScore +
+                           ObjectMatcher.PathSegmentScore(targetRelativePath, d.relativePath) +
+                           ObjectMatcher.AncestorContextScore(d.rootObjectName, targetRelativePath) +
+                           RootNameBonus(d.rootObjectName, targetRootName);
+                })
+                .ThenBy(d => Math.Abs(d.hierarchyDepth - targetDepth))
+                .ThenBy(d => ObjectMatcher.LevenshteinDistance(targetRelativePath ?? "", d.relativePath ?? ""))
+                .First();
+        }
+
+        /// <summary>
+        /// Bonus score when source root name matches the paste target root name.
+        /// Disambiguates multi-root copy/paste scenarios where AncestorContextScore
+        /// cannot help (relative paths do not contain the root name itself).
+        /// </summary>
+        private static float RootNameBonus(string sourceRootName, string targetRootName)
+        {
+            if (string.IsNullOrEmpty(sourceRootName) || string.IsNullOrEmpty(targetRootName))
+                return 0f;
+            if (sourceRootName == targetRootName)
+                return 30f;
+            if (ObjectMatcher.HasCommonBaseName(sourceRootName, targetRootName, 1))
+                return 20f;
+            return 0f;
         }
 
         // Apply materials to object, handling array size differences by pasting available slots
@@ -358,7 +401,7 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// Get relative path from root object to target object
+        /// Get relative path from root object to target object.
         /// </summary>
         private static string GetRelativePath(GameObject obj, GameObject rootObject)
         {
@@ -375,132 +418,6 @@ namespace Kanameliser.EditorPlus
             }
 
             return path;
-        }
-
-        /// <summary>
-        /// Calculates Levenshtein distance (edit distance) between two strings
-        /// </summary>
-        private static int LevenshteinDistance(string s1, string s2)
-        {
-            if (string.IsNullOrEmpty(s1)) return string.IsNullOrEmpty(s2) ? 0 : s2.Length;
-            if (string.IsNullOrEmpty(s2)) return s1.Length;
-
-            int[,] d = new int[s1.Length + 1, s2.Length + 1];
-
-            for (int i = 0; i <= s1.Length; i++) d[i, 0] = i;
-            for (int j = 0; j <= s2.Length; j++) d[0, j] = j;
-
-            for (int i = 1; i <= s1.Length; i++)
-            {
-                for (int j = 1; j <= s2.Length; j++)
-                {
-                    int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
-                    d[i, j] = Math.Min(Math.Min(
-                        d[i - 1, j] + 1,      // deletion
-                        d[i, j - 1] + 1),     // insertion
-                        d[i - 1, j - 1] + cost); // substitution
-                }
-            }
-
-            return d[s1.Length, s2.Length];
-        }
-
-        /// <summary>
-        /// Selects the best candidate from multiple matches based on name similarity
-        /// </summary>
-        private static MaterialData SelectBySimilarity(List<MaterialData> candidates, GameObject rootObject, string targetRelativePath)
-        {
-            if (candidates == null || candidates.Count == 0) return null;
-            if (candidates.Count == 1) return candidates.First();
-
-            return candidates
-                .OrderBy(data => LevenshteinDistance(data.rootObjectName, rootObject.name))  // rootObject name similarity
-                .ThenBy(data => LevenshteinDistance(data.relativePath, targetRelativePath))  // path similarity
-                .First();
-        }
-
-        /// <summary>
-        /// Filters candidates by matching parent hierarchy from bottom to top
-        /// </summary>
-        private static List<MaterialData> FilterByParentHierarchy(
-            List<MaterialData> candidates,
-            string targetRelativePath,
-            GameObject rootObject)
-        {
-            if (candidates.Count <= 1) return candidates;
-
-            string rootName = rootObject.name;
-            string[] targetParts = string.IsNullOrEmpty(targetRelativePath)
-                ? new string[0]
-                : targetRelativePath.Split('/');
-
-            // Level 0: Filter by rootObjectName first
-            var rootNameFiltered = candidates.Where(data =>
-                data.rootObjectName == rootName).ToList();
-            if (rootNameFiltered.Count > 0)
-            {
-                candidates = rootNameFiltered;
-                if (candidates.Count == 1) return candidates;
-            }
-
-            // Get maximum depth among candidates
-            int maxDepth = candidates.Max(c =>
-            {
-                if (string.IsNullOrEmpty(c.relativePath)) return 0;
-                return c.relativePath.Split('/').Length;
-            });
-
-            // Start from parent level (one level up from the object itself)
-            // We compare backwards, matching parent hierarchy
-            for (int level = 1; level < maxDepth; level++)
-            {
-                var filtered = candidates.Where(data =>
-                {
-                    string[] sourceParts = string.IsNullOrEmpty(data.relativePath)
-                        ? new string[0]
-                        : data.relativePath.Split('/');
-
-                    // Check if source has enough depth for this level
-                    if (sourceParts.Length <= level) return false;
-
-                    // Get parent name at this level (counting from the end)
-                    // level=1: immediate parent, level=2: grandparent, etc.
-                    int sourceIndex = sourceParts.Length - 1 - level;
-                    string sourceParent = sourceParts[sourceIndex];
-
-                    // For target, we need to compare with appropriate level
-                    int targetIndex = targetParts.Length - 1 - level;
-
-                    if (targetIndex >= 0)
-                    {
-                        // Target has this level in its path
-                        string targetParent = targetParts[targetIndex];
-                        return sourceParent == targetParent;
-                    }
-                    else
-                    {
-                        // Target doesn't have this level (we're beyond target's depth)
-                        // Compare with rootObject name
-                        return sourceParent == rootName;
-                    }
-                }).ToList();
-
-                // If filtering narrowed down candidates, use filtered list
-                if (filtered.Count > 0)
-                {
-                    candidates = filtered;
-
-                    // If narrowed down to one, we're done
-                    if (candidates.Count == 1) break;
-                }
-                // If filtered.Count == 0, keep the previous candidates and stop filtering
-                else
-                {
-                    break;
-                }
-            }
-
-            return candidates;
         }
     }
 }

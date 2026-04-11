@@ -12,6 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Improved
+
+- **MA Material Helper / Material Copier: Object Matching Algorithm** — Exact name matches work the same as before. When no exact match is found, the algorithm now tries score-based similar-name matching as a last resort, so color variants and numbered duplicates can be matched where possible
+  - **Color variants** — `Ribbon_blue` ↔ `Ribbon_red`, `Kutsu kuro` ↔ `Kutsu shiro`, `top-blue` ↔ `top-red`
+  - **Numbered/versioned duplicates** — `Body_01` ↔ `Body_02`, `Skirt (1)` ↔ `Skirt (2)`, `Hair.001` ↔ `Hair.002`
+  - **Same-name disambiguation** — When multiple objects share the same name (e.g., `Mesh` under `Jacket/`, `Skirt/`, `Boots/`), parent hierarchy similarity is used to match them correctly
+
+---
+
+### 改善
+
+- **MA Material Helper / Material Copier: オブジェクトマッチングアルゴリズム** — 名前が完全一致するものは従来通りにマッチング。完全一致が見つからない場合に、最終手段としてスコアリングに基づく類似名マッチングを試みるようになり、色違いや番号違いもなるべく自動的に対応付けされるように改善しました
+  - **色違い** — `Ribbon_blue` ↔ `Ribbon_red`、`Kutsu kuro` ↔ `Kutsu shiro`、`top-blue` ↔ `top-red`
+  - **番号・バージョン違い** — `Body_01` ↔ `Body_02`、`Skirt (1)` ↔ `Skirt (2)`、`Hair.001` ↔ `Hair.002`
+  - **同名オブジェクトの振り分け** — `Jacket/Mesh`・`Skirt/Mesh`・`Boots/Mesh`のように同じ名前のオブジェクトが複数ある場合、親の階層構造の類似度で正しく対応付けるように改善
+
 ## [0.4.1] - 2025-10-19
 
 ### Added

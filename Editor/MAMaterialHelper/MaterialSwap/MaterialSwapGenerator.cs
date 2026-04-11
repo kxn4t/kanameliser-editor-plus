@@ -414,12 +414,13 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
             errorMessage = null;
             var materialSwapData = new Dictionary<Material, MaterialSwapInfo>();
             int totalMatchCount = 0;
+            var matchedPaths = new HashSet<string>();
 
             // Process each material setup in the group
             foreach (var sourceSetup in group)
             {
                 // Try to find matching object in target
-                var matchedTransform = ObjectMatcher.FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath, sourceSetup.hierarchyDepth, sourceSetup.rootObjectName);
+                var matchedTransform = ObjectMatcher.FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath, sourceSetup.hierarchyDepth, sourceSetup.rootObjectName, matchedPaths, sourceSetup.rendererType);
                 if (matchedTransform == null)
                 {
                     Debug.LogWarning($"[MA Material Helper] Could not find match for '{sourceSetup.objectName}'");
@@ -552,12 +553,13 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
             errorMessage = null;
             int totalMatchCount = 0;
             var limitationErrors = new List<string>();
+            var matchedPaths = new HashSet<string>();
 
             // Process each material setup in the group
             foreach (var sourceSetup in group)
             {
                 // Try to find matching object in target
-                var matchedTransform = ObjectMatcher.FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath, sourceSetup.hierarchyDepth, sourceSetup.rootObjectName);
+                var matchedTransform = ObjectMatcher.FindMatchingObject(targetRoot.transform, sourceSetup.objectName, sourceSetup.relativePath, sourceSetup.hierarchyDepth, sourceSetup.rootObjectName, matchedPaths, sourceSetup.rendererType);
                 if (matchedTransform == null)
                 {
                     Debug.LogWarning($"[MA Material Helper] Could not find match for '{sourceSetup.objectName}'");

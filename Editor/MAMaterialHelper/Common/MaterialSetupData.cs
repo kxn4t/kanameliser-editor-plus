@@ -16,14 +16,16 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         public int[] materialSlots;
         public int hierarchyDepth;
         public string rootObjectName;
+        public string rendererType;
 
         public MaterialSetupData()
         {
             materials = new Material[0];
             materialSlots = new int[0];
+            rendererType = "";
         }
 
-        public MaterialSetupData(string objectName, string relativePath, Material[] materials, int depth = 0, string rootName = "")
+        public MaterialSetupData(string objectName, string relativePath, Material[] materials, int depth = 0, string rootName = "", string rendererType = "")
         {
             this.objectName = objectName;
             this.relativePath = relativePath;
@@ -31,6 +33,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             this.materialSlots = new int[this.materials.Length];
             this.hierarchyDepth = depth;
             this.rootObjectName = rootName;
+            this.rendererType = rendererType ?? "";
             for (int i = 0; i < this.materials.Length; i++)
             {
                 this.materialSlots[i] = i;
