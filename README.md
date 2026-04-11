@@ -72,8 +72,10 @@ Source and target objects are automatically matched in the following priority or
 3. **Name match (any depth)** — When multiple candidates exist, the closest depth is preferred
    - Example: `Outfit/Outer/Jacket` (depth 3) → `Jacket` (depth 1)
 4. **Case-insensitive name match** — `earing` → `Earing`
+5. **Similar name match** — Names matching after structural normalization (e.g., `Body_01` ≈ `Body_02`) or sharing a common base name (e.g., `Ribbon_blue` ≈ `Ribbon_red`), ranked by a composite score
+   - Example: `Ribbon_blue` → `Ribbon_red`, `Hair.001` → `Hair.002`
 
-When multiple candidates remain, parent names are matched from bottom to top to narrow down the results. If still ambiguous, the Levenshtein distance of root names is used for final selection.
+When multiple candidates remain at the same priority, hierarchy path similarity (comparing parent folders from the leaf upward), ancestor context matching, depth proximity, and Levenshtein distance are used for selection.
 
 This matching specification is also shared by MA Material Helper.
 

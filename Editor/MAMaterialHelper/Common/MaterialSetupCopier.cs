@@ -61,7 +61,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                         currentPath,
                         materials,
                         depth,
-                        rootObject.name
+                        rootObject.name,
+                        renderer.GetType().Name
                     );
                     materialSetups.Add(setupData);
                 }
