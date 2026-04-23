@@ -50,16 +50,17 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         /// <param name="sourceRelativePath">Relative path of the source object from its root.</param>
         /// <param name="sourceDepth">Depth of the source object in its hierarchy.</param>
         /// <param name="sourceRootName">Name of the source root object for ancestor context scoring.</param>
-        /// <param name="matchedPaths">
-        /// Optional set of already-matched target paths (relative to root).
+        /// <param name="matchedTargets">
+        /// Optional set of already-matched target Transforms.
         /// Matched targets are excluded from candidates to prevent duplicate matching.
         /// The selected match is automatically added to this set.
+        /// Transform identity is used as the key, so same-name siblings are distinguished correctly.
         /// </param>
         /// <param name="sourceRendererType">
         /// Optional renderer type name (e.g. "SkinnedMeshRenderer", "MeshRenderer").
         /// When non-empty, candidates are filtered to match this renderer type.
         /// </param>
-        public static Transform FindMatchingObject(Transform root, string objectName, string sourceRelativePath, int sourceDepth = 0, string sourceRootName = "", HashSet<string> matchedPaths = null, string sourceRendererType = "")
+        public static Transform FindMatchingObject(Transform root, string objectName, string sourceRelativePath, int sourceDepth = 0, string sourceRootName = "", HashSet<Transform> matchedTargets = null, string sourceRendererType = "")
         {
             if (root == null) return null;
 
@@ -72,17 +73,17 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 .Where(t => string.IsNullOrEmpty(sourceRendererType) ||
                             t.GetComponent<Renderer>()?.GetType().Name == sourceRendererType)
                 .Select(t => (transform: t, path: GetRelativePathFromRoot(t, root)))
-                .Where(c => matchedPaths == null || !matchedPaths.Contains(c.path))
+                .Where(c => matchedTargets == null || !matchedTargets.Contains(c.transform))
                 .ToList();
             Debug.Log($"[MA Material Helper] MATCH: Objects with Renderer: {candidates.Count}" +
-                (matchedPaths != null ? $" (excluded {matchedPaths.Count} already matched)" : ""));
+                (matchedTargets != null ? $" (excluded {matchedTargets.Count} already matched)" : ""));
 
             var result = TryMatch(candidates, objectName, sourceRelativePath, sourceDepth, sourceRootName);
 
             if (result.transform != null)
             {
                 // Track matched target to prevent duplicate matching
-                matchedPaths?.Add(result.path);
+                matchedTargets?.Add(result.transform);
                 return result.transform;
             }
 
@@ -95,7 +96,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                     .Where(t => t.GetComponent<Renderer>() != null)
                     .Where(t => t.GetComponent<Renderer>().GetType().Name != sourceRendererType)
                     .Select(t => (transform: t, path: GetRelativePathFromRoot(t, root)))
-                    .Where(c => matchedPaths == null || !matchedPaths.Contains(c.path))
+                    .Where(c => matchedTargets == null || !matchedTargets.Contains(c.transform))
                     .ToList();
 
                 if (crossTypeCandidates.Count > 0)
@@ -114,7 +115,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                     {
                         var selected = SelectBestFuzzyCandidate(p5CrossType, objectName, sourceRelativePath, sourceDepth, sourceRootName);
                         Debug.Log($"[MA Material Helper] MATCH: P5 - Fuzzy (cross-type): '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
-                        matchedPaths?.Add(selected.path);
+                        matchedTargets?.Add(selected.transform);
                         return selected.transform;
                     }
                 }
