@@ -12,6 +12,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Component Manager**
+  - Fixed an issue where closing the deletion confirmation dialog with the Esc key or the close (×) button would execute the deletion instead of cancelling it. The dialog buttons and the confirmation message were corrected
+  - Fixed a "Mismatched LayoutGroup" error in the console when switching the target object
+  - Components that fail to delete (e.g. non-added components on a Prefab instance) no longer abort the remaining deletions; failures are now reported together after the operation completes
+- **MA Material Helper**
+  - Fixed an issue where a Material Swap limitation warning detected in one group could be overwritten and lost when later groups had no conflicts
+  - Cleanup on failure (no matching objects) now uses Undo-compatible deletion, preventing broken Undo history after a failed generation
+  - Raised the hierarchy scan depth limit from 10 to 32 so deeply nested meshes (e.g. under avatar bones) are no longer skipped, and a warning is now logged when the limit is reached
+- **Mesh Info**
+  - Fixed Material Slots being double-counted when a parent and its child were selected at the same time
+- **AO Bounds Setter**
+  - Fixed a MissingReferenceException that could abort Apply (and row clicks) when a listed object was deleted before applying
+  - Fixed the Transform selector popup remaining open as an unclosable window; it now closes on focus loss and with the Esc key
+- **Missing BlendShape Inserter**
+  - Fixed a GUILayout error that occurred when clicking the "-" button in the clip list
+  - Fixed an issue where overwriting AnimationClips embedded in imported assets such as FBX would not be saved; these are now correctly detected as read-only and an error is shown
+
+---
+
+### 修正
+
+- **Component Manager**
+  - 削除確認ダイアログをEscキーや閉じる（×）ボタンで閉じると、キャンセルではなく削除が実行されてしまう問題を修正。ダイアログのボタンと確認メッセージを修正しました
+  - ターゲットオブジェクトを差し替えた際にコンソールに「Mismatched LayoutGroup」エラーが出る問題を修正
+  - 削除に失敗するコンポーネント（Prefabインスタンス上の非追加コンポーネント等）があっても残りの削除が中断されないように修正。失敗した項目は処理完了後にまとめて通知するようにしました
+- **MA Material Helper**
+  - あるグループで検出されたMaterial Swap制限の警告が、後続グループに競合がない場合に上書きされて消えてしまう問題を修正
+  - 失敗時（マッチ0件）のクリーンアップをUndo対応の削除に変更し、生成失敗後にUndo履歴が壊れる問題を修正
+  - 階層スキャンの深さ上限を10から32に引き上げ、深い階層のメッシュ（アバターのボーン下など）が漏れる問題を修正。上限到達時には警告を出力するようにしました
+- **Mesh Info**
+  - 親とその子を同時に選択した際にMaterial Slotsが二重カウントされる問題を修正
+- **AO Bounds Setter**
+  - リスト表示後に対象オブジェクトが削除されると、Apply（および行クリック）がMissingReferenceExceptionで中断する問題を修正
+  - Transformセレクターのポップアップが閉じられないウィンドウとして残ってしまう問題を修正。フォーカスを失ったときとEscキーで閉じるようにしました
+- **Missing BlendShape Inserter**
+  - クリップ一覧の「-」ボタンをクリックするとGUILayoutエラーが発生する問題を修正
+  - FBX等のインポートアセットに埋め込まれたAnimationClipを上書きした際に、保存されない問題を修正。これらを読み取り専用として正しく検出し、エラーを表示するようにしました
+
 ## [0.5.0] - 2026-04-23
 
 ### Improved
