@@ -1068,14 +1068,15 @@ namespace Kanameliser.EditorPlus
                 // オブジェクトフィールド
                 EditorGUI.BeginChangeCheck();
                 GameObject newTargetObject = EditorGUILayout.ObjectField("", targetObject, typeof(GameObject), true) as GameObject;
+                GameObject resultTargetObject = targetObject;
                 if (EditorGUI.EndChangeCheck() && newTargetObject != null)
                 {
                     dataManager.RefreshComponentsList(newTargetObject);
-                    return newTargetObject;
+                    resultTargetObject = newTargetObject;
                 }
 
                 EditorGUILayout.EndHorizontal();
-                return targetObject;
+                return resultTargetObject;
             }
             catch (Exception ex)
             {
@@ -1496,27 +1497,65 @@ namespace Kanameliser.EditorPlus
                     // 処理を Undo でまとめる
                     Undo.SetCurrentGroupName("Remove GameObjects and Components");
                     int undoGroup = Undo.GetCurrentGroup();
+                    List<string> failedItems = new List<string>();
 
-                    // 選択されたGameObjectを削除
-                    foreach (var gameObject in selectedGameObjects)
+                    try
                     {
-                        if (gameObject != null)
+                        // 選択されたGameObjectを削除
+                        foreach (var gameObject in selectedGameObjects)
                         {
-                            Undo.DestroyObjectImmediate(gameObject);
+                            if (gameObject == null) continue;
+
+                            string gameObjectName = gameObject.name;
+                            try
+                            {
+                                Undo.DestroyObjectImmediate(gameObject);
+                            }
+                            catch (Exception ex)
+                            {
+                                failedItems.Add($"GameObject: {gameObjectName}");
+                                Debug.LogWarning($"Failed to delete GameObject '{gameObjectName}': {ex.Message}");
+                            }
+                        }
+
+                        // 選択されたコンポーネントを削除
+                        foreach (var componentInfo in selectedComponents)
+                        {
+                            if (componentInfo == null || componentInfo.Component == null) continue;
+
+                            Component component = componentInfo.Component;
+                            string componentName = componentInfo.Name;
+                            try
+                            {
+                                Undo.DestroyObjectImmediate(component);
+                            }
+                            catch (Exception ex)
+                            {
+                                failedItems.Add($"Component: {componentName}");
+                                Debug.LogWarning($"Failed to delete component '{componentName}': {ex.Message}");
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            Undo.CollapseUndoOperations(undoGroup);
+                        }
+                        finally
+                        {
+                            dataManager.RefreshComponentsList(targetObject);
                         }
                     }
 
-                    // 選択されたコンポーネントを削除
-                    foreach (var componentInfo in selectedComponents)
+                    if (failedItems.Count > 0)
                     {
-                        if (componentInfo != null && componentInfo.Component != null)
-                        {
-                            Undo.DestroyObjectImmediate(componentInfo.Component);
-                        }
+                        EditorUtility.DisplayDialog(
+                            "Deletion Partially Completed",
+                            $"Some selected items could not be deleted:\n\n{string.Join("\n", failedItems)}",
+                            "OK"
+                        );
                     }
-
-                    Undo.CollapseUndoOperations(undoGroup);
-                    dataManager.RefreshComponentsList(targetObject);
                 }
             }
             catch (Exception ex)
