@@ -8,7 +8,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
     /// </summary>
     public static class MaterialSetupCopier
     {
-        private const int MAX_HIERARCHY_DEPTH = 10;
+        private const int MAX_HIERARCHY_DEPTH = 32;
 
         /// <summary>
         /// Copies material setup from the specified GameObject and its children
@@ -24,7 +24,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             };
 
             // Scan hierarchy and collect material data
-            ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0, sourceRoot);
+            bool depthLimitWarningLogged = false;
+            ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0, sourceRoot, ref depthLimitWarningLogged);
 
             return copiedData;
         }
@@ -32,10 +33,20 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         /// <summary>
         /// Recursively scans the hierarchy for renderers and their materials
         /// </summary>
-        private static void ScanHierarchy(Transform current, string relativePath, List<MaterialSetupData> materialSetups, int depth, GameObject rootObject)
+        private static void ScanHierarchy(Transform current, string relativePath, List<MaterialSetupData> materialSetups, int depth, GameObject rootObject, ref bool depthLimitWarningLogged)
         {
             if (depth >= MAX_HIERARCHY_DEPTH)
+            {
+                if (!depthLimitWarningLogged)
+                {
+                    Debug.LogWarning(
+                        $"[MA Material Helper] Material setup scanning stopped at '{current.name}' because the hierarchy depth limit of {MAX_HIERARCHY_DEPTH} was reached. Renderers at or below this point were not copied.",
+                        rootObject
+                    );
+                    depthLimitWarningLogged = true;
+                }
                 return;
+            }
 
             // Build current relative path (without root name)
             string currentPath = string.IsNullOrEmpty(relativePath)
@@ -74,7 +85,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 Transform child = current.GetChild(i);
                 if (child != null)
                 {
-                    ScanHierarchy(child, currentPath, materialSetups, depth + 1, rootObject);
+                    ScanHierarchy(child, currentPath, materialSetups, depth + 1, rootObject, ref depthLimitWarningLogged);
                 }
             }
         }
@@ -125,7 +136,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 copiedData.materialSetups.Add(groupStartMarker);
 
                 // Scan hierarchy for this source root
-                ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0, sourceRoot);
+                bool depthLimitWarningLogged = false;
+                ScanHierarchy(sourceRoot.transform, "", copiedData.materialSetups, 0, sourceRoot, ref depthLimitWarningLogged);
 
                 // Update source root name to include group info
                 if (i == 0)

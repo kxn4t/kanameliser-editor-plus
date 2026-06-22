@@ -49,7 +49,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 int totalSuccessfulMatches = 0;
                 int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
                 string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
-                string limitationError = null;
+                var limitationErrors = new List<string>();
 
                 // Create color variations for each group
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
@@ -62,7 +62,11 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     createdVariations.Add(colorVariation);
 
                     // Create material swaps for this group
-                    int groupMatches = SetupMaterialSwapsForGroup(colorVariation, targetRoot, group, out limitationError);
+                    int groupMatches = SetupMaterialSwapsForGroup(colorVariation, targetRoot, group, out string limitationError);
+                    if (!string.IsNullOrEmpty(limitationError))
+                    {
+                        limitationErrors.Add(limitationError);
+                    }
 
                     totalSuccessfulMatches += groupMatches;
 
@@ -77,13 +81,15 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     // Clean up all created variations
                     foreach (var variation in createdVariations)
                     {
-                        UnityEngine.Object.DestroyImmediate(variation);
+                        Undo.DestroyObjectImmediate(variation);
                     }
 
                     if (isNewMenu)
                     {
-                        UnityEngine.Object.DestroyImmediate(colorMenu.gameObject);
+                        Undo.DestroyObjectImmediate(colorMenu.gameObject);
                     }
+
+                    Undo.CollapseUndoOperations(undoGroup);
 
                     return new GenerationResult
                     {
@@ -102,12 +108,12 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     : $"Added {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})";
 
                 // If there were limitation errors, return them as warning
-                if (!string.IsNullOrEmpty(limitationError))
+                if (limitationErrors.Count > 0)
                 {
                     return new GenerationResult
                     {
                         success = false,
-                        message = limitationError,
+                        message = string.Join("\n\n", limitationErrors),
                         createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
                     };
                 }
@@ -159,7 +165,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 int totalSuccessfulMatches = 0;
                 int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
                 string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
-                string limitationError = null;
+                var limitationErrors = new List<string>();
 
                 // Create color variations for each group
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
@@ -181,7 +187,11 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     createdVariations.Add(colorVariation);
 
                     // Create material swaps for this group (per-object mode)
-                    int groupMatches = SetupMaterialSwapsPerObjectForGroup(colorVariation, targetRoot, group, out limitationError);
+                    int groupMatches = SetupMaterialSwapsPerObjectForGroup(colorVariation, targetRoot, group, out string limitationError);
+                    if (!string.IsNullOrEmpty(limitationError))
+                    {
+                        limitationErrors.Add(limitationError);
+                    }
 
                     totalSuccessfulMatches += groupMatches;
 
@@ -196,13 +206,15 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     // Clean up all created variations
                     foreach (var variation in createdVariations)
                     {
-                        UnityEngine.Object.DestroyImmediate(variation);
+                        Undo.DestroyObjectImmediate(variation);
                     }
 
                     if (isNewMenu)
                     {
-                        UnityEngine.Object.DestroyImmediate(colorMenu.gameObject);
+                        Undo.DestroyObjectImmediate(colorMenu.gameObject);
                     }
+
+                    Undo.CollapseUndoOperations(undoGroup);
 
                     return new GenerationResult
                     {
@@ -221,12 +233,12 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     : $"Added {groups.Count} color variations with per-object components";
 
                 // If there were limitation errors, return them as warning
-                if (!string.IsNullOrEmpty(limitationError))
+                if (limitationErrors.Count > 0)
                 {
                     return new GenerationResult
                     {
                         success = false,
-                        message = limitationError,
+                        message = string.Join("\n\n", limitationErrors),
                         createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
                     };
                 }
