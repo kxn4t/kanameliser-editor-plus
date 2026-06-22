@@ -34,7 +34,7 @@ namespace Kanameliser.EditorPlus
             }
         }
 
-        public static int ProcessStandardMeshComponents(GameObject obj, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, ref int totalMaterialSlots)
+        public static int ProcessStandardMeshComponents(GameObject obj, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, HashSet<Renderer> processedRenderers, ref int totalMaterialSlots)
         {
             int triangleCount = 0;
 
@@ -46,7 +46,7 @@ namespace Kanameliser.EditorPlus
             {
                 triangleCount += ProcessMesh(meshFilter.sharedMesh, processedMeshes);
 
-                if (meshRenderer != null && meshRenderer.sharedMaterials != null)
+                if (meshRenderer != null && meshRenderer.sharedMaterials != null && processedRenderers.Add(meshRenderer))
                 {
                     ProcessMaterials(meshRenderer.sharedMaterials, processedMaterials);
                     totalMaterialSlots += meshRenderer.sharedMaterials.Length;
@@ -59,7 +59,7 @@ namespace Kanameliser.EditorPlus
             {
                 triangleCount += ProcessMesh(skinnedMeshRenderer.sharedMesh, processedMeshes);
 
-                if (skinnedMeshRenderer.sharedMaterials != null)
+                if (skinnedMeshRenderer.sharedMaterials != null && processedRenderers.Add(skinnedMeshRenderer))
                 {
                     ProcessMaterials(skinnedMeshRenderer.sharedMaterials, processedMaterials);
                     totalMaterialSlots += skinnedMeshRenderer.sharedMaterials.Length;

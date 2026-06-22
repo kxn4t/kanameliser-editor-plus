@@ -37,12 +37,13 @@ namespace Kanameliser.EditorPlus
             var data = new MeshInfoData();
             var processedMeshes = new HashSet<Mesh>();
             var processedMaterials = new HashSet<Material>();
+            var processedRenderers = new HashSet<Renderer>();
             bool hasChildObjects = false;
             int materialSlots = 0;
 
             foreach (var obj in gameObjects)
             {
-                data.Triangles += ProcessGameObjectWithProxy(obj, processedMeshes, processedMaterials, ref hasChildObjects, ref materialSlots);
+                data.Triangles += ProcessGameObjectWithProxy(obj, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref materialSlots);
             }
 
             data.Meshes = processedMeshes.Count;
@@ -53,7 +54,7 @@ namespace Kanameliser.EditorPlus
             return data;
         }
 
-        private int ProcessGameObjectWithProxy(GameObject obj, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials,
+        private int ProcessGameObjectWithProxy(GameObject obj, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, HashSet<Renderer> processedRenderers,
             ref bool hasChildObjects, ref int totalMaterialSlots)
         {
             if (obj.CompareTag("EditorOnly"))
@@ -73,30 +74,30 @@ namespace Kanameliser.EditorPlus
                 {
                     // Use proxy mesh data instead of original for accurate build preview
                     IsShowingProxyInfo = true;
-                    triangleCount = ProcessProxyRenderer(proxyRenderer, processedMeshes, processedMaterials, ref totalMaterialSlots);
+                    triangleCount = ProcessProxyRenderer(proxyRenderer, processedMeshes, processedMaterials, processedRenderers, ref totalMaterialSlots);
 
                     foreach (Transform child in obj.transform)
                     {
-                        triangleCount += ProcessGameObjectWithProxy(child.gameObject, processedMeshes, processedMaterials, ref hasChildObjects, ref totalMaterialSlots);
+                        triangleCount += ProcessGameObjectWithProxy(child.gameObject, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref totalMaterialSlots);
                     }
 
                     return triangleCount;
                 }
             }
 
-            triangleCount += MeshInfoUtility.ProcessStandardMeshComponents(obj, processedMeshes, processedMaterials, ref totalMaterialSlots);
+            triangleCount += MeshInfoUtility.ProcessStandardMeshComponents(obj, processedMeshes, processedMaterials, processedRenderers, ref totalMaterialSlots);
 
             foreach (Transform child in obj.transform)
             {
-                triangleCount += ProcessGameObjectWithProxy(child.gameObject, processedMeshes, processedMaterials, ref hasChildObjects, ref totalMaterialSlots);
+                triangleCount += ProcessGameObjectWithProxy(child.gameObject, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref totalMaterialSlots);
             }
 
             return triangleCount;
         }
 
-        private int ProcessProxyRenderer(Renderer proxyRenderer, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, ref int totalMaterialSlots)
+        private int ProcessProxyRenderer(Renderer proxyRenderer, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, HashSet<Renderer> processedRenderers, ref int totalMaterialSlots)
         {
-            return MeshInfoUtility.ProcessStandardMeshComponents(proxyRenderer.gameObject, processedMeshes, processedMaterials, ref totalMaterialSlots);
+            return MeshInfoUtility.ProcessStandardMeshComponents(proxyRenderer.gameObject, processedMeshes, processedMaterials, processedRenderers, ref totalMaterialSlots);
         }
 
     }
