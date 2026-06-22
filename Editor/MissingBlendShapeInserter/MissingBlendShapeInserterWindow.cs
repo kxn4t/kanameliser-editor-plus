@@ -133,16 +133,25 @@ namespace Kanameliser.EditorPlus
             scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Height(listHeight + 10f));
 
             // 各アニメーションクリップを描画
+            int clipIndexToRemove = -1;
             for (int i = 0; i < animationClips.Count; i++)
             {
-                DrawAnimationClipItem(i);
+                if (DrawAnimationClipItem(i))
+                {
+                    clipIndexToRemove = i;
+                }
             }
 
             EditorGUILayout.EndScrollView(); // スクロールビューの終了
+
+            if (clipIndexToRemove >= 0)
+            {
+                animationClips.RemoveAt(clipIndexToRemove);
+            }
         }
 
         // 個々のアニメーションクリップアイテムの描画
-        private void DrawAnimationClipItem(int index)
+        private bool DrawAnimationClipItem(int index)
         {
             EditorGUILayout.BeginHorizontal(); // 水平レイアウトの開始
 
@@ -155,17 +164,20 @@ namespace Kanameliser.EditorPlus
                 UpdateAnimationClipAt(index, newClip);
 
             // 削除ボタン
-            if (GUILayout.Button("-", GUILayout.Width(30)))
-            {
-                animationClips.RemoveAt(index);
-                return;
-            }
+            bool shouldRemove = GUILayout.Button("-", GUILayout.Width(30));
 
             EditorGUILayout.EndHorizontal(); // 水平レイアウトの終了
+
+            if (shouldRemove)
+            {
+                return true;
+            }
 
             // 直前に描画した領域を取得し、ドラッグ＆ドロップ処理を設定
             Rect lastRect = GUILayoutUtility.GetLastRect();
             HandleDragAndDropOnItem(lastRect, index);
+
+            return false;
         }
 
         // アニメーションクリップの更新と重複チェック
