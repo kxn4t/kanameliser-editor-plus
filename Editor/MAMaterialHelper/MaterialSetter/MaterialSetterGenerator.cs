@@ -75,13 +75,15 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                     // Clean up all created variations
                     foreach (var variation in createdVariations)
                     {
-                        UnityEngine.Object.DestroyImmediate(variation);
+                        Undo.DestroyObjectImmediate(variation);
                     }
 
                     if (isNewMenu)
                     {
-                        UnityEngine.Object.DestroyImmediate(colorMenu.gameObject);
+                        Undo.DestroyObjectImmediate(colorMenu.gameObject);
                     }
+
+                    Undo.CollapseUndoOperations(undoGroup);
 
                     return new GenerationResult
                     {
