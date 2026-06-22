@@ -364,16 +364,22 @@ namespace Kanameliser.EditorPlus
         private bool IsClipReadOnly(AnimationClip clip)
         {
             string assetPath = AssetDatabase.GetAssetPath(clip);
+            if (string.IsNullOrEmpty(assetPath) ||
+                !string.Equals(Path.GetExtension(assetPath), ".anim", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
             string fullPath = Path.GetFullPath(assetPath);
 
-            return (File.GetAttributes(fullPath) & FileAttributes.ReadOnly) != 0;
+            return !File.Exists(fullPath) || (File.GetAttributes(fullPath) & FileAttributes.ReadOnly) != 0;
         }
 
         // 読み取り専用エラーの表示
         private void ShowReadOnlyError(AnimationClip clip)
         {
             string assetPath = AssetDatabase.GetAssetPath(clip);
-            EditorUtility.DisplayDialog("エラー", $"ファイルが読み取り専用のため、上書きできません。ファイルパス: {assetPath}", "OK");
+            EditorUtility.DisplayDialog("エラー", $"ファイルが読み取り専用、または .anim ファイルではないため、上書きできません。ファイルパス: {assetPath}", "OK");
         }
 
         // 新しいクリップの作成
