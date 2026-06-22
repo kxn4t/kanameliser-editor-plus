@@ -1460,7 +1460,7 @@ namespace Kanameliser.EditorPlus
                     }
                 }
 
-                confirmMessage += "\nThis action cannot be undone.";
+                confirmMessage += "\nUndo is available.";
                 return confirmMessage;
             }
             catch (Exception ex)
@@ -1486,12 +1486,12 @@ namespace Kanameliser.EditorPlus
                 bool confirmResult = EditorUtility.DisplayDialog(
                     "Confirm Deletion",
                     confirmMessage,
-                    "Cancel",
-                    "Delete"
+                    "Delete",
+                    "Cancel"
                 );
 
                 // ユーザーが「削除する」を選んだ場合のみ処理を実行
-                if (!confirmResult)
+                if (confirmResult)
                 {
                     // 処理を Undo でまとめる
                     Undo.SetCurrentGroupName("Remove GameObjects and Components");
