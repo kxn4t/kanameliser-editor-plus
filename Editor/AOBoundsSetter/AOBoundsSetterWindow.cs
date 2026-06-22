@@ -307,8 +307,11 @@ namespace Kanameliser.EditorPlus
             nameContainer.AddToClassList("clickable-label");
             nameContainer.RegisterCallback<MouseDownEvent>(evt =>
             {
-                Selection.activeGameObject = data.Renderer.gameObject;
-                EditorGUIUtility.PingObject(data.Renderer.gameObject);
+                var renderer = data.Renderer;
+                if (renderer == null) return;
+
+                Selection.activeGameObject = renderer.gameObject;
+                EditorGUIUtility.PingObject(renderer.gameObject);
             });
 
             var iconContent = EditorGUIUtility.ObjectContent(data.Renderer, data.Renderer.GetType());
@@ -331,11 +334,11 @@ namespace Kanameliser.EditorPlus
             aoLabel.AddToClassList("clickable-label");
             aoLabel.RegisterCallback<MouseDownEvent>(evt =>
             {
-                if (data.Renderer.probeAnchor != null)
-                {
-                    Selection.activeGameObject = data.Renderer.probeAnchor.gameObject;
-                    EditorGUIUtility.PingObject(data.Renderer.probeAnchor.gameObject);
-                }
+                var renderer = data.Renderer;
+                if (renderer == null || renderer.probeAnchor == null) return;
+
+                Selection.activeGameObject = renderer.probeAnchor.gameObject;
+                EditorGUIUtility.PingObject(renderer.probeAnchor.gameObject);
             });
             row.Add(aoLabel);
 
@@ -345,11 +348,11 @@ namespace Kanameliser.EditorPlus
             rootBoneLabel.AddToClassList("clickable-label");
             rootBoneLabel.RegisterCallback<MouseDownEvent>(evt =>
             {
-                if (data.Renderer is SkinnedMeshRenderer smr && smr.rootBone != null)
-                {
-                    Selection.activeGameObject = smr.rootBone.gameObject;
-                    EditorGUIUtility.PingObject(smr.rootBone.gameObject);
-                }
+                var skinnedMeshRenderer = data.Renderer as SkinnedMeshRenderer;
+                if (skinnedMeshRenderer == null || skinnedMeshRenderer.rootBone == null) return;
+
+                Selection.activeGameObject = skinnedMeshRenderer.rootBone.gameObject;
+                EditorGUIUtility.PingObject(skinnedMeshRenderer.rootBone.gameObject);
             });
             row.Add(rootBoneLabel);
 
@@ -479,13 +482,13 @@ namespace Kanameliser.EditorPlus
         private void OnApplyButtonClicked()
         {
             var selectedRenderers = meshRendererDataList
-                .Where(d => d.IsSelected)
+                .Where(d => d.IsSelected && d.Renderer != null)
                 .Select(d => d.Renderer)
                 .ToArray();
 
             if (selectedRenderers.Length == 0)
             {
-                Debug.LogWarning("No meshes selected.");
+                Debug.LogWarning("No valid meshes selected.");
                 return;
             }
 
@@ -505,6 +508,8 @@ namespace Kanameliser.EditorPlus
 
             foreach (var renderer in selectedRenderers)
             {
+                if (renderer == null) continue;
+
                 // Apply Anchor Override
                 if (anchorOverride != null || renderer.probeAnchor != null)
                 {

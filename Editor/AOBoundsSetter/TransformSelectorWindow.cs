@@ -51,6 +51,7 @@ namespace Kanameliser.EditorPlus
 
             window.position = new Rect(screenPosition, windowSize);
             window.ShowPopup();
+            window.Focus();
         }
 
         public void CreateGUI()
@@ -213,6 +214,15 @@ namespace Kanameliser.EditorPlus
         {
             // Close window when it loses focus
             Close();
+        }
+
+        private void OnGUI()
+        {
+            if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
+            {
+                Close();
+                Event.current.Use();
+            }
         }
     }
 }
