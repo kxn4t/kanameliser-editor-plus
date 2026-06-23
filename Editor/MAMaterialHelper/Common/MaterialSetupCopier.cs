@@ -130,8 +130,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 {
                     objectName = $"__GROUP_START_{i}__",
                     relativePath = sourceRoot.name,
-                    materials = new Material[0],
-                    materialSlots = new int[0]
+                    materials = new Material[0]
                 };
                 copiedData.materialSetups.Add(groupStartMarker);
 

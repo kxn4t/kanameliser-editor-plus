@@ -13,7 +13,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         public string objectName;
         public string relativePath;
         public Material[] materials;
-        public int[] materialSlots;
         public int hierarchyDepth;
         public string rootObjectName;
         public string rendererType;
@@ -21,7 +20,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         public MaterialSetupData()
         {
             materials = new Material[0];
-            materialSlots = new int[0];
             rendererType = "";
         }
 
@@ -30,14 +28,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             this.objectName = objectName;
             this.relativePath = relativePath;
             this.materials = materials ?? new Material[0];
-            this.materialSlots = new int[this.materials.Length];
             this.hierarchyDepth = depth;
             this.rootObjectName = rootName;
             this.rendererType = rendererType ?? "";
-            for (int i = 0; i < this.materials.Length; i++)
-            {
-                this.materialSlots[i] = i;
-            }
         }
     }
 
@@ -81,14 +74,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         public static void StoreCopiedData(CopiedMaterialData data)
         {
             _copiedData = data;
-        }
-
-        /// <summary>
-        /// Clears the copied data
-        /// </summary>
-        public static void ClearCopiedData()
-        {
-            _copiedData = null;
         }
 
         /// <summary>
