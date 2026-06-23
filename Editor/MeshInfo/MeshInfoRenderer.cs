@@ -142,6 +142,8 @@ namespace Kanameliser.EditorPlus
         }
 
 #if NDMF_INSTALLED
+        private static readonly GUIContent scratchContent = new GUIContent();
+
         private void DrawDynamicLabel(string label, int original, int current, bool showDiff)
         {
             // Show difference visualization when proxy data differs from original
@@ -161,13 +163,15 @@ namespace Kanameliser.EditorPlus
             string mainText = $"{label}: {current} ";
             string diffText = diff > 0 ? $"[+{diff}]" : $"[{diff}]";
 
-            string fullText = mainText + diffText;
-            var lineRect = GUILayoutUtility.GetRect(new GUIContent(fullText), infoStyle);
+            scratchContent.text = mainText + diffText;
+            var lineRect = GUILayoutUtility.GetRect(scratchContent, infoStyle);
 
-            GUI.Label(new Rect(lineRect.x, lineRect.y, lineRect.width, lineRect.height), mainText, infoStyle);
+            scratchContent.text = mainText;
+            GUI.Label(new Rect(lineRect.x, lineRect.y, lineRect.width, lineRect.height), scratchContent, infoStyle);
+            var mainSize = infoStyle.CalcSize(scratchContent);
 
-            var mainSize = infoStyle.CalcSize(new GUIContent(mainText));
-            var diffSize = diffStyle.CalcSize(new GUIContent(diffText));
+            scratchContent.text = diffText;
+            var diffSize = diffStyle.CalcSize(scratchContent);
             float diffY = lineRect.y + (lineRect.height - diffSize.y);
             var diffRect = new Rect(lineRect.x + mainSize.x, diffY, diffSize.x, diffSize.y);
 
@@ -189,7 +193,7 @@ namespace Kanameliser.EditorPlus
             GUI.DrawTexture(bgRect, Texture2D.whiteTexture);
             GUI.color = originalColor;
 
-            GUI.Label(diffRect, diffText, diffStyle);
+            GUI.Label(diffRect, scratchContent, diffStyle);
         }
 
         private void DrawNDMFIndicators(bool isShowingProxyInfo, bool hasProxyInSelection)
