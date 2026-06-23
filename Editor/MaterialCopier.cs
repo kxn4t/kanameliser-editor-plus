@@ -39,6 +39,45 @@ namespace Kanameliser.EditorPlus
     {
         private static List<MaterialData> copiedMaterials = new List<MaterialData>();
 
+        // Test-only entry points. These preserve the editor session state so EditMode
+        // regression tests can exercise the production selection and paste paths.
+        internal static MaterialData FindMatchingMaterialDataForTests(
+            IEnumerable<MaterialData> testCopiedMaterials,
+            string targetName,
+            string targetRelativePath,
+            int targetDepth,
+            string targetRendererType = "",
+            string targetRootName = "")
+        {
+            var originalCopiedMaterials = copiedMaterials;
+            try
+            {
+                copiedMaterials = testCopiedMaterials?.ToList() ?? new List<MaterialData>();
+                return FindMatchingMaterialData(targetName, targetRelativePath, targetDepth, targetRendererType, targetRootName);
+            }
+            finally
+            {
+                copiedMaterials = originalCopiedMaterials;
+            }
+        }
+
+        internal static void PasteMaterialsForTests(GameObject[] targetObjects, IEnumerable<MaterialData> testCopiedMaterials)
+        {
+            var originalSelection = Selection.objects;
+            var originalCopiedMaterials = copiedMaterials;
+            try
+            {
+                copiedMaterials = testCopiedMaterials?.ToList() ?? new List<MaterialData>();
+                Selection.objects = targetObjects ?? Array.Empty<UnityEngine.Object>();
+                PasteMaterials();
+            }
+            finally
+            {
+                Selection.objects = originalSelection;
+                copiedMaterials = originalCopiedMaterials;
+            }
+        }
+
         [MenuItem("GameObject/Kanameliser Editor Plus/Copy Materials", false, 0)]
         private static void CopyMaterials()
         {
