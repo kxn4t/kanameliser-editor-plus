@@ -157,6 +157,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         #region Reflection Utilities
 
 #if MODULAR_AVATAR_INSTALLED
+        private static MethodInfo initSettingsMethod;
+        private static bool initSettingsMethodLookupCompleted;
+
         /// <summary>
         /// Calls InitSettings on a ModularAvatarMenuItem using reflection for safety
         /// </summary>
@@ -164,12 +167,16 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         {
             try
             {
-                var initMethod = typeof(ModularAvatarMenuItem).GetMethod("InitSettings",
-                    BindingFlags.Instance | BindingFlags.NonPublic);
-
-                if (initMethod != null)
+                if (!initSettingsMethodLookupCompleted)
                 {
-                    initMethod.Invoke(menuItem, null);
+                    initSettingsMethod = typeof(ModularAvatarMenuItem).GetMethod("InitSettings",
+                        BindingFlags.Instance | BindingFlags.NonPublic);
+                    initSettingsMethodLookupCompleted = true;
+                }
+
+                if (initSettingsMethod != null)
+                {
+                    initSettingsMethod.Invoke(menuItem, null);
                     return true;
                 }
                 else
