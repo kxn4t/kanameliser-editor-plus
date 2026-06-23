@@ -79,41 +79,34 @@ namespace Kanameliser.EditorPlus
             List<GameObject> ordered = new List<GameObject>();
             if (targetObject == null) return ordered;
 
-            try
+            // GameObjectの順番を取得
+            Queue<Transform> queue = new Queue<Transform>();
+            queue.Enqueue(targetObject.transform);
+
+            while (queue.Count > 0)
             {
-                // GameObjectの順番を取得
-                Queue<Transform> queue = new Queue<Transform>();
-                queue.Enqueue(targetObject.transform);
+                Transform currentTransform = queue.Dequeue();
+                if (currentTransform == null) continue;
 
-                while (queue.Count > 0)
+                GameObject currentGO = currentTransform.gameObject;
+                if (currentGO == null) continue;
+
+                // 辞書に存在するGameObjectのみを対象とする
+                // （コンポーネントがないオブジェクトも表示するオプションがオンの場合は辞書に含まれている）
+                if (componentsByGameObject.ContainsKey(currentGO))
                 {
-                    Transform currentTransform = queue.Dequeue();
-                    if (currentTransform == null) continue;
+                    ordered.Add(currentGO);
+                }
 
-                    GameObject currentGO = currentTransform.gameObject;
-                    if (currentGO == null) continue;
-
-                    // 辞書に存在するGameObjectのみを対象とする
-                    // （コンポーネントがないオブジェクトも表示するオプションがオンの場合は辞書に含まれている）
-                    if (componentsByGameObject.ContainsKey(currentGO))
+                // 子要素をキューに追加
+                for (int i = 0; i < currentTransform.childCount; i++)
+                {
+                    Transform child = currentTransform.GetChild(i);
+                    if (child != null)
                     {
-                        ordered.Add(currentGO);
-                    }
-
-                    // 子要素をキューに追加
-                    for (int i = 0; i < currentTransform.childCount; i++)
-                    {
-                        Transform child = currentTransform.GetChild(i);
-                        if (child != null)
-                        {
-                            queue.Enqueue(child);
-                        }
+                        queue.Enqueue(child);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred while ordering GameObjects: {ex.Message}");
             }
 
             return ordered;
@@ -129,26 +122,18 @@ namespace Kanameliser.EditorPlus
                 return true;
             }
 
-            try
-            {
-                string filterLower = gameObjectFilter.ToLower();
+            string filterLower = gameObjectFilter.ToLower();
 
-                if (searchInPaths)
-                {
-                    // パスを含めて検索
-                    string path = ComponentPathUtility.GetGameObjectPath(gameObject, targetObject);
-                    return path.ToLower().Contains(filterLower);
-                }
-                else
-                {
-                    // 名前のみで検索
-                    return gameObject.name.ToLower().Contains(filterLower);
-                }
-            }
-            catch (Exception ex)
+            if (searchInPaths)
             {
-                Debug.LogError($"Error occurred during GameObject filtering: {ex.Message}");
-                return false;
+                // パスを含めて検索
+                string path = ComponentPathUtility.GetGameObjectPath(gameObject, targetObject);
+                return path.ToLower().Contains(filterLower);
+            }
+            else
+            {
+                // 名前のみで検索
+                return gameObject.name.ToLower().Contains(filterLower);
             }
         }
 
@@ -162,25 +147,17 @@ namespace Kanameliser.EditorPlus
                 return components.ToList();
             }
 
-            try
-            {
-                string filterLower = componentFilter.ToLower();
+            string filterLower = componentFilter.ToLower();
 
-                // コンポーネント名でフィルタリング
-                var matchingComponents = components
-                    .Where(c => c.Name.ToLower().Contains(filterLower))
-                    .ToList();
+            // コンポーネント名でフィルタリング
+            var matchingComponents = components
+                .Where(c => c.Name.ToLower().Contains(filterLower))
+                .ToList();
 
-                // 一致するコンポーネントを持つGameObjectの全コンポーネントを表示するオプション
-                return (showAllComponentsOnMatch && matchingComponents.Any())
-                    ? components.ToList()
-                    : matchingComponents;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred during component filtering: {ex.Message}");
-                return new List<ComponentInfo>();
-            }
+            // 一致するコンポーネントを持つGameObjectの全コンポーネントを表示するオプション
+            return (showAllComponentsOnMatch && matchingComponents.Any())
+                ? components.ToList()
+                : matchingComponents;
         }
 
         /// <summary>
@@ -193,33 +170,26 @@ namespace Kanameliser.EditorPlus
             List<GameObject> filteredGameObjects = new List<GameObject>();
             List<ComponentInfo> filteredComponents = new List<ComponentInfo>();
 
-            try
-            {
-                var orderedGameObjects = GetOrderedGameObjects(targetObject);
+            var orderedGameObjects = GetOrderedGameObjects(targetObject);
 
-                // GameObjectとコンポーネントのフィルタリング
-                foreach (var gameObject in orderedGameObjects)
+            // GameObjectとコンポーネントのフィルタリング
+            foreach (var gameObject in orderedGameObjects)
+            {
+                if (!componentsByGameObject.ContainsKey(gameObject)) continue;
+
+                // GameObject名またはパスによるフィルタリング
+                bool gameObjectMatched = IsGameObjectMatchingFilter(gameObject, targetObject, gameObjectFilter, searchInPaths);
+                if (!gameObjectMatched) continue;
+
+                var components = componentsByGameObject[gameObject];
+                var matchingComponents = FilterComponentsByName(components, componentFilter, showAllComponentsOnMatch);
+
+                // フィルタリング結果に基づいて表示対象を決定
+                if (string.IsNullOrEmpty(componentFilter) || matchingComponents.Any())
                 {
-                    if (!componentsByGameObject.ContainsKey(gameObject)) continue;
-
-                    // GameObject名またはパスによるフィルタリング
-                    bool gameObjectMatched = IsGameObjectMatchingFilter(gameObject, targetObject, gameObjectFilter, searchInPaths);
-                    if (!gameObjectMatched) continue;
-
-                    var components = componentsByGameObject[gameObject];
-                    var matchingComponents = FilterComponentsByName(components, componentFilter, showAllComponentsOnMatch);
-
-                    // フィルタリング結果に基づいて表示対象を決定
-                    if (string.IsNullOrEmpty(componentFilter) || matchingComponents.Any())
-                    {
-                        filteredGameObjects.Add(gameObject);
-                        filteredComponents.AddRange(matchingComponents);
-                    }
+                    filteredGameObjects.Add(gameObject);
+                    filteredComponents.AddRange(matchingComponents);
                 }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred during item filtering: {ex.Message}");
             }
 
             return (filteredGameObjects, filteredComponents);
@@ -230,26 +200,18 @@ namespace Kanameliser.EditorPlus
         /// </summary>
         public (List<GameObject> gameObjects, List<ComponentInfo> components) GetSelectedItems()
         {
-            try
-            {
-                // 選択されたGameObjectを取得
-                var selectedGameObjects = componentsByGameObject.Keys
-                    .Where(go => gameObjectSelectionState.ContainsKey(go) && gameObjectSelectionState[go])
-                    .ToList();
+            // 選択されたGameObjectを取得
+            var selectedGameObjects = componentsByGameObject.Keys
+                .Where(go => gameObjectSelectionState.ContainsKey(go) && gameObjectSelectionState[go])
+                .ToList();
 
-                // 選択されたコンポーネントを取得（GameObjectが選択されていないもののみ）
-                var selectedComponents = componentsByGameObject
-                    .Where(entry => !gameObjectSelectionState.ContainsKey(entry.Key) || !gameObjectSelectionState[entry.Key])
-                    .SelectMany(entry => entry.Value.Where(c => c.IsSelected))
-                    .ToList();
+            // 選択されたコンポーネントを取得（GameObjectが選択されていないもののみ）
+            var selectedComponents = componentsByGameObject
+                .Where(entry => !gameObjectSelectionState.ContainsKey(entry.Key) || !gameObjectSelectionState[entry.Key])
+                .SelectMany(entry => entry.Value.Where(c => c.IsSelected))
+                .ToList();
 
-                return (selectedGameObjects, selectedComponents);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred while getting selected items: {ex.Message}");
-                return (new List<GameObject>(), new List<ComponentInfo>());
-            }
+            return (selectedGameObjects, selectedComponents);
         }
     }
 

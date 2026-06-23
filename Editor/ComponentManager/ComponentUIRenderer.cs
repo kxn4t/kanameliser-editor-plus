@@ -173,93 +173,86 @@ namespace Kanameliser.EditorPlus
         {
             if (gameObj == null) return;
 
-            try
+            // 行の高さを計算 (GameObject + コンポーネント数に基づく)
+            int componentCount = components.Count;
+            int calculatedRowHeight = Mathf.Max((int)ComponentConstants.MIN_ROW_HEIGHT, (int)(ComponentConstants.ROW_HEIGHT + componentCount * ComponentConstants.ROW_HEIGHT)); // 最低高さは36px
+
+            Rect totalRect = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true), GUILayout.Height(calculatedRowHeight));
+            float startX = totalRect.x;
+
+            // GameObject チェックボックス - GameObject名と同じ高さに配置
+            Rect goCheckboxRect = new Rect(startX, totalRect.y, ComponentConstants.CHECKBOX_WIDTH, ComponentConstants.ROW_HEIGHT);
+            bool isGameObjectSelected = dataManager.GameObjectSelectionState[gameObj];
+
+            // EditorGUI.Toggleを使用して状態変更を検出
+            bool newIsGameObjectSelected = EditorGUI.Toggle(goCheckboxRect, isGameObjectSelected);
+            if (newIsGameObjectSelected != isGameObjectSelected)
             {
-                // 行の高さを計算 (GameObject + コンポーネント数に基づく)
-                int componentCount = components.Count;
-                int calculatedRowHeight = Mathf.Max((int)ComponentConstants.MIN_ROW_HEIGHT, (int)(ComponentConstants.ROW_HEIGHT + componentCount * ComponentConstants.ROW_HEIGHT)); // 最低高さは36px
+                dataManager.GameObjectSelectionState[gameObj] = newIsGameObjectSelected;
+            }
 
-                Rect totalRect = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true), GUILayout.Height(calculatedRowHeight));
-                float startX = totalRect.x;
+            // GameObject名
+            Rect nameRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y, gameObjectColumnWidth, ComponentConstants.ROW_HEIGHT);
+            EditorGUI.LabelField(nameRect, gameObj.name, headerLabelStyle);
 
-                // GameObject チェックボックス - GameObject名と同じ高さに配置
-                Rect goCheckboxRect = new Rect(startX, totalRect.y, ComponentConstants.CHECKBOX_WIDTH, ComponentConstants.ROW_HEIGHT);
-                bool isGameObjectSelected = dataManager.GameObjectSelectionState[gameObj];
+            // GameObject名の部分をクリックできるように
+            Event evt = Event.current;
+            if (evt.type == EventType.MouseDown && nameRect.Contains(evt.mousePosition))
+            {
+                Event evtCopy = new Event(evt);
+                evt.Use();
+                SelectGameObjectInHierarchy(gameObj, targetObject);
+                EditorWindow.GetWindow<ComponentManager>().Repaint();
+            }
+
+            // GameObject パス
+            Rect pathRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y + 18, gameObjectColumnWidth, 16);
+            string path = ComponentPathUtility.GetGameObjectPath(gameObj, targetObject);
+            EditorGUI.LabelField(pathRect, path, pathLabelStyle);
+
+            // パスの部分もクリックできるように
+            if (evt.type == EventType.MouseDown && pathRect.Contains(evt.mousePosition))
+            {
+                Event evtCopy = new Event(evt);
+                evt.Use();
+                SelectGameObjectInHierarchy(gameObj, targetObject);
+                EditorWindow.GetWindow<ComponentManager>().Repaint();
+            }
+
+            // コンポーネント部分
+            float componentStartX = startX + ComponentConstants.CHECKBOX_WIDTH + gameObjectColumnWidth + ComponentConstants.RESIZE_HANDLE_WIDTH;
+
+            // 各コンポーネントを描画（インデントなしで縦に並べる）
+            for (int i = 0; i < components.Count; i++)
+            {
+                var component = components[i];
+                if (component == null) continue;
+
+                float yOffset = i * ComponentConstants.ROW_HEIGHT;
+
+                // コンポーネントのチェックボックス
+                Rect compCheckboxRect = new Rect(componentStartX, totalRect.y + yOffset, ComponentConstants.CHECKBOX_WIDTH, ComponentConstants.ROW_HEIGHT);
+                bool isCompSelected = component.IsSelected;
 
                 // EditorGUI.Toggleを使用して状態変更を検出
-                bool newIsGameObjectSelected = EditorGUI.Toggle(goCheckboxRect, isGameObjectSelected);
-                if (newIsGameObjectSelected != isGameObjectSelected)
+                bool newIsCompSelected = EditorGUI.Toggle(compCheckboxRect, isCompSelected);
+                if (newIsCompSelected != isCompSelected)
                 {
-                    dataManager.GameObjectSelectionState[gameObj] = newIsGameObjectSelected;
+                    component.IsSelected = newIsCompSelected;
                 }
 
-                // GameObject名
-                Rect nameRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y, gameObjectColumnWidth, ComponentConstants.ROW_HEIGHT);
-                EditorGUI.LabelField(nameRect, gameObj.name, headerLabelStyle);
+                // コンポーネントアイコン
+                GUIContent content = component.Component != null
+                    ? EditorGUIUtility.ObjectContent(component.Component, component.Component.GetType())
+                    : new GUIContent("Missing");
 
-                // GameObject名の部分をクリックできるように
-                Event evt = Event.current;
-                if (evt.type == EventType.MouseDown && nameRect.Contains(evt.mousePosition))
-                {
-                    Event evtCopy = new Event(evt);
-                    evt.Use();
-                    SelectGameObjectInHierarchy(gameObj, targetObject);
-                    EditorWindow.GetWindow<ComponentManager>().Repaint();
-                }
+                Rect iconRect = new Rect(componentStartX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y + yOffset, ComponentConstants.ICON_WIDTH, ComponentConstants.ROW_HEIGHT);
+                EditorGUI.LabelField(iconRect, new GUIContent(content.image));
 
-                // GameObject パス
-                Rect pathRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y + 18, gameObjectColumnWidth, 16);
-                string path = ComponentPathUtility.GetGameObjectPath(gameObj, targetObject);
-                EditorGUI.LabelField(pathRect, path, pathLabelStyle);
-
-                // パスの部分もクリックできるように
-                if (evt.type == EventType.MouseDown && pathRect.Contains(evt.mousePosition))
-                {
-                    Event evtCopy = new Event(evt);
-                    evt.Use();
-                    SelectGameObjectInHierarchy(gameObj, targetObject);
-                    EditorWindow.GetWindow<ComponentManager>().Repaint();
-                }
-
-                // コンポーネント部分
-                float componentStartX = startX + ComponentConstants.CHECKBOX_WIDTH + gameObjectColumnWidth + ComponentConstants.RESIZE_HANDLE_WIDTH;
-
-                // 各コンポーネントを描画（インデントなしで縦に並べる）
-                for (int i = 0; i < components.Count; i++)
-                {
-                    var component = components[i];
-                    if (component == null) continue;
-
-                    float yOffset = i * ComponentConstants.ROW_HEIGHT;
-
-                    // コンポーネントのチェックボックス
-                    Rect compCheckboxRect = new Rect(componentStartX, totalRect.y + yOffset, ComponentConstants.CHECKBOX_WIDTH, ComponentConstants.ROW_HEIGHT);
-                    bool isCompSelected = component.IsSelected;
-
-                    // EditorGUI.Toggleを使用して状態変更を検出
-                    bool newIsCompSelected = EditorGUI.Toggle(compCheckboxRect, isCompSelected);
-                    if (newIsCompSelected != isCompSelected)
-                    {
-                        component.IsSelected = newIsCompSelected;
-                    }
-
-                    // コンポーネントアイコン
-                    GUIContent content = component.Component != null
-                        ? EditorGUIUtility.ObjectContent(component.Component, component.Component.GetType())
-                        : new GUIContent("Missing");
-
-                    Rect iconRect = new Rect(componentStartX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y + yOffset, ComponentConstants.ICON_WIDTH, ComponentConstants.ROW_HEIGHT);
-                    EditorGUI.LabelField(iconRect, new GUIContent(content.image));
-
-                    // コンポーネント名
-                    Rect compLabelRect = new Rect(componentStartX + ComponentConstants.CHECKBOX_WIDTH + ComponentConstants.ICON_WIDTH, totalRect.y + yOffset,
-                                       componentColumnWidth - ComponentConstants.ICON_WIDTH, ComponentConstants.ROW_HEIGHT);
-                    EditorGUI.LabelField(compLabelRect, component.Name, componentLabelStyle);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred while drawing row: {ex.Message}");
+                // コンポーネント名
+                Rect compLabelRect = new Rect(componentStartX + ComponentConstants.CHECKBOX_WIDTH + ComponentConstants.ICON_WIDTH, totalRect.y + yOffset,
+                                   componentColumnWidth - ComponentConstants.ICON_WIDTH, ComponentConstants.ROW_HEIGHT);
+                EditorGUI.LabelField(compLabelRect, component.Name, componentLabelStyle);
             }
         }
 
@@ -349,45 +342,30 @@ namespace Kanameliser.EditorPlus
         {
             if (gameObj == null) return;
 
-            try
+            // 現在のPrefab編集モード情報を取得
+            var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+
+            // Prefab編集モードの場合、対応するPrefab編集モード内のオブジェクトを取得
+            GameObject objectToSelect = GetCorrespondingPrefabModeObject(gameObj, prefabStage, targetObject);
+
+            // ヒエラルキーで選択
+            Selection.activeObject = objectToSelect;
+
+            // エディタのフォーカスをHierarchyビューに移す
+            // まずSceneHierarchyWindowを取得してみる
+            var sceneHierarchyWindowType = System.Type.GetType("UnityEditor.SceneHierarchyWindow,UnityEditor");
+            if (sceneHierarchyWindowType != null)
             {
-                // 現在のPrefab編集モード情報を取得
-                var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
-
-                // Prefab編集モードの場合、対応するPrefab編集モード内のオブジェクトを取得
-                GameObject objectToSelect = GetCorrespondingPrefabModeObject(gameObj, prefabStage, targetObject);
-
-                // ヒエラルキーで選択
-                Selection.activeObject = objectToSelect;
-
-                // エディタのフォーカスをHierarchyビューに移す
-                try
+                var hierarchyWindow = EditorWindow.GetWindow(sceneHierarchyWindowType);
+                if (hierarchyWindow != null)
                 {
-                    // まずSceneHierarchyWindowを取得してみる
-                    var sceneHierarchyWindowType = System.Type.GetType("UnityEditor.SceneHierarchyWindow,UnityEditor");
-                    if (sceneHierarchyWindowType != null)
-                    {
-                        var hierarchyWindow = EditorWindow.GetWindow(sceneHierarchyWindowType);
-                        if (hierarchyWindow != null)
-                        {
-                            hierarchyWindow.Focus();
-                            return;
-                        }
-                    }
-
-                    // フォールバック
-                    EditorApplication.ExecuteMenuItem("Window/General/Hierarchy");
-                }
-                catch (System.Exception)
-                {
-                    // 何らかの例外が発生した場合のフォールバック
-                    EditorApplication.ExecuteMenuItem("Window/General/Hierarchy");
+                    hierarchyWindow.Focus();
+                    return;
                 }
             }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred during hierarchy selection: {ex.Message}");
-            }
+
+            // フォールバック
+            EditorApplication.ExecuteMenuItem("Window/General/Hierarchy");
         }
 
         /// <summary>
@@ -398,52 +376,44 @@ namespace Kanameliser.EditorPlus
             if (prefabStage == null)
                 return gameObject;
 
-            try
+            // 直接インスタンスIDで対応関係を確認
+            if (PrefabUtility.IsPartOfPrefabInstance(prefabStage.prefabContentsRoot) &&
+                PrefabUtility.IsPartOfPrefabInstance(gameObject))
             {
-                // 直接インスタンスIDで対応関係を確認
-                if (PrefabUtility.IsPartOfPrefabInstance(prefabStage.prefabContentsRoot) &&
-                    PrefabUtility.IsPartOfPrefabInstance(gameObject))
-                {
-                    // 編集中のPrefabアセットとターゲットオブジェクトが同じPrefab階層にある可能性がある
-                    GameObject prefabAsset = PrefabUtility.GetCorrespondingObjectFromSource(prefabStage.prefabContentsRoot);
-                    GameObject gameObjectPrefabAsset = PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject);
+                // 編集中のPrefabアセットとターゲットオブジェクトが同じPrefab階層にある可能性がある
+                GameObject prefabAsset = PrefabUtility.GetCorrespondingObjectFromSource(prefabStage.prefabContentsRoot);
+                GameObject gameObjectPrefabAsset = PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject);
 
-                    if (prefabAsset == gameObjectPrefabAsset)
+                if (prefabAsset == gameObjectPrefabAsset)
+                {
+                    // 同じPrefabの一部なので、相対パスを使用して対応するオブジェクトを見つける
+                    string relativePath = ComponentPathUtility.GetRelativePathFromAncestor(gameObject.transform, targetObject.transform);
+                    if (!string.IsNullOrEmpty(relativePath))
                     {
-                        // 同じPrefabの一部なので、相対パスを使用して対応するオブジェクトを見つける
-                        string relativePath = ComponentPathUtility.GetRelativePathFromAncestor(gameObject.transform, targetObject.transform);
-                        if (!string.IsNullOrEmpty(relativePath))
-                        {
-                            Transform childTransform = prefabStage.prefabContentsRoot.transform.Find(relativePath);
-                            if (childTransform != null)
-                                return childTransform.gameObject;
-                        }
+                        Transform childTransform = prefabStage.prefabContentsRoot.transform.Find(relativePath);
+                        if (childTransform != null)
+                            return childTransform.gameObject;
                     }
                 }
-
-                // パス解決によるフォールバック
-                string path = ComponentPathUtility.GetRelativePathFromAncestor(gameObject.transform, targetObject.transform);
-                if (!string.IsNullOrEmpty(path) && path != ".")
-                {
-                    Transform childTransform = prefabStage.prefabContentsRoot.transform.Find(path);
-                    if (childTransform != null)
-                        return childTransform.gameObject;
-                }
-
-                // 同じ名前のオブジェクトを探す（最終手段）
-                if (gameObject != targetObject)
-                {
-                    // 深さ優先探索でGameObjectをPrefabステージから探す
-                    return FindMatchingGameObjectInPrefab(gameObject.name, prefabStage.prefabContentsRoot);
-                }
-
-                return gameObject;
             }
-            catch (Exception ex)
+
+            // パス解決によるフォールバック
+            string path = ComponentPathUtility.GetRelativePathFromAncestor(gameObject.transform, targetObject.transform);
+            if (!string.IsNullOrEmpty(path) && path != ".")
             {
-                Debug.LogError($"Error occurred while getting prefab mode object: {ex.Message}");
-                return gameObject;
+                Transform childTransform = prefabStage.prefabContentsRoot.transform.Find(path);
+                if (childTransform != null)
+                    return childTransform.gameObject;
             }
+
+            // 同じ名前のオブジェクトを探す（最終手段）
+            if (gameObject != targetObject)
+            {
+                // 深さ優先探索でGameObjectをPrefabステージから探す
+                return FindMatchingGameObjectInPrefab(gameObject.name, prefabStage.prefabContentsRoot);
+            }
+
+            return gameObject;
         }
 
         /// <summary>
@@ -471,68 +441,60 @@ namespace Kanameliser.EditorPlus
         public (string gameObjectFilter, string componentFilter, bool searchInPaths, bool showAllComponentsOnMatch, bool showEmptyObjects)
             DrawFilters(string gameObjectFilter, string componentFilter, bool searchInPaths, bool showAllComponentsOnMatch, bool showEmptyObjects)
         {
-            try
+            // フィルター入力欄
+            EditorGUILayout.BeginHorizontal();
+
+            // チェックボックス分の空白
+            GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH);
+
+            // GameObjectフィルター (GameObject列と同じ幅を使用、最小幅も設定)
+            EditorGUILayout.BeginVertical(GUILayout.Width(gameObjectColumnWidth), GUILayout.MinWidth(ComponentConstants.MIN_COLUMN_WIDTH));
+            EditorGUILayout.LabelField("GameObject Filter:", headerLabelStyle);
+            string newGameObjectFilter = EditorGUILayout.TextField(gameObjectFilter);
+
+            // GameObject フィルターオプション
+            bool newSearchInPaths = EditorGUILayout.ToggleLeft(" Include paths in search", searchInPaths);
+
+            EditorGUILayout.EndVertical();
+
+            // リサイズハンドル分の空白
+            GUILayout.Space(ComponentConstants.RESIZE_HANDLE_WIDTH);
+
+            // チェックボックス分の空白
+            GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH);
+
+            // Componentフィルター (残りの幅を使用、最小幅も設定)
+            EditorGUILayout.BeginVertical(GUILayout.Width(componentColumnWidth), GUILayout.MinWidth(ComponentConstants.MIN_COLUMN_WIDTH));
+            EditorGUILayout.LabelField("Component Filter:", headerLabelStyle);
+            string newComponentFilter = EditorGUILayout.TextField(componentFilter);
+
+            // コンポーネント フィルターオプション
+            bool newShowAllComponentsOnMatch = EditorGUILayout.ToggleLeft(" Show all components of matching GameObjects", showAllComponentsOnMatch);
+
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.EndHorizontal();
+
+            // 追加オプション（横並び）
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH); // 左側の余白を合わせる
+
+            // コンポーネントがないオブジェクトも表示するオプション
+            bool newShowEmptyObjects = EditorGUILayout.ToggleLeft(" Show GameObjects with no components", showEmptyObjects);
+            if (newShowEmptyObjects != showEmptyObjects)
             {
-                // フィルター入力欄
-                EditorGUILayout.BeginHorizontal();
-
-                // チェックボックス分の空白
-                GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH);
-
-                // GameObjectフィルター (GameObject列と同じ幅を使用、最小幅も設定)
-                EditorGUILayout.BeginVertical(GUILayout.Width(gameObjectColumnWidth), GUILayout.MinWidth(ComponentConstants.MIN_COLUMN_WIDTH));
-                EditorGUILayout.LabelField("GameObject Filter:", headerLabelStyle);
-                string newGameObjectFilter = EditorGUILayout.TextField(gameObjectFilter);
-
-                // GameObject フィルターオプション
-                bool newSearchInPaths = EditorGUILayout.ToggleLeft(" Include paths in search", searchInPaths);
-
-                EditorGUILayout.EndVertical();
-
-                // リサイズハンドル分の空白
-                GUILayout.Space(ComponentConstants.RESIZE_HANDLE_WIDTH);
-
-                // チェックボックス分の空白
-                GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH);
-
-                // Componentフィルター (残りの幅を使用、最小幅も設定)
-                EditorGUILayout.BeginVertical(GUILayout.Width(componentColumnWidth), GUILayout.MinWidth(ComponentConstants.MIN_COLUMN_WIDTH));
-                EditorGUILayout.LabelField("Component Filter:", headerLabelStyle);
-                string newComponentFilter = EditorGUILayout.TextField(componentFilter);
-
-                // コンポーネント フィルターオプション
-                bool newShowAllComponentsOnMatch = EditorGUILayout.ToggleLeft(" Show all components of matching GameObjects", showAllComponentsOnMatch);
-
-                EditorGUILayout.EndVertical();
-
-                EditorGUILayout.EndHorizontal();
-
-                // 追加オプション（横並び）
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH); // 左側の余白を合わせる
-
-                // コンポーネントがないオブジェクトも表示するオプション
-                bool newShowEmptyObjects = EditorGUILayout.ToggleLeft(" Show GameObjects with no components", showEmptyObjects);
-                if (newShowEmptyObjects != showEmptyObjects)
-                {
-                    dataManager.ShowEmptyObjects = newShowEmptyObjects;
-                    showEmptyObjects = newShowEmptyObjects;
-                }
-                else
-                {
-                    // もしかするとdataManagerの値と一致していない可能性があるので同期する
-                    showEmptyObjects = dataManager.ShowEmptyObjects;
-                }
-
-                EditorGUILayout.EndHorizontal();
-
-                return (newGameObjectFilter, newComponentFilter, newSearchInPaths, newShowAllComponentsOnMatch, showEmptyObjects);
+                dataManager.ShowEmptyObjects = newShowEmptyObjects;
+                showEmptyObjects = newShowEmptyObjects;
             }
-            catch (Exception ex)
+            else
             {
-                Debug.LogError($"Error occurred while drawing filters: {ex.Message}");
-                return (gameObjectFilter, componentFilter, searchInPaths, showAllComponentsOnMatch, showEmptyObjects);
+                // もしかするとdataManagerの値と一致していない可能性があるので同期する
+                showEmptyObjects = dataManager.ShowEmptyObjects;
             }
+
+            EditorGUILayout.EndHorizontal();
+
+            return (newGameObjectFilter, newComponentFilter, newSearchInPaths, newShowAllComponentsOnMatch, showEmptyObjects);
         }
 
         /// <summary>
@@ -540,76 +502,68 @@ namespace Kanameliser.EditorPlus
         /// </summary>
         public GameObject DrawTargetObjectField(GameObject targetObject, ComponentDataManager dataManager)
         {
-            try
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField("Target Object", GUILayout.Width(EditorGUIUtility.labelWidth - 30));
+
+            // 更新ボタンを追加（ラベルの後、フィールドの前）
+            if (GUILayout.Button(EditorGUIUtility.IconContent("Refresh"), GUILayout.Width(30), GUILayout.Height(18)))
             {
-                EditorGUILayout.BeginHorizontal();
-
-                EditorGUILayout.LabelField("Target Object", GUILayout.Width(EditorGUIUtility.labelWidth - 30));
-
-                // 更新ボタンを追加（ラベルの後、フィールドの前）
-                if (GUILayout.Button(EditorGUIUtility.IconContent("Refresh"), GUILayout.Width(30), GUILayout.Height(18)))
+                if (targetObject != null)
                 {
-                    if (targetObject != null)
+                    // 現在のチェック状態を保存
+                    Dictionary<GameObject, bool> savedGameObjectSelectionState = new Dictionary<GameObject, bool>(dataManager.GameObjectSelectionState);
+                    Dictionary<Component, bool> savedComponentSelectionState = new Dictionary<Component, bool>();
+
+                    // 各コンポーネントの選択状態を保存
+                    foreach (var entry in dataManager.ComponentsByGameObject)
                     {
-                        // 現在のチェック状態を保存
-                        Dictionary<GameObject, bool> savedGameObjectSelectionState = new Dictionary<GameObject, bool>(dataManager.GameObjectSelectionState);
-                        Dictionary<Component, bool> savedComponentSelectionState = new Dictionary<Component, bool>();
-
-                        // 各コンポーネントの選択状態を保存
-                        foreach (var entry in dataManager.ComponentsByGameObject)
+                        foreach (var compInfo in entry.Value)
                         {
-                            foreach (var compInfo in entry.Value)
+                            if (compInfo.Component != null)
                             {
-                                if (compInfo.Component != null)
-                                {
-                                    savedComponentSelectionState[compInfo.Component] = compInfo.IsSelected;
-                                }
+                                savedComponentSelectionState[compInfo.Component] = compInfo.IsSelected;
                             }
                         }
+                    }
 
-                        dataManager.RefreshComponentsList(targetObject);
+                    dataManager.RefreshComponentsList(targetObject);
 
-                        // GameObjectのチェック状態を復元
-                        foreach (var gameObject in dataManager.GameObjectSelectionState.Keys.ToList())
+                    // GameObjectのチェック状態を復元
+                    foreach (var gameObject in dataManager.GameObjectSelectionState.Keys.ToList())
+                    {
+                        if (savedGameObjectSelectionState.ContainsKey(gameObject))
                         {
-                            if (savedGameObjectSelectionState.ContainsKey(gameObject))
-                            {
-                                dataManager.GameObjectSelectionState[gameObject] = savedGameObjectSelectionState[gameObject];
-                            }
+                            dataManager.GameObjectSelectionState[gameObject] = savedGameObjectSelectionState[gameObject];
                         }
+                    }
 
-                        // コンポーネントのチェック状態を復元
-                        foreach (var entry in dataManager.ComponentsByGameObject)
+                    // コンポーネントのチェック状態を復元
+                    foreach (var entry in dataManager.ComponentsByGameObject)
+                    {
+                        foreach (var compInfo in entry.Value)
                         {
-                            foreach (var compInfo in entry.Value)
+                            if (compInfo.Component != null && savedComponentSelectionState.ContainsKey(compInfo.Component))
                             {
-                                if (compInfo.Component != null && savedComponentSelectionState.ContainsKey(compInfo.Component))
-                                {
-                                    compInfo.IsSelected = savedComponentSelectionState[compInfo.Component];
-                                }
+                                compInfo.IsSelected = savedComponentSelectionState[compInfo.Component];
                             }
                         }
                     }
                 }
-
-                // オブジェクトフィールド
-                EditorGUI.BeginChangeCheck();
-                GameObject newTargetObject = EditorGUILayout.ObjectField("", targetObject, typeof(GameObject), true) as GameObject;
-                GameObject resultTargetObject = targetObject;
-                if (EditorGUI.EndChangeCheck() && newTargetObject != null)
-                {
-                    dataManager.RefreshComponentsList(newTargetObject);
-                    resultTargetObject = newTargetObject;
-                }
-
-                EditorGUILayout.EndHorizontal();
-                return resultTargetObject;
             }
-            catch (Exception ex)
+
+            // オブジェクトフィールド
+            EditorGUI.BeginChangeCheck();
+            GameObject newTargetObject = EditorGUILayout.ObjectField("", targetObject, typeof(GameObject), true) as GameObject;
+            GameObject resultTargetObject = targetObject;
+            if (EditorGUI.EndChangeCheck() && newTargetObject != null)
             {
-                Debug.LogError($"Error occurred while drawing target object field: {ex.Message}");
-                return targetObject;
+                dataManager.RefreshComponentsList(newTargetObject);
+                resultTargetObject = newTargetObject;
             }
+
+            EditorGUILayout.EndHorizontal();
+            return resultTargetObject;
         }
     }
 

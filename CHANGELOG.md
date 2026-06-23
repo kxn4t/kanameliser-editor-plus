@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed an issue where closing the deletion confirmation dialog with the Esc key or the close (×) button would execute the deletion instead of cancelling it. The dialog buttons and the confirmation message were corrected
   - Fixed a "Mismatched LayoutGroup" error in the console when switching the target object
   - Components that fail to delete (e.g. non-added components on a Prefab instance) no longer abort the remaining deletions; failures are now reported together after the operation completes
+  - Component Manager UI exceptions are no longer swallowed by helper methods; they now reach Unity's console, while `ExitGUIException` continues to propagate correctly
 - **MA Material Helper**
   - Fixed an issue where a Material Swap limitation warning detected in one group could be overwritten and lost when later groups had no conflicts
   - Cleanup on failure (no matching objects) now uses Undo-compatible deletion, preventing broken Undo history after a failed generation
@@ -39,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 削除確認ダイアログをEscキーや閉じる（×）ボタンで閉じると、キャンセルではなく削除が実行されてしまう問題を修正。ダイアログのボタンと確認メッセージを修正しました
   - ターゲットオブジェクトを差し替えた際にコンソールに「Mismatched LayoutGroup」エラーが出る問題を修正
   - 削除に失敗するコンポーネント（Prefabインスタンス上の非追加コンポーネント等）があっても残りの削除が中断されないように修正。失敗した項目は処理完了後にまとめて通知するようにしました
+  - Component ManagerのUI補助メソッドで例外を握り潰さないようにし、Unityのコンソールへ表出するように修正
 - **MA Material Helper**
   - あるグループで検出されたMaterial Swap制限の警告が、後続グループに競合がない場合に上書きされて消えてしまう問題を修正
   - 失敗時（マッチ0件）のクリーンアップをUndo対応の削除に変更し、生成失敗後にUndo履歴が壊れる問題を修正

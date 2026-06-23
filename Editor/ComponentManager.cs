@@ -31,16 +31,16 @@ namespace Kanameliser.EditorPlus
 
         private void OnEnable()
         {
-            try
-            {
-                dataManager = new ComponentDataManager();
-                uiRenderer = new ComponentUIRenderer(dataManager);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred while initializing ComponentManager: {ex.Message}");
-            }
+            dataManager = new ComponentDataManager();
+            uiRenderer = new ComponentUIRenderer(dataManager);
         }
+
+        // Exception policy:
+        // Scope                                            | Policy
+        // OnGUI                                            | Log non-ExitGUI exceptions; let ExitGUIException propagate.
+        // RefreshComponentsList / CalculateGameObjectPath  | Preserve operation-specific fallback and log.
+        // RemoveSelectedComponents item loops               | Record failures and continue with remaining deletions.
+        // All other Component Manager operations            | Propagate to OnGUI or Unity for visibility.
 
         private void OnGUI()
         {
@@ -112,7 +112,7 @@ namespace Kanameliser.EditorPlus
                 EditorGUILayout.Space();
                 DrawButtons();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is ExitGUIException))
             {
                 Debug.LogError($"Error occurred while drawing ComponentManager GUI: {ex.Message}");
             }
@@ -120,102 +120,88 @@ namespace Kanameliser.EditorPlus
 
         private void DrawTableLayout()
         {
-            try
+            // テーブルヘッダー上部の区切り線
+            GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
+
+            // 固定レイアウトのヘッダー行
+            Rect totalRect = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true));
+
+            // フィルター後の表示対象となるGameObjectとComponent
+            var (filteredGameObjects, filteredComponents) = dataManager.GetFilteredItems(
+                targetObject, gameObjectFilter, componentFilter, searchInPaths, showAllComponentsOnMatch);
+
+            // テーブルヘッダーを描画
+            uiRenderer.DrawTableHeader(totalRect, filteredGameObjects, filteredComponents);
+
+            // リサイズハンドルの処理
+            Rect resizeHandleRect = new Rect(
+                totalRect.x + ComponentConstants.CHECKBOX_WIDTH + uiRenderer.GameObjectColumnWidth,
+                totalRect.y,
+                ComponentConstants.RESIZE_HANDLE_WIDTH,
+                totalRect.height);
+            uiRenderer.HandleColumnResize(resizeHandleRect);
+
+            // ヘッダー下部の区切り線
+            GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
+
+            // スクロール可能なコンテンツ領域
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
+
+            // フィルターされたGameObjectを描画
+            foreach (var gameObject in filteredGameObjects)
             {
-                // テーブルヘッダー上部の区切り線
-                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
+                if (gameObject == null) continue;
 
-                // 固定レイアウトのヘッダー行
-                Rect totalRect = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true));
+                // このGameObjectに関連するフィルター済みコンポーネントのリスト
+                var components = dataManager.ComponentsByGameObject[gameObject];
 
-                // フィルター後の表示対象となるGameObjectとComponent
-                var (filteredGameObjects, filteredComponents) = dataManager.GetFilteredItems(
-                    targetObject, gameObjectFilter, componentFilter, searchInPaths, showAllComponentsOnMatch);
+                // コンポーネントフィルタリングを共通メソッドを使用して実行
+                List<ComponentInfo> gameObjectFilteredComponents = dataManager.FilterComponentsByName(
+                    components, componentFilter, showAllComponentsOnMatch);
 
-                // テーブルヘッダーを描画
-                uiRenderer.DrawTableHeader(totalRect, filteredGameObjects, filteredComponents);
+                // 統合された行を描画（GameObjectとそのコンポーネント）
+                uiRenderer.DrawCombinedRow(gameObject, gameObjectFilteredComponents, targetObject);
 
-                // リサイズハンドルの処理
-                Rect resizeHandleRect = new Rect(
-                    totalRect.x + ComponentConstants.CHECKBOX_WIDTH + uiRenderer.GameObjectColumnWidth,
-                    totalRect.y,
-                    ComponentConstants.RESIZE_HANDLE_WIDTH,
-                    totalRect.height);
-                uiRenderer.HandleColumnResize(resizeHandleRect);
-
-                // ヘッダー下部の区切り線
-                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
-
-                // スクロール可能なコンテンツ領域
-                scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-
-
-                // フィルターされたGameObjectを描画
-                foreach (var gameObject in filteredGameObjects)
-                {
-                    if (gameObject == null) continue;
-
-                    // このGameObjectに関連するフィルター済みコンポーネントのリスト
-                    var components = dataManager.ComponentsByGameObject[gameObject];
-
-                    // コンポーネントフィルタリングを共通メソッドを使用して実行
-                    List<ComponentInfo> gameObjectFilteredComponents = dataManager.FilterComponentsByName(
-                        components, componentFilter, showAllComponentsOnMatch);
-
-                    // 統合された行を描画（GameObjectとそのコンポーネント）
-                    uiRenderer.DrawCombinedRow(gameObject, gameObjectFilteredComponents, targetObject);
-
-                    // 区切り線
-                    EditorGUILayout.Space();
-                    Rect rect = EditorGUILayout.GetControlRect(false, 1);
-                    EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 1));
-                    EditorGUILayout.Space();
-                }
-
-                EditorGUILayout.EndScrollView();
+                // 区切り線
+                EditorGUILayout.Space();
+                Rect rect = EditorGUILayout.GetControlRect(false, 1);
+                EditorGUI.DrawRect(rect, new Color(0.5f, 0.5f, 0.5f, 1));
+                EditorGUILayout.Space();
             }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred while drawing table layout: {ex.Message}");
-            }
+
+            EditorGUILayout.EndScrollView();
         }
 
         private void DrawButtons()
         {
-            try
+            EditorGUILayout.BeginHorizontal();
+
+            // 選択されたGameObjectとコンポーネントを取得
+            var (selectedGameObjects, selectedComponents) = dataManager.GetSelectedItems();
+
+            // GameObjectまたはComponentが選択されているかチェック
+            bool anyGameObjectSelected = selectedGameObjects.Count > 0;
+            bool anyComponentSelected = selectedComponents.Count > 0;
+
+            // 選択ボタン - 条件に基づいて有効/無効を制御
+            bool canSelect = CanSelectInHierarchy() && (anyGameObjectSelected || anyComponentSelected);
+            GUI.enabled = canSelect;
+            if (GUILayout.Button("Select in Hierarchy", GUILayout.Height(30)))
             {
-                EditorGUILayout.BeginHorizontal();
-
-                // 選択されたGameObjectとコンポーネントを取得
-                var (selectedGameObjects, selectedComponents) = dataManager.GetSelectedItems();
-
-                // GameObjectまたはComponentが選択されているかチェック
-                bool anyGameObjectSelected = selectedGameObjects.Count > 0;
-                bool anyComponentSelected = selectedComponents.Count > 0;
-
-                // 選択ボタン - 条件に基づいて有効/無効を制御
-                bool canSelect = CanSelectInHierarchy() && (anyGameObjectSelected || anyComponentSelected);
-                GUI.enabled = canSelect;
-                if (GUILayout.Button("Select in Hierarchy", GUILayout.Height(30)))
-                {
-                    SelectInHierarchy();
-                }
-
-                // 削除ボタン
-                GUI.enabled = anyGameObjectSelected || anyComponentSelected;
-                if (GUILayout.Button("Remove Selected Items", GUILayout.Height(30)))
-                {
-                    RemoveSelectedComponents();
-                }
-
-                GUI.enabled = true;
-
-                EditorGUILayout.EndHorizontal();
+                SelectInHierarchy();
             }
-            catch (Exception ex)
+
+            // 削除ボタン
+            GUI.enabled = anyGameObjectSelected || anyComponentSelected;
+            if (GUILayout.Button("Remove Selected Items", GUILayout.Height(30)))
             {
-                Debug.LogError($"Error occurred while drawing buttons: {ex.Message}");
+                RemoveSelectedComponents();
             }
+
+            GUI.enabled = true;
+
+            EditorGUILayout.EndHorizontal();
         }
 
         // Hierarchy内での選択が可能かどうかを判定
@@ -223,34 +209,26 @@ namespace Kanameliser.EditorPlus
         {
             if (targetObject == null) return false;
 
-            try
+            // 現在のPrefab編集モード情報を取得
+            var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+            bool isPrefabMode = prefabStage != null;
+
+            // ケース1: オブジェクトがシーン内オブジェクト（Hierarchy上のオブジェクト）
+            bool isSceneObject = !PrefabUtility.IsPartOfPrefabAsset(targetObject) &&
+                               !EditorUtility.IsPersistent(targetObject);
+
+            // ケース2: Prefab編集モードで開いているPrefabと同じPrefabがAssetsから指定された
+            bool isPrefabAssetMatchingCurrentStage = false;
+            if (isPrefabMode && PrefabUtility.IsPartOfPrefabAsset(targetObject))
             {
-                // 現在のPrefab編集モード情報を取得
-                var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
-                bool isPrefabMode = prefabStage != null;
-
-                // ケース1: オブジェクトがシーン内オブジェクト（Hierarchy上のオブジェクト）
-                bool isSceneObject = !PrefabUtility.IsPartOfPrefabAsset(targetObject) &&
-                                   !EditorUtility.IsPersistent(targetObject);
-
-                // ケース2: Prefab編集モードで開いているPrefabと同じPrefabがAssetsから指定された
-                bool isPrefabAssetMatchingCurrentStage = false;
-                if (isPrefabMode && PrefabUtility.IsPartOfPrefabAsset(targetObject))
-                {
-                    // 編集中のPrefabアセットとターゲットオブジェクトのPrefabアセットが同じか確認
-                    GameObject prefabAsset = PrefabUtility.GetCorrespondingObjectFromSource(prefabStage.prefabContentsRoot);
-                    GameObject targetPrefabAsset = targetObject;
-                    isPrefabAssetMatchingCurrentStage = (prefabAsset == targetPrefabAsset);
-                }
-
-                // いずれかの条件を満たせば選択可能
-                return isSceneObject || isPrefabAssetMatchingCurrentStage;
+                // 編集中のPrefabアセットとターゲットオブジェクトのPrefabアセットが同じか確認
+                GameObject prefabAsset = PrefabUtility.GetCorrespondingObjectFromSource(prefabStage.prefabContentsRoot);
+                GameObject targetPrefabAsset = targetObject;
+                isPrefabAssetMatchingCurrentStage = (prefabAsset == targetPrefabAsset);
             }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred while determining hierarchy selection: {ex.Message}");
-                return false;
-            }
+
+            // いずれかの条件を満たせば選択可能
+            return isSceneObject || isPrefabAssetMatchingCurrentStage;
         }
 
         /// <summary>
@@ -261,18 +239,10 @@ namespace Kanameliser.EditorPlus
             if (prefabStage == null || !PrefabUtility.IsPartOfPrefabAsset(targetObject))
                 return gameObject;
 
-            try
-            {
-                string relativePath = ComponentPathUtility.GetRelativePathFromAncestor(gameObject.transform, targetObject.transform);
-                Transform childTransform = prefabStage.prefabContentsRoot.transform.Find(relativePath);
+            string relativePath = ComponentPathUtility.GetRelativePathFromAncestor(gameObject.transform, targetObject.transform);
+            Transform childTransform = prefabStage.prefabContentsRoot.transform.Find(relativePath);
 
-                return childTransform != null ? childTransform.gameObject : gameObject;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error occurred while getting prefab mode object: {ex.Message}");
-                return gameObject;
-            }
+            return childTransform != null ? childTransform.gameObject : gameObject;
         }
 
         // ヒエラルキー内で選択する処理
@@ -280,53 +250,46 @@ namespace Kanameliser.EditorPlus
         {
             if (targetObject == null) return;
 
-            try
+            // 選択されたGameObjectとコンポーネントを取得
+            var (selectedGameObjects, selectedComponents) = dataManager.GetSelectedItems();
+
+            // 選択用オブジェクトリスト
+            List<UnityEngine.Object> objectsToSelect = new List<UnityEngine.Object>();
+
+            // 現在のPrefab編集モード情報を取得
+            var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+
+            // チェックされたGameObjectを収集
+            foreach (var gameObject in selectedGameObjects)
             {
-                // 選択されたGameObjectとコンポーネントを取得
-                var (selectedGameObjects, selectedComponents) = dataManager.GetSelectedItems();
+                if (gameObject == null) continue;
 
-                // 選択用オブジェクトリスト
-                List<UnityEngine.Object> objectsToSelect = new List<UnityEngine.Object>();
+                // Prefab編集モードの場合、対応するPrefab編集モード内のオブジェクトを取得
+                GameObject objectToAdd = GetCorrespondingPrefabModeObject(gameObject, prefabStage);
+                objectsToSelect.Add(objectToAdd);
+            }
 
-                // 現在のPrefab編集モード情報を取得
-                var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+            // コンポーネントのチェック状態を確認し、対応するGameObjectを追加
+            foreach (var compInfo in selectedComponents)
+            {
+                if (compInfo == null || compInfo.GameObject == null) continue;
 
-                // チェックされたGameObjectを収集
-                foreach (var gameObject in selectedGameObjects)
+                GameObject gameObject = compInfo.GameObject;
+                if (!selectedGameObjects.Contains(gameObject)) // GameObjectが直接選択されていない場合のみ
                 {
-                    if (gameObject == null) continue;
-
                     // Prefab編集モードの場合、対応するPrefab編集モード内のオブジェクトを取得
                     GameObject objectToAdd = GetCorrespondingPrefabModeObject(gameObject, prefabStage);
                     objectsToSelect.Add(objectToAdd);
                 }
-
-                // コンポーネントのチェック状態を確認し、対応するGameObjectを追加
-                foreach (var compInfo in selectedComponents)
-                {
-                    if (compInfo == null || compInfo.GameObject == null) continue;
-
-                    GameObject gameObject = compInfo.GameObject;
-                    if (!selectedGameObjects.Contains(gameObject)) // GameObjectが直接選択されていない場合のみ
-                    {
-                        // Prefab編集モードの場合、対応するPrefab編集モード内のオブジェクトを取得
-                        GameObject objectToAdd = GetCorrespondingPrefabModeObject(gameObject, prefabStage);
-                        objectsToSelect.Add(objectToAdd);
-                    }
-                }
-
-                // 重複を除去
-                objectsToSelect = objectsToSelect.Distinct().ToList();
-
-                // ヒエラルキーで選択
-                if (objectsToSelect.Count > 0)
-                {
-                    Selection.objects = objectsToSelect.ToArray();
-                }
             }
-            catch (Exception ex)
+
+            // 重複を除去
+            objectsToSelect = objectsToSelect.Distinct().ToList();
+
+            // ヒエラルキーで選択
+            if (objectsToSelect.Count > 0)
             {
-                Debug.LogError($"Error occurred during hierarchy selection: {ex.Message}");
+                Selection.objects = objectsToSelect.ToArray();
             }
         }
 
@@ -335,60 +298,52 @@ namespace Kanameliser.EditorPlus
         /// </summary>
         private string CreateDeleteConfirmMessage(List<GameObject> selectedGameObjects, List<ComponentInfo> selectedComponents)
         {
-            try
+            string confirmMessage = "Are you sure you want to delete the following items?\n\n";
+
+            // 選択されたGameObjectの一覧を追加
+            if (selectedGameObjects.Count > 0)
             {
-                string confirmMessage = "Are you sure you want to delete the following items?\n\n";
-
-                // 選択されたGameObjectの一覧を追加
-                if (selectedGameObjects.Count > 0)
+                confirmMessage += "【Selected GameObjects】\n";
+                for (int i = 0; i < selectedGameObjects.Count; i++)
                 {
-                    confirmMessage += "【Selected GameObjects】\n";
-                    for (int i = 0; i < selectedGameObjects.Count; i++)
-                    {
-                        if (selectedGameObjects[i] == null) continue;
+                    if (selectedGameObjects[i] == null) continue;
 
-                        if (i < 10 || i == selectedGameObjects.Count - 1) // 最初の10個と最後の1個を表示
-                        {
-                            confirmMessage += "- " + ComponentPathUtility.GetGameObjectPath(selectedGameObjects[i], targetObject) + "\n";
-                        }
-                        else if (i == 10) // 省略表示
-                        {
-                            confirmMessage += "- ... (and " + (selectedGameObjects.Count - 10) + " more GameObjects)\n";
-                            break;
-                        }
+                    if (i < 10 || i == selectedGameObjects.Count - 1) // 最初の10個と最後の1個を表示
+                    {
+                        confirmMessage += "- " + ComponentPathUtility.GetGameObjectPath(selectedGameObjects[i], targetObject) + "\n";
                     }
-                    confirmMessage += "\n";
-                }
-
-                // 選択されたコンポーネントの一覧を追加
-                if (selectedComponents.Count > 0)
-                {
-                    confirmMessage += "【Selected Components】\n";
-                    for (int i = 0; i < selectedComponents.Count; i++)
+                    else if (i == 10) // 省略表示
                     {
-                        if (selectedComponents[i] == null || selectedComponents[i].GameObject == null) continue;
-
-                        if (i < 10 || i == selectedComponents.Count - 1) // 最初の10個と最後の1個を表示
-                        {
-                            var comp = selectedComponents[i];
-                            confirmMessage += "- " + ComponentPathUtility.GetGameObjectPath(comp.GameObject, targetObject) + " : " + comp.Name + "\n";
-                        }
-                        else if (i == 10) // 省略表示
-                        {
-                            confirmMessage += "- ... (and " + (selectedComponents.Count - 10) + " more Components)\n";
-                            break;
-                        }
+                        confirmMessage += "- ... (and " + (selectedGameObjects.Count - 10) + " more GameObjects)\n";
+                        break;
                     }
                 }
+                confirmMessage += "\n";
+            }
 
-                confirmMessage += "\nUndo is available.";
-                return confirmMessage;
-            }
-            catch (Exception ex)
+            // 選択されたコンポーネントの一覧を追加
+            if (selectedComponents.Count > 0)
             {
-                Debug.LogError($"Error occurred while creating deletion confirmation message: {ex.Message}");
-                return "Error creating confirmation message. Do you want to proceed with deletion?";
+                confirmMessage += "【Selected Components】\n";
+                for (int i = 0; i < selectedComponents.Count; i++)
+                {
+                    if (selectedComponents[i] == null || selectedComponents[i].GameObject == null) continue;
+
+                    if (i < 10 || i == selectedComponents.Count - 1) // 最初の10個と最後の1個を表示
+                    {
+                        var comp = selectedComponents[i];
+                        confirmMessage += "- " + ComponentPathUtility.GetGameObjectPath(comp.GameObject, targetObject) + " : " + comp.Name + "\n";
+                    }
+                    else if (i == 10) // 省略表示
+                    {
+                        confirmMessage += "- ... (and " + (selectedComponents.Count - 10) + " more Components)\n";
+                        break;
+                    }
+                }
             }
+
+            confirmMessage += "\nUndo is available.";
+            return confirmMessage;
         }
 
         private void RemoveSelectedComponents()
