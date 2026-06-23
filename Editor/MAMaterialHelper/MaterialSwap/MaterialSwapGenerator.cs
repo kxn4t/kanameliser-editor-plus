@@ -342,7 +342,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     if (uniqueTargets.Count > 1)
                     {
                         hasConflict = true;
-                        var slotInfo = string.Join(", ", targets.Select(t => $"Slot{t.slotIndex}→{t.targetMaterial.name}"));
+                        var slotInfo = string.Join(", ", targets
+                            .OrderBy(t => t.slotIndex)
+                            .Select(t => $"Slot{t.slotIndex}→{t.targetMaterial.name}"));
                         conflictDetails.Add($"  - '{obj.name}': {slotInfo}");
                     }
                 }
