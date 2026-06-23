@@ -63,14 +63,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         }
 
         /// <summary>
-        /// Logs a warning message to console
-        /// </summary>
-        public static void LogWarning(string message)
-        {
-            Debug.LogWarning($"[MA Material Helper] {message}");
-        }
-
-        /// <summary>
         /// Logs an error message to console
         /// </summary>
         public static void LogError(string message)
