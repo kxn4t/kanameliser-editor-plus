@@ -1,0 +1,30 @@
+{
+    "name": "Kanameliser.EditorPlus.Editor.Tests",
+    "rootNamespace": "",
+    "references": [
+        "Kanameliser.EditorPlus.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [
+        {
+            "name": "nadena.dev.modular-avatar",
+            "expression": "1.13.0",
+            "define": "MODULAR_AVATAR_INSTALLED"
+        }
+    ],
+    "noEngineReferences": false
+}
