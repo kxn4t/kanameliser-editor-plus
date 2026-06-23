@@ -293,10 +293,11 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
 
             while (current != null && current != root)
             {
-                path.Insert(0, current.name);
+                path.Add(current.name);
                 current = current.parent;
             }
 
+            path.Reverse();
             return string.Join("/", path);
         }
 
