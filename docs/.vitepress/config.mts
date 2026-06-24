@@ -38,9 +38,22 @@ const sidebarEn = [
   },
 ]
 
+const siteUrl = 'https://kxn4t.github.io/kanameliser-editor-plus'
+const ogImage = `${siteUrl}/og-image.png`
+
 export default defineConfig({
   title: 'Kanameliser Editor Plus',
   base: '/kanameliser-editor-plus/',
+
+  head: [
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: 'Kanameliser Editor Plus' }],
+    ['meta', { property: 'og:image', content: ogImage }],
+    ['meta', { property: 'og:url', content: siteUrl }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:image', content: ogImage }],
+    ['meta', { name: 'twitter:site', content: '@kanameliser' }],
+  ],
 
   locales: {
     root: {
