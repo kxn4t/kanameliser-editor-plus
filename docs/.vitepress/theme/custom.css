@@ -1,0 +1,4 @@
+.VPHero .name,
+.VPHero .text {
+  white-space: nowrap;
+}
