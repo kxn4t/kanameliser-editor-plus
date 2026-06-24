@@ -74,6 +74,6 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # docs
-docs/node_modules/
-docs/.vitepress/cache/
-docs/.vitepress/dist/
+docs~/node_modules/
+docs~/.vitepress/cache/
+docs~/.vitepress/dist/
