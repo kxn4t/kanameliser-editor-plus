@@ -134,7 +134,18 @@ Mesh A:
 
 Material Swap can only replace "Material X" with one material, so both slots end up with the same result. Material Setter can specify per slot, allowing each to change to a different material.
 
-Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
+#### Material Slot Remapping
+
+When an outfit is converted to fit another avatar (e.g. with auto-fitting tools), a renderer's material slot order can change, so an index-based color setup ends up on the wrong slots. Add a remapping component to the converted outfit and point it at the original outfit to fix this:
+
+1. Right-click the converted outfit → `Add Material Slot Remapping`
+2. Set the original outfit as `Reference Prefab` → click `Generate Mapping`
+3. Run `Copy Material Setup` / `Create Material Setter` / `Create Material Swap` as usual — generation follows the mapping so colors land on the correct slots
+
+The mapping is generated from material references, so generate it before changing the converted outfit's materials (i.e. right after conversion).  
+After generation, only the slot correspondence (indices) is stored, so changing the outfit's materials afterwards does not break the mapping.
+
+Access: Right-click in Hierarchy `Kanameliser Editor Plus > Add Material Slot Remapping / Copy Material Setup / Create Material Setter / Create Material Swap`
 
 ### AO Bounds Setter
 
