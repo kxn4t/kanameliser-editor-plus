@@ -239,27 +239,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         }
 
         /// <summary>
-        /// Creates a color variation GameObject with Material Swap components
-        /// </summary>
-        public static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName, string parameterName)
-        {
-            var colorVariation = new GameObject(name);
-            colorVariation.transform.SetParent(parent, false);
-
-            // Register the created GameObject with Undo system
-            Undo.RegisterCreatedObjectUndo(colorVariation, "Create Color Variation");
-
-            // Add Material Swap component
-            var materialSwap = Undo.AddComponent<ModularAvatarMaterialSwap>(colorVariation);
-
-            // Add Menu Item component
-            var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
-            ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName, parameterName);
-
-            return colorVariation;
-        }
-
-        /// <summary>
         /// Sets up the Material Swap component
         /// </summary>
         public static void SetupMaterialSwap(GameObject swapObject, GameObject rootObject, List<(Material from, Material to)> swaps)
@@ -308,11 +287,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         }
 
         public static GameObject CreateMenuToggleVariation(Transform parent, string name, int colorNumber, string gameObjectName, string parameterName)
-        {
-            throw new InvalidOperationException("Modular Avatar is not available");
-        }
-
-        public static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName, string parameterName)
         {
             throw new InvalidOperationException("Modular Avatar is not available");
         }

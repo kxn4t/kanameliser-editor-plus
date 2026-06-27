@@ -18,7 +18,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
         private const string COLOR_PREFIX = "Color";
         public const string MENU_ITEM_PARAMETER = "KEP/MaterialSwap";
 
-        private delegate GameObject CreateVariationCallback(Transform colorMenu, string colorName, int colorNumber, GameObject targetRoot, string parameterName);
+        private delegate GameObject CreateVariationCallback(Transform colorMenu, string colorName, int colorNumber, string gameObjectName, string parameterName);
         private delegate int ProcessGroupCallback(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group, out string limitationError);
         private delegate string SuccessMessageFactory(bool isNewMenu, int groupCount, int startingColorNumber);
 
@@ -213,7 +213,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 int colorNumber = startingColorNumber + groupIndex;
                 string colorName = $"{COLOR_PREFIX}{colorNumber}";
 
-                var colorVariation = createVariation(colorMenu, colorName, colorNumber, targetRoot, uniqueParameterName);
+                var colorVariation = createVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
                 createdVariations.Add(colorVariation);
 
                 int groupMatches = processGroup(colorVariation, targetRoot, group, out string limitationError);
@@ -278,18 +278,18 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
             };
         }
 
-        private static GameObject CreateMaterialSwapVariation(Transform colorMenu, string colorName, int colorNumber, GameObject targetRoot, string parameterName)
+        private static GameObject CreateMaterialSwapVariation(Transform colorMenu, string colorName, int colorNumber, string gameObjectName, string parameterName)
         {
-            var colorVariation = ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, targetRoot.name, parameterName);
+            var colorVariation = ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, gameObjectName, parameterName);
 #if MODULAR_AVATAR_INSTALLED
             Undo.AddComponent<ModularAvatarMaterialSwap>(colorVariation);
 #endif
             return colorVariation;
         }
 
-        private static GameObject CreateMenuToggleVariation(Transform colorMenu, string colorName, int colorNumber, GameObject targetRoot, string parameterName)
+        private static GameObject CreateMenuToggleVariation(Transform colorMenu, string colorName, int colorNumber, string gameObjectName, string parameterName)
         {
-            return ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, targetRoot.name, parameterName);
+            return ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, gameObjectName, parameterName);
         }
 
         /// <summary>
