@@ -29,7 +29,7 @@ When NDMF preview is active, you can check optimization results from AAO/TTT/Mes
 - Displays original and optimized mesh counts side-by-side with diff indicators
 - Automatically detects NDMF proxy meshes and shows a green dot to indicate preview state
 
-Toggle: `Tools > Kanameliser Editor Plus > Show Mesh Info Display`
+Toggle: `Tools > Kanameliser Editor Plus > [Settings] > Show Mesh Info Display`
 
 ### Toggle Objects Active
 
@@ -78,6 +78,12 @@ Source and target objects are automatically matched in the following priority or
 When multiple candidates remain at the same priority, hierarchy path similarity (comparing parent folders from the leaf upward), ancestor context matching, depth proximity, and Levenshtein distance are used for selection.
 
 This matching specification is also shared by MA Material Helper.
+
+#### Verbose Matching Logs
+
+When automatic matching does not produce the expected result, enable verbose logging to see full match decision details in the Unity console. This toggle also applies to MA Material Helper matching.
+
+Toggle: `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs`
 
 Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy/Paste Materials`
 
