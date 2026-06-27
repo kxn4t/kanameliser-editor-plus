@@ -21,7 +21,8 @@ namespace Kanameliser.Editor.MAMaterialHelper
         private const int MENU_PRIORITY = 100;
 
 #if MODULAR_AVATAR_INSTALLED
-        [MenuItem(MENU_PATH_ADD_REMAPPING, false, MENU_PRIORITY - 1)]
+        // +20 leaves a gap (>= 11) after the Create items so Unity draws a separator above this item.
+        [MenuItem(MENU_PATH_ADD_REMAPPING, false, MENU_PRIORITY + 20)]
         public static void AddMaterialSlotRemapping()
         {
             var selected = Selection.activeGameObject;
