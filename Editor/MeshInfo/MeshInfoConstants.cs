@@ -4,7 +4,7 @@ namespace Kanameliser.EditorPlus
 {
     internal static class MeshInfoConstants
     {
-        public const string MenuPath = "Tools/Kanameliser Editor Plus/Show Mesh Info Display";
+        public const string MenuPath = "Tools/Kanameliser Editor Plus/[Settings]/Show Mesh Info Display";
         public const string PreferenceKey = "MeshInfoDisplayVisible";
 
         public const int WindowWidth = 170;

@@ -32,7 +32,7 @@ namespace Kanameliser.EditorPlus
             EditorApplication.quitting += OnEditorQuitting;
         }
 
-        [MenuItem(MeshInfoConstants.MenuPath, false, 1100)]
+        [MenuItem(MeshInfoConstants.MenuPath)]
         private static void ToggleDisplayVisibility()
         {
             isDisplayVisible = !isDisplayVisible;

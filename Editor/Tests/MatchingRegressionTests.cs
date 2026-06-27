@@ -14,16 +14,20 @@ namespace Kanameliser.EditorPlus.Tests
     {
         private readonly List<UnityEngine.Object> createdObjects = new();
         private CopiedMaterialData originalCopiedData;
+        private bool originalVerboseMatchingLogs;
 
         [SetUp]
         public void SetUp()
         {
             originalCopiedData = MAMaterialHelperSession.CopiedData;
+            originalVerboseMatchingLogs = MAMaterialHelperDebug.VerboseMatchingLogs;
+            MAMaterialHelperDebug.VerboseMatchingLogs = false;
         }
 
         [TearDown]
         public void TearDown()
         {
+            MAMaterialHelperDebug.VerboseMatchingLogs = originalVerboseMatchingLogs;
             MAMaterialHelperSession.StoreCopiedData(originalCopiedData);
 
             for (int i = createdObjects.Count - 1; i >= 0; i--)
@@ -120,6 +124,8 @@ namespace Kanameliser.EditorPlus.Tests
         [Test]
         public void FindMatchingObject_FixesP1ThroughP5SelectionsAndLogs()
         {
+            MAMaterialHelperDebug.VerboseMatchingLogs = true;
+
             var p1Root = CreateGameObject("P1Root");
             var p1Candidate = CreateGameObject("Body", CreateGameObject("Exact", p1Root));
             AddMeshRenderer(p1Candidate);
@@ -187,6 +193,8 @@ namespace Kanameliser.EditorPlus.Tests
         [Test]
         public void FindMatchingObject_PreservesSiblingOrderAndMatchedTargetExclusion()
         {
+            MAMaterialHelperDebug.VerboseMatchingLogs = true;
+
             var root = CreateGameObject("TieRoot");
             var candidates = CreateGameObject("Candidates", root);
             var first = CreateGameObject("Body", candidates);
@@ -219,6 +227,8 @@ namespace Kanameliser.EditorPlus.Tests
         [Test]
         public void FindMatchingObject_UsesCrossTypeFallbackAndRecordsItsLog()
         {
+            MAMaterialHelperDebug.VerboseMatchingLogs = true;
+
             var root = CreateGameObject("CrossTypeRoot");
             var candidate = CreateGameObject("Hair_v2", root);
             AddMeshRenderer(candidate);
@@ -244,11 +254,49 @@ namespace Kanameliser.EditorPlus.Tests
             Assert.That(captured.match, Is.Null);
             Assert.That(captured.logs, Is.EqualTo(new[]
             {
-                MatcherLog(LogType.Log, "Looking for 'Body' (path: 'Body', depth: 1, root: 'Source') in 'RendererlessRoot'"),
+                MatcherLog(LogType.Warning, "Found 1 matching objects without Renderer (excluded):"),
+                MatcherLog(LogType.Log, "No match found for 'Body'")
+            }));
+        }
+
+        [Test]
+        public void FindMatchingObject_VerboseModeAddsObjectCountAndRendererlessDetails()
+        {
+            MAMaterialHelperDebug.VerboseMatchingLogs = true;
+
+            var root = CreateGameObject("VerboseRoot");
+            CreateGameObject("Body", root);
+
+            var captured = CaptureMatchLogs(() => ObjectMatcher.FindMatchingObject(root.transform, "Body", "Body", 1, "Source"));
+
+            Assert.That(captured.match, Is.Null);
+            Assert.That(captured.logs, Is.EqualTo(new[]
+            {
+                MatcherLog(LogType.Log, "Looking for 'Body' (path: 'Body', depth: 1, root: 'Source') in 'VerboseRoot'"),
                 MatcherLog(LogType.Log, "Objects with Renderer: 0"),
                 MatcherLog(LogType.Warning, "Found 1 matching objects without Renderer (excluded):"),
-                MatcherLog(LogType.Warning, "  - 'Body' at 'RendererlessRoot/Body'"),
+                MatcherLog(LogType.Warning, "  - 'Body' at 'VerboseRoot/Body'"),
                 MatcherLog(LogType.Log, "No match found for 'Body'")
+            }));
+        }
+
+        [Test]
+        public void FindMatchingObject_VerboseModeLogsObjectCountOnSuccessfulMatch()
+        {
+            MAMaterialHelperDebug.VerboseMatchingLogs = true;
+
+            var root = CreateGameObject("VerboseMatchRoot");
+            var candidate = CreateGameObject("Body", root);
+            AddMeshRenderer(candidate);
+
+            var captured = CaptureMatchLogs(() => ObjectMatcher.FindMatchingObject(root.transform, "Body", "Body", 1, "Source"));
+
+            Assert.That(captured.match, Is.SameAs(candidate.transform));
+            Assert.That(captured.logs, Is.EqualTo(new[]
+            {
+                MatcherLog(LogType.Log, "Looking for 'Body' (path: 'Body', depth: 1, root: 'Source') in 'VerboseMatchRoot'"),
+                MatcherLog(LogType.Log, "Objects with Renderer: 1"),
+                MatcherLog(LogType.Log, "P1 - Exact path: 'Body' at 'VerboseMatchRoot/Body'")
             }));
         }
 

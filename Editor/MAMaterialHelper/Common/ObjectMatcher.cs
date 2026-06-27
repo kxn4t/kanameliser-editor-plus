@@ -64,7 +64,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         {
             if (root == null) return null;
 
-            Debug.Log($"[MA Material Helper] MATCH: Looking for '{objectName}' (path: '{sourceRelativePath}', depth: {sourceDepth}, root: '{sourceRootName}') in '{root.name}'");
+            if (MAMaterialHelperDebug.VerboseMatchingLogs)
+                Debug.Log($"[MA Material Helper] MATCH: Looking for '{objectName}' (path: '{sourceRelativePath}', depth: {sourceDepth}, root: '{sourceRootName}') in '{root.name}'");
 
             // Pre-compute relative paths for all renderer transforms to avoid repeated hierarchy walks
             var allTransforms = root.GetComponentsInChildren<Transform>(true);
@@ -75,8 +76,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 .Select(t => (transform: t, path: GetRelativePathFromRoot(t, root)))
                 .Where(c => matchedTargets == null || !matchedTargets.Contains(c.transform))
                 .ToList();
-            Debug.Log($"[MA Material Helper] MATCH: Objects with Renderer: {candidates.Count}" +
-                (matchedTargets != null ? $" (excluded {matchedTargets.Count} already matched)" : ""));
+            if (MAMaterialHelperDebug.VerboseMatchingLogs)
+                Debug.Log($"[MA Material Helper] MATCH: Objects with Renderer: {candidates.Count}" +
+                    (matchedTargets != null ? $" (excluded {matchedTargets.Count} already matched)" : ""));
 
             var result = TryMatch(candidates, objectName, sourceRelativePath, sourceDepth, sourceRootName);
 
@@ -114,7 +116,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                     if (p5CrossType.Count > 0)
                     {
                         var selected = SelectBestFuzzyCandidate(p5CrossType, objectName, sourceRelativePath, sourceDepth, sourceRootName);
-                        Debug.Log($"[MA Material Helper] MATCH: P5 - Fuzzy (cross-type): '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
+                        if (MAMaterialHelperDebug.VerboseMatchingLogs)
+                            Debug.Log($"[MA Material Helper] MATCH: P5 - Fuzzy (cross-type): '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
                         matchedTargets?.Add(selected.transform);
                         return selected.transform;
                     }
@@ -124,13 +127,14 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             // Log objects that were excluded due to no Renderer
             var excludedNoRenderer = allTransforms
                 .Where(t => t.GetComponent<Renderer>() == null && t.name == objectName)
-                .ToList();
-            if (excludedNoRenderer.Count > 0)
+                .ToArray();
+            if (excludedNoRenderer.Length > 0)
             {
-                Debug.LogWarning($"[MA Material Helper] MATCH: Found {excludedNoRenderer.Count} matching objects without Renderer (excluded):");
-                foreach (var excluded in excludedNoRenderer.Take(5))
+                Debug.LogWarning($"[MA Material Helper] MATCH: Found {excludedNoRenderer.Length} matching objects without Renderer (excluded):");
+                if (MAMaterialHelperDebug.VerboseMatchingLogs)
                 {
-                    Debug.LogWarning($"[MA Material Helper] MATCH:   - '{excluded.name}' at '{GetFullPath(excluded)}'");
+                    foreach (var excluded in excludedNoRenderer.Take(5))
+                        Debug.LogWarning($"[MA Material Helper] MATCH:   - '{excluded.name}' at '{GetFullPath(excluded)}'");
                 }
             }
 
@@ -154,7 +158,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             if (p1.Count > 0)
             {
                 var selected = SelectBestCandidate(p1, sourceRelativePath, sourceDepth, sourceRootName);
-                Debug.Log($"[MA Material Helper] MATCH: P1 - Exact path: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
+                if (MAMaterialHelperDebug.VerboseMatchingLogs)
+                    Debug.Log($"[MA Material Helper] MATCH: P1 - Exact path: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
                 return selected;
             }
 
@@ -169,7 +174,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             if (p2.Count > 0)
             {
                 var selected = SelectBestCandidate(p2, sourceRelativePath, sourceDepth, sourceRootName);
-                Debug.Log($"[MA Material Helper] MATCH: P2 - Depth+name: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
+                if (MAMaterialHelperDebug.VerboseMatchingLogs)
+                    Debug.Log($"[MA Material Helper] MATCH: P2 - Depth+name: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
                 return selected;
             }
 
@@ -178,7 +184,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             if (p3.Count > 0)
             {
                 var selected = SelectBestCandidate(p3, sourceRelativePath, sourceDepth, sourceRootName);
-                Debug.Log($"[MA Material Helper] MATCH: P3 - Name: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
+                if (MAMaterialHelperDebug.VerboseMatchingLogs)
+                    Debug.Log($"[MA Material Helper] MATCH: P3 - Name: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
                 return selected;
             }
 
@@ -189,7 +196,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             if (p4.Count > 0)
             {
                 var selected = SelectBestCandidate(p4, sourceRelativePath, sourceDepth, sourceRootName);
-                Debug.Log($"[MA Material Helper] MATCH: P4 - Case-insensitive: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
+                if (MAMaterialHelperDebug.VerboseMatchingLogs)
+                    Debug.Log($"[MA Material Helper] MATCH: P4 - Case-insensitive: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
                 return selected;
             }
 
@@ -207,7 +215,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             if (p5.Count > 0)
             {
                 var selected = SelectBestFuzzyCandidate(p5, objectName, sourceRelativePath, sourceDepth, sourceRootName);
-                Debug.Log($"[MA Material Helper] MATCH: P5 - Fuzzy: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
+                if (MAMaterialHelperDebug.VerboseMatchingLogs)
+                    Debug.Log($"[MA Material Helper] MATCH: P5 - Fuzzy: '{selected.transform.name}' at '{GetFullPath(selected.transform)}'");
                 return selected;
             }
 

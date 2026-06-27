@@ -41,3 +41,9 @@ Material Swap can only replace "Material X" with one material, so both slots end
 ## Access
 
 Right-click in Hierarchy → `Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
+
+## Verbose Matching Logs
+
+When automatic object matching does not produce the expected result, enable verbose logging to see full match decision details in the Unity console.
+
+Toggle: `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs`
