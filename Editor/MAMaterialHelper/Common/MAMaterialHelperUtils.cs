@@ -44,8 +44,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 message = "Modular Avatar is not installed"
             };
             return false;
-#endif
-
+#else
             if (targetRoot == null || copiedData == null)
             {
                 result = new GenerationResult
@@ -58,6 +57,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
 
             result = default;
             return true;
+#endif
         }
 
         /// <summary>
