@@ -14,7 +14,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
     /// </summary>
     public static class MaterialSetterGenerator
     {
-        private const string COLOR_MENU_NAME = "Color Menu";
         private const string COLOR_PREFIX = "Color";
         public const string MENU_ITEM_PARAMETER = "KEP/MaterialSetter";
 
@@ -24,7 +23,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
         /// <param name="skipUnchanged">If true, only creates setters for materials that differ from current materials</param>
         public static GenerationResult CreateMaterialSetter(GameObject targetRoot, CopiedMaterialData copiedData, bool skipUnchanged = true)
         {
-            if (!ValidateParameters(targetRoot, copiedData, out var validationResult))
+            if (!MAMaterialHelperUtils.ValidateGenerationParameters(targetRoot, copiedData, out var validationResult))
                 return validationResult;
 
             try
@@ -33,7 +32,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                 Undo.SetCurrentGroupName("Create Material Setter");
                 int undoGroup = Undo.GetCurrentGroup();
 
-                var (colorMenu, isNewMenu) = EnsureColorMenu(targetRoot);
+                var (colorMenu, isNewMenu) = MAMaterialHelperUtils.EnsureColorMenu(targetRoot);
                 var groups = MAMaterialHelperSession.GetCopiedDataGroups();
 
                 if (groups.Count == 0)
@@ -57,7 +56,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                     int colorNumber = startingColorNumber + groupIndex;
                     string colorName = $"{COLOR_PREFIX}{colorNumber}";
 
-                    var colorVariation = CreateColorVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
+                    var colorVariation = ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
                     createdVariations.Add(colorVariation);
 
                     // Create material setters for this group
@@ -119,71 +118,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
         }
 
         #region Private Methods
-
-        /// <summary>
-        /// Validates input parameters for material setter generation
-        /// </summary>
-        private static bool ValidateParameters(GameObject targetRoot, CopiedMaterialData copiedData, out GenerationResult result)
-        {
-#if !MODULAR_AVATAR_INSTALLED
-            result = new GenerationResult
-            {
-                success = false,
-                message = "Modular Avatar is not installed"
-            };
-            return false;
-#endif
-
-            if (targetRoot == null || copiedData == null)
-            {
-                result = new GenerationResult
-                {
-                    success = false,
-                    message = "Invalid parameters"
-                };
-                return false;
-            }
-
-            result = default;
-            return true;
-        }
-
-        /// <summary>
-        /// Ensures Color Menu exists and returns it with creation status
-        /// </summary>
-        private static (Transform colorMenu, bool isNewMenu) EnsureColorMenu(GameObject targetRoot)
-        {
-            Transform colorMenu = targetRoot.transform.Find(COLOR_MENU_NAME);
-            bool isNewMenu = colorMenu == null;
-
-            if (isNewMenu)
-            {
-                var colorMenuObj = ModularAvatarIntegration.CreateColorMenu(targetRoot, COLOR_MENU_NAME);
-                colorMenu = colorMenuObj.transform;
-            }
-
-            return (colorMenu, isNewMenu);
-        }
-
-        /// <summary>
-        /// Creates a color variation GameObject with components
-        /// </summary>
-        private static GameObject CreateColorVariation(Transform parent, string name, int colorNumber, string gameObjectName, string parameterName)
-        {
-#if MODULAR_AVATAR_INSTALLED
-            var colorVariation = new GameObject(name);
-            colorVariation.transform.SetParent(parent, false);
-
-            Undo.RegisterCreatedObjectUndo(colorVariation, "Create Color Variation");
-
-            var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
-            ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, name, colorNumber, gameObjectName, parameterName);
-
-            return colorVariation;
-#else
-            throw new InvalidOperationException("Modular Avatar is not installed");
-#endif
-        }
 
         /// <summary>
         /// Sets up material setters for a specific group

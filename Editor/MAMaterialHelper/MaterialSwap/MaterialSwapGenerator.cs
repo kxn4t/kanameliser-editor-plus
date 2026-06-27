@@ -15,115 +15,31 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
     /// </summary>
     public static class MaterialSwapGenerator
     {
-        private const string COLOR_MENU_NAME = "Color Menu";
         private const string COLOR_PREFIX = "Color";
         public const string MENU_ITEM_PARAMETER = "KEP/MaterialSwap";
+
+        private delegate GameObject CreateVariationCallback(Transform colorMenu, string colorName, int colorNumber, string gameObjectName, string parameterName);
+        private delegate int ProcessGroupCallback(GameObject colorVariation, GameObject targetRoot, List<MaterialSetupData> group, out string limitationError);
+        private delegate string SuccessMessageFactory(bool isNewMenu, int groupCount, int startingColorNumber);
 
         /// <summary>
         /// Creates material swap setup on the target GameObject
         /// </summary>
         public static GenerationResult CreateMaterialSwap(GameObject targetRoot, CopiedMaterialData copiedData)
         {
-            if (!ValidateParameters(targetRoot, copiedData, out var validationResult))
+            if (!MAMaterialHelperUtils.ValidateGenerationParameters(targetRoot, copiedData, out var validationResult))
                 return validationResult;
 
             try
             {
-                // Set up Undo group for this operation
-                Undo.SetCurrentGroupName("Create Material Swap");
-                int undoGroup = Undo.GetCurrentGroup();
-
-                var (colorMenu, isNewMenu) = EnsureColorMenu(targetRoot);
-                var groups = MAMaterialHelperSession.GetCopiedDataGroups();
-
-                if (groups.Count == 0)
-                {
-                    return new GenerationResult
-                    {
-                        success = false,
-                        message = "No material setup groups found"
-                    };
-                }
-
-                var createdVariations = new List<GameObject>();
-                int totalSuccessfulMatches = 0;
-                int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
-                string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
-                var limitationErrors = new List<string>();
-
-                // Create color variations for each group
-                for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
-                {
-                    var group = groups[groupIndex];
-                    int colorNumber = startingColorNumber + groupIndex;
-                    string colorName = $"{COLOR_PREFIX}{colorNumber}";
-
-                    var colorVariation = ModularAvatarIntegration.CreateColorVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
-                    createdVariations.Add(colorVariation);
-
-                    // Create material swaps for this group
-                    int groupMatches = SetupMaterialSwapsForGroup(colorVariation, targetRoot, group, out string limitationError);
-                    if (!string.IsNullOrEmpty(limitationError))
-                    {
-                        limitationErrors.Add(limitationError);
-                    }
-
-                    totalSuccessfulMatches += groupMatches;
-
-                    if (groupMatches == 0)
-                    {
-                        Debug.LogWarning($"[MA Material Helper] No matching objects found for group {groupIndex + 1}");
-                    }
-                }
-
-                if (totalSuccessfulMatches == 0)
-                {
-                    // Clean up all created variations
-                    foreach (var variation in createdVariations)
-                    {
-                        Undo.DestroyObjectImmediate(variation);
-                    }
-
-                    if (isNewMenu)
-                    {
-                        Undo.DestroyObjectImmediate(colorMenu.gameObject);
-                    }
-
-                    Undo.CollapseUndoOperations(undoGroup);
-
-                    return new GenerationResult
-                    {
-                        success = false,
-                        message = "No matching objects found between source and target"
-                    };
-                }
-
-                EditorUtility.SetDirty(targetRoot);
-
-                // Collapse all Undo operations into a single operation
-                Undo.CollapseUndoOperations(undoGroup);
-
-                string resultMessage = isNewMenu
-                    ? $"Created Color Menu with {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})"
-                    : $"Added {groups.Count} color variations (Color{startingColorNumber}-Color{startingColorNumber + groups.Count - 1})";
-
-                // If there were limitation errors, return them as warning
-                if (limitationErrors.Count > 0)
-                {
-                    return new GenerationResult
-                    {
-                        success = false,
-                        message = string.Join("\n\n", limitationErrors),
-                        createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
-                    };
-                }
-
-                return new GenerationResult
-                {
-                    success = true,
-                    message = resultMessage,
-                    createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
-                };
+                return CreateMaterialSwapCore(
+                    targetRoot,
+                    "Create Material Swap",
+                    CreateMaterialSwapVariation,
+                    SetupMaterialSwapsForGroup,
+                    (isNewMenu, groupCount, startingColorNumber) => isNewMenu
+                        ? $"Created Color Menu with {groupCount} color variations (Color{startingColorNumber}-Color{startingColorNumber + groupCount - 1})"
+                        : $"Added {groupCount} color variations (Color{startingColorNumber}-Color{startingColorNumber + groupCount - 1})");
             }
             catch (Exception e)
             {
@@ -140,115 +56,19 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
         /// </summary>
         public static GenerationResult CreateMaterialSwapPerObject(GameObject targetRoot, CopiedMaterialData copiedData)
         {
-            if (!ValidateParameters(targetRoot, copiedData, out var validationResult))
+            if (!MAMaterialHelperUtils.ValidateGenerationParameters(targetRoot, copiedData, out var validationResult))
                 return validationResult;
 
             try
             {
-                // Set up Undo group for this operation
-                Undo.SetCurrentGroupName("Create Material Swap Per Object");
-                int undoGroup = Undo.GetCurrentGroup();
-
-                var (colorMenu, isNewMenu) = EnsureColorMenu(targetRoot);
-                var groups = MAMaterialHelperSession.GetCopiedDataGroups();
-
-                if (groups.Count == 0)
-                {
-                    return new GenerationResult
-                    {
-                        success = false,
-                        message = "No material setup groups found"
-                    };
-                }
-
-                var createdVariations = new List<GameObject>();
-                int totalSuccessfulMatches = 0;
-                int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
-                string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
-                var limitationErrors = new List<string>();
-
-                // Create color variations for each group
-                for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
-                {
-                    var group = groups[groupIndex];
-                    int colorNumber = startingColorNumber + groupIndex;
-                    string colorName = $"{COLOR_PREFIX}{colorNumber}";
-
-                    var colorVariation = new GameObject(colorName);
-                    colorVariation.transform.SetParent(colorMenu, false);
-
-                    // Register the created GameObject with Undo system
-                    Undo.RegisterCreatedObjectUndo(colorVariation, "Create Color Variation");
-
-#if MODULAR_AVATAR_INSTALLED
-                    var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
-                    ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, colorName, colorNumber, targetRoot.name, uniqueParameterName);
-#endif
-                    createdVariations.Add(colorVariation);
-
-                    // Create material swaps for this group (per-object mode)
-                    int groupMatches = SetupMaterialSwapsPerObjectForGroup(colorVariation, targetRoot, group, out string limitationError);
-                    if (!string.IsNullOrEmpty(limitationError))
-                    {
-                        limitationErrors.Add(limitationError);
-                    }
-
-                    totalSuccessfulMatches += groupMatches;
-
-                    if (groupMatches == 0)
-                    {
-                        Debug.LogWarning($"[MA Material Helper] No matching objects found for group {groupIndex + 1}");
-                    }
-                }
-
-                if (totalSuccessfulMatches == 0)
-                {
-                    // Clean up all created variations
-                    foreach (var variation in createdVariations)
-                    {
-                        Undo.DestroyObjectImmediate(variation);
-                    }
-
-                    if (isNewMenu)
-                    {
-                        Undo.DestroyObjectImmediate(colorMenu.gameObject);
-                    }
-
-                    Undo.CollapseUndoOperations(undoGroup);
-
-                    return new GenerationResult
-                    {
-                        success = false,
-                        message = "No matching objects found between source and target"
-                    };
-                }
-
-                EditorUtility.SetDirty(targetRoot);
-
-                // Collapse all Undo operations into a single operation
-                Undo.CollapseUndoOperations(undoGroup);
-
-                string resultMessage = isNewMenu
-                    ? $"Created Color Menu with {groups.Count} color variations (per-object components)"
-                    : $"Added {groups.Count} color variations with per-object components";
-
-                // If there were limitation errors, return them as warning
-                if (limitationErrors.Count > 0)
-                {
-                    return new GenerationResult
-                    {
-                        success = false,
-                        message = string.Join("\n\n", limitationErrors),
-                        createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
-                    };
-                }
-
-                return new GenerationResult
-                {
-                    success = true,
-                    message = resultMessage,
-                    createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
-                };
+                return CreateMaterialSwapCore(
+                    targetRoot,
+                    "Create Material Swap Per Object",
+                    CreateMenuToggleVariation,
+                    SetupMaterialSwapsPerObjectForGroup,
+                    (isNewMenu, groupCount, _) => isNewMenu
+                        ? $"Created Color Menu with {groupCount} color variations (per-object components)"
+                        : $"Added {groupCount} color variations with per-object components");
             }
             catch (Exception e)
             {
@@ -357,6 +177,121 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
         #region Private Methods
 
+        private static GenerationResult CreateMaterialSwapCore(
+            GameObject targetRoot,
+            string undoGroupName,
+            CreateVariationCallback createVariation,
+            ProcessGroupCallback processGroup,
+            SuccessMessageFactory createSuccessMessage)
+        {
+            // Set up Undo group for this operation
+            Undo.SetCurrentGroupName(undoGroupName);
+            int undoGroup = Undo.GetCurrentGroup();
+
+            var (colorMenu, isNewMenu) = MAMaterialHelperUtils.EnsureColorMenu(targetRoot);
+            var groups = MAMaterialHelperSession.GetCopiedDataGroups();
+
+            if (groups.Count == 0)
+            {
+                return new GenerationResult
+                {
+                    success = false,
+                    message = "No material setup groups found"
+                };
+            }
+
+            var createdVariations = new List<GameObject>();
+            int totalSuccessfulMatches = 0;
+            int startingColorNumber = MAMaterialHelperUtils.DetermineNextColorNumber(colorMenu, COLOR_PREFIX);
+            string uniqueParameterName = ModularAvatarIntegration.DetermineParameterNameForColorMenu(colorMenu, targetRoot, MENU_ITEM_PARAMETER);
+            var limitationErrors = new List<string>();
+
+            // Create color variations for each group
+            for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
+            {
+                var group = groups[groupIndex];
+                int colorNumber = startingColorNumber + groupIndex;
+                string colorName = $"{COLOR_PREFIX}{colorNumber}";
+
+                var colorVariation = createVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
+                createdVariations.Add(colorVariation);
+
+                int groupMatches = processGroup(colorVariation, targetRoot, group, out string limitationError);
+                if (!string.IsNullOrEmpty(limitationError))
+                {
+                    limitationErrors.Add(limitationError);
+                }
+
+                totalSuccessfulMatches += groupMatches;
+
+                if (groupMatches == 0)
+                {
+                    Debug.LogWarning($"[MA Material Helper] No matching objects found for group {groupIndex + 1}");
+                }
+            }
+
+            if (totalSuccessfulMatches == 0)
+            {
+                // Clean up all created variations
+                foreach (var variation in createdVariations)
+                {
+                    Undo.DestroyObjectImmediate(variation);
+                }
+
+                if (isNewMenu)
+                {
+                    Undo.DestroyObjectImmediate(colorMenu.gameObject);
+                }
+
+                Undo.CollapseUndoOperations(undoGroup);
+
+                return new GenerationResult
+                {
+                    success = false,
+                    message = "No matching objects found between source and target"
+                };
+            }
+
+            EditorUtility.SetDirty(targetRoot);
+
+            // Collapse all Undo operations into a single operation
+            Undo.CollapseUndoOperations(undoGroup);
+
+            string resultMessage = createSuccessMessage(isNewMenu, groups.Count, startingColorNumber);
+
+            // If there were limitation errors, return them as warning
+            if (limitationErrors.Count > 0)
+            {
+                return new GenerationResult
+                {
+                    success = false,
+                    message = string.Join("\n\n", limitationErrors),
+                    createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
+                };
+            }
+
+            return new GenerationResult
+            {
+                success = true,
+                message = resultMessage,
+                createdObject = createdVariations.Count > 0 ? createdVariations[0] : null
+            };
+        }
+
+        private static GameObject CreateMaterialSwapVariation(Transform colorMenu, string colorName, int colorNumber, string gameObjectName, string parameterName)
+        {
+            var colorVariation = ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, gameObjectName, parameterName);
+#if MODULAR_AVATAR_INSTALLED
+            Undo.AddComponent<ModularAvatarMaterialSwap>(colorVariation);
+#endif
+            return colorVariation;
+        }
+
+        private static GameObject CreateMenuToggleVariation(Transform colorMenu, string colorName, int colorNumber, string gameObjectName, string parameterName)
+        {
+            return ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, gameObjectName, parameterName);
+        }
+
         /// <summary>
         /// Builds error message for Material Swap limitation
         /// </summary>
@@ -372,51 +307,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                                "代わりに「Create Material Setter」を使用してください。\n" +
                                "Please use 'Create Material Setter' instead.";
             return errorMessage;
-        }
-
-        /// <summary>
-        /// Validates input parameters for material swap generation
-        /// </summary>
-        private static bool ValidateParameters(GameObject targetRoot, CopiedMaterialData copiedData, out GenerationResult result)
-        {
-#if !MODULAR_AVATAR_INSTALLED
-            result = new GenerationResult
-            {
-                success = false,
-                message = "Modular Avatar is not installed"
-            };
-            return false;
-#endif
-
-            if (targetRoot == null || copiedData == null)
-            {
-                result = new GenerationResult
-                {
-                    success = false,
-                    message = "Invalid parameters"
-                };
-                return false;
-            }
-
-            result = default;
-            return true;
-        }
-
-        /// <summary>
-        /// Ensures Color Menu exists and returns it with creation status
-        /// </summary>
-        private static (Transform colorMenu, bool isNewMenu) EnsureColorMenu(GameObject targetRoot)
-        {
-            Transform colorMenu = targetRoot.transform.Find(COLOR_MENU_NAME);
-            bool isNewMenu = colorMenu == null;
-
-            if (isNewMenu)
-            {
-                var colorMenuObj = ModularAvatarIntegration.CreateColorMenu(targetRoot, COLOR_MENU_NAME);
-                colorMenu = colorMenuObj.transform;
-            }
-
-            return (colorMenu, isNewMenu);
         }
 
         /// <summary>

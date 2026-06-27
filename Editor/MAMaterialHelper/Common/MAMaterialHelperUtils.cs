@@ -10,6 +10,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
     /// </summary>
     public static class MAMaterialHelperUtils
     {
+        internal const string ColorMenuName = "Color Menu";
+
         /// <summary>
         /// Validates if all requirements are met for MA Material Helper functionality
         /// </summary>
@@ -28,6 +30,51 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 message = "All requirements met"
             };
 #endif
+        }
+
+        /// <summary>
+        /// Validates input parameters for MA generation
+        /// </summary>
+        internal static bool ValidateGenerationParameters(GameObject targetRoot, CopiedMaterialData copiedData, out GenerationResult result)
+        {
+#if !MODULAR_AVATAR_INSTALLED
+            result = new GenerationResult
+            {
+                success = false,
+                message = "Modular Avatar is not installed"
+            };
+            return false;
+#else
+            if (targetRoot == null || copiedData == null)
+            {
+                result = new GenerationResult
+                {
+                    success = false,
+                    message = "Invalid parameters"
+                };
+                return false;
+            }
+
+            result = default;
+            return true;
+#endif
+        }
+
+        /// <summary>
+        /// Ensures Color Menu exists and returns it with creation status
+        /// </summary>
+        internal static (Transform colorMenu, bool isNewMenu) EnsureColorMenu(GameObject targetRoot)
+        {
+            Transform colorMenu = targetRoot.transform.Find(ColorMenuName);
+            bool isNewMenu = colorMenu == null;
+
+            if (isNewMenu)
+            {
+                var colorMenuObj = ModularAvatarIntegration.CreateColorMenu(targetRoot, ColorMenuName);
+                colorMenu = colorMenuObj.transform;
+            }
+
+            return (colorMenu, isNewMenu);
         }
 
         /// <summary>
