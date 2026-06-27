@@ -58,7 +58,10 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     int colorNumber = startingColorNumber + groupIndex;
                     string colorName = $"{COLOR_PREFIX}{colorNumber}";
 
-                    var colorVariation = ModularAvatarIntegration.CreateColorVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
+                    var colorVariation = ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
+#if MODULAR_AVATAR_INSTALLED
+                    Undo.AddComponent<ModularAvatarMaterialSwap>(colorVariation);
+#endif
                     createdVariations.Add(colorVariation);
 
                     // Create material swaps for this group
@@ -174,16 +177,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                     int colorNumber = startingColorNumber + groupIndex;
                     string colorName = $"{COLOR_PREFIX}{colorNumber}";
 
-                    var colorVariation = new GameObject(colorName);
-                    colorVariation.transform.SetParent(colorMenu, false);
-
-                    // Register the created GameObject with Undo system
-                    Undo.RegisterCreatedObjectUndo(colorVariation, "Create Color Variation");
-
-#if MODULAR_AVATAR_INSTALLED
-                    var menuItem = Undo.AddComponent<ModularAvatarMenuItem>(colorVariation);
-                    ModularAvatarIntegration.ConfigureMenuItemAsToggle(menuItem, colorName, colorNumber, targetRoot.name, uniqueParameterName);
-#endif
+                    var colorVariation = ModularAvatarIntegration.CreateMenuToggleVariation(colorMenu, colorName, colorNumber, targetRoot.name, uniqueParameterName);
                     createdVariations.Add(colorVariation);
 
                     // Create material swaps for this group (per-object mode)
