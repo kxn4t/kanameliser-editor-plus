@@ -12,6 +12,15 @@ namespace Kanameliser.EditorPlus
     /// </summary>
     public class TransformSelectorWindow : EditorWindow
     {
+        private const float WindowWidth = 300f;
+        private const float WindowHeight = 400f;
+        private const float WindowPadding = 5f;
+        private const float SearchFieldMarginBottom = 5f;
+        private const float TransformListBorderWidth = 1f;
+        private static readonly Color PlaceholderTextColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        private static readonly Color TransformListBorderColor = new Color(0.2f, 0.2f, 0.2f);
+        private static readonly Color TransformItemHoverColor = new Color(0.3f, 0.5f, 0.8f, 0.5f);
+
         private GameObject rootObject;
         private Action<Transform> onSelectionChanged;
         private TextField searchField;
@@ -27,7 +36,7 @@ namespace Kanameliser.EditorPlus
             window.onSelectionChanged = onSelectionChanged;
 
             // Position the window below the field
-            Vector2 windowSize = new Vector2(300, 400);
+            Vector2 windowSize = new Vector2(WindowWidth, WindowHeight);
 
             // Convert to screen position, align to the right edge of the field
             Vector2 screenPosition = GUIUtility.GUIToScreenPoint(new Vector2(fieldRect.xMax - windowSize.x, fieldRect.yMax));
@@ -57,14 +66,14 @@ namespace Kanameliser.EditorPlus
         public void CreateGUI()
         {
             var root = rootVisualElement;
-            root.style.paddingTop = 5;
-            root.style.paddingBottom = 5;
-            root.style.paddingLeft = 5;
-            root.style.paddingRight = 5;
+            root.style.paddingTop = WindowPadding;
+            root.style.paddingBottom = WindowPadding;
+            root.style.paddingLeft = WindowPadding;
+            root.style.paddingRight = WindowPadding;
 
             // Search field
             searchField = new TextField();
-            searchField.style.marginBottom = 5;
+            searchField.style.marginBottom = SearchFieldMarginBottom;
             searchField.RegisterValueChangedCallback(OnSearchTextChanged);
 
             // Add placeholder text
@@ -72,7 +81,7 @@ namespace Kanameliser.EditorPlus
             placeholderLabel.style.position = Position.Absolute;
             placeholderLabel.style.left = 3;
             placeholderLabel.style.top = 2;
-            placeholderLabel.style.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+            placeholderLabel.style.color = PlaceholderTextColor;
             placeholderLabel.pickingMode = PickingMode.Ignore;
 
             searchField.RegisterCallback<FocusInEvent>(evt =>
@@ -99,14 +108,14 @@ namespace Kanameliser.EditorPlus
             // Transform list
             transformListScrollView = new ScrollView();
             transformListScrollView.style.flexGrow = 1;
-            transformListScrollView.style.borderTopWidth = 1;
-            transformListScrollView.style.borderBottomWidth = 1;
-            transformListScrollView.style.borderLeftWidth = 1;
-            transformListScrollView.style.borderRightWidth = 1;
-            transformListScrollView.style.borderTopColor = new Color(0.2f, 0.2f, 0.2f);
-            transformListScrollView.style.borderBottomColor = new Color(0.2f, 0.2f, 0.2f);
-            transformListScrollView.style.borderLeftColor = new Color(0.2f, 0.2f, 0.2f);
-            transformListScrollView.style.borderRightColor = new Color(0.2f, 0.2f, 0.2f);
+            transformListScrollView.style.borderTopWidth = TransformListBorderWidth;
+            transformListScrollView.style.borderBottomWidth = TransformListBorderWidth;
+            transformListScrollView.style.borderLeftWidth = TransformListBorderWidth;
+            transformListScrollView.style.borderRightWidth = TransformListBorderWidth;
+            transformListScrollView.style.borderTopColor = TransformListBorderColor;
+            transformListScrollView.style.borderBottomColor = TransformListBorderColor;
+            transformListScrollView.style.borderLeftColor = TransformListBorderColor;
+            transformListScrollView.style.borderRightColor = TransformListBorderColor;
             root.Add(transformListScrollView);
 
             RefreshTransformList();
@@ -193,7 +202,7 @@ namespace Kanameliser.EditorPlus
             // Hover effect
             item.RegisterCallback<MouseEnterEvent>(evt =>
             {
-                item.style.backgroundColor = new Color(0.3f, 0.5f, 0.8f, 0.5f);
+                item.style.backgroundColor = TransformItemHoverColor;
             });
             item.RegisterCallback<MouseLeaveEvent>(evt =>
             {

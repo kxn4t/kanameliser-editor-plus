@@ -6,6 +6,13 @@ namespace Kanameliser.EditorPlus
 {
     internal class MissingBlendShapeInserterWindow : EditorWindow
     {
+        private const float WindowMinWidth = 600f;
+        private const float WindowMinHeight = 400f;
+        private const float DropAreaHeight = 50.0f;
+        private const float ClipListItemSpacing = 4f;
+        private const float ClipListMaxHeight = 200f;
+        private const float ClipListHeightPadding = 10f;
+
         // ユーザーが指定するアニメーションクリップのリスト
         public List<AnimationClip> animationClips = new List<AnimationClip>();
 
@@ -28,7 +35,7 @@ namespace Kanameliser.EditorPlus
         public static void ShowWindow()
         {
             var window = GetWindow<MissingBlendShapeInserterWindow>("Missing BlendShape Inserter");
-            window.minSize = new Vector2(600, 400);
+            window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
         }
 
         private void OnGUI()
@@ -62,7 +69,7 @@ namespace Kanameliser.EditorPlus
             EditorGUILayout.LabelField("アニメーションファイルをドラッグ＆ドロップで指定", EditorStyles.boldLabel);
 
             // ドラッグ＆ドロップエリアを作成
-            Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+            Rect dropArea = GUILayoutUtility.GetRect(0.0f, DropAreaHeight, GUILayout.ExpandWidth(true));
             GUI.Box(dropArea, "ここにアニメーションファイルをドラッグ＆ドロップ");
 
             // ドラッグ＆ドロップの処理を行う
@@ -130,12 +137,11 @@ namespace Kanameliser.EditorPlus
 
             // リストの高さを計算
             int itemCount = animationClips.Count;
-            float itemHeight = EditorGUIUtility.singleLineHeight + 4f;
-            float maxListHeight = 200f;
-            float listHeight = Mathf.Min(itemCount * itemHeight, maxListHeight);
+            float itemHeight = EditorGUIUtility.singleLineHeight + ClipListItemSpacing;
+            float listHeight = Mathf.Min(itemCount * itemHeight, ClipListMaxHeight);
 
             // スクロールビューの開始
-            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Height(listHeight + 10f));
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Height(listHeight + ClipListHeightPadding));
 
             // 各アニメーションクリップを描画
             int clipIndexToRemove = -1;
