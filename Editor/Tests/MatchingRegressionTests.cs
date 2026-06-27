@@ -426,6 +426,50 @@ namespace Kanameliser.EditorPlus.Tests
             }
         }
 
+        [Test]
+        public void PasteMaterials_UsesNestedRelativePathForDuplicateNames()
+        {
+            var targetRoot = CreateGameObject("NestedTarget");
+            var materialA = CreateMaterial("MaterialA");
+            var materialB = CreateMaterial("MaterialB");
+            var beforeA = CreateMaterial("BeforeA");
+            var beforeB = CreateMaterial("BeforeB");
+
+            var bodyA = CreateGameObject("Body", CreateGameObject("VariantA", targetRoot)).AddComponent<MeshRenderer>();
+            bodyA.sharedMaterial = beforeA;
+            var bodyB = CreateGameObject("Body", CreateGameObject("VariantB", targetRoot)).AddComponent<MeshRenderer>();
+            bodyB.sharedMaterial = beforeB;
+
+            var copiedData = new[]
+            {
+                Data("Body", "VariantA/Body", 2, targetRoot.name, "MeshRenderer", materialA),
+                Data("Body", "VariantB/Body", 2, targetRoot.name, "MeshRenderer", materialB)
+            };
+
+            var undoPerformed = false;
+            try
+            {
+                Undo.IncrementCurrentGroup();
+                var logs = CaptureLogs("[MaterialCopier]", () => MaterialCopier.PasteMaterialsForTests(new[] { targetRoot }, copiedData));
+
+                Assert.That(logs, Is.EqualTo(new[] { "Log: [MaterialCopier] Applied materials to 2 objects." }));
+                Assert.That(bodyA.sharedMaterial, Is.SameAs(materialA));
+                Assert.That(bodyB.sharedMaterial, Is.SameAs(materialB));
+
+                Undo.PerformUndo();
+                undoPerformed = true;
+                Assert.That(bodyA.sharedMaterial, Is.SameAs(beforeA));
+                Assert.That(bodyB.sharedMaterial, Is.SameAs(beforeB));
+            }
+            finally
+            {
+                if (!undoPerformed)
+                {
+                    Undo.PerformUndo();
+                }
+            }
+        }
+
         private static MaterialData Data(string name, string path, int depth, string rootName = "Source", string rendererType = "MeshRenderer", params Material[] materials)
         {
             return new MaterialData(name, materials ?? Array.Empty<Material>(), depth, path, rootName, rendererType);

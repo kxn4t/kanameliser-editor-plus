@@ -23,8 +23,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         private const float FuzzyAncestorBonus = 20f;
         private const int EligibilityMinTokenLength = 3;
         private const int RankingMinTokenLength = 1;
-        private const float NormalizedNameScore = 100f;
-        private const float FuzzyNameScore = 60f;
+        internal const float NormalizedNameScore = 100f;
+        internal const float FuzzyNameScore = 60f;
 
         private static readonly char[] NameSeparators = { '_', '-', '.', ' ' };
 
