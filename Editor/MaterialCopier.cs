@@ -257,6 +257,13 @@ namespace Kanameliser.EditorPlus
         {
             if (copiedMaterials == null || copiedMaterials.Count == 0) return null;
 
+            // Keep in sync with ObjectMatcher's tier order, P5 eligibility, shared
+            // scoring helpers, and name-score constants. Intentional differences:
+            // this searches from paste target to copied source data, allows empty
+            // rendererType metadata, uses RootNameBonus for multi-root copy/paste
+            // disambiguation, and does not share Transform collection, logging, or
+            // matchedTargets duplicate tracking.
+
             // Apply renderer type filter to base candidates
             var baseCandidates = copiedMaterials.Where(d =>
                 string.IsNullOrEmpty(targetRendererType) ||
@@ -341,7 +348,7 @@ namespace Kanameliser.EditorPlus
 
         /// <summary>
         /// Selects the best source MaterialData for P5 fuzzy tier using combined name + path scoring.
-        /// Score: NameScore(norm=100, fuzzy=60) + PathSegmentScore + AncestorContextScore + RootNameBonus.
+        /// Score: NameScore + PathSegmentScore + AncestorContextScore + RootNameBonus.
         /// Tiebreakers: highest score, then depth proximity, then Levenshtein distance.
         /// </summary>
         private static MaterialData SelectBestFuzzySource(List<MaterialData> candidates, string targetName, string targetRelativePath, int targetDepth, string targetRootName = "")
@@ -355,8 +362,8 @@ namespace Kanameliser.EditorPlus
                 {
                     string normalizedSource = ObjectMatcher.NormalizeName(d.objectName);
                     float nameScore = string.Equals(normalizedTarget, normalizedSource, StringComparison.OrdinalIgnoreCase)
-                        ? 100f
-                        : 60f;
+                        ? ObjectMatcher.NormalizedNameScore
+                        : ObjectMatcher.FuzzyNameScore;
                     return nameScore +
                            ObjectMatcher.PathSegmentScore(targetRelativePath, d.relativePath) +
                            ObjectMatcher.AncestorContextScore(d.rootObjectName, targetRelativePath) +
