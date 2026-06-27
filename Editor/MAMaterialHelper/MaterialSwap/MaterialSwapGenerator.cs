@@ -15,7 +15,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
     /// </summary>
     public static class MaterialSwapGenerator
     {
-        private const string COLOR_MENU_NAME = "Color Menu";
         private const string COLOR_PREFIX = "Color";
         public const string MENU_ITEM_PARAMETER = "KEP/MaterialSwap";
 
@@ -28,7 +27,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
         /// </summary>
         public static GenerationResult CreateMaterialSwap(GameObject targetRoot, CopiedMaterialData copiedData)
         {
-            if (!ValidateParameters(targetRoot, copiedData, out var validationResult))
+            if (!MAMaterialHelperUtils.ValidateGenerationParameters(targetRoot, copiedData, out var validationResult))
                 return validationResult;
 
             try
@@ -57,7 +56,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
         /// </summary>
         public static GenerationResult CreateMaterialSwapPerObject(GameObject targetRoot, CopiedMaterialData copiedData)
         {
-            if (!ValidateParameters(targetRoot, copiedData, out var validationResult))
+            if (!MAMaterialHelperUtils.ValidateGenerationParameters(targetRoot, copiedData, out var validationResult))
                 return validationResult;
 
             try
@@ -189,7 +188,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
             Undo.SetCurrentGroupName(undoGroupName);
             int undoGroup = Undo.GetCurrentGroup();
 
-            var (colorMenu, isNewMenu) = EnsureColorMenu(targetRoot);
+            var (colorMenu, isNewMenu) = MAMaterialHelperUtils.EnsureColorMenu(targetRoot);
             var groups = MAMaterialHelperSession.GetCopiedDataGroups();
 
             if (groups.Count == 0)
@@ -308,51 +307,6 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                                "代わりに「Create Material Setter」を使用してください。\n" +
                                "Please use 'Create Material Setter' instead.";
             return errorMessage;
-        }
-
-        /// <summary>
-        /// Validates input parameters for material swap generation
-        /// </summary>
-        private static bool ValidateParameters(GameObject targetRoot, CopiedMaterialData copiedData, out GenerationResult result)
-        {
-#if !MODULAR_AVATAR_INSTALLED
-            result = new GenerationResult
-            {
-                success = false,
-                message = "Modular Avatar is not installed"
-            };
-            return false;
-#endif
-
-            if (targetRoot == null || copiedData == null)
-            {
-                result = new GenerationResult
-                {
-                    success = false,
-                    message = "Invalid parameters"
-                };
-                return false;
-            }
-
-            result = default;
-            return true;
-        }
-
-        /// <summary>
-        /// Ensures Color Menu exists and returns it with creation status
-        /// </summary>
-        private static (Transform colorMenu, bool isNewMenu) EnsureColorMenu(GameObject targetRoot)
-        {
-            Transform colorMenu = targetRoot.transform.Find(COLOR_MENU_NAME);
-            bool isNewMenu = colorMenu == null;
-
-            if (isNewMenu)
-            {
-                var colorMenuObj = ModularAvatarIntegration.CreateColorMenu(targetRoot, COLOR_MENU_NAME);
-                colorMenu = colorMenuObj.transform;
-            }
-
-            return (colorMenu, isNewMenu);
         }
 
         /// <summary>
