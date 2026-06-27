@@ -7,6 +7,8 @@ namespace Kanameliser.EditorPlus
 {
     internal class MissingBlendShapeInserterConfirmationWindow : EditorWindow
     {
+        private const string BlendShapePrefix = "blendShape.";
+
         private static List<AnimationClip> animationClips = new List<AnimationClip>();
         private static string skinnedMeshRendererPath = "Body";
         private static bool overwriteExistingFiles = true;
@@ -48,7 +50,7 @@ namespace Kanameliser.EditorPlus
         public static void ShowWindow()
         {
             var window = GetWindow<MissingBlendShapeInserterConfirmationWindow>("変更内容の確認");
-            window.minSize = new Vector2(600, 400);
+            window.minSize = MissingBlendShapeInserterLayoutConstants.WindowMinSize;
             window.CalculateMissingBlendShapes(); // 変更点の計算を開始
         }
 
@@ -150,13 +152,6 @@ namespace Kanameliser.EditorPlus
                 if (clip == null)
                     continue;
 
-                // アニメーションクリップであることを確認
-                if (!(clip is AnimationClip))
-                {
-                    ShowInvalidClipError(clip);
-                    continue;
-                }
-
                 // 欠落しているBlendShapeを取得
                 List<string> missingBlendShapes = GetMissingBlendShapes(clip, allBlendShapeNames);
 
@@ -176,12 +171,6 @@ namespace Kanameliser.EditorPlus
             }
 
             changesCalculated = true; // 変更点の計算が完了
-        }
-
-        // 無効なクリップのエラー表示
-        private void ShowInvalidClipError(AnimationClip clip)
-        {
-            EditorUtility.DisplayDialog("エラー", $"指定されたオブジェクトはAnimationClipではありません。オブジェクト名: {clip.name}", "OK");
         }
 
         // BlendShapeの値を取得
@@ -207,7 +196,7 @@ namespace Kanameliser.EditorPlus
             // 各BlendShapeの値を取得
             foreach (var blendShapeName in blendShapeNames)
             {
-                string name = blendShapeName.Substring("blendShape.".Length);
+                string name = blendShapeName.Substring(BlendShapePrefix.Length);
                 int index = smr.sharedMesh.GetBlendShapeIndex(name);
                 float value = index != -1 ? smr.GetBlendShapeWeight(index) : 0f;
                 blendShapeValues[blendShapeName] = value;
@@ -298,7 +287,7 @@ namespace Kanameliser.EditorPlus
         {
             return binding.type == typeof(SkinnedMeshRenderer) &&
                    binding.path.Equals(skinnedMeshRendererPath) &&
-                   binding.propertyName.StartsWith("blendShape.") &&
+                   binding.propertyName.StartsWith(BlendShapePrefix) &&
                    !binding.isPPtrCurve;
         }
 

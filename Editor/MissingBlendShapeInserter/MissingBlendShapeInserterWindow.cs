@@ -4,8 +4,18 @@ using System.Collections.Generic;
 
 namespace Kanameliser.EditorPlus
 {
+    internal static class MissingBlendShapeInserterLayoutConstants
+    {
+        internal static readonly Vector2 WindowMinSize = new Vector2(600f, 400f);
+    }
+
     internal class MissingBlendShapeInserterWindow : EditorWindow
     {
+        private const float DropAreaHeight = 50.0f;
+        private const float ClipListItemSpacing = 4f;
+        private const float ClipListMaxHeight = 200f;
+        private const float ClipListScrollViewExtraHeight = 10f;
+
         // ユーザーが指定するアニメーションクリップのリスト
         public List<AnimationClip> animationClips = new List<AnimationClip>();
 
@@ -28,7 +38,7 @@ namespace Kanameliser.EditorPlus
         public static void ShowWindow()
         {
             var window = GetWindow<MissingBlendShapeInserterWindow>("Missing BlendShape Inserter");
-            window.minSize = new Vector2(600, 400);
+            window.minSize = MissingBlendShapeInserterLayoutConstants.WindowMinSize;
         }
 
         private void OnGUI()
@@ -62,21 +72,23 @@ namespace Kanameliser.EditorPlus
             EditorGUILayout.LabelField("アニメーションファイルをドラッグ＆ドロップで指定", EditorStyles.boldLabel);
 
             // ドラッグ＆ドロップエリアを作成
-            Rect dropArea = GUILayoutUtility.GetRect(0.0f, 50.0f, GUILayout.ExpandWidth(true));
+            Rect dropArea = GUILayoutUtility.GetRect(0.0f, DropAreaHeight, GUILayout.ExpandWidth(true));
             GUI.Box(dropArea, "ここにアニメーションファイルをドラッグ＆ドロップ");
 
             // ドラッグ＆ドロップの処理を行う
-            HandleDragAndDrop(dropArea);
+            if (TryHandleDropArea(dropArea, out Object[] dropped))
+                AddAnimationClips(dropped);
         }
 
         // ドラッグ＆ドロップの処理
-        private void HandleDragAndDrop(Rect dropArea)
+        private static bool TryHandleDropArea(Rect dropArea, out Object[] dropped)
         {
+            dropped = null;
             Event evt = Event.current;
 
             // マウスがドロップエリア内にあるか確認
             if (!dropArea.Contains(evt.mousePosition))
-                return;
+                return false;
 
             // イベントタイプによって処理を分岐
             switch (evt.type)
@@ -89,11 +101,14 @@ namespace Kanameliser.EditorPlus
                     if (evt.type == EventType.DragPerform)
                     {
                         DragAndDrop.AcceptDrag();
-                        AddAnimationClips(DragAndDrop.objectReferences);
+                        dropped = (Object[])DragAndDrop.objectReferences.Clone();
                         evt.Use(); // イベントを使用済みにする
+                        return true;
                     }
                     break;
             }
+
+            return false;
         }
 
         // アニメーションクリップの追加
@@ -125,12 +140,11 @@ namespace Kanameliser.EditorPlus
 
             // リストの高さを計算
             int itemCount = animationClips.Count;
-            float itemHeight = EditorGUIUtility.singleLineHeight + 4f;
-            float maxListHeight = 200f;
-            float listHeight = Mathf.Min(itemCount * itemHeight, maxListHeight);
+            float itemHeight = EditorGUIUtility.singleLineHeight + ClipListItemSpacing;
+            float listHeight = Mathf.Min(itemCount * itemHeight, ClipListMaxHeight);
 
             // スクロールビューの開始
-            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Height(listHeight + 10f));
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Height(listHeight + ClipListScrollViewExtraHeight));
 
             // 各アニメーションクリップを描画
             int clipIndexToRemove = -1;
@@ -175,7 +189,8 @@ namespace Kanameliser.EditorPlus
 
             // 直前に描画した領域を取得し、ドラッグ＆ドロップ処理を設定
             Rect lastRect = GUILayoutUtility.GetLastRect();
-            HandleDragAndDropOnItem(lastRect, index);
+            if (TryHandleDropArea(lastRect, out Object[] dropped))
+                ReplaceAnimationClipAt(index, dropped);
 
             return false;
         }
@@ -192,33 +207,6 @@ namespace Kanameliser.EditorPlus
             {
                 // 重複していない場合はリストを更新
                 animationClips[index] = newClip;
-            }
-        }
-
-        // 個々のアイテムへのドラッグ＆ドロップ処理
-        private void HandleDragAndDropOnItem(Rect dropArea, int index)
-        {
-            Event evt = Event.current;
-
-            // マウスがアイテム領域内にあるか確認
-            if (!dropArea.Contains(evt.mousePosition))
-                return;
-
-            // イベントタイプによって処理を分岐
-            switch (evt.type)
-            {
-                case EventType.DragUpdated:
-                case EventType.DragPerform:
-                    // ドラッグ＆ドロップの見た目を変更
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-
-                    if (evt.type == EventType.DragPerform)
-                    {
-                        DragAndDrop.AcceptDrag();
-                        ReplaceAnimationClipAt(index, DragAndDrop.objectReferences);
-                        evt.Use(); // イベントを使用済みにする
-                    }
-                    break;
             }
         }
 
