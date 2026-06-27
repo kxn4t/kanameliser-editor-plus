@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "nadena.dev.modular-avatar.core",
+        "nadena.dev.ndmf",
         "Kanameliser.EditorPlus.Runtime"
     ],
     "includePlatforms": [
