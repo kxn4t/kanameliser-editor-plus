@@ -7,8 +7,6 @@ namespace Kanameliser.EditorPlus
 {
     internal class MissingBlendShapeInserterConfirmationWindow : EditorWindow
     {
-        private const float WindowMinWidth = 600f;
-        private const float WindowMinHeight = 400f;
         private const string BlendShapePrefix = "blendShape.";
 
         private static List<AnimationClip> animationClips = new List<AnimationClip>();
@@ -52,7 +50,7 @@ namespace Kanameliser.EditorPlus
         public static void ShowWindow()
         {
             var window = GetWindow<MissingBlendShapeInserterConfirmationWindow>("変更内容の確認");
-            window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
+            window.minSize = MissingBlendShapeInserterLayoutConstants.WindowMinSize;
             window.CalculateMissingBlendShapes(); // 変更点の計算を開始
         }
 
@@ -154,13 +152,6 @@ namespace Kanameliser.EditorPlus
                 if (clip == null)
                     continue;
 
-                // アニメーションクリップであることを確認
-                if (!(clip is AnimationClip))
-                {
-                    ShowInvalidClipError(clip);
-                    continue;
-                }
-
                 // 欠落しているBlendShapeを取得
                 List<string> missingBlendShapes = GetMissingBlendShapes(clip, allBlendShapeNames);
 
@@ -180,12 +171,6 @@ namespace Kanameliser.EditorPlus
             }
 
             changesCalculated = true; // 変更点の計算が完了
-        }
-
-        // 無効なクリップのエラー表示
-        private void ShowInvalidClipError(AnimationClip clip)
-        {
-            EditorUtility.DisplayDialog("エラー", $"指定されたオブジェクトはAnimationClipではありません。オブジェクト名: {clip.name}", "OK");
         }
 
         // BlendShapeの値を取得
