@@ -451,19 +451,8 @@ namespace Kanameliser.EditorPlus
         /// </summary>
         private static string GetRelativePath(GameObject obj, GameObject rootObject)
         {
-            if (obj == null) return "";
-            if (obj == rootObject) return "";
-
-            string path = obj.name;
-            Transform parent = obj.transform.parent;
-
-            while (parent != null && parent.gameObject != rootObject)
-            {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
-            }
-
-            return path;
+            if (obj == null || rootObject == null) return "";
+            return ObjectMatcher.GetRelativePathFromRoot(obj.transform, rootObject.transform);
         }
     }
 }
