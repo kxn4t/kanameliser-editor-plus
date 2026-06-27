@@ -28,17 +28,32 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             string rendererType = renderer.GetType().Name;
 
             RendererSlotRemap match = null;
+
+            // Primary: match by direct renderer reference. This survives object renames and moves.
             foreach (var remap in component.remaps)
             {
-                if (remap == null || remap.rendererPath != relPath) continue;
-                if (!string.IsNullOrEmpty(remap.rendererType) &&
-                    !string.IsNullOrEmpty(rendererType) &&
-                    remap.rendererType != rendererType)
+                if (remap != null && remap.renderer == renderer)
                 {
-                    continue;
+                    match = remap;
+                    break;
                 }
-                match = remap;
-                break;
+            }
+
+            // Fallback: match by relative path + renderer type (lost reference / legacy data).
+            if (match == null)
+            {
+                foreach (var remap in component.remaps)
+                {
+                    if (remap == null || remap.rendererPath != relPath) continue;
+                    if (!string.IsNullOrEmpty(remap.rendererType) &&
+                        !string.IsNullOrEmpty(rendererType) &&
+                        remap.rendererType != rendererType)
+                    {
+                        continue;
+                    }
+                    match = remap;
+                    break;
+                }
             }
 
             if (match == null || match.referenceSlotForHostSlot == null) return null;

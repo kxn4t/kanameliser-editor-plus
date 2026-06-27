@@ -87,6 +87,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
                 remaps.Add(new RendererSlotRemap
                 {
+                    renderer = hostRenderer,
                     rendererPath = relPath,
                     rendererType = rendererType,
                     referenceSlotForHostSlot = map

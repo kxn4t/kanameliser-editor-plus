@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Kanameliser.EditorPlus.Runtime
 {
@@ -15,7 +16,14 @@ namespace Kanameliser.EditorPlus.Runtime
     [Serializable]
     public class RendererSlotRemap
     {
-        /// <summary>Relative path of the renderer from the <see cref="MaterialSlotRemapping"/> transform.</summary>
+        /// <summary>
+        /// Direct reference to the target renderer. This is the primary lookup key and survives
+        /// object renames and moves within the hierarchy. <see cref="rendererPath"/> is kept only as
+        /// a fallback (lost reference / legacy data) and for display.
+        /// </summary>
+        public Renderer renderer;
+
+        /// <summary>Relative path of the renderer from the <see cref="MaterialSlotRemapping"/> transform (fallback / display).</summary>
         public string rendererPath;
 
         /// <summary>Renderer type name (e.g. "SkinnedMeshRenderer") used to disambiguate the lookup.</summary>

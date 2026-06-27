@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using Kanameliser.Editor.MAMaterialHelper.Common;
 using Kanameliser.EditorPlus.Runtime;
 
 namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
@@ -90,7 +91,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 string key = remap.rendererPath ?? "";
                 if (!_foldouts.ContainsKey(key)) _foldouts[key] = false;
 
-                string title = string.IsNullOrEmpty(remap.rendererPath) ? "(root)" : remap.rendererPath;
+                string title = DisplayPath(component, remap);
                 _foldouts[key] = EditorGUILayout.Foldout(_foldouts[key], title, true);
                 if (!_foldouts[key]) continue;
 
@@ -148,13 +149,25 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
         private static Material[] GetHostMaterials(MaterialSlotRemapping component, RendererSlotRemap remap)
         {
-            Transform t = string.IsNullOrEmpty(remap.rendererPath)
-                ? component.transform
-                : component.transform.Find(remap.rendererPath);
-            if (t == null) return null;
-
-            var renderer = t.GetComponent<Renderer>();
+            Renderer renderer = remap.renderer;
+            if (renderer == null)
+            {
+                Transform t = string.IsNullOrEmpty(remap.rendererPath)
+                    ? component.transform
+                    : component.transform.Find(remap.rendererPath);
+                renderer = t != null ? t.GetComponent<Renderer>() : null;
+            }
             return renderer != null ? renderer.sharedMaterials : null;
+        }
+
+        private static string DisplayPath(MaterialSlotRemapping component, RendererSlotRemap remap)
+        {
+            if (remap.renderer != null)
+            {
+                string live = ObjectMatcher.GetRelativePathFromRoot(remap.renderer.transform, component.transform);
+                return string.IsNullOrEmpty(live) ? "(root)" : live;
+            }
+            return string.IsNullOrEmpty(remap.rendererPath) ? "(root)" : remap.rendererPath;
         }
     }
 }

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using Kanameliser.Editor.MAMaterialHelper.Common;
 using Kanameliser.Editor.MAMaterialHelper.SlotRemapping;
 using Kanameliser.EditorPlus.Runtime;
 
@@ -106,6 +107,34 @@ namespace Kanameliser.EditorPlus.Tests
             Assert.That(result.success, Is.False);
             Assert.That(result.errors, Is.Not.Empty);
             Assert.That(result.remaps, Is.Empty);
+        }
+
+        [Test]
+        public void ResolveSlotMap_FollowsRendererReferenceAfterRename()
+        {
+            var a = CreateMaterial("A");
+            var b = CreateMaterial("B");
+
+            var host = CreateGameObject("Host");
+            var bodyGo = CreateGameObject("Body", host);
+            var body = bodyGo.AddComponent<MeshRenderer>();
+            body.sharedMaterials = new[] { b, a };
+            var component = host.AddComponent<MaterialSlotRemapping>();
+
+            var reference = CreateGameObject("Reference");
+            var refBody = CreateGameObject("Body", reference).AddComponent<MeshRenderer>();
+            refBody.sharedMaterials = new[] { a, b };
+            component.referencePrefab = reference;
+
+            var result = MaterialSlotRemapGenerator.Generate(component);
+            Assert.That(result.success, Is.True);
+            component.remaps = result.remaps;
+
+            // Rename the renderer object after the mapping was generated.
+            bodyGo.name = "Body_Renamed";
+
+            var map = MaterialSlotRemapUtil.ResolveSlotMap(body.transform);
+            Assert.That(map, Is.EqualTo(new[] { 1, 0 }));
         }
     }
 }
