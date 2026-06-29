@@ -2,7 +2,9 @@
     "name": "Kanameliser.EditorPlus.Editor",
     "rootNamespace": "",
     "references": [
-        "nadena.dev.modular-avatar.core"
+        "nadena.dev.modular-avatar.core",
+        "nadena.dev.ndmf",
+        "Kanameliser.EditorPlus.Runtime"
     ],
     "includePlatforms": [
         "Editor"

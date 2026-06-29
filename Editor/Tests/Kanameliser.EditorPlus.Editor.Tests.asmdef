@@ -3,6 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Kanameliser.EditorPlus.Editor",
+        "Kanameliser.EditorPlus.Runtime",
+        "nadena.dev.modular-avatar.core",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

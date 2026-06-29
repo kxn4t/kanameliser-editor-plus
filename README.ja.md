@@ -132,7 +132,18 @@ Material Swapでは以下のようなケースに対応できません:
 
 Material Swapは「マテリアルX」を1つのマテリアルにしか置き換えられないため、両スロットが同じ結果になります。Material Setterならスロット単位で異なるマテリアルを指定できます。
 
-アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Copy Material Setup / Create Material Setter / Create Material Swap`
+#### Material Slot Remapping
+
+衣装を別アバター向けに変換（自動調整ツールなど）すると、レンダラーのマテリアルスロット順が変わり、インデックスベースの色変更設定がずれることがあります。変換後の衣装にリマッピングコンポーネントを追加し、元の衣装を指定することで補正できます:
+
+1. 変換後の衣装を右クリック → `Add Material Slot Remapping`
+2. 元の衣装を `Reference Prefab` に指定 → `Generate Mapping` をクリック
+3. 通常どおり `Copy Material Setup` / `Create Material Setter` / `Create Material Swap` を実行 — 生成がマッピングに従い、色が正しいスロットに適用されます
+
+マッピングはマテリアル参照から生成されるため、変換直後の衣装のマテリアルを変更する前に実行し、Material Slot Remappingを生成してください。  
+生成後はスロットの対応付け（インデックス）のみ保持するため、生成後に衣装のマテリアルを変更してもマッピングは壊れません。
+
+アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Add Material Slot Remapping / Copy Material Setup / Create Material Setter / Create Material Swap`
 
 ### AO Bounds Setter
 

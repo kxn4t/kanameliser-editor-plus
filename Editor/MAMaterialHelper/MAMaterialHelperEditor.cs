@@ -3,6 +3,7 @@ using UnityEngine;
 using Kanameliser.Editor.MAMaterialHelper.Common;
 using Kanameliser.Editor.MAMaterialHelper.MaterialSwap;
 using Kanameliser.Editor.MAMaterialHelper.MaterialSetter;
+using Kanameliser.EditorPlus.Runtime;
 
 namespace Kanameliser.Editor.MAMaterialHelper
 {
@@ -16,9 +17,34 @@ namespace Kanameliser.Editor.MAMaterialHelper
         private const string MENU_PATH_CREATE_SETTER_ALL_SLOTS = "GameObject/Kanameliser Editor Plus/[Optional] Create Material Setter (All Slots)";
         private const string MENU_PATH_CREATE_SWAP = "GameObject/Kanameliser Editor Plus/Create Material Swap";
         private const string MENU_PATH_CREATE_SWAP_PER_OBJECT = "GameObject/Kanameliser Editor Plus/[Optional] Create Material Swap (Per Object)";
+        private const string MENU_PATH_ADD_REMAPPING = "GameObject/Kanameliser Editor Plus/Add Material Slot Remapping";
         private const int MENU_PRIORITY = 100;
 
 #if MODULAR_AVATAR_INSTALLED
+        // +20 leaves a gap (>= 11) after the Create items so Unity draws a separator above this item.
+        [MenuItem(MENU_PATH_ADD_REMAPPING, false, MENU_PRIORITY + 20)]
+        public static void AddMaterialSlotRemapping()
+        {
+            var selected = Selection.activeGameObject;
+            if (selected == null) return;
+
+            if (selected.GetComponent<MaterialSlotRemapping>() != null)
+            {
+                MAMaterialHelperUtils.ShowInfoDialog("This object already has a Material Slot Remapping component.");
+                return;
+            }
+
+            Undo.AddComponent<MaterialSlotRemapping>(selected);
+            Selection.activeGameObject = selected;
+            MAMaterialHelperUtils.LogSuccess($"Added Material Slot Remapping to '{selected.name}'");
+        }
+
+        [MenuItem(MENU_PATH_ADD_REMAPPING, true)]
+        public static bool ValidateAddMaterialSlotRemapping()
+        {
+            return Selection.activeGameObject != null;
+        }
+
         [MenuItem(MENU_PATH_COPY, false, MENU_PRIORITY)]
         public static void CopyMaterialSetup()
         {
