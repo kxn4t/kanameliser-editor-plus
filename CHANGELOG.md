@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Japanese language support (NDMF localization)** — Component Manager, MA Material Helper dialogs, AO Bounds Setter, and the Material Slot Remapping Inspector are now available in Japanese. The language follows NDMF's shared language preference and can be switched from the language selector shown in each window (requires NDMF 1.11.0+). Without NDMF, the UI remains in English.
 - **MA Material Helper: Material Slot Remapping** — Added a `Kanameliser Editor Plus > Add Material Slot Remapping` component (Hierarchy right-click). Use it when an outfit conversion (e.g. auto-fitting tools) reorders a renderer's material slots and Material Setter/Swap color changes no longer land correctly. It maps the converted outfit's material slots back to the original (reference) outfit's slots, so Material Setter/Swap color changes apply to the correct slots even when the conversion shifted the slot order.
 - **MA Material Helper / Material Copier: Verbose Matching Logs toggle** — Added a menu toggle at `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` to enable detailed matching diagnostics in the console.
 
@@ -41,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 追加
 
+- **日本語UI対応（NDMFローカライズ）** — Component Manager、MA Material Helperのダイアログ、AO Bounds Setter、Material Slot RemappingのInspectorが日本語表示に対応しました。言語はNDMF共通の言語設定に従い、各ウィンドウの言語セレクターから切り替えできます（NDMF 1.11.0以上が必要）。NDMFがない環境では従来どおり英語表示になります。
 - **MA Material Helper: Material Slot Remapping** — `Kanameliser Editor Plus > Add Material Slot Remapping`（ヒエラルキー右クリック）コンポーネントを追加。もちふぃった～等で変換を行った際にマテリアルスロット順が変わってしまい、Material Setter/Swapの色変更がうまく行かないときに使用します。変換後の衣装のマテリアルスロットを元（参照）衣装のスロットに対応付けることで、変換でスロット順がずれていてもMaterial Setter/Swapの色変更が正しいスロットに適用されるようにします。
 - **MA Material Helper / Material Copier: 詳細マッチングログのトグル** — `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` にデバッグ用ログのトグルを追加。有効にするとマッチング判定の詳細情報をコンソールに出力します。
 
