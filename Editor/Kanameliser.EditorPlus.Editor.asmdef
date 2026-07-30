@@ -22,6 +22,11 @@
             "define": "NDMF_INSTALLED"
         },
         {
+            "name": "nadena.dev.ndmf",
+            "expression": "[1.11.0,2.0.0)",
+            "define": "KEP_NDMF_LOCALIZATION"
+        },
+        {
             "name": "nadena.dev.modular-avatar",
             "expression": "1.13.0",
             "define": "MODULAR_AVATAR_INSTALLED"
