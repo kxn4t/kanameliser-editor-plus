@@ -3,6 +3,7 @@ using UnityEngine;
 using Kanameliser.Editor.MAMaterialHelper.Common;
 using Kanameliser.Editor.MAMaterialHelper.MaterialSwap;
 using Kanameliser.Editor.MAMaterialHelper.MaterialSetter;
+using Kanameliser.EditorPlus;
 using Kanameliser.EditorPlus.Runtime;
 
 namespace Kanameliser.Editor.MAMaterialHelper
@@ -30,7 +31,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
             if (selected.GetComponent<MaterialSlotRemapping>() != null)
             {
-                MAMaterialHelperUtils.ShowInfoDialog("This object already has a Material Slot Remapping component.");
+                MAMaterialHelperUtils.ShowInfoDialog(Localization.S("maMaterialHelper.alreadyHasRemapping"));
                 return;
             }
 
@@ -83,7 +84,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
             if (!MAMaterialHelperSession.HasCopiedData)
             {
-                MAMaterialHelperUtils.ShowErrorDialog("No material setup has been copied. Please copy a material setup first.");
+                MAMaterialHelperUtils.ShowErrorDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
                 return;
             }
 
@@ -110,7 +111,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
             if (!MAMaterialHelperSession.HasCopiedData)
             {
-                MAMaterialHelperUtils.ShowErrorDialog("No material setup has been copied. Please copy a material setup first.");
+                MAMaterialHelperUtils.ShowErrorDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
                 return;
             }
 
@@ -137,7 +138,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
             if (!MAMaterialHelperSession.HasCopiedData)
             {
-                MAMaterialHelperUtils.ShowErrorDialog("No material setup has been copied. Please copy a material setup first.");
+                MAMaterialHelperUtils.ShowErrorDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
                 return;
             }
 
@@ -168,7 +169,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
             if (!MAMaterialHelperSession.HasCopiedData)
             {
-                MAMaterialHelperUtils.ShowErrorDialog("No material setup has been copied. Please copy a material setup first.");
+                MAMaterialHelperUtils.ShowErrorDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
                 return;
             }
 
