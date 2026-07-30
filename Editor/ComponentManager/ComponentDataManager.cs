@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Kanameliser.EditorPlus
 {
     /// <summary>
-    /// コンポーネントデータを管理するクラス
+    /// Manages component data
     /// </summary>
     public class ComponentDataManager
     {
@@ -20,7 +20,7 @@ namespace Kanameliser.EditorPlus
         public bool ShowEmptyObjects { get => showEmptyObjects; set => showEmptyObjects = value; }
 
         /// <summary>
-        /// コンポーネントリストを更新する
+        /// Refreshes the component list
         /// </summary>
         public void RefreshComponentsList(GameObject targetObject)
         {
@@ -33,7 +33,7 @@ namespace Kanameliser.EditorPlus
 
             try
             {
-                // ターゲットとその子オブジェクトを収集
+                // Collect the target and its child objects
                 Transform[] transforms = targetObject.GetComponentsInChildren<Transform>(true);
                 foreach (Transform transform in transforms)
                 {
@@ -42,10 +42,10 @@ namespace Kanameliser.EditorPlus
                     GameObject gameObject = transform.gameObject;
                     if (gameObject == null) continue;
 
-                    // オブジェクトのコンポーネントを収集
+                    // Collect the object's components
                     Component[] components = gameObject.GetComponents<Component>();
 
-                    // Transform以外のコンポーネントをフィルタリング
+                    // Filter out Transform components
                     List<ComponentInfo> componentInfos = components
                         .Where(c => c != null && !(c is Transform))
                         .Select(c => new ComponentInfo
@@ -56,10 +56,10 @@ namespace Kanameliser.EditorPlus
                         })
                         .ToList();
 
-                    // コンポーネントがないオブジェクトも表示するオプションがオンの場合
+                    // When the option to show GameObjects without components is on
                     if (componentInfos.Count > 0 || showEmptyObjects)
                     {
-                        // コンポーネントがなくてもGameObjectを登録
+                        // Register the GameObject even when it has no components
                         componentsByGameObject[gameObject] = componentInfos;
                         gameObjectSelectionState[gameObject] = false;
                     }
@@ -72,14 +72,14 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// 階層順にソートされたGameObjectのリストを取得
+        /// Gets the list of GameObjects sorted in hierarchy order
         /// </summary>
         public List<GameObject> GetOrderedGameObjects(GameObject targetObject)
         {
             List<GameObject> ordered = new List<GameObject>();
             if (targetObject == null) return ordered;
 
-            // GameObjectの順番を取得
+            // Traverse GameObjects in order
             Queue<Transform> queue = new Queue<Transform>();
             queue.Enqueue(targetObject.transform);
 
@@ -91,14 +91,14 @@ namespace Kanameliser.EditorPlus
                 GameObject currentGO = currentTransform.gameObject;
                 if (currentGO == null) continue;
 
-                // 辞書に存在するGameObjectのみを対象とする
-                // （コンポーネントがないオブジェクトも表示するオプションがオンの場合は辞書に含まれている）
+                // Only include GameObjects present in the dictionary
+                // (GameObjects without components are included when the corresponding option is on)
                 if (componentsByGameObject.ContainsKey(currentGO))
                 {
                     ordered.Add(currentGO);
                 }
 
-                // 子要素をキューに追加
+                // Enqueue child elements
                 for (int i = 0; i < currentTransform.childCount; i++)
                 {
                     Transform child = currentTransform.GetChild(i);
@@ -113,7 +113,7 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// GameObject名またはパスによるフィルタリングを行う
+        /// Filters by GameObject name or path
         /// </summary>
         private bool IsGameObjectMatchingFilter(GameObject gameObject, GameObject targetObject, string gameObjectFilter, bool searchInPaths)
         {
@@ -126,19 +126,19 @@ namespace Kanameliser.EditorPlus
 
             if (searchInPaths)
             {
-                // パスを含めて検索
+                // Search including the path
                 string path = ComponentPathUtility.GetGameObjectPath(gameObject, targetObject);
                 return path.ToLower().Contains(filterLower);
             }
             else
             {
-                // 名前のみで検索
+                // Search by name only
                 return gameObject.name.ToLower().Contains(filterLower);
             }
         }
 
         /// <summary>
-        /// コンポーネント名によるフィルタリングを行う
+        /// Filters components by name
         /// </summary>
         public List<ComponentInfo> FilterComponentsByName(List<ComponentInfo> components, string componentFilter, bool showAllComponentsOnMatch)
         {
@@ -149,19 +149,19 @@ namespace Kanameliser.EditorPlus
 
             string filterLower = componentFilter.ToLower();
 
-            // コンポーネント名でフィルタリング
+            // Filter by component name
             var matchingComponents = components
                 .Where(c => c.Name.ToLower().Contains(filterLower))
                 .ToList();
 
-            // 一致するコンポーネントを持つGameObjectの全コンポーネントを表示するオプション
+            // Option to show all components of GameObjects that have a matching component
             return (showAllComponentsOnMatch && matchingComponents.Any())
                 ? components.ToList()
                 : matchingComponents;
         }
 
         /// <summary>
-        /// フィルタリングされたGameObjectとコンポーネントを取得
+        /// Gets the filtered GameObjects and components
         /// </summary>
         public (List<GameObject> gameObjects, List<ComponentInfo> components) GetFilteredItems(
             GameObject targetObject, string gameObjectFilter, string componentFilter,
@@ -172,19 +172,19 @@ namespace Kanameliser.EditorPlus
 
             var orderedGameObjects = GetOrderedGameObjects(targetObject);
 
-            // GameObjectとコンポーネントのフィルタリング
+            // Filter GameObjects and components
             foreach (var gameObject in orderedGameObjects)
             {
                 if (!componentsByGameObject.ContainsKey(gameObject)) continue;
 
-                // GameObject名またはパスによるフィルタリング
+                // Filter by GameObject name or path
                 bool gameObjectMatched = IsGameObjectMatchingFilter(gameObject, targetObject, gameObjectFilter, searchInPaths);
                 if (!gameObjectMatched) continue;
 
                 var components = componentsByGameObject[gameObject];
                 var matchingComponents = FilterComponentsByName(components, componentFilter, showAllComponentsOnMatch);
 
-                // フィルタリング結果に基づいて表示対象を決定
+                // Decide what to display based on the filtering results
                 if (string.IsNullOrEmpty(componentFilter) || matchingComponents.Any())
                 {
                     filteredGameObjects.Add(gameObject);
@@ -196,16 +196,16 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// 選択されたGameObjectとコンポーネントを取得
+        /// Gets the selected GameObjects and components
         /// </summary>
         public (List<GameObject> gameObjects, List<ComponentInfo> components) GetSelectedItems()
         {
-            // 選択されたGameObjectを取得
+            // Get the selected GameObjects
             var selectedGameObjects = componentsByGameObject.Keys
                 .Where(go => gameObjectSelectionState.ContainsKey(go) && gameObjectSelectionState[go])
                 .ToList();
 
-            // 選択されたコンポーネントを取得（GameObjectが選択されていないもののみ）
+            // Get the selected components (only those whose GameObject is not selected)
             var selectedComponents = componentsByGameObject
                 .Where(entry => !gameObjectSelectionState.ContainsKey(entry.Key) || !gameObjectSelectionState[entry.Key])
                 .SelectMany(entry => entry.Value.Where(c => c.IsSelected))

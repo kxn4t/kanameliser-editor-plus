@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Language: en-us\n"
+
+# ── Common ──
+
+msgid "common.ok"
+msgstr "OK"
+
+msgid "common.cancel"
+msgstr "Cancel"
+
+msgid "common.delete"
+msgstr "Delete"
+
+# ── Component Manager ──
+
+msgid "componentManager.targetObject"
+msgstr "Target Object"
+
+msgid "componentManager.gameObjectFilter"
+msgstr "GameObject Filter:"
+
+msgid "componentManager.componentFilter"
+msgstr "Component Filter:"
+
+msgid "componentManager.includePathsInSearch"
+msgstr "Include paths in search"
+
+msgid "componentManager.showAllComponentsOnMatch"
+msgstr "Show all components of matching GameObjects"
+
+msgid "componentManager.showEmptyObjects"
+msgstr "Show GameObjects with no components"
+
+msgid "componentManager.selectPrompt"
+msgstr "Please select a GameObject to display components"
+
+msgid "componentManager.selectInHierarchy"
+msgstr "Select in Hierarchy"
+
+msgid "componentManager.removeSelectedItems"
+msgstr "Remove Selected Items"
+
+msgid "componentManager.confirmDeletion"
+msgstr "Confirm Deletion"
+
+msgid "componentManager.confirmDeletion.header"
+msgstr "Are you sure you want to delete the following items?"
+
+msgid "componentManager.confirmDeletion.selectedGameObjects"
+msgstr "[Selected GameObjects]"
+
+msgid "componentManager.confirmDeletion.selectedComponents"
+msgstr "[Selected Components]"
+
+#, csharp-format
+msgid "componentManager.confirmDeletion.moreGameObjects"
+msgstr "- ... (and {0} more GameObjects)"
+
+#, csharp-format
+msgid "componentManager.confirmDeletion.moreComponents"
+msgstr "- ... (and {0} more Components)"
+
+msgid "componentManager.confirmDeletion.undoAvailable"
+msgstr "Undo is available."
+
+msgid "componentManager.deletionPartiallyCompleted"
+msgstr "Deletion Partially Completed"
+
+#, csharp-format
+msgid "componentManager.deletionPartiallyCompleted.message"
+msgstr "Some selected items could not be deleted:\n\n{0}"

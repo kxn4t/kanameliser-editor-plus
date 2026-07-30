@@ -7,15 +7,15 @@ using UnityEngine;
 namespace Kanameliser.EditorPlus
 {
     /// <summary>
-    /// パス関連のユーティリティクラス
+    /// Path-related utility class
     /// </summary>
     public static class ComponentPathUtility
     {
-        // パスのキャッシュ
+        // Path cache
         private static Dictionary<(GameObject, GameObject), string> pathCache = new Dictionary<(GameObject, GameObject), string>();
 
         /// <summary>
-        /// パスキャッシュをクリア
+        /// Clears the path cache
         /// </summary>
         public static void ClearCache()
         {
@@ -23,7 +23,7 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// GameObjectのパスを取得（キャッシュ利用）
+        /// Gets the GameObject path (using the cache)
         /// </summary>
         public static string GetGameObjectPath(GameObject go, GameObject targetObject)
         {
@@ -31,7 +31,7 @@ namespace Kanameliser.EditorPlus
 
             var cacheKey = (go, targetObject);
 
-            // キャッシュにパスが存在する場合はそれを返す
+            // Return the cached path when available
             if (pathCache.TryGetValue(cacheKey, out string cachedPath))
             {
                 return cachedPath;
@@ -39,14 +39,14 @@ namespace Kanameliser.EditorPlus
 
             string path = CalculateGameObjectPath(go, targetObject);
 
-            // キャッシュに保存
+            // Store in the cache
             pathCache[cacheKey] = path;
 
             return path;
         }
 
         /// <summary>
-        /// 実際のパス計算
+        /// Performs the actual path calculation
         /// </summary>
         private static string CalculateGameObjectPath(GameObject go, GameObject targetObject)
         {
@@ -54,27 +54,27 @@ namespace Kanameliser.EditorPlus
 
             try
             {
-                // targetObjectがnullの場合は、従来通りの完全パスを返す
+                // When targetObject is null, return the conventional full path
                 if (targetObject == null)
                 {
                     return GetFullPath(go);
                 }
 
-                // 対象がtargetObject自身の場合は、targetObjectの名前を返す
+                // When the object is targetObject itself, return targetObject's name
                 if (go == targetObject)
                 {
                     return targetObject.name;
                 }
 
-                // targetObjectからの相対パスを構築する
+                // Build the path relative to targetObject
                 if (IsChildOf(go.transform, targetObject.transform))
                 {
-                    // goがtargetObjectの子孫である場合
+                    // go is a descendant of targetObject
                     return targetObject.name + "/" + GetRelativePathFromAncestor(go.transform, targetObject.transform);
                 }
                 else if (IsChildOf(targetObject.transform, go.transform))
                 {
-                    // targetObjectがgoの子孫である場合
+                    // targetObject is a descendant of go
                     string upPath = "";
                     Transform parent = targetObject.transform.parent;
                     Transform goTransform = go.transform;
@@ -91,27 +91,27 @@ namespace Kanameliser.EditorPlus
                     }
                 }
 
-                // 共通の祖先を見つけて相対パスを構築
+                // Find the common ancestor and build a relative path
                 Transform commonAncestor = FindCommonAncestor(go.transform, targetObject.transform);
                 if (commonAncestor != null)
                 {
                     string upPath = "";
                     Transform current = targetObject.transform;
 
-                    // targetObjectから共通祖先までの上方向のパス
+                    // Upward path from targetObject to the common ancestor
                     while (current != null && current != commonAncestor)
                     {
                         upPath += "../";
                         current = current.parent;
                     }
 
-                    // 共通祖先からgoまでの下方向のパス
+                    // Downward path from the common ancestor to go
                     string downPath = GetRelativePathFromAncestor(go.transform, commonAncestor);
 
                     return targetObject.name + "/" + (upPath + downPath).TrimEnd('/');
                 }
 
-                // 関連性がない場合は完全パスを返す（ターゲットオブジェクト名を先頭に付ける）
+                // When unrelated, return the full path (prefixed with the target object's name)
                 return targetObject.name + " → " + GetFullPath(go);
             }
             catch (Exception ex)
@@ -121,7 +121,7 @@ namespace Kanameliser.EditorPlus
             }
         }
 
-        // あるTransformが別のTransformの子孫であるかチェック
+        // Check whether a Transform is a descendant of another Transform
         private static bool IsChildOf(Transform child, Transform parent)
         {
             if (child == null || parent == null) return false;
@@ -136,7 +136,7 @@ namespace Kanameliser.EditorPlus
             return false;
         }
 
-        // 祖先からの相対パスを取得
+        // Get the path relative to an ancestor
         public static string GetRelativePathFromAncestor(Transform descendant, Transform ancestor)
         {
             if (descendant == null || ancestor == null) return string.Empty;
@@ -156,12 +156,12 @@ namespace Kanameliser.EditorPlus
             return path;
         }
 
-        // 二つのTransform間の共通祖先を見つける
+        // Find the common ancestor of two Transforms
         private static Transform FindCommonAncestor(Transform t1, Transform t2)
         {
             if (t1 == null || t2 == null) return null;
 
-            // t1の全祖先を格納
+            // Store all ancestors of t1
             HashSet<Transform> t1Ancestors = new HashSet<Transform>();
             Transform current = t1;
 
@@ -171,7 +171,7 @@ namespace Kanameliser.EditorPlus
                 current = current.parent;
             }
 
-            // t2を辿りながら、t1の祖先セットと一致するものを探す
+            // Walk up from t2 looking for a match in t1's ancestor set
             current = t2;
             while (current != null)
             {
@@ -180,7 +180,7 @@ namespace Kanameliser.EditorPlus
                 current = current.parent;
             }
 
-            return null; // 共通祖先なし
+            return null; // No common ancestor
         }
 
         private static string GetFullPath(GameObject go)

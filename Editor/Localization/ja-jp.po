@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Language: ja-jp\n"
+
+# ── 共通 ──
+
+msgid "common.ok"
+msgstr "OK"
+
+msgid "common.cancel"
+msgstr "キャンセル"
+
+msgid "common.delete"
+msgstr "削除"
+
+# ── Component Manager ──
+
+msgid "componentManager.targetObject"
+msgstr "対象オブジェクト"
+
+msgid "componentManager.gameObjectFilter"
+msgstr "GameObjectフィルター:"
+
+msgid "componentManager.componentFilter"
+msgstr "Componentフィルター:"
+
+msgid "componentManager.includePathsInSearch"
+msgstr "パスを含めて検索"
+
+msgid "componentManager.showAllComponentsOnMatch"
+msgstr "一致したGameObjectの全Componentを表示"
+
+msgid "componentManager.showEmptyObjects"
+msgstr "Componentを持たないGameObjectも表示"
+
+msgid "componentManager.selectPrompt"
+msgstr "Componentを表示するGameObjectを選択してください"
+
+msgid "componentManager.selectInHierarchy"
+msgstr "Hierarchyで選択"
+
+msgid "componentManager.removeSelectedItems"
+msgstr "選択した項目を削除"
+
+msgid "componentManager.confirmDeletion"
+msgstr "削除の確認"
+
+msgid "componentManager.confirmDeletion.header"
+msgstr "以下の項目を削除しますか？"
+
+msgid "componentManager.confirmDeletion.selectedGameObjects"
+msgstr "【選択中のGameObject】"
+
+msgid "componentManager.confirmDeletion.selectedComponents"
+msgstr "【選択中のComponent】"
+
+#, csharp-format
+msgid "componentManager.confirmDeletion.moreGameObjects"
+msgstr "- ...（ほか {0} 件のGameObject）"
+
+#, csharp-format
+msgid "componentManager.confirmDeletion.moreComponents"
+msgstr "- ...（ほか {0} 件のComponent）"
+
+msgid "componentManager.confirmDeletion.undoAvailable"
+msgstr "Undoで元に戻せます。"
+
+msgid "componentManager.deletionPartiallyCompleted"
+msgstr "削除を完了できませんでした"
+
+#, csharp-format
+msgid "componentManager.deletionPartiallyCompleted.message"
+msgstr "以下の項目は削除できませんでした:\n\n{0}"

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Kanameliser.EditorPlus
 {
     /// <summary>
-    /// UI描画を担当するクラス
+    /// Handles UI rendering
     /// </summary>
     public class ComponentUIRenderer
     {
@@ -17,7 +17,7 @@ namespace Kanameliser.EditorPlus
         private bool isResizingGameObjectColumn = false;
         private float totalWidth = 0f;
 
-        // スタイル定義
+        // Style definitions
         private GUIStyle headerLabelStyle;
         private GUIStyle pathLabelStyle;
         private GUIStyle componentLabelStyle;
@@ -34,7 +34,7 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// UIスタイルを初期化
+        /// Initializes the UI styles
         /// </summary>
         private void InitializeStyles()
         {
@@ -52,39 +52,39 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// ウィンドウ幅に基づいてカラム幅を調整
+        /// Adjusts column widths based on the window width
         /// </summary>
         public void AdjustColumnWidths(float windowWidth)
         {
             totalWidth = windowWidth;
 
-            // 使用可能な全体幅からチェックボックスとリサイズハンドル幅を引く
+            // Subtract the checkbox and resize handle widths from the total available width
             float availableWidth = totalWidth - (ComponentConstants.CHECKBOX_WIDTH * 2) - ComponentConstants.RESIZE_HANDLE_WIDTH - ComponentConstants.COLUMN_MARGIN;
 
-            // GameObjectカラムとComponentカラムが両方とも最小幅以上になるよう調整
+            // Keep both the GameObject and Component columns at or above the minimum width
             float totalMinWidth = ComponentConstants.MIN_COLUMN_WIDTH * 2;
             if (availableWidth < totalMinWidth)
             {
-                // 利用可能な幅が足りない場合は、均等に分配
+                // Distribute evenly when the available width is insufficient
                 gameObjectColumnWidth = availableWidth / 2;
                 componentColumnWidth = availableWidth / 2;
             }
             else
             {
-                // GameObjectカラムの最大幅を全幅の60%以下に制限
+                // Cap the GameObject column width at 60% of the total width
                 float maxGameObjectWidth = availableWidth * ComponentConstants.MAX_COLUMN_RATIO;
                 gameObjectColumnWidth = Mathf.Min(gameObjectColumnWidth, maxGameObjectWidth);
 
-                // GameObjectカラムが最小幅を下回らないようにする
+                // Keep the GameObject column at or above the minimum width
                 gameObjectColumnWidth = Mathf.Max(gameObjectColumnWidth, ComponentConstants.MIN_COLUMN_WIDTH);
 
-                // componentColumnWidthはGameObjectカラム幅に応じて調整（最小幅を確保）
+                // Adjust componentColumnWidth based on the GameObject column width (ensuring the minimum width)
                 componentColumnWidth = Mathf.Max(availableWidth - gameObjectColumnWidth, ComponentConstants.MIN_COLUMN_WIDTH);
 
-                // 両方のカラム幅合計が利用可能幅を超える場合は調整
+                // Adjust when both column widths together exceed the available width
                 if (gameObjectColumnWidth + componentColumnWidth > availableWidth)
                 {
-                    // 比率を維持しながら調整
+                    // Adjust while preserving the ratio
                     float ratio = gameObjectColumnWidth / (gameObjectColumnWidth + componentColumnWidth);
                     gameObjectColumnWidth = availableWidth * ratio;
                     componentColumnWidth = availableWidth * (1 - ratio);
@@ -93,13 +93,13 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// テーブルヘッダーを描画
+        /// Draws the table header
         /// </summary>
         public void DrawTableHeader(Rect totalRect, List<GameObject> filteredGameObjects, List<ComponentInfo> filteredComponents)
         {
             float startX = totalRect.x;
 
-            // GameObject チェックボックス列
+            // GameObject checkbox column
             Rect checkboxRect1 = new Rect(startX, totalRect.y, ComponentConstants.CHECKBOX_WIDTH, totalRect.height);
             bool allGameObjectsSelected = filteredGameObjects.Count > 0 &&
                                          filteredGameObjects.All(go => dataManager.GameObjectSelectionState[go]);
@@ -111,30 +111,30 @@ namespace Kanameliser.EditorPlus
 
             if (newAllGameObjectsSelected != allGameObjectsSelected)
             {
-                // 混合状態でクリックされた場合は常に全解除する
+                // Always clear all when clicked in a mixed state
                 bool newState = newAllGameObjectsSelected;
                 if (mixedGameObjectSelection)
                 {
                     newState = false;
                 }
 
-                // GameObjectのみ選択状態を更新（コンポーネントは連動させない）
+                // Update selection state for GameObjects only (components are not linked)
                 foreach (var go in filteredGameObjects)
                 {
                     dataManager.GameObjectSelectionState[go] = newState;
                 }
             }
 
-            // GameObject ヘッダー
+            // GameObject header
             Rect gameObjectHeaderRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y, gameObjectColumnWidth, totalRect.height);
             EditorGUI.LabelField(gameObjectHeaderRect, "GameObject", headerLabelStyle);
 
-            // リサイズハンドル
+            // Resize handle
             Rect resizeHandleRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH + gameObjectColumnWidth, totalRect.y, ComponentConstants.RESIZE_HANDLE_WIDTH, totalRect.height);
             EditorGUI.LabelField(resizeHandleRect, "|", EditorStyles.boldLabel);
             EditorGUIUtility.AddCursorRect(resizeHandleRect, MouseCursor.ResizeHorizontal);
 
-            // Component チェックボックス列
+            // Component checkbox column
             Rect checkboxRect2 = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH + gameObjectColumnWidth + ComponentConstants.RESIZE_HANDLE_WIDTH, totalRect.y, ComponentConstants.CHECKBOX_WIDTH, totalRect.height);
             bool allComponentsSelected = filteredComponents.Count > 0 &&
                                         filteredComponents.All(c => c.IsSelected);
@@ -146,56 +146,56 @@ namespace Kanameliser.EditorPlus
 
             if (newAllComponentsSelected != allComponentsSelected)
             {
-                // 混合状態でクリックされた場合は常に全解除する
+                // Always clear all when clicked in a mixed state
                 bool newState = newAllComponentsSelected;
                 if (mixedComponentSelection)
                 {
                     newState = false;
                 }
 
-                // フィルター後の表示対象のみを更新
+                // Update only the items visible after filtering
                 foreach (var comp in filteredComponents)
                 {
                     comp.IsSelected = newState;
                 }
             }
 
-            // Component ヘッダー
+            // Component header
             Rect componentHeaderRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH + gameObjectColumnWidth + ComponentConstants.RESIZE_HANDLE_WIDTH + ComponentConstants.CHECKBOX_WIDTH,
                                               totalRect.y, componentColumnWidth, totalRect.height);
             EditorGUI.LabelField(componentHeaderRect, "Component", headerLabelStyle);
         }
 
         /// <summary>
-        /// GameObjectとそのコンポーネントの行を描画
+        /// Draws a row for a GameObject and its components
         /// </summary>
         public void DrawCombinedRow(GameObject gameObj, List<ComponentInfo> components, GameObject targetObject)
         {
             if (gameObj == null) return;
 
-            // 行の高さを計算 (GameObject + コンポーネント数に基づく)
+            // Calculate the row height (based on the GameObject plus the component count)
             int componentCount = components.Count;
-            int calculatedRowHeight = Mathf.Max((int)ComponentConstants.MIN_ROW_HEIGHT, (int)(ComponentConstants.ROW_HEIGHT + componentCount * ComponentConstants.ROW_HEIGHT)); // 最低高さは36px
+            int calculatedRowHeight = Mathf.Max((int)ComponentConstants.MIN_ROW_HEIGHT, (int)(ComponentConstants.ROW_HEIGHT + componentCount * ComponentConstants.ROW_HEIGHT)); // Minimum height is 36px
 
             Rect totalRect = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true), GUILayout.Height(calculatedRowHeight));
             float startX = totalRect.x;
 
-            // GameObject チェックボックス - GameObject名と同じ高さに配置
+            // GameObject checkbox - aligned with the GameObject name
             Rect goCheckboxRect = new Rect(startX, totalRect.y, ComponentConstants.CHECKBOX_WIDTH, ComponentConstants.ROW_HEIGHT);
             bool isGameObjectSelected = dataManager.GameObjectSelectionState[gameObj];
 
-            // EditorGUI.Toggleを使用して状態変更を検出
+            // Use EditorGUI.Toggle to detect state changes
             bool newIsGameObjectSelected = EditorGUI.Toggle(goCheckboxRect, isGameObjectSelected);
             if (newIsGameObjectSelected != isGameObjectSelected)
             {
                 dataManager.GameObjectSelectionState[gameObj] = newIsGameObjectSelected;
             }
 
-            // GameObject名
+            // GameObject name
             Rect nameRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y, gameObjectColumnWidth, ComponentConstants.ROW_HEIGHT);
             EditorGUI.LabelField(nameRect, gameObj.name, headerLabelStyle);
 
-            // GameObject名の部分をクリックできるように
+            // Make the GameObject name clickable
             Event evt = Event.current;
             if (evt.type == EventType.MouseDown && nameRect.Contains(evt.mousePosition))
             {
@@ -205,12 +205,12 @@ namespace Kanameliser.EditorPlus
                 EditorWindow.GetWindow<ComponentManager>().Repaint();
             }
 
-            // GameObject パス
+            // GameObject path
             Rect pathRect = new Rect(startX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y + 18, gameObjectColumnWidth, 16);
             string path = ComponentPathUtility.GetGameObjectPath(gameObj, targetObject);
             EditorGUI.LabelField(pathRect, path, pathLabelStyle);
 
-            // パスの部分もクリックできるように
+            // Make the path clickable as well
             if (evt.type == EventType.MouseDown && pathRect.Contains(evt.mousePosition))
             {
                 Event evtCopy = new Event(evt);
@@ -219,10 +219,10 @@ namespace Kanameliser.EditorPlus
                 EditorWindow.GetWindow<ComponentManager>().Repaint();
             }
 
-            // コンポーネント部分
+            // Component area
             float componentStartX = startX + ComponentConstants.CHECKBOX_WIDTH + gameObjectColumnWidth + ComponentConstants.RESIZE_HANDLE_WIDTH;
 
-            // 各コンポーネントを描画（インデントなしで縦に並べる）
+            // Draw each component (stacked vertically without indentation)
             for (int i = 0; i < components.Count; i++)
             {
                 var component = components[i];
@@ -230,18 +230,18 @@ namespace Kanameliser.EditorPlus
 
                 float yOffset = i * ComponentConstants.ROW_HEIGHT;
 
-                // コンポーネントのチェックボックス
+                // Component checkbox
                 Rect compCheckboxRect = new Rect(componentStartX, totalRect.y + yOffset, ComponentConstants.CHECKBOX_WIDTH, ComponentConstants.ROW_HEIGHT);
                 bool isCompSelected = component.IsSelected;
 
-                // EditorGUI.Toggleを使用して状態変更を検出
+                // Use EditorGUI.Toggle to detect state changes
                 bool newIsCompSelected = EditorGUI.Toggle(compCheckboxRect, isCompSelected);
                 if (newIsCompSelected != isCompSelected)
                 {
                     component.IsSelected = newIsCompSelected;
                 }
 
-                // コンポーネントアイコン
+                // Component icon
                 GUIContent content = component.Component != null
                     ? EditorGUIUtility.ObjectContent(component.Component, component.Component.GetType())
                     : new GUIContent("Missing");
@@ -249,7 +249,7 @@ namespace Kanameliser.EditorPlus
                 Rect iconRect = new Rect(componentStartX + ComponentConstants.CHECKBOX_WIDTH, totalRect.y + yOffset, ComponentConstants.ICON_WIDTH, ComponentConstants.ROW_HEIGHT);
                 EditorGUI.LabelField(iconRect, new GUIContent(content.image));
 
-                // コンポーネント名
+                // Component name
                 Rect compLabelRect = new Rect(componentStartX + ComponentConstants.CHECKBOX_WIDTH + ComponentConstants.ICON_WIDTH, totalRect.y + yOffset,
                                    componentColumnWidth - ComponentConstants.ICON_WIDTH, ComponentConstants.ROW_HEIGHT);
                 EditorGUI.LabelField(compLabelRect, component.Name, componentLabelStyle);
@@ -257,7 +257,7 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// リサイズハンドルの処理
+        /// Handles the column resize handle
         /// </summary>
         public void HandleColumnResize(Rect resizeHandleRect)
         {
@@ -265,7 +265,7 @@ namespace Kanameliser.EditorPlus
 
             EditorGUIUtility.AddCursorRect(resizeHandleRect, MouseCursor.ResizeHorizontal);
 
-            // リサイズハンドルの処理をイベントタイプごとに分離
+            // Handle the resize handle separately per event type
             switch (evt.type)
             {
                 case EventType.MouseDown:
@@ -307,27 +307,27 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// カラム幅を更新する
+        /// Updates the column widths
         /// </summary>
         private void UpdateColumnWidths(float deltaX)
         {
             float availableWidth = totalWidth - (ComponentConstants.CHECKBOX_WIDTH * 2) - ComponentConstants.RESIZE_HANDLE_WIDTH - ComponentConstants.COLUMN_MARGIN;
 
-            // 新しい幅を計算
+            // Calculate the new width
             float newWidth = gameObjectColumnWidth + deltaX;
 
-            // 最小幅を確保しつつ、最大幅をウィンドウの60%以下に制限
+            // Ensure the minimum width while capping the maximum at 60% of the window
             float maxAllowed = Mathf.Max(availableWidth * ComponentConstants.MAX_COLUMN_RATIO, ComponentConstants.MIN_COLUMN_WIDTH);
             newWidth = Mathf.Clamp(newWidth, ComponentConstants.MIN_COLUMN_WIDTH, maxAllowed);
 
-            // コンポーネント列も最小幅を下回らないようにする
+            // Keep the component column from going below the minimum width as well
             float remainingWidth = availableWidth - newWidth;
             if (remainingWidth < ComponentConstants.MIN_COLUMN_WIDTH)
             {
                 newWidth = availableWidth - ComponentConstants.MIN_COLUMN_WIDTH;
             }
 
-            // 変更があればレイアウトを更新
+            // Update the layout when changed
             if (newWidth != gameObjectColumnWidth)
             {
                 gameObjectColumnWidth = newWidth;
@@ -336,23 +336,23 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// GameObjectをHierarchy上で選択する
+        /// Selects the GameObject in the Hierarchy
         /// </summary>
         private void SelectGameObjectInHierarchy(GameObject gameObj, GameObject targetObject)
         {
             if (gameObj == null) return;
 
-            // 現在のPrefab編集モード情報を取得
+            // Get the current prefab editing mode info
             var prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
 
-            // Prefab編集モードの場合、対応するPrefab編集モード内のオブジェクトを取得
+            // In prefab editing mode, get the corresponding object inside the prefab stage
             GameObject objectToSelect = GetCorrespondingPrefabModeObject(gameObj, prefabStage, targetObject);
 
-            // ヒエラルキーで選択
+            // Select in the Hierarchy
             Selection.activeObject = objectToSelect;
 
-            // エディタのフォーカスをHierarchyビューに移す
-            // まずSceneHierarchyWindowを取得してみる
+            // Move editor focus to the Hierarchy view
+            // Try to get the SceneHierarchyWindow first
             var sceneHierarchyWindowType = System.Type.GetType("UnityEditor.SceneHierarchyWindow,UnityEditor");
             if (sceneHierarchyWindowType != null)
             {
@@ -364,29 +364,29 @@ namespace Kanameliser.EditorPlus
                 }
             }
 
-            // フォールバック
+            // Fallback
             EditorApplication.ExecuteMenuItem("Window/General/Hierarchy");
         }
 
         /// <summary>
-        /// Prefab編集モード内の対応するGameObjectを取得
+        /// Gets the corresponding GameObject inside prefab editing mode
         /// </summary>
         private GameObject GetCorrespondingPrefabModeObject(GameObject gameObject, UnityEditor.SceneManagement.PrefabStage prefabStage, GameObject targetObject)
         {
             if (prefabStage == null)
                 return gameObject;
 
-            // 直接インスタンスIDで対応関係を確認
+            // Check the correspondence directly via instance IDs
             if (PrefabUtility.IsPartOfPrefabInstance(prefabStage.prefabContentsRoot) &&
                 PrefabUtility.IsPartOfPrefabInstance(gameObject))
             {
-                // 編集中のPrefabアセットとターゲットオブジェクトが同じPrefab階層にある可能性がある
+                // The prefab asset being edited and the target object may belong to the same prefab hierarchy
                 GameObject prefabAsset = PrefabUtility.GetCorrespondingObjectFromSource(prefabStage.prefabContentsRoot);
                 GameObject gameObjectPrefabAsset = PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject);
 
                 if (prefabAsset == gameObjectPrefabAsset)
                 {
-                    // 同じPrefabの一部なので、相対パスを使用して対応するオブジェクトを見つける
+                    // Part of the same prefab, so find the corresponding object via the relative path
                     string relativePath = ComponentPathUtility.GetRelativePathFromAncestor(gameObject.transform, targetObject.transform);
                     if (!string.IsNullOrEmpty(relativePath))
                     {
@@ -397,7 +397,7 @@ namespace Kanameliser.EditorPlus
                 }
             }
 
-            // パス解決によるフォールバック
+            // Fallback via path resolution
             string path = ComponentPathUtility.GetRelativePathFromAncestor(gameObject.transform, targetObject.transform);
             if (!string.IsNullOrEmpty(path) && path != ".")
             {
@@ -406,10 +406,10 @@ namespace Kanameliser.EditorPlus
                     return childTransform.gameObject;
             }
 
-            // 同じ名前のオブジェクトを探す（最終手段）
+            // Search for an object with the same name (last resort)
             if (gameObject != targetObject)
             {
-                // 深さ優先探索でGameObjectをPrefabステージから探す
+                // Depth-first search for the GameObject within the prefab stage
                 return FindMatchingGameObjectInPrefab(gameObject.name, prefabStage.prefabContentsRoot);
             }
 
@@ -417,14 +417,14 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// 名前に基づいて一致するGameObjectをPrefab内で探す
+        /// Finds a matching GameObject in the prefab by name
         /// </summary>
         private GameObject FindMatchingGameObjectInPrefab(string objectName, GameObject root)
         {
             if (root.name == objectName)
                 return root;
 
-            // 子オブジェクトを再帰的に探索
+            // Search child objects recursively
             foreach (Transform child in root.transform)
             {
                 GameObject result = FindMatchingGameObjectInPrefab(objectName, child.gameObject);
@@ -436,51 +436,51 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// フィルター入力欄を描画
+        /// Draws the filter fields
         /// </summary>
         public (string gameObjectFilter, string componentFilter, bool searchInPaths, bool showAllComponentsOnMatch, bool showEmptyObjects)
             DrawFilters(string gameObjectFilter, string componentFilter, bool searchInPaths, bool showAllComponentsOnMatch, bool showEmptyObjects)
         {
-            // フィルター入力欄
+            // Filter fields
             EditorGUILayout.BeginHorizontal();
 
-            // チェックボックス分の空白
+            // Spacing for the checkbox column
             GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH);
 
-            // GameObjectフィルター (GameObject列と同じ幅を使用、最小幅も設定)
+            // GameObject filter (uses the same width as the GameObject column, with a minimum width)
             EditorGUILayout.BeginVertical(GUILayout.Width(gameObjectColumnWidth), GUILayout.MinWidth(ComponentConstants.MIN_COLUMN_WIDTH));
-            EditorGUILayout.LabelField("GameObject Filter:", headerLabelStyle);
+            EditorGUILayout.LabelField(Localization.S("componentManager.gameObjectFilter"), headerLabelStyle);
             string newGameObjectFilter = EditorGUILayout.TextField(gameObjectFilter);
 
-            // GameObject フィルターオプション
-            bool newSearchInPaths = EditorGUILayout.ToggleLeft(" Include paths in search", searchInPaths);
+            // GameObject filter options
+            bool newSearchInPaths = EditorGUILayout.ToggleLeft(" " + Localization.S("componentManager.includePathsInSearch"), searchInPaths);
 
             EditorGUILayout.EndVertical();
 
-            // リサイズハンドル分の空白
+            // Spacing for the resize handle
             GUILayout.Space(ComponentConstants.RESIZE_HANDLE_WIDTH);
 
-            // チェックボックス分の空白
+            // Spacing for the checkbox column
             GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH);
 
-            // Componentフィルター (残りの幅を使用、最小幅も設定)
+            // Component filter (uses the remaining width, with a minimum width)
             EditorGUILayout.BeginVertical(GUILayout.Width(componentColumnWidth), GUILayout.MinWidth(ComponentConstants.MIN_COLUMN_WIDTH));
-            EditorGUILayout.LabelField("Component Filter:", headerLabelStyle);
+            EditorGUILayout.LabelField(Localization.S("componentManager.componentFilter"), headerLabelStyle);
             string newComponentFilter = EditorGUILayout.TextField(componentFilter);
 
-            // コンポーネント フィルターオプション
-            bool newShowAllComponentsOnMatch = EditorGUILayout.ToggleLeft(" Show all components of matching GameObjects", showAllComponentsOnMatch);
+            // Component filter options
+            bool newShowAllComponentsOnMatch = EditorGUILayout.ToggleLeft(" " + Localization.S("componentManager.showAllComponentsOnMatch"), showAllComponentsOnMatch);
 
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.EndHorizontal();
 
-            // 追加オプション（横並び）
+            // Additional options (laid out horizontally)
             EditorGUILayout.BeginHorizontal();
-            GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH); // 左側の余白を合わせる
+            GUILayout.Space(ComponentConstants.CHECKBOX_WIDTH); // Match the left margin
 
-            // コンポーネントがないオブジェクトも表示するオプション
-            bool newShowEmptyObjects = EditorGUILayout.ToggleLeft(" Show GameObjects with no components", showEmptyObjects);
+            // Option to also show GameObjects without components
+            bool newShowEmptyObjects = EditorGUILayout.ToggleLeft(" " + Localization.S("componentManager.showEmptyObjects"), showEmptyObjects);
             if (newShowEmptyObjects != showEmptyObjects)
             {
                 dataManager.ShowEmptyObjects = newShowEmptyObjects;
@@ -488,7 +488,7 @@ namespace Kanameliser.EditorPlus
             }
             else
             {
-                // もしかするとdataManagerの値と一致していない可能性があるので同期する
+                // Sync in case the value differs from dataManager's
                 showEmptyObjects = dataManager.ShowEmptyObjects;
             }
 
@@ -498,24 +498,24 @@ namespace Kanameliser.EditorPlus
         }
 
         /// <summary>
-        /// ターゲットオブジェクトフィールドを描画
+        /// Draws the target object field
         /// </summary>
         public GameObject DrawTargetObjectField(GameObject targetObject, ComponentDataManager dataManager)
         {
             EditorGUILayout.BeginHorizontal();
 
-            EditorGUILayout.LabelField("Target Object", GUILayout.Width(EditorGUIUtility.labelWidth - 30));
+            EditorGUILayout.LabelField(Localization.S("componentManager.targetObject"), GUILayout.Width(EditorGUIUtility.labelWidth - 30));
 
-            // 更新ボタンを追加（ラベルの後、フィールドの前）
+            // Refresh button (after the label, before the field)
             if (GUILayout.Button(EditorGUIUtility.IconContent("Refresh"), GUILayout.Width(30), GUILayout.Height(18)))
             {
                 if (targetObject != null)
                 {
-                    // 現在のチェック状態を保存
+                    // Save the current selection states
                     Dictionary<GameObject, bool> savedGameObjectSelectionState = new Dictionary<GameObject, bool>(dataManager.GameObjectSelectionState);
                     Dictionary<Component, bool> savedComponentSelectionState = new Dictionary<Component, bool>();
 
-                    // 各コンポーネントの選択状態を保存
+                    // Save the selection state of each component
                     foreach (var entry in dataManager.ComponentsByGameObject)
                     {
                         foreach (var compInfo in entry.Value)
@@ -529,7 +529,7 @@ namespace Kanameliser.EditorPlus
 
                     dataManager.RefreshComponentsList(targetObject);
 
-                    // GameObjectのチェック状態を復元
+                    // Restore GameObject selection states
                     foreach (var gameObject in dataManager.GameObjectSelectionState.Keys.ToList())
                     {
                         if (savedGameObjectSelectionState.ContainsKey(gameObject))
@@ -538,7 +538,7 @@ namespace Kanameliser.EditorPlus
                         }
                     }
 
-                    // コンポーネントのチェック状態を復元
+                    // Restore component selection states
                     foreach (var entry in dataManager.ComponentsByGameObject)
                     {
                         foreach (var compInfo in entry.Value)
@@ -552,7 +552,7 @@ namespace Kanameliser.EditorPlus
                 }
             }
 
-            // オブジェクトフィールド
+            // Object field
             EditorGUI.BeginChangeCheck();
             GameObject newTargetObject = EditorGUILayout.ObjectField("", targetObject, typeof(GameObject), true) as GameObject;
             GameObject resultTargetObject = targetObject;

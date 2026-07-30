@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Kanameliser.EditorPlus
 {
     /// <summary>
-    /// コンポーネント情報を格納するクラス
+    /// Holds component information
     /// </summary>
     public class ComponentInfo
     {
