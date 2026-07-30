@@ -340,14 +340,21 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
                 // Create material swaps
                 var currentMaterials = renderer.sharedMaterials;
-                int maxSlots = Mathf.Min(currentMaterials.Length, sourceSetup.materials.Length);
+                // Slot remapping (if present) maps each host slot back to its reference-order source slot.
+                var slotMap = MaterialSlotRemapUtil.ResolveSlotMap(matchedTransform);
 
-                for (int i = 0; i < maxSlots; i++)
+                for (int hostSlot = 0; hostSlot < currentMaterials.Length; hostSlot++)
                 {
-                    if (currentMaterials[i] != null && sourceSetup.materials[i] != null)
+                    int sourceSlot = slotMap != null ? slotMap[hostSlot] : hostSlot;
+                    if (sourceSlot < 0 || sourceSlot >= sourceSetup.materials.Length)
                     {
-                        var fromMaterial = currentMaterials[i];
-                        var toMaterial = sourceSetup.materials[i];
+                        continue;
+                    }
+
+                    if (currentMaterials[hostSlot] != null && sourceSetup.materials[sourceSlot] != null)
+                    {
+                        var fromMaterial = currentMaterials[hostSlot];
+                        var toMaterial = sourceSetup.materials[sourceSlot];
 
                         // Group material swaps by source material
                         if (!materialSwapData.ContainsKey(fromMaterial))
@@ -355,7 +362,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                             materialSwapData[fromMaterial] = new MaterialSwapInfo();
                         }
 
-                        materialSwapData[fromMaterial].AddMapping(toMaterial, matchedTransform.gameObject, i);
+                        materialSwapData[fromMaterial].AddMapping(toMaterial, matchedTransform.gameObject, hostSlot);
                         totalMatchCount++;
                     }
                 }
@@ -480,17 +487,24 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 // Create material swaps for this specific object
                 var objectSwaps = new List<(Material from, Material to)>();
                 var currentMaterials = renderer.sharedMaterials;
-                int maxSlots = Mathf.Min(currentMaterials.Length, sourceSetup.materials.Length);
+                // Slot remapping (if present) maps each host slot back to its reference-order source slot.
+                var slotMap = MaterialSlotRemapUtil.ResolveSlotMap(matchedTransform);
 
                 // Track material mappings for this object to detect conflicts
                 var materialMappings = new Dictionary<Material, List<(int slotIndex, Material targetMaterial)>>();
 
-                for (int i = 0; i < maxSlots; i++)
+                for (int hostSlot = 0; hostSlot < currentMaterials.Length; hostSlot++)
                 {
-                    if (currentMaterials[i] != null && sourceSetup.materials[i] != null)
+                    int sourceSlot = slotMap != null ? slotMap[hostSlot] : hostSlot;
+                    if (sourceSlot < 0 || sourceSlot >= sourceSetup.materials.Length)
                     {
-                        var fromMaterial = currentMaterials[i];
-                        var toMaterial = sourceSetup.materials[i];
+                        continue;
+                    }
+
+                    if (currentMaterials[hostSlot] != null && sourceSetup.materials[sourceSlot] != null)
+                    {
+                        var fromMaterial = currentMaterials[hostSlot];
+                        var toMaterial = sourceSetup.materials[sourceSlot];
 
                         objectSwaps.Add((fromMaterial, toMaterial));
 
@@ -499,7 +513,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                         {
                             materialMappings[fromMaterial] = new List<(int, Material)>();
                         }
-                        materialMappings[fromMaterial].Add((i, toMaterial));
+                        materialMappings[fromMaterial].Add((hostSlot, toMaterial));
                     }
                 }
 

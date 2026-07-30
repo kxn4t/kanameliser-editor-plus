@@ -252,7 +252,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
 
         /// <summary>
         /// Selects the best candidate for P5 fuzzy tier using combined name + path scoring.
-        /// Score: NameScore(norm=100, fuzzy=60) + PathSegmentScore + AncestorContextScore.
+        /// Score: NameScore + PathSegmentScore + AncestorContextScore.
         /// Tiebreakers: highest score, then depth proximity, then Levenshtein distance.
         /// </summary>
         private static (Transform transform, string path) SelectBestFuzzyCandidate(

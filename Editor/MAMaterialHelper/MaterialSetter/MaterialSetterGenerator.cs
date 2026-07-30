@@ -148,20 +148,31 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                 // Create material setter for this object
                 var materials = new List<(Material material, int slotIndex)>();
                 var currentMaterials = renderer.sharedMaterials;
-                int maxSlots = Mathf.Min(currentMaterials.Length, sourceSetup.materials.Length);
+                // Slot remapping (if present) maps each host slot back to its reference-order source slot.
+                var slotMap = MaterialSlotRemapUtil.ResolveSlotMap(matchedTransform);
 
-                for (int i = 0; i < maxSlots; i++)
+                for (int hostSlot = 0; hostSlot < currentMaterials.Length; hostSlot++)
                 {
-                    // Add the material from the source setup (skip null materials)
-                    if (sourceSetup.materials[i] != null)
+                    int sourceSlot = slotMap != null ? slotMap[hostSlot] : hostSlot;
+                    if (sourceSlot < 0 || sourceSlot >= sourceSetup.materials.Length)
                     {
-                        // Skip if skipUnchanged is enabled and the material is the same as current
-                        if (skipUnchanged && sourceSetup.materials[i] == currentMaterials[i])
-                        {
-                            continue;
-                        }
-                        materials.Add((sourceSetup.materials[i], i));
+                        continue;
                     }
+
+                    // Add the material from the source setup (skip null materials)
+                    var sourceMaterial = sourceSetup.materials[sourceSlot];
+                    if (sourceMaterial == null)
+                    {
+                        continue;
+                    }
+
+                    // Skip if skipUnchanged is enabled and the material is the same as current
+                    if (skipUnchanged && sourceMaterial == currentMaterials[hostSlot])
+                    {
+                        continue;
+                    }
+
+                    materials.Add((sourceMaterial, hostSlot));
                 }
 
                 // Only create component if there are valid materials
