@@ -35,7 +35,4 @@ features:
   - title: AO Bounds Setter
     details: 複数メッシュのAnchor Override・Root Bone・Boundsを一括設定。衣装制作に便利。
     link: /features/ao-bounds-setter
-  - title: Missing BlendShape Inserter
-    details: アニメーションファイル間で不足するBlendShapeキーを自動検出・補完。
-    link: /features/missing-blendshape-inserter
 ---

@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MA Material Helper: Material Slot Remapping** — Added a `Kanameliser Editor Plus > Add Material Slot Remapping` component (Hierarchy right-click). Use it when an outfit conversion (e.g. auto-fitting tools) reorders a renderer's material slots and Material Setter/Swap color changes no longer land correctly. It maps the converted outfit's material slots back to the original (reference) outfit's slots, so Material Setter/Swap color changes apply to the correct slots even when the conversion shifted the slot order.
 - **MA Material Helper / Material Copier: Verbose Matching Logs toggle** — Added a menu toggle at `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` to enable detailed matching diagnostics in the console.
 
+### Removed
+
+- **Missing BlendShape Inserter** — Removed from Kanameliser Editor Plus. Please use [Zatools' Missing BlendShape Inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/) instead.
+
 ### Fixed
 
 - **Component Manager**
@@ -33,16 +37,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AO Bounds Setter**
   - Fixed a MissingReferenceException that could abort Apply (and row clicks) when a listed object was deleted before applying
   - Fixed the Transform selector popup remaining open as an unclosable window; it now closes on focus loss and with the Esc key
-- **Missing BlendShape Inserter**
-  - Fixed a GUILayout error that occurred when clicking the "-" button in the clip list
-  - Fixed an issue where overwriting AnimationClips embedded in imported assets such as FBX would not be saved; these are now correctly detected as read-only and an error is shown
-
 ---
 
 ### 追加
 
 - **MA Material Helper: Material Slot Remapping** — `Kanameliser Editor Plus > Add Material Slot Remapping`（ヒエラルキー右クリック）コンポーネントを追加。もちふぃった～等で変換を行った際にマテリアルスロット順が変わってしまい、Material Setter/Swapの色変更がうまく行かないときに使用します。変換後の衣装のマテリアルスロットを元（参照）衣装のスロットに対応付けることで、変換でスロット順がずれていてもMaterial Setter/Swapの色変更が正しいスロットに適用されるようにします。
 - **MA Material Helper / Material Copier: 詳細マッチングログのトグル** — `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` にデバッグ用ログのトグルを追加。有効にするとマッチング判定の詳細情報をコンソールに出力します。
+
+### 削除
+
+- **Missing BlendShape Inserter** — Kanameliser Editor Plusから削除しました。同等機能については、[Zatools版 Missing BlendShape Inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/) をご利用ください。
 
 ### 修正
 
@@ -60,10 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AO Bounds Setter**
   - リスト表示後に対象オブジェクトが削除されると、Apply（および行クリック）がMissingReferenceExceptionで中断する問題を修正
   - Transformセレクターのポップアップが閉じられないウィンドウとして残ってしまう問題を修正。フォーカスを失ったときとEscキーで閉じるようにしました
-- **Missing BlendShape Inserter**
-  - クリップ一覧の「-」ボタンをクリックするとGUILayoutエラーが発生する問題を修正
-  - FBX等のインポートアセットに埋め込まれたAnimationClipを上書きした際に、保存されない問題を修正。これらを読み取り専用として正しく検出し、エラーを表示するようにしました
-
 ## [0.5.0] - 2026-04-23
 
 ### Improved
