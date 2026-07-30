@@ -86,6 +86,81 @@ namespace Kanameliser.EditorPlus.Tests
         }
 
         [Test]
+        public void Generate_DuplicateMaterials_MarksEstimatedMappingAmbiguous()
+        {
+            var a = CreateMaterial("A");
+            var b = CreateMaterial("B");
+
+            var host = CreateGameObject("Host");
+            var hostBody = CreateGameObject("Body", host).AddComponent<MeshRenderer>();
+            hostBody.sharedMaterials = new[] { a, a, b };
+            var component = host.AddComponent<MaterialSlotRemapping>();
+
+            var reference = CreateGameObject("Reference");
+            var refBody = CreateGameObject("Body", reference).AddComponent<MeshRenderer>();
+            refBody.sharedMaterials = new[] { b, a, a };
+            component.referencePrefab = reference;
+
+            var result = MaterialSlotRemapGenerator.Generate(component);
+
+            Assert.That(result.success, Is.True);
+            Assert.That(result.hasAmbiguousMappings, Is.True);
+            Assert.That(result.remaps[0].referenceSlotForHostSlot, Is.EqualTo(new[] { 1, 2, 0 }));
+            Assert.That(result.ambiguousMappingDetails, Has.Count.EqualTo(1));
+            StringAssert.Contains(
+                "host slots [0, 1], reference slots [1, 2]",
+                string.Join("\n", result.warnings));
+            StringAssert.Contains(
+                "Estimated host -> reference [0 -> 1, 1 -> 2]",
+                MaterialSlotRemappingEditor.BuildAmbiguityConfirmationMessage(result));
+        }
+
+        [Test]
+        public void Generate_MultipleEmptySlots_MarksEstimatedMappingAmbiguous()
+        {
+            var a = CreateMaterial("A");
+
+            var host = CreateGameObject("Host");
+            var hostBody = CreateGameObject("Body", host).AddComponent<MeshRenderer>();
+            hostBody.sharedMaterials = new Material[] { null, null, a };
+            var component = host.AddComponent<MaterialSlotRemapping>();
+
+            var reference = CreateGameObject("Reference");
+            var refBody = CreateGameObject("Body", reference).AddComponent<MeshRenderer>();
+            refBody.sharedMaterials = new Material[] { a, null, null };
+            component.referencePrefab = reference;
+
+            var result = MaterialSlotRemapGenerator.Generate(component);
+
+            Assert.That(result.success, Is.True);
+            Assert.That(result.hasAmbiguousMappings, Is.True);
+            Assert.That(result.remaps[0].referenceSlotForHostSlot, Is.EqualTo(new[] { 1, 2, 0 }));
+            StringAssert.Contains("(None / Missing)", string.Join("\n", result.warnings));
+        }
+
+        [Test]
+        public void Generate_SingleEmptySlot_DoesNotMarkMappingAmbiguous()
+        {
+            var a = CreateMaterial("A");
+
+            var host = CreateGameObject("Host");
+            var hostBody = CreateGameObject("Body", host).AddComponent<MeshRenderer>();
+            hostBody.sharedMaterials = new Material[] { null, a };
+            var component = host.AddComponent<MaterialSlotRemapping>();
+
+            var reference = CreateGameObject("Reference");
+            var refBody = CreateGameObject("Body", reference).AddComponent<MeshRenderer>();
+            refBody.sharedMaterials = new Material[] { a, null };
+            component.referencePrefab = reference;
+
+            var result = MaterialSlotRemapGenerator.Generate(component);
+
+            Assert.That(result.success, Is.True);
+            Assert.That(result.hasAmbiguousMappings, Is.False);
+            Assert.That(result.remaps[0].referenceSlotForHostSlot, Is.EqualTo(new[] { 1, 0 }));
+        }
+
+        [Test]
         public void Generate_SlotCountMismatch_FailsWithoutRemaps()
         {
             var a = CreateMaterial("A");

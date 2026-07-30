@@ -9,6 +9,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
     [CustomEditor(typeof(MaterialSlotRemapping))]
     public class MaterialSlotRemappingEditor : UnityEditor.Editor
     {
+        private const int MaxAmbiguityDetailsInDialog = 5;
+
         private RemapGenerationResult _lastResult;
         private readonly Dictionary<string, bool> _foldouts = new Dictionary<string, bool>();
 
@@ -54,11 +56,48 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             _lastResult = result;
             if (result.success)
             {
+                if (result.hasAmbiguousMappings &&
+                    !EditorUtility.DisplayDialog(
+                        "Ambiguous Material Slot Mapping",
+                        BuildAmbiguityConfirmationMessage(result),
+                        "Use Estimated Mapping",
+                        "Cancel"))
+                {
+                    _lastResult = null;
+                    return;
+                }
+
                 Undo.RecordObject(component, "Generate Slot Remapping");
                 component.remaps = result.remaps;
                 CommitChange(component);
                 Debug.Log($"[MA Material Helper] Generated slot remapping for {result.matchedRendererCount} renderer(s).");
             }
+        }
+
+        internal static string BuildAmbiguityConfirmationMessage(RemapGenerationResult result)
+        {
+            var displayedDetails = new List<string>();
+            int displayedCount = result.ambiguousMappingDetails.Count;
+            if (displayedCount > MaxAmbiguityDetailsInDialog)
+                displayedCount = MaxAmbiguityDetailsInDialog;
+
+            for (int i = 0; i < displayedCount; i++)
+                displayedDetails.Add(result.ambiguousMappingDetails[i]);
+
+            string details = string.Join("\n\n", displayedDetails);
+            if (result.ambiguousMappingDetails.Count > displayedCount)
+            {
+                details += $"\n\n...and {result.ambiguousMappingDetails.Count - displayedCount} more. " +
+                           "All details will be shown in the Inspector warnings.";
+            }
+
+            return
+                "Some material or empty slots occur more than once, so their submesh " +
+                "correspondence could not be determined reliably.\n\n" +
+                details + "\n\n" +
+                "If you continue, the estimated mapping will be stored. Review and adjust these " +
+                "slots manually before creating Material Setter/Swap components.\n\n" +
+                "Use the estimated mapping?";
         }
 
         private void DrawResultMessages()

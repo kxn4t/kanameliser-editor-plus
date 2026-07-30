@@ -50,6 +50,7 @@ When an outfit is converted to fit another avatar (e.g. with auto-fitting tools)
 
 The mapping is generated from material references, so generate it before changing the converted outfit's materials (i.e. right after conversion).  
 After generation, only the slot correspondence (indices) is stored, so changing the outfit's materials afterwards does not break the mapping.
+When the same material (or an empty slot) occurs more than once, the slot order cannot be determined uniquely. A confirmation dialog and warnings identify these cases; review the estimated mapping and adjust it manually in the Inspector when needed.
 
 ## Access
 

@@ -14,7 +14,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         public List<RendererSlotRemap> remaps = new List<RendererSlotRemap>();
         public List<string> errors = new List<string>();
         public List<string> warnings = new List<string>();
+        public List<string> ambiguousMappingDetails = new List<string>();
         public int matchedRendererCount;
+        public bool hasAmbiguousMappings;
     }
 
     /// <summary>
@@ -79,6 +81,32 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 }
 
                 var map = BuildSlotMap(hostMaterials, refMaterials, out var unresolved);
+                foreach (var ambiguity in FindAmbiguousMaterialGroups(hostMaterials, refMaterials))
+                {
+                    var estimates = new List<string>();
+                    foreach (int hostSlot in ambiguity.hostSlots)
+                    {
+                        int referenceSlot = map[hostSlot];
+                        estimates.Add($"{hostSlot} -> {(referenceSlot >= 0 ? referenceSlot.ToString() : "none")}");
+                    }
+
+                    string materialName = ambiguity.material == null
+                        ? "(None / Missing)"
+                        : $"'{ambiguity.material.name}'";
+                    string detail =
+                        $"Ambiguous slot mapping at '{DisplayPath(relPath)}' for {materialName}: " +
+                        $"host slots [{string.Join(", ", ambiguity.hostSlots)}], " +
+                        $"reference slots [{string.Join(", ", ambiguity.referenceSlots)}]. " +
+                        $"Estimated host -> reference [{string.Join(", ", estimates)}]";
+                    string warning =
+                        detail + ". " +
+                        "The same material or empty value occurs more than once, so submesh " +
+                        "correspondence cannot be determined automatically. Review the estimated mapping manually.";
+                    result.warnings.Add(warning);
+                    result.ambiguousMappingDetails.Add(detail);
+                    result.hasAmbiguousMappings = true;
+                }
+
                 if (unresolved.Count > 0)
                 {
                     result.warnings.Add(
@@ -152,6 +180,50 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             }
 
             return map;
+        }
+
+        private sealed class MaterialOccurrenceGroup
+        {
+            public Material material;
+            public readonly List<int> hostSlots = new List<int>();
+            public readonly List<int> referenceSlots = new List<int>();
+        }
+
+        private static List<MaterialOccurrenceGroup> FindAmbiguousMaterialGroups(
+            Material[] hostMaterials,
+            Material[] referenceMaterials)
+        {
+            var groups = new List<MaterialOccurrenceGroup>();
+
+            for (int i = 0; i < hostMaterials.Length; i++)
+            {
+                FindOrCreateGroup(groups, hostMaterials[i]).hostSlots.Add(i);
+            }
+
+            for (int i = 0; i < referenceMaterials.Length; i++)
+            {
+                FindOrCreateGroup(groups, referenceMaterials[i]).referenceSlots.Add(i);
+            }
+
+            groups.RemoveAll(group =>
+                group.hostSlots.Count == 0 ||
+                group.referenceSlots.Count == 0 ||
+                (group.hostSlots.Count == 1 && group.referenceSlots.Count == 1));
+            return groups;
+        }
+
+        private static MaterialOccurrenceGroup FindOrCreateGroup(
+            List<MaterialOccurrenceGroup> groups,
+            Material material)
+        {
+            foreach (var group in groups)
+            {
+                if (group.material == material) return group;
+            }
+
+            var created = new MaterialOccurrenceGroup { material = material };
+            groups.Add(created);
+            return created;
         }
 
         private static string DisplayPath(string relPath)
