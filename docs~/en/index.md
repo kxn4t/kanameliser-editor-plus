@@ -35,7 +35,4 @@ features:
   - title: AO Bounds Setter
     details: Batch configure Anchor Override, Root Bone, and Bounds across multiple meshes.
     link: /en/features/ao-bounds-setter
-  - title: Missing BlendShape Inserter
-    details: Detect and fill missing BlendShape keys across animation files automatically.
-    link: /en/features/missing-blendshape-inserter
 ---

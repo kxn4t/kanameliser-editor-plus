@@ -159,21 +159,6 @@ Material Swapは「マテリアルX」を1つのマテリアルにしか置き�
 
 アクセス: `Tools > Kanameliser Editor Plus > AO Bounds Setter`
 
-### Missing BlendShape Inserter
-
-アニメーションファイル間で不足しているBlendShapeキーを自動検出・補完します。
-すべてのアニメーションが同じBlendShapeを操作するようにファイルを更新することで、異なる表情状態間のスムーズな遷移を確保します。複数ファイルの一括処理にも対応しています。
-
-主な使用場面:
-
-- アバターの顔のBlendShapeを変更したが、表情アニメーションで使用していない場合
-- ジェスチャーなどによる表情アニメーション切り替え時に表情が崩れる場合
-- すべてのアニメーションファイルで一貫したBlendShape操作を確保したい場合
-
-この機能はkb10uyさんの[Zatools](https://zatools.kb10uy.dev/)に多言語化対応され統合されています。詳しくは[Zatools/missing-blendshape-inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/)を参照してください。
-
-アクセス: `Tools > Kanameliser Editor Plus > Missing BlendShape Inserter`
-
 ## 必要環境
 
 - Unity 2022.3.22f1以上

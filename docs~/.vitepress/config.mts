@@ -14,7 +14,6 @@ const sidebarJa = [
       { text: 'Material Copier', link: '/features/material-copier' },
       { text: 'MA Material Helper', link: '/features/ma-material-helper' },
       { text: 'AO Bounds Setter', link: '/features/ao-bounds-setter' },
-      { text: 'Missing BlendShape Inserter', link: '/features/missing-blendshape-inserter' },
     ],
   },
 ]
@@ -33,7 +32,6 @@ const sidebarEn = [
       { text: 'Material Copier', link: '/en/features/material-copier' },
       { text: 'MA Material Helper', link: '/en/features/ma-material-helper' },
       { text: 'AO Bounds Setter', link: '/en/features/ao-bounds-setter' },
-      { text: 'Missing BlendShape Inserter', link: '/en/features/missing-blendshape-inserter' },
     ],
   },
 ]
