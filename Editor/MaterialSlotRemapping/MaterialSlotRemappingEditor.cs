@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using Kanameliser.Editor.MAMaterialHelper.Common;
+using Kanameliser.EditorPlus;
 using Kanameliser.EditorPlus.Runtime;
 
 namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
@@ -18,17 +19,13 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         {
             var component = (MaterialSlotRemapping)target;
 
-            EditorGUILayout.HelpBox(
-                "Maps this (converted) outfit's material slots back to a reference (original) outfit, " +
-                "so Material Setter/Swap color setups land on the correct slots.\n" +
-                "Generate the mapping right after conversion, before recoloring the outfit.",
-                MessageType.Info);
+            EditorGUILayout.HelpBox(Localization.S("slotRemap.description"), MessageType.Info);
 
             EditorGUILayout.Space();
 
             EditorGUI.BeginChangeCheck();
             var newRef = (GameObject)EditorGUILayout.ObjectField(
-                "Reference Prefab", component.referencePrefab, typeof(GameObject), true);
+                Localization.S("slotRemap.referencePrefab"), component.referencePrefab, typeof(GameObject), true);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(component, "Set Reference Prefab");
@@ -38,7 +35,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
             using (new EditorGUI.DisabledScope(component.referencePrefab == null))
             {
-                if (GUILayout.Button("Generate Mapping"))
+                if (GUILayout.Button(Localization.S("slotRemap.generateMapping")))
                 {
                     GenerateMapping(component);
                 }
@@ -58,10 +55,10 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             {
                 if (result.hasAmbiguousMappings &&
                     !EditorUtility.DisplayDialog(
-                        "Ambiguous Material Slot Mapping",
+                        Localization.S("slotRemap.ambiguousDialog.title"),
                         BuildAmbiguityConfirmationMessage(result),
-                        "Use Estimated Mapping",
-                        "Cancel"))
+                        Localization.S("slotRemap.ambiguousDialog.useEstimated"),
+                        Localization.S("common.cancel")))
                 {
                     _lastResult = null;
                     return;
@@ -87,17 +84,11 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             string details = string.Join("\n\n", displayedDetails);
             if (result.ambiguousMappingDetails.Count > displayedCount)
             {
-                details += $"\n\n...and {result.ambiguousMappingDetails.Count - displayedCount} more. " +
-                           "All details will be shown in the Inspector warnings.";
+                details += "\n\n" + Localization.S("slotRemap.ambiguousDialog.more",
+                    result.ambiguousMappingDetails.Count - displayedCount);
             }
 
-            return
-                "Some material or empty slots occur more than once, so their submesh " +
-                "correspondence could not be determined reliably.\n\n" +
-                details + "\n\n" +
-                "If you continue, the estimated mapping will be stored. Review and adjust these " +
-                "slots manually before creating Material Setter/Swap components.\n\n" +
-                "Use the estimated mapping?";
+            return Localization.S("slotRemap.ambiguousDialog.message", details);
         }
 
         private void DrawResultMessages()
@@ -110,18 +101,18 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 EditorGUILayout.HelpBox(warning, MessageType.Warning);
 
             if (_lastResult.success && _lastResult.warnings.Count == 0 && _lastResult.errors.Count == 0)
-                EditorGUILayout.HelpBox($"Mapping generated for {_lastResult.matchedRendererCount} renderer(s).", MessageType.Info);
+                EditorGUILayout.HelpBox(Localization.S("slotRemap.mappingGenerated", _lastResult.matchedRendererCount), MessageType.Info);
         }
 
         private void DrawRemaps(MaterialSlotRemapping component)
         {
             if (component.remaps == null || component.remaps.Count == 0)
             {
-                EditorGUILayout.LabelField("No mapping generated yet.", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField(Localization.S("slotRemap.noMapping"), EditorStyles.miniLabel);
                 return;
             }
 
-            EditorGUILayout.LabelField($"Slot Mappings ({component.remaps.Count} renderers)", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(Localization.S("slotRemap.slotMappings", component.remaps.Count), EditorStyles.boldLabel);
 
             foreach (var remap in component.remaps)
             {
@@ -136,7 +127,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
                 EditorGUI.indentLevel++;
                 DrawRemapEntry(component, remap);
-                if (GUILayout.Button("Reset This Renderer To Identity", GUILayout.Width(260)))
+                if (GUILayout.Button(Localization.S("slotRemap.resetToIdentity"), GUILayout.Width(260)))
                 {
                     ResetToIdentity(component, remap);
                 }

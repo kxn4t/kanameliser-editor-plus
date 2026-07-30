@@ -1,5 +1,10 @@
 /* AO Bounds Setter Window Styles */
 
+/* Language switcher */
+.language-switcher {
+    margin-bottom: 8px;
+}
+
 /* Main container */
 .main-container {
     padding: 10px;

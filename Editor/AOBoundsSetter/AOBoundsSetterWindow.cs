@@ -50,11 +50,30 @@ namespace Kanameliser.EditorPlus
             mainContainer.AddToClassList("main-container");
             root.Add(mainContainer);
 
+            // Language switcher at top
+            var langSwitcher = new IMGUIContainer(Localization.ShowLanguageUI);
+            langSwitcher.AddToClassList("language-switcher");
+            mainContainer.Add(langSwitcher);
+
             CreateRootObjectSection(mainContainer);
             CreateBatchSettingsSection(mainContainer);
             CreateMeshListSection(mainContainer);
 
             UpdateApplyButtonState();
+
+            // Localize ndmf-tr elements (kept up to date on language change by NDMF)
+            Localization.LocalizeUIElements(root);
+
+            // Tooltips set outside ndmf-tr need a manual refresh on language change
+            Localization.RegisterLanguageChangeCallback(this, w => w.UpdateLocalizedTooltips());
+        }
+
+        private void UpdateLocalizedTooltips()
+        {
+            if (refreshButton != null)
+            {
+                refreshButton.tooltip = Localization.S("aoBounds.refresh:tooltip");
+            }
         }
 
         private void CreateRootObjectSection(VisualElement container)
@@ -62,8 +81,9 @@ namespace Kanameliser.EditorPlus
             var section = new VisualElement();
             section.AddToClassList("root-object-section");
 
-            var label = new Label("Root Object");
+            var label = new Label("aoBounds.rootObject");
             label.AddToClassList("section-label");
+            label.AddToClassList("ndmf-tr");
             section.Add(label);
 
             // Root Object Field with Refresh Button
@@ -73,7 +93,7 @@ namespace Kanameliser.EditorPlus
             refreshButton = new Button(OnRefreshButtonClicked)
             {
                 text = "↻",
-                tooltip = "Reload meshes from the root object"
+                tooltip = Localization.S("aoBounds.refresh:tooltip")
             };
             refreshButton.AddToClassList("refresh-button");
             rootObjectContainer.Add(refreshButton);
@@ -102,12 +122,14 @@ namespace Kanameliser.EditorPlus
             var section = new VisualElement();
             section.AddToClassList("section-container");
 
-            var label = new Label("Batch Settings");
+            var label = new Label("aoBounds.batchSettings");
             label.AddToClassList("section-title");
+            label.AddToClassList("ndmf-tr");
             section.Add(label);
 
-            var aoLabel = new Label("Anchor Override:");
+            var aoLabel = new Label("aoBounds.anchorOverride");
             aoLabel.AddToClassList("field-label");
+            aoLabel.AddToClassList("ndmf-tr");
             section.Add(aoLabel);
 
             var anchorOverrideContainer = new VisualElement();
@@ -130,8 +152,9 @@ namespace Kanameliser.EditorPlus
 
             section.Add(anchorOverrideContainer);
 
-            var rootBoneLabel = new Label("Root Bone (SkinnedMeshRenderer only):");
+            var rootBoneLabel = new Label("aoBounds.rootBone");
             rootBoneLabel.AddToClassList("field-label-with-spacing");
+            rootBoneLabel.AddToClassList("ndmf-tr");
             section.Add(rootBoneLabel);
 
             var rootBoneContainer = new VisualElement();
@@ -154,8 +177,9 @@ namespace Kanameliser.EditorPlus
 
             section.Add(rootBoneContainer);
 
-            var boundsLabel = new Label("Bounds (SkinnedMeshRenderer only):");
+            var boundsLabel = new Label("aoBounds.bounds");
             boundsLabel.AddToClassList("field-label-with-spacing");
+            boundsLabel.AddToClassList("ndmf-tr");
             section.Add(boundsLabel);
 
             boundsCenterField = new Vector3Field("Center");
@@ -169,9 +193,10 @@ namespace Kanameliser.EditorPlus
 
             applyButton = new Button(OnApplyButtonClicked)
             {
-                text = "Apply to Selected Meshes"
+                text = "aoBounds.apply"
             };
             applyButton.AddToClassList("apply-button");
+            applyButton.AddToClassList("ndmf-tr");
             section.Add(applyButton);
 
             container.Add(section);
@@ -182,8 +207,9 @@ namespace Kanameliser.EditorPlus
             var section = new VisualElement();
             section.AddToClassList("mesh-list-section");
 
-            var label = new Label("Mesh List");
+            var label = new Label("aoBounds.meshList");
             label.AddToClassList("section-label");
+            label.AddToClassList("ndmf-tr");
             section.Add(label);
 
             // Container for header and list
@@ -215,20 +241,24 @@ namespace Kanameliser.EditorPlus
             headerToggle.RegisterValueChangedCallback(OnHeaderToggleChanged);
             header.Add(headerToggle);
 
-            var objectNameLabel = new Label("Object Name");
+            var objectNameLabel = new Label("aoBounds.header.objectName");
             objectNameLabel.AddToClassList("header-label-object-name");
+            objectNameLabel.AddToClassList("ndmf-tr");
             header.Add(objectNameLabel);
 
-            var aoLabel = new Label("Anchor Override");
+            var aoLabel = new Label("aoBounds.header.anchorOverride");
             aoLabel.AddToClassList("header-label-ao");
+            aoLabel.AddToClassList("ndmf-tr");
             header.Add(aoLabel);
 
-            var rootBoneLabel = new Label("Root Bone");
+            var rootBoneLabel = new Label("aoBounds.header.rootBone");
             rootBoneLabel.AddToClassList("header-label-root-bone");
+            rootBoneLabel.AddToClassList("ndmf-tr");
             header.Add(rootBoneLabel);
 
-            var boundsLabel = new Label("Bounds");
+            var boundsLabel = new Label("aoBounds.header.bounds");
             boundsLabel.AddToClassList("header-label-bounds");
+            boundsLabel.AddToClassList("ndmf-tr");
             header.Add(boundsLabel);
 
             return header;

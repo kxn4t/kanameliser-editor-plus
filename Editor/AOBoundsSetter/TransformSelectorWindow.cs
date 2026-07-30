@@ -77,7 +77,7 @@ namespace Kanameliser.EditorPlus
             searchField.RegisterValueChangedCallback(OnSearchTextChanged);
 
             // Add placeholder text
-            var placeholderLabel = new Label("Search...");
+            var placeholderLabel = new Label(Localization.S("aoBounds.search"));
             placeholderLabel.style.position = Position.Absolute;
             placeholderLabel.style.left = 3;
             placeholderLabel.style.top = 2;

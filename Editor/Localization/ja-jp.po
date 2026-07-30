@@ -78,6 +78,98 @@ msgstr ""
 msgid "maMaterialHelper.swapLimitation.conflictHeader"
 msgstr "マテリアル '{0}' に以下の競合があります:"
 
+# ── AO Bounds Setter ──
+
+msgid "aoBounds.rootObject"
+msgstr "Rootオブジェクト"
+
+msgid "aoBounds.refresh:tooltip"
+msgstr "Rootオブジェクトからメッシュを再読み込み"
+
+msgid "aoBounds.batchSettings"
+msgstr "一括設定"
+
+msgid "aoBounds.anchorOverride"
+msgstr "Anchor Override:"
+
+msgid "aoBounds.rootBone"
+msgstr "Root Bone（SkinnedMeshRendererのみ）:"
+
+msgid "aoBounds.bounds"
+msgstr "Bounds（SkinnedMeshRendererのみ）:"
+
+msgid "aoBounds.apply"
+msgstr "選択したメッシュに適用"
+
+msgid "aoBounds.meshList"
+msgstr "メッシュ一覧"
+
+msgid "aoBounds.header.objectName"
+msgstr "オブジェクト名"
+
+msgid "aoBounds.header.anchorOverride"
+msgstr "Anchor Override"
+
+msgid "aoBounds.header.rootBone"
+msgstr "Root Bone"
+
+msgid "aoBounds.header.bounds"
+msgstr "Bounds"
+
+msgid "aoBounds.search"
+msgstr "検索..."
+
+# ── Material Slot Remapping ──
+
+msgid "slotRemap.description"
+msgstr ""
+"この（変換後の）衣装のマテリアルスロットを参照元（変換前）の衣装に対応付け、"
+"Material Setter/Swapの色設定が正しいスロットに適用されるようにします。\n"
+"マッピングは変換直後、色替えを作成する前に生成してください。"
+
+msgid "slotRemap.referencePrefab"
+msgstr "参照元Prefab"
+
+msgid "slotRemap.generateMapping"
+msgstr "マッピングを生成"
+
+msgid "slotRemap.ambiguousDialog.title"
+msgstr "マテリアルスロットの対応が曖昧です"
+
+msgid "slotRemap.ambiguousDialog.useEstimated"
+msgstr "推定マッピングを使用"
+
+#, csharp-format
+msgid "slotRemap.ambiguousDialog.message"
+msgstr ""
+"同じマテリアルまたは空のスロットが複数あるため、サブメッシュの対応関係を"
+"確実に決定できませんでした。\n"
+"\n"
+"{0}\n"
+"\n"
+"続行すると推定マッピングが保存されます。Material Setter/Swapを作成する前に、"
+"該当スロットを手動で確認・調整してください。\n"
+"\n"
+"推定マッピングを使用しますか？"
+
+#, csharp-format
+msgid "slotRemap.ambiguousDialog.more"
+msgstr "...ほか {0} 件。詳細はInspectorの警告に表示されます。"
+
+#, csharp-format
+msgid "slotRemap.mappingGenerated"
+msgstr "{0} 件のRendererのマッピングを生成しました。"
+
+msgid "slotRemap.noMapping"
+msgstr "マッピングはまだ生成されていません。"
+
+#, csharp-format
+msgid "slotRemap.slotMappings"
+msgstr "スロットマッピング（{0} 件のRenderer）"
+
+msgid "slotRemap.resetToIdentity"
+msgstr "このRendererをそのままの対応にリセット"
+
 # ── Component Manager ──
 
 msgid "componentManager.targetObject"
