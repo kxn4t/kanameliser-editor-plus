@@ -123,9 +123,11 @@ msgstr "Search..."
 
 msgid "slotRemap.description"
 msgstr ""
-"Maps this (converted) outfit's material slots back to a reference (original) outfit, "
+"Use this when color setups created with Create Material Setter etc. do not map correctly "
+"after converting an outfit with fitting tools such as Mochifitter.\n"
+"Maps the converted outfit's material slots back to a reference (original) outfit, "
 "so Material Setter/Swap color setups land on the correct slots.\n"
-"Generate the mapping right after conversion, before recoloring the outfit."
+"Generate the mapping right after conversion, before recoloring (changing mesh materials) the outfit."
 
 msgid "slotRemap.referencePrefab"
 msgstr "Reference Prefab"
