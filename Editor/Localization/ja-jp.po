@@ -13,6 +13,71 @@ msgstr "キャンセル"
 msgid "common.delete"
 msgstr "削除"
 
+msgid "common.continue"
+msgstr "続行"
+
+# ── MA Material Helper ──
+
+msgid "maMaterialHelper.dialogTitle"
+msgstr "MA Material Helper"
+
+msgid "maMaterialHelper.dialogTitle.error"
+msgstr "MA Material Helper - エラー"
+
+msgid "maMaterialHelper.dialogTitle.warning"
+msgstr "MA Material Helper - 警告"
+
+msgid "maMaterialHelper.alreadyHasRemapping"
+msgstr "このオブジェクトには既にMaterial Slot Remappingコンポーネントが付いています。"
+
+msgid "maMaterialHelper.noCopiedSetup"
+msgstr "マテリアルセットアップがコピーされていません。先にCopy Material Setupを実行してください。"
+
+msgid "maMaterialHelper.noSetupGroups"
+msgstr "マテリアルセットアップのグループが見つかりませんでした"
+
+msgid "maMaterialHelper.noMatchingObjects"
+msgstr "コピー元とコピー先で一致するオブジェクトが見つかりませんでした"
+
+msgid "maMaterialHelper.invalidParameters"
+msgstr "パラメーターが不正です"
+
+msgid "maMaterialHelper.modularAvatarNotInstalled"
+msgstr "Modular Avatarがインストールされていません"
+
+#, csharp-format
+msgid "maMaterialHelper.createSetterFailed"
+msgstr "Material Setterの作成に失敗しました: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.createSwapFailed"
+msgstr "Material Swapの作成に失敗しました: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.createSwapPerObjectFailed"
+msgstr "Material Swap (Per Object) の作成に失敗しました: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.operationFailed"
+msgstr "処理に失敗しました ({0}):\n{1}"
+
+#, csharp-format
+msgid "maMaterialHelper.swapLimitation"
+msgstr ""
+"Material Swapの制限を検出しました\n"
+"\n"
+"Material Swapでは、同じメッシュ内の同じマテリアルを複数の異なるマテリアルに変更できません。\n"
+"\n"
+"検出された競合:\n"
+"{0}\n"
+"\n"
+"解決方法:\n"
+"代わりに「Create Material Setter」を使用してください。"
+
+#, csharp-format
+msgid "maMaterialHelper.swapLimitation.conflictHeader"
+msgstr "マテリアル '{0}' に以下の競合があります:"
+
 # ── Component Manager ──
 
 msgid "componentManager.targetObject"

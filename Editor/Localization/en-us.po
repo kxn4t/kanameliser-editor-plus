@@ -13,6 +13,71 @@ msgstr "Cancel"
 msgid "common.delete"
 msgstr "Delete"
 
+msgid "common.continue"
+msgstr "Continue"
+
+# ── MA Material Helper ──
+
+msgid "maMaterialHelper.dialogTitle"
+msgstr "MA Material Helper"
+
+msgid "maMaterialHelper.dialogTitle.error"
+msgstr "MA Material Helper - Error"
+
+msgid "maMaterialHelper.dialogTitle.warning"
+msgstr "MA Material Helper - Warning"
+
+msgid "maMaterialHelper.alreadyHasRemapping"
+msgstr "This object already has a Material Slot Remapping component."
+
+msgid "maMaterialHelper.noCopiedSetup"
+msgstr "No material setup has been copied. Please copy a material setup first."
+
+msgid "maMaterialHelper.noSetupGroups"
+msgstr "No material setup groups found"
+
+msgid "maMaterialHelper.noMatchingObjects"
+msgstr "No matching objects found between source and target"
+
+msgid "maMaterialHelper.invalidParameters"
+msgstr "Invalid parameters"
+
+msgid "maMaterialHelper.modularAvatarNotInstalled"
+msgstr "Modular Avatar is not installed"
+
+#, csharp-format
+msgid "maMaterialHelper.createSetterFailed"
+msgstr "Failed to create material setter: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.createSwapFailed"
+msgstr "Failed to create material swap: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.createSwapPerObjectFailed"
+msgstr "Failed to create material swap per object: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.operationFailed"
+msgstr "Failed to {0}:\n{1}"
+
+#, csharp-format
+msgid "maMaterialHelper.swapLimitation"
+msgstr ""
+"Material Swap Limitation Detected\n"
+"\n"
+"Material Swap cannot replace the same material in a mesh with multiple different materials.\n"
+"\n"
+"Detected conflicts:\n"
+"{0}\n"
+"\n"
+"Solution:\n"
+"Please use 'Create Material Setter' instead."
+
+#, csharp-format
+msgid "maMaterialHelper.swapLimitation.conflictHeader"
+msgstr "Material '{0}' has the following conflicts:"
+
 # ── Component Manager ──
 
 msgid "componentManager.targetObject"

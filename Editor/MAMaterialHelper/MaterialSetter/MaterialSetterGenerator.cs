@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using Kanameliser.Editor.MAMaterialHelper.Common;
+using Kanameliser.EditorPlus;
 #if MODULAR_AVATAR_INSTALLED
 using nadena.dev.modular_avatar.core;
 #endif
@@ -40,7 +41,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                     return new GenerationResult
                     {
                         success = false,
-                        message = "No material setup groups found"
+                        message = Localization.S("maMaterialHelper.noSetupGroups")
                     };
                 }
 
@@ -87,7 +88,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                     return new GenerationResult
                     {
                         success = false,
-                        message = "No matching objects found between source and target"
+                        message = Localization.S("maMaterialHelper.noMatchingObjects")
                     };
                 }
 
@@ -112,7 +113,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSetter
                 return new GenerationResult
                 {
                     success = false,
-                    message = $"Failed to create material setter: {e.Message}"
+                    message = Localization.S("maMaterialHelper.createSetterFailed", e.Message)
                 };
             }
         }

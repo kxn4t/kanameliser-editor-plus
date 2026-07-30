@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
+using Kanameliser.EditorPlus;
 
 namespace Kanameliser.Editor.MAMaterialHelper.Common
 {
@@ -41,7 +42,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             result = new GenerationResult
             {
                 success = false,
-                message = "Modular Avatar is not installed"
+                message = Localization.S("maMaterialHelper.modularAvatarNotInstalled")
             };
             return false;
 #else
@@ -50,7 +51,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
                 result = new GenerationResult
                 {
                     success = false,
-                    message = "Invalid parameters"
+                    message = Localization.S("maMaterialHelper.invalidParameters")
                 };
                 return false;
             }
@@ -80,25 +81,35 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
         /// <summary>
         /// Shows an error dialog with consistent styling
         /// </summary>
-        public static void ShowErrorDialog(string message, string title = "MA Material Helper - Error")
+        public static void ShowErrorDialog(string message, string title = null)
         {
-            EditorUtility.DisplayDialog(title, message, "OK");
+            EditorUtility.DisplayDialog(
+                title ?? Localization.S("maMaterialHelper.dialogTitle.error"),
+                message,
+                Localization.S("common.ok"));
         }
 
         /// <summary>
-        /// Shows a warning dialog with OK/Cancel options
+        /// Shows a warning dialog with Continue/Cancel options
         /// </summary>
-        public static bool ShowWarningDialog(string message, string title = "MA Material Helper - Warning")
+        public static bool ShowWarningDialog(string message, string title = null)
         {
-            return EditorUtility.DisplayDialog(title, message, "Continue", "Cancel");
+            return EditorUtility.DisplayDialog(
+                title ?? Localization.S("maMaterialHelper.dialogTitle.warning"),
+                message,
+                Localization.S("common.continue"),
+                Localization.S("common.cancel"));
         }
 
         /// <summary>
         /// Shows an info dialog
         /// </summary>
-        public static void ShowInfoDialog(string message, string title = "MA Material Helper")
+        public static void ShowInfoDialog(string message, string title = null)
         {
-            EditorUtility.DisplayDialog(title, message, "OK");
+            EditorUtility.DisplayDialog(
+                title ?? Localization.S("maMaterialHelper.dialogTitle"),
+                message,
+                Localization.S("common.ok"));
         }
 
         /// <summary>
@@ -190,7 +201,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             catch (System.Exception e)
             {
                 LogError($"Failed to {operationName}: {e.Message}");
-                ShowErrorDialog($"Failed to {operationName}:\n{e.Message}");
+                ShowErrorDialog(Localization.S("maMaterialHelper.operationFailed", operationName, e.Message));
                 return false;
             }
         }
@@ -207,7 +218,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.Common
             catch (System.Exception e)
             {
                 LogError($"Failed to {operationName}: {e.Message}");
-                ShowErrorDialog($"Failed to {operationName}:\n{e.Message}");
+                ShowErrorDialog(Localization.S("maMaterialHelper.operationFailed", operationName, e.Message));
                 return defaultValue;
             }
         }

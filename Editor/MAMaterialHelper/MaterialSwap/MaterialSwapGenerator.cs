@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Kanameliser.Editor.MAMaterialHelper.Common;
+using Kanameliser.EditorPlus;
 #if MODULAR_AVATAR_INSTALLED
 using nadena.dev.modular_avatar.core;
 #endif
@@ -46,7 +47,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 return new GenerationResult
                 {
                     success = false,
-                    message = $"Failed to create material swap: {e.Message}"
+                    message = Localization.S("maMaterialHelper.createSwapFailed", e.Message)
                 };
             }
         }
@@ -75,7 +76,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 return new GenerationResult
                 {
                     success = false,
-                    message = $"Failed to create material swap per object: {e.Message}"
+                    message = Localization.S("maMaterialHelper.createSwapPerObjectFailed", e.Message)
                 };
             }
         }
@@ -196,7 +197,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 return new GenerationResult
                 {
                     success = false,
-                    message = "No material setup groups found"
+                    message = Localization.S("maMaterialHelper.noSetupGroups")
                 };
             }
 
@@ -248,7 +249,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
                 return new GenerationResult
                 {
                     success = false,
-                    message = "No matching objects found between source and target"
+                    message = Localization.S("maMaterialHelper.noMatchingObjects")
                 };
             }
 
@@ -297,16 +298,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
         /// </summary>
         private static string BuildLimitationErrorMessage(List<string> conflictDetails)
         {
-            var errorMessage = "Material Swap Limitation Detected\n\n" +
-                               "Material Swapでは、同じメッシュ内の同じマテリアルを複数の異なるマテリアルに変更できません。\n" +
-                               "Material Swap cannot replace the same material in a mesh with multiple different materials.\n\n" +
-                               "Detected conflicts / 検出された競合:\n" +
-                               string.Join("\n", conflictDetails) +
-                               "\n\n" +
-                               "解決方法 / Solution:\n" +
-                               "代わりに「Create Material Setter」を使用してください。\n" +
-                               "Please use 'Create Material Setter' instead.";
-            return errorMessage;
+            return Localization.S("maMaterialHelper.swapLimitation", string.Join("\n", conflictDetails));
         }
 
         /// <summary>
@@ -391,7 +383,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.MaterialSwap
 
                 if (swapInfo.HasSameObjectMultipleTargets(out var conflictDetails))
                 {
-                    limitationErrors.Add($"\nMaterial '{fromMaterial.name}' has the following conflicts:");
+                    limitationErrors.Add("\n" + Localization.S("maMaterialHelper.swapLimitation.conflictHeader", fromMaterial.name));
                     limitationErrors.AddRange(conflictDetails);
                 }
             }

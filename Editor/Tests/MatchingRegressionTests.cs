@@ -602,17 +602,13 @@ namespace Kanameliser.EditorPlus.Tests
             return renderer;
         }
 
+        // Mirrors ProcessMaterialSwapGroups + BuildLimitationErrorMessage message assembly
         private static string LimitationMessage(Material from, string objectName, string slotDetails)
         {
-            return "Material Swap Limitation Detected\n\n" +
-                   "Material Swapでは、同じメッシュ内の同じマテリアルを複数の異なるマテリアルに変更できません。\n" +
-                   "Material Swap cannot replace the same material in a mesh with multiple different materials.\n\n" +
-                   "Detected conflicts / 検出された競合:\n\n" +
-                   $"Material '{from.name}' has the following conflicts:\n" +
-                   $"  - '{objectName}': {slotDetails}\n\n" +
-                   "解決方法 / Solution:\n" +
-                   "代わりに「Create Material Setter」を使用してください。\n" +
-                   "Please use 'Create Material Setter' instead.";
+            var conflictDetails =
+                "\n" + Localization.S("maMaterialHelper.swapLimitation.conflictHeader", from.name) +
+                "\n" + $"  - '{objectName}': {slotDetails}";
+            return Localization.S("maMaterialHelper.swapLimitation", conflictDetails);
         }
 #else
         [Test, Ignore("Material Swap generation requires Modular Avatar.")]
