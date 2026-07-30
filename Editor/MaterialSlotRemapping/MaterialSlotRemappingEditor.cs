@@ -31,7 +31,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             {
                 Undo.RecordObject(component, "Set Reference Prefab");
                 component.referencePrefab = newRef;
-                EditorUtility.SetDirty(component);
+                CommitChange(component);
             }
 
             using (new EditorGUI.DisabledScope(component.referencePrefab == null))
@@ -56,7 +56,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             {
                 Undo.RecordObject(component, "Generate Slot Remapping");
                 component.remaps = result.remaps;
-                EditorUtility.SetDirty(component);
+                CommitChange(component);
                 Debug.Log($"[MA Material Helper] Generated slot remapping for {result.matchedRendererCount} renderer(s).");
             }
         }
@@ -132,7 +132,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 {
                     Undo.RecordObject(component, "Edit Slot Remapping");
                     map[hostSlot] = newValue;
-                    EditorUtility.SetDirty(component);
+                    CommitChange(component);
                 }
             }
         }
@@ -144,7 +144,18 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             Undo.RecordObject(component, "Reset Slot Remapping");
             for (int i = 0; i < remap.referenceSlotForHostSlot.Length; i++)
                 remap.referenceSlotForHostSlot[i] = i;
+            CommitChange(component);
+        }
+
+        /// <summary>
+        /// Persists a direct field mutation made after <see cref="Undo.RecordObject"/>. On a prefab
+        /// instance, <see cref="EditorUtility.SetDirty"/> alone does not register the change as a
+        /// property override, so regenerated or hand-edited mappings would be lost on reload.
+        /// </summary>
+        private static void CommitChange(MaterialSlotRemapping component)
+        {
             EditorUtility.SetDirty(component);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(component);
         }
 
         private static Material[] GetHostMaterials(MaterialSlotRemapping component, RendererSlotRemap remap)
