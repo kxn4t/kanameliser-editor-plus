@@ -78,6 +78,100 @@ msgstr ""
 msgid "maMaterialHelper.swapLimitation.conflictHeader"
 msgstr "Material '{0}' has the following conflicts:"
 
+# ── AO Bounds Setter ──
+
+msgid "aoBounds.rootObject"
+msgstr "Root Object"
+
+msgid "aoBounds.refresh:tooltip"
+msgstr "Reload meshes from the root object"
+
+msgid "aoBounds.batchSettings"
+msgstr "Batch Settings"
+
+msgid "aoBounds.anchorOverride"
+msgstr "Anchor Override:"
+
+msgid "aoBounds.rootBone"
+msgstr "Root Bone (SkinnedMeshRenderer only):"
+
+msgid "aoBounds.bounds"
+msgstr "Bounds (SkinnedMeshRenderer only):"
+
+msgid "aoBounds.apply"
+msgstr "Apply to Selected Meshes"
+
+msgid "aoBounds.meshList"
+msgstr "Mesh List"
+
+msgid "aoBounds.header.objectName"
+msgstr "Object Name"
+
+msgid "aoBounds.header.anchorOverride"
+msgstr "Anchor Override"
+
+msgid "aoBounds.header.rootBone"
+msgstr "Root Bone"
+
+msgid "aoBounds.header.bounds"
+msgstr "Bounds"
+
+msgid "aoBounds.search"
+msgstr "Search..."
+
+# ── Material Slot Remapping ──
+
+msgid "slotRemap.description"
+msgstr ""
+"Use this when color setups created with Create Material Setter etc. do not map correctly "
+"after converting an outfit with fitting tools such as Mochifitter.\n"
+"Maps the converted outfit's material slots back to a reference (original) outfit, "
+"so Material Setter/Swap color setups land on the correct slots.\n"
+"Generate the mapping right after conversion, before recoloring (changing mesh materials) the outfit."
+
+msgid "slotRemap.referencePrefab"
+msgstr "Reference Prefab"
+
+msgid "slotRemap.generateMapping"
+msgstr "Generate Mapping"
+
+msgid "slotRemap.ambiguousDialog.title"
+msgstr "Ambiguous Material Slot Mapping"
+
+msgid "slotRemap.ambiguousDialog.useEstimated"
+msgstr "Use Estimated Mapping"
+
+#, csharp-format
+msgid "slotRemap.ambiguousDialog.message"
+msgstr ""
+"Some material or empty slots occur more than once, so their submesh "
+"correspondence could not be determined reliably.\n"
+"\n"
+"{0}\n"
+"\n"
+"If you continue, the estimated mapping will be stored. Review and adjust these "
+"slots manually before creating Material Setter/Swap components.\n"
+"\n"
+"Use the estimated mapping?"
+
+#, csharp-format
+msgid "slotRemap.ambiguousDialog.more"
+msgstr "...and {0} more. All details will be shown in the Inspector warnings."
+
+#, csharp-format
+msgid "slotRemap.mappingGenerated"
+msgstr "Mapping generated for {0} renderer(s)."
+
+msgid "slotRemap.noMapping"
+msgstr "No mapping generated yet."
+
+#, csharp-format
+msgid "slotRemap.slotMappings"
+msgstr "Slot Mappings ({0} renderers)"
+
+msgid "slotRemap.resetToIdentity"
+msgstr "Reset This Renderer To Identity"
+
 # ── Component Manager ──
 
 msgid "componentManager.targetObject"
