@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Kanameliser.EditorPlus
 {
     /// <summary>
-    /// 共通の定数を定義するクラス
+    /// Defines shared constants
     /// </summary>
     public static class ComponentConstants
     {
