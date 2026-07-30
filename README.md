@@ -167,7 +167,7 @@ Access: `Tools > Kanameliser Editor Plus > AO Bounds Setter`
 ## Requirements
 
 - Unity 2022.3.22f1 or higher
-- Optional: NDMF (enhanced build preview support)
+- Optional: NDMF 1.11.0 or higher (Japanese UI with language switching, enhanced build preview support)
 - Optional: Modular Avatar 1.13.0 or higher (required for MA Material Helper)
 
 ## Contributing
