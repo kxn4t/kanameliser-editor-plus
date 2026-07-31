@@ -26,6 +26,9 @@ features:
   - title: Material Copier
     details: Copy & paste materials between GameObjects with matching names.
     link: /en/features/material-copier
+  - title: FBX Settings Copier
+    details: Copy & paste FBX import settings between FBX assets, with batch paste support.
+    link: /en/features/fbx-settings-copier
   - title: MA Material Helper
     details: Auto-generate Modular Avatar color-change menus from color variation prefabs.
     link: /en/features/ma-material-helper
