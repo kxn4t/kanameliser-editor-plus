@@ -89,7 +89,7 @@ Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy/Paste Materials
 
 ### FBX Settings Copier
 
-Copy & paste FBX import settings between FBX assets in the Project window. Useful when importing multiple FBX files (outfit color variations, avatar updates, etc.) that should share the same import setup.
+Copy & paste FBX import settings between FBX assets in the Project window. Useful when importing multiple FBX files that should share the same import setup (e.g. outfits supporting multiple avatars).
 
 - Copies Model tab settings (including Legacy Blend Shape Normals), basic Rig settings, and Materials tab settings including Remapped Materials
 - Paste to multiple FBX files at once — files already matching the copied settings are skipped without reimporting

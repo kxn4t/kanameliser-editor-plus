@@ -1,6 +1,6 @@
 # FBX Settings Copier
 
-Copy & paste FBX import settings between FBX assets in the Project window. When multiple FBX files should share the same import setup (outfit color variations, avatar updates, etc.), this saves you from re-entering the settings in the Inspector every time.
+Copy & paste FBX import settings between FBX assets in the Project window. When multiple FBX files should share the same import setup (e.g. outfits supporting multiple avatars), this saves you from re-entering the settings in the Inspector every time.
 
 ## Usage
 

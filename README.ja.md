@@ -87,7 +87,7 @@ GameObjectのアクティブ状態とEditorOnlyタグをすばやく切り替え
 
 ### FBX Settings Copier
 
-ProjectウィンドウでFBXアセット間のインポート設定をコピー&ペーストできます。同じインポート設定にしたいFBXが複数あるとき（衣装のカラーバリエーションやアバターのアップデートなど）に便利です。
+ProjectウィンドウでFBXアセット間のインポート設定をコピー&ペーストできます。同じインポート設定にしたいFBXが複数あるとき（複数のアバター対応時など）に便利です。
 
 - Modelタブの全設定（Legacy Blend Shape Normalsを含む）、Rigタブの基本設定、MaterialsタブのRemapped Materialsを含む設定をコピー
 - 複数FBXへの一括ペーストに対応 — コピーした設定と差分のないファイルは再インポートせずスキップ
