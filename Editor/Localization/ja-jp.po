@@ -31,7 +31,23 @@ msgid "maMaterialHelper.alreadyHasRemapping"
 msgstr "このオブジェクトには既にMaterial Slot Remappingコンポーネントが付いています。"
 
 msgid "maMaterialHelper.noCopiedSetup"
-msgstr "マテリアルセットアップがコピーされていません。先にCopy Material Setupを実行してください。"
+msgstr "色データがまだコピーされていません。\n先に色違いのPrefabを選択して「Copy Color Variants」を実行してください。"
+
+msgid "maMaterialHelper.guide.title"
+msgstr "色変更メニューの作り方"
+
+msgid "maMaterialHelper.guide.step1"
+msgstr "色違いのPrefabを選択して右クリック →「Copy Color Variants」（複数選択可）"
+
+msgid "maMaterialHelper.guide.step2"
+msgstr "衣装本体を選択して右クリック →「Create Color Menu」（手順1の後にメニューへ表示されます）"
+
+msgid "maMaterialHelper.guide.statusNotCopied"
+msgstr "まだ色データがコピーされていません。手順1から始めてください"
+
+#, csharp-format
+msgid "maMaterialHelper.guide.statusCopied"
+msgstr "「{0}」からコピー済み（{1}オブジェクト・{2}マテリアル）\n衣装を選択して手順2を実行してください"
 
 msgid "maMaterialHelper.noSetupGroups"
 msgstr "マテリアルセットアップのグループが見つかりませんでした"
@@ -72,7 +88,7 @@ msgstr ""
 "{0}\n"
 "\n"
 "解決方法:\n"
-"代わりに「Create Material Setter」を使用してください。"
+"代わりに「Create Color Menu」を使用してください。"
 
 #, csharp-format
 msgid "maMaterialHelper.swapLimitation.conflictHeader"
@@ -123,7 +139,7 @@ msgstr "検索..."
 
 msgid "slotRemap.description"
 msgstr ""
-"もちふぃった～等を利用し変換した際、Create Material Setterなどでの色変更がうまくマッピングされないときに利用してください。\n"
+"もちふぃった～等を利用し変換した際、Create Color Menuなどでの色変更がうまくマッピングされないときに利用してください。\n"
 "変換後の衣装のマテリアルスロットを参照元（変換前）の衣装に対応付け、"
 "Material Setter/Swapの色設定が正しいスロットに適用されるようにします。\n"
 "マッピングは変換直後、色改変（メッシュのマテリアル変更）を実施する前に生成してください。"

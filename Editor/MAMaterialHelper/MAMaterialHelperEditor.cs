@@ -13,11 +13,12 @@ namespace Kanameliser.Editor.MAMaterialHelper
     /// </summary>
     public static class MAMaterialHelperEditor
     {
-        private const string MENU_PATH_COPY = "GameObject/Kanameliser Editor Plus/Copy Material Setup";
-        private const string MENU_PATH_CREATE_SETTER = "GameObject/Kanameliser Editor Plus/Create Material Setter";
-        private const string MENU_PATH_CREATE_SETTER_ALL_SLOTS = "GameObject/Kanameliser Editor Plus/[Optional] Create Material Setter (All Slots)";
-        private const string MENU_PATH_CREATE_SWAP = "GameObject/Kanameliser Editor Plus/Create Material Swap";
-        private const string MENU_PATH_CREATE_SWAP_PER_OBJECT = "GameObject/Kanameliser Editor Plus/[Optional] Create Material Swap (Per Object)";
+        private const string MENU_PATH_HOW_TO = "GameObject/Kanameliser Editor Plus/[How to Create Color Menu]";
+        private const string MENU_PATH_COPY = "GameObject/Kanameliser Editor Plus/Copy Color Variants";
+        private const string MENU_PATH_CREATE_SETTER = "GameObject/Kanameliser Editor Plus/Create Color Menu";
+        private const string MENU_PATH_CREATE_SETTER_ALL_SLOTS = "GameObject/Kanameliser Editor Plus/Advanced/Create Material Setter (All Slots)";
+        private const string MENU_PATH_CREATE_SWAP = "GameObject/Kanameliser Editor Plus/Advanced/Create Material Swap";
+        private const string MENU_PATH_CREATE_SWAP_PER_OBJECT = "GameObject/Kanameliser Editor Plus/Advanced/Create Material Swap (Per Object)";
         private const string MENU_PATH_ADD_REMAPPING = "GameObject/Kanameliser Editor Plus/Add Material Slot Remapping";
         private const int MENU_PRIORITY = 100;
 
@@ -46,6 +47,13 @@ namespace Kanameliser.Editor.MAMaterialHelper
             return Selection.activeGameObject != null;
         }
 
+        // +5 places this below the Advanced/ submenu, at the end of the color menu group
+        [MenuItem(MENU_PATH_HOW_TO, false, MENU_PRIORITY + 5)]
+        public static void OpenColorMenuGuide()
+        {
+            ColorMenuGuideWindow.ShowWindow();
+        }
+
         [MenuItem(MENU_PATH_COPY, false, MENU_PRIORITY)]
         public static void CopyMaterialSetup()
         {
@@ -72,8 +80,19 @@ namespace Kanameliser.Editor.MAMaterialHelper
                 string objectNames = selectedObjects.Length == 1
                     ? selectedObjects[0].name
                     : $"{selectedObjects.Length} objects";
-                MAMaterialHelperUtils.LogSuccess($"Copied material setup from {objectNames} ({copiedData.materialSetups.Count} material setups)");
-            }, "copy material setup");
+                MAMaterialHelperUtils.LogSuccess($"Copied color variants from {objectNames} ({copiedData.materialSetups.Count} material setups)");
+            }, "copy color variants");
+        }
+
+        /// <summary>
+        /// Returns true when copied data exists; otherwise shows a dialog guiding the user to copy first
+        /// </summary>
+        private static bool EnsureCopiedDataOrGuide()
+        {
+            if (MAMaterialHelperSession.HasCopiedData) return true;
+
+            MAMaterialHelperUtils.ShowInfoDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
+            return false;
         }
 
         [MenuItem(MENU_PATH_CREATE_SETTER, false, MENU_PRIORITY + 1)]
@@ -81,12 +100,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
         {
             var selected = Selection.activeGameObject;
             if (selected == null) return;
-
-            if (!MAMaterialHelperSession.HasCopiedData)
-            {
-                MAMaterialHelperUtils.ShowErrorDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
-                return;
-            }
+            if (!EnsureCopiedDataOrGuide()) return;
 
             MAMaterialHelperUtils.TryExecute(() =>
             {
@@ -108,12 +122,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
         {
             var selected = Selection.activeGameObject;
             if (selected == null) return;
-
-            if (!MAMaterialHelperSession.HasCopiedData)
-            {
-                MAMaterialHelperUtils.ShowErrorDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
-                return;
-            }
+            if (!EnsureCopiedDataOrGuide()) return;
 
             MAMaterialHelperUtils.TryExecute(() =>
             {
@@ -135,12 +144,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
         {
             var selected = Selection.activeGameObject;
             if (selected == null) return;
-
-            if (!MAMaterialHelperSession.HasCopiedData)
-            {
-                MAMaterialHelperUtils.ShowErrorDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
-                return;
-            }
+            if (!EnsureCopiedDataOrGuide()) return;
 
             MAMaterialHelperUtils.TryExecute(() =>
             {
@@ -166,12 +170,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
         {
             var selected = Selection.activeGameObject;
             if (selected == null) return;
-
-            if (!MAMaterialHelperSession.HasCopiedData)
-            {
-                MAMaterialHelperUtils.ShowErrorDialog(Localization.S("maMaterialHelper.noCopiedSetup"));
-                return;
-            }
+            if (!EnsureCopiedDataOrGuide()) return;
 
             MAMaterialHelperUtils.TryExecute(() =>
             {

@@ -95,18 +95,22 @@ Requirement: [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or high
 
 #### Usage
 
-1. Select color variation prefabs → Right-click → `Copy Material Setup` (multiple selection supported)
-2. Select target outfit → Right-click → Choose one of the following:
-   - `Create Material Setter` — Directly set materials per slot (recommended)
-   - `[Optional] Create Material Setter (All Slots)` — Create setters for all slots (may affect performance, recommended only when you need to customize manually)
-   - `Create Material Swap` — Set materials by replacement rules
-   - `[Optional] Create Material Swap (Per Object)` — Create individual swaps per object
+1. Select color variation prefabs → Right-click → `Copy Color Variants` (multiple selection supported)
+2. Select target outfit → Right-click → `Create Color Menu` (this item appears after copying)
 
-A "Color Menu" with numbered color variations (Color1, Color2, etc.) is automatically created.
+If you are unsure of the steps, open `[How to Create Color Menu]` from the right-click menu at any time to review the workflow and see a list of the currently copied objects.
+
+A "Color Menu" with numbered color variations (Color1, Color2, etc.) is automatically created. `Create Color Menu` generates Modular Avatar Material Setter components per slot, which works for most cases.
+
+For special cases, the `Advanced` submenu offers alternative generation modes:
+
+- `Create Material Setter (All Slots)` — Create setters for all slots (may affect performance, recommended only when you need to customize manually)
+- `Create Material Swap` — Set materials by replacement rules
+- `Create Material Swap (Per Object)` — Create individual swaps per object
 
 #### Difference Between Material Setter and Material Swap
 
-Material Setter is recommended for most use cases.
+Material Setter (used by `Create Color Menu`) is recommended for most use cases.
 
 - **Material Setter**: Sets per slot, allowing different materials to be assigned from the same source material within the same mesh
 - **Material Swap**: Replaces by material name, so the same source material always maps to the same target. Best for simple configurations
@@ -140,13 +144,13 @@ When an outfit is converted to fit another avatar (e.g. with auto-fitting tools)
 
 1. Right-click the converted outfit → `Add Material Slot Remapping`
 2. Set the original outfit as `Reference Prefab` → click `Generate Mapping`
-3. Run `Copy Material Setup` / `Create Material Setter` / `Create Material Swap` as usual — generation follows the mapping so colors land on the correct slots
+3. Run `Copy Color Variants` / `Create Color Menu` as usual — generation follows the mapping so colors land on the correct slots
 
 The mapping is generated from material references, so generate it before changing the converted outfit's materials (i.e. right after conversion).  
 After generation, only the slot correspondence (indices) is stored, so changing the outfit's materials afterwards does not break the mapping.
 When the same material (or an empty slot) occurs more than once, the slot order cannot be determined uniquely. A confirmation dialog and warnings identify these cases; review the estimated mapping and adjust it manually in the Inspector when needed.
 
-Access: Right-click in Hierarchy `Kanameliser Editor Plus > Add Material Slot Remapping / Copy Material Setup / Create Material Setter / Create Material Swap`
+Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
 
 ### AO Bounds Setter
 

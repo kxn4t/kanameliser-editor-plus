@@ -93,18 +93,22 @@ Modular Avatarのマテリアル制御コンポーネントを使用した色変
 
 #### 使い方
 
-1. カラーバリエーションPrefabを選択 → 右クリック → `Copy Material Setup`（複数選択可）
-2. ターゲットの衣装を選択 → 右クリック → 以下のいずれかを選択:
-   - `Create Material Setter` — 各スロットに直接マテリアルを設定（推奨）
-   - `[Optional] Create Material Setter (All Slots)` — すべてのスロットにSetterを作成（パフォーマンスに影響する可能性があるため、カスタマイズしたい場合のみ推奨）
-   - `Create Material Swap` — マテリアルの置き換えルールで設定
-   - `[Optional] Create Material Swap (Per Object)` — オブジェクト毎に個別のSwapを作成
+1. カラーバリエーションPrefabを選択 → 右クリック → `Copy Color Variants`（複数選択可）
+2. ターゲットの衣装を選択 → 右クリック → `Create Color Menu`（コピー後に表示されます）
 
-番号付きカラーバリエーション（Color1、Color2など）を含む「Color Menu」が自動作成されます。
+手順が分からなくなったときは、右クリックメニューの `[How to Create Color Menu]` を開くと、手順の説明とコピー済みオブジェクトの一覧をいつでも確認できます。
+
+番号付きカラーバリエーション（Color1、Color2など）を含む「Color Menu」が自動作成されます。`Create Color Menu` はModular AvatarのMaterial Setterコンポーネントをスロット単位で生成し、ほとんどのケースに対応できます。
+
+特殊なケース向けに、`Advanced` サブメニューで別の生成モードを選択できます:
+
+- `Create Material Setter (All Slots)` — すべてのスロットにSetterを作成（パフォーマンスに影響する可能性があるため、カスタマイズしたい場合のみ推奨）
+- `Create Material Swap` — マテリアルの置き換えルールで設定
+- `Create Material Swap (Per Object)` — オブジェクト毎に個別のSwapを作成
 
 #### Material SetterとMaterial Swapの違い
 
-基本的にはMaterial Setterを推奨します。
+基本的にはMaterial Setter（`Create Color Menu` が使用）を推奨します。
 
 - **Material Setter**: スロット単位で設定するため、同一メッシュ内で同じマテリアルからそれぞれ異なるマテリアルへの変更が可能
 - **Material Swap**: マテリアル名ベースで置き換えるため、同一マテリアルは同じ変更先になる。シンプルな構成向け
@@ -138,13 +142,13 @@ Material Swapは「マテリアルX」を1つのマテリアルにしか置き�
 
 1. 変換後の衣装を右クリック → `Add Material Slot Remapping`
 2. 元の衣装を `Reference Prefab` に指定 → `Generate Mapping` をクリック
-3. 通常どおり `Copy Material Setup` / `Create Material Setter` / `Create Material Swap` を実行 — 生成がマッピングに従い、色が正しいスロットに適用されます
+3. 通常どおり `Copy Color Variants` / `Create Color Menu` を実行 — 生成がマッピングに従い、色が正しいスロットに適用されます
 
 マッピングはマテリアル参照から生成されるため、変換直後の衣装のマテリアルを変更する前に実行し、Material Slot Remappingを生成してください。  
 生成後はスロットの対応付け（インデックス）のみ保持するため、生成後に衣装のマテリアルを変更してもマッピングは壊れません。
 同じマテリアル（または空のスロット）が複数ある場合はスロット順を一意に判定できないため、確認ダイアログと警告が表示されます。推定結果を確認し、必要に応じてInspectorで手動修正してください。
 
-アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Add Material Slot Remapping / Copy Material Setup / Create Material Setter / Create Material Swap`
+アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
 
 ### AO Bounds Setter
 

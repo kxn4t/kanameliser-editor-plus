@@ -6,17 +6,20 @@ Modular Avatar のマテリアル制御コンポーネントを使った色変�
 
 ## 使い方
 
-1. カラーバリエーション Prefab を選択 → 右クリック → `Copy Material Setup`（複数選択可）
-2. ターゲットの衣装を選択 → 右クリック → 以下のいずれかを選択:
+1. カラーバリエーション Prefab を選択 → 右クリック → `Copy Color Variants`（複数選択可）
+2. ターゲットの衣装を選択 → 右クリック → `Create Color Menu`（コピー後に表示されます）
+
+手順が分からなくなったときは、右クリックメニューの `[How to Create Color Menu]` を開くと、手順の説明とコピー済みオブジェクトの一覧をいつでも確認できます。
+
+番号付きカラーバリエーション（Color1、Color2など）を含む「Color Menu」が自動作成されます。`Create Color Menu` はMaterial Setterをスロット単位で生成します（ほとんどのケースで**推奨**）。
+
+特殊なケース向けに、`Advanced` サブメニュー（コピー後に表示）で別の生成モードを選択できます:
 
 | コマンド | 説明 |
 |---|---|
-| `Create Material Setter` | 各スロットに直接マテリアルを設定（**推奨**） |
-| `[Optional] Create Material Setter (All Slots)` | すべてのスロットに Setter を作成（カスタマイズ用） |
+| `Create Material Setter (All Slots)` | すべてのスロットに Setter を作成（カスタマイズ用） |
 | `Create Material Swap` | マテリアルの置き換えルールで設定 |
-| `[Optional] Create Material Swap (Per Object)` | オブジェクトごとに個別の Swap を作成 |
-
-番号付きカラーバリエーション（Color1、Color2 など）を含む「Color Menu」が自動作成されます。
+| `Create Material Swap (Per Object)` | オブジェクトごとに個別の Swap を作成 |
 
 ## Material Setter と Material Swap の違い
 
@@ -46,7 +49,7 @@ Material Swap は「マテリアルX」を1つのマテリアルにしか置き�
 
 1. 変換後の衣装を右クリック → `Add Material Slot Remapping`
 2. 元の衣装を `Reference Prefab` に指定 → `Generate Mapping` をクリック
-3. 通常どおり `Copy Material Setup` / `Create Material Setter` / `Create Material Swap` を実行 — 生成がマッピングに従い、色が正しいスロットに適用されます
+3. 通常どおり `Copy Color Variants` / `Create Color Menu` を実行 — 生成がマッピングに従い、色が正しいスロットに適用されます
 
 マッピングはマテリアル参照から生成されるため、変換直後の衣装のマテリアルを変更する前に実行し、Material Slot Remappingを生成してください。  
 生成後はスロットの対応付け（インデックス）のみ保持するため、生成後に衣装のマテリアルを変更してもマッピングは壊れません。
@@ -54,7 +57,7 @@ Material Swap は「マテリアルX」を1つのマテリアルにしか置き�
 
 ## アクセス方法
 
-ヒエラルキー右クリック → `Kanameliser Editor Plus > Add Material Slot Remapping / Copy Material Setup / Create Material Setter / Create Material Swap`
+ヒエラルキー右クリック → `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
 
 ## 詳細マッチングログ
 
