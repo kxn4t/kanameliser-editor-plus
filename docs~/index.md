@@ -26,6 +26,9 @@ features:
   - title: Material Copier
     details: 同名オブジェクト間でマテリアルをコピー＆ペースト。
     link: /features/material-copier
+  - title: FBX Settings Copier
+    details: FBXアセット間でインポート設定をコピー＆ペースト。複数FBXへの一括適用にも対応。
+    link: /features/fbx-settings-copier
   - title: MA Material Helper
     details: Modular Avatarの色変更メニューをカラーバリエーションPrefabから自動生成。
     link: /features/ma-material-helper

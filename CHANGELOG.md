@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MA Material Helper: Material Slot Remapping** — Added a `Kanameliser Editor Plus > Add Material Slot Remapping` component (Hierarchy right-click). Use it when an outfit conversion (e.g. auto-fitting tools) reorders a renderer's material slots and Material Setter/Swap color changes no longer land correctly. It maps the converted outfit's material slots back to the original (reference) outfit's slots, so Material Setter/Swap color changes apply to the correct slots even when the conversion shifted the slot order.
 - **MA Material Helper / Material Copier: Verbose Matching Logs toggle** — Added a menu toggle at `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` to enable detailed matching diagnostics in the console.
 - **MA Material Helper: `[How to Create Color Menu]` guide window** — Added a guide item to the Hierarchy right-click menu. It opens a window explaining the two-step workflow, with a live status and a list of the currently copied objects (available in English and Japanese).
+- **FBX Settings Copier** — Copy & paste FBX import settings between FBX assets from the Project window right-click menu (`Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`). Copies Model tab settings (including Legacy Blend Shape Normals), basic Rig settings (Animation Type, Avatar Definition, Skin Weights, Optimize Bones / Optimize Game Objects), and Materials tab settings including Remapped Materials. Remaps are applied only to material names that exist on the target; animation clip definitions and Humanoid bone mappings are not copied. Pasting to multiple FBX files at once is supported, and files whose settings already match are skipped without reimporting.
 
 ### Changed
 
@@ -51,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MA Material Helper: Material Slot Remapping** — `Kanameliser Editor Plus > Add Material Slot Remapping`（ヒエラルキー右クリック）コンポーネントを追加。もちふぃった～等で変換を行った際にマテリアルスロット順が変わってしまい、Material Setter/Swapの色変更がうまく行かないときに使用します。変換後の衣装のマテリアルスロットを元（参照）衣装のスロットに対応付けることで、変換でスロット順がずれていてもMaterial Setter/Swapの色変更が正しいスロットに適用されるようにします。
 - **MA Material Helper / Material Copier: 詳細マッチングログのトグル** — `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` にデバッグ用ログのトグルを追加。有効にするとマッチング判定の詳細情報をコンソールに出力します。
 - **MA Material Helper: `[How to Create Color Menu]` ガイドウィンドウ** — ヒエラルキー右クリックメニューにガイド項目を追加。2ステップの作成手順の説明と、コピー済みオブジェクトの状態・一覧をリアルタイム表示するウィンドウが開きます（日本語・英語対応）。
+- **FBX Settings Copier** — ProjectウィンドウのFBX右クリックメニュー（`Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`）でFBXアセット間のインポート設定をコピー&ペーストできるようになりました。Modelタブの全設定（Legacy Blend Shape Normalsを含む）、Rigタブの基本設定（Animation Type、Avatar Definition、Skin Weights、Optimize Bones / Optimize Game Objects）、MaterialsタブのRemapped Materialsを含む設定をコピーします。リマップはターゲットに同名のマテリアルが存在する場合のみ適用され、AnimationタブのクリップとHumanoidのボーンマッピングはコピーされません。複数FBXへの一括ペーストに対応し、設定に差分のないファイルは再インポートせずスキップします。
 
 ### 変更
 

@@ -85,6 +85,31 @@ GameObjectのアクティブ状態とEditorOnlyタグをすばやく切り替え
 
 アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Copy/Paste Materials`
 
+### FBX Settings Copier
+
+ProjectウィンドウでFBXアセット間のインポート設定をコピー&ペーストできます。同じインポート設定にしたいFBXが複数あるとき（衣装のカラーバリエーションやアバターのアップデートなど）に便利です。
+
+- Modelタブの全設定（Legacy Blend Shape Normalsを含む）、Rigタブの基本設定、MaterialsタブのRemapped Materialsを含む設定をコピー
+- 複数FBXへの一括ペーストに対応 — コピーした設定と差分のないファイルは再インポートせずスキップ
+
+#### 使い方
+
+1. コピー元のFBXをProjectウィンドウで選択 → 右クリック → `Copy FBX Settings`
+2. コピー先のFBXを選択（複数選択可）→ 右クリック → `Paste FBX Settings`
+
+#### コピーされる設定
+
+- **Modelタブ**: 全設定（Scale Factor、Read/Write、Blend Shapes、Normals/Tangents、Legacy Blend Shape Normalsなど）
+- **Rigタブ**: Animation Type、Avatar Definition（Copy From Other Avatarの場合は参照アバターも）、Skin Weights、Optimize Bones / Optimize Game Objects
+- **Materialsタブ**: Material Creation Mode、Location、Naming/Search設定、Remapped Materials
+
+Remapped Materialsはターゲットに同名のマテリアルが存在する場合のみ適用され、一致しないものは変更されません。
+Animationタブのクリップ定義とHumanoidのボーンマッピング（Avatar Configuration）はファイル固有のためコピーされません。
+
+注意: インポート設定の変更はCtrl+Zで元に戻せません。
+
+アクセス: ProjectウィンドウのFBX右クリック `Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`
+
 ### MA Material Helper
 
 Modular Avatarのマテリアル制御コンポーネントを使用した色変更メニューを自動生成します。カラーバリエーションのPrefabから数クリックで色変更メニューを作成でき、複数のPrefabからの同時生成にも対応しています。

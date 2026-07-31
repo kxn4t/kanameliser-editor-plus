@@ -87,6 +87,31 @@ Toggle: `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs`
 
 Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy/Paste Materials`
 
+### FBX Settings Copier
+
+Copy & paste FBX import settings between FBX assets in the Project window. Useful when importing multiple FBX files (outfit color variations, avatar updates, etc.) that should share the same import setup.
+
+- Copies Model tab settings (including Legacy Blend Shape Normals), basic Rig settings, and Materials tab settings including Remapped Materials
+- Paste to multiple FBX files at once — files already matching the copied settings are skipped without reimporting
+
+#### Usage
+
+1. Select the source FBX in the Project window → Right-click → `Copy FBX Settings`
+2. Select target FBX files (multiple selection supported) → Right-click → `Paste FBX Settings`
+
+#### What Is Copied
+
+- **Model tab**: All settings (Scale Factor, Read/Write, Blend Shapes, Normals/Tangents, Legacy Blend Shape Normals, etc.)
+- **Rig tab**: Animation Type, Avatar Definition (including the source avatar reference for Copy From Other Avatar), Skin Weights, Optimize Bones / Optimize Game Objects
+- **Materials tab**: Material Creation Mode, Location, Naming/Search settings, and Remapped Materials
+
+Remapped Materials are applied only where the target has a material with the same name; unmatched entries are left untouched.
+Animation clip definitions and Humanoid bone mappings (Avatar Configuration) are not copied, as they are specific to each file.
+
+Note: Import settings changes cannot be undone with Ctrl+Z.
+
+Access: Right-click an FBX in the Project window `Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`
+
 ### MA Material Helper
 
 Automatically generates color change menus using Modular Avatar's material control components. Create color change menus from color variation prefabs in just a few clicks, with support for simultaneous generation from multiple prefabs.
