@@ -1,0 +1,89 @@
+.guide-container {
+    flex-grow: 1;
+    padding: 12px 16px 16px 16px;
+}
+
+.language-switcher {
+    margin-bottom: 6px;
+}
+
+.guide-title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-bottom: 10px;
+    white-space: normal;
+}
+
+.step-card {
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--unity-colors-helpbox-background);
+    border-color: var(--unity-colors-helpbox-border);
+    border-width: 1px;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+.step-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    background-color: rgb(70, 115, 190);
+    color: white;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.step-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    white-space: normal;
+}
+
+.status-card {
+    flex-shrink: 1;
+    background-color: var(--unity-colors-helpbox-background);
+    border-color: var(--unity-colors-helpbox-border);
+    border-width: 1px;
+    border-left-width: 3px;
+    border-left-color: rgb(140, 140, 140);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-top: 4px;
+}
+
+.status-card--copied {
+    border-left-color: rgb(94, 180, 93);
+}
+
+.status-label {
+    white-space: normal;
+}
+
+.status-card--copied .status-label {
+    color: rgb(94, 180, 93);
+}
+
+.copied-list {
+    flex-shrink: 1;
+    max-height: 180px;
+    margin-top: 6px;
+    border-top-width: 1px;
+    border-top-color: var(--unity-colors-helpbox-border);
+    padding-top: 4px;
+}
+
+.copied-group {
+    margin-top: 2px;
+}
+
+.copied-group > .unity-foldout__toggle {
+    -unity-font-style: bold;
+}
+
+.copied-list-item {
+    padding: 1px 2px;
+}

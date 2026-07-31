@@ -6,17 +6,20 @@ Automatically generates color change menus using Modular Avatar's material contr
 
 ## Usage
 
-1. Select color variation prefabs → Right-click → `Copy Material Setup` (multiple selection supported)
-2. Select target outfit → Right-click → Choose one of the following:
+1. Select color variation prefabs → Right-click → `Copy Color Variants` (multiple selection supported)
+2. Select target outfit → Right-click → `Create Color Menu` (this item appears after copying)
+
+If you are unsure of the steps, open `[How to Create Color Menu]` from the right-click menu at any time to review the workflow and see a list of the currently copied objects.
+
+A "Color Menu" with numbered color variations (Color1, Color2, etc.) is automatically created. `Create Color Menu` generates Material Setter components per slot (**recommended** for most cases).
+
+For special cases, the `Advanced` submenu (shown after copying) offers alternative generation modes:
 
 | Command | Description |
 |---|---|
-| `Create Material Setter` | Set materials per slot (**recommended**) |
-| `[Optional] Create Material Setter (All Slots)` | Create setters for all slots (for manual customization) |
+| `Create Material Setter (All Slots)` | Create setters for all slots (for manual customization) |
 | `Create Material Swap` | Set materials by replacement rules |
-| `[Optional] Create Material Swap (Per Object)` | Create individual swaps per object |
-
-A "Color Menu" with numbered color variations (Color1, Color2, etc.) is automatically created.
+| `Create Material Swap (Per Object)` | Create individual swaps per object |
 
 ## Material Setter vs Material Swap
 
@@ -46,7 +49,7 @@ When an outfit is converted to fit another avatar (e.g. with auto-fitting tools)
 
 1. Right-click the converted outfit → `Add Material Slot Remapping`
 2. Set the original outfit as `Reference Prefab` → click `Generate Mapping`
-3. Run `Copy Material Setup` / `Create Material Setter` / `Create Material Swap` as usual — generation follows the mapping so colors land on the correct slots
+3. Run `Copy Color Variants` / `Create Color Menu` as usual — generation follows the mapping so colors land on the correct slots
 
 The mapping is generated from material references, so generate it before changing the converted outfit's materials (i.e. right after conversion).  
 After generation, only the slot correspondence (indices) is stored, so changing the outfit's materials afterwards does not break the mapping.
@@ -54,7 +57,7 @@ When the same material (or an empty slot) occurs more than once, the slot order 
 
 ## Access
 
-Right-click in Hierarchy → `Kanameliser Editor Plus > Add Material Slot Remapping / Copy Material Setup / Create Material Setter / Create Material Swap`
+Right-click in Hierarchy → `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
 
 ## Verbose Matching Logs
 

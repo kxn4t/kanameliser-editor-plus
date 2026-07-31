@@ -31,7 +31,23 @@ msgid "maMaterialHelper.alreadyHasRemapping"
 msgstr "This object already has a Material Slot Remapping component."
 
 msgid "maMaterialHelper.noCopiedSetup"
-msgstr "No material setup has been copied. Please copy a material setup first."
+msgstr "No color variants have been copied yet.\nSelect the color variant prefab(s) and run 'Copy Color Variants' first."
+
+msgid "maMaterialHelper.guide.title"
+msgstr "How to Create Color Menu"
+
+msgid "maMaterialHelper.guide.step1"
+msgstr "Select the color variant prefab(s) and right-click → 'Copy Color Variants' (multiple selection supported)"
+
+msgid "maMaterialHelper.guide.step2"
+msgstr "Select the target outfit and right-click → 'Create Color Menu' (this item appears after Step 1)"
+
+msgid "maMaterialHelper.guide.statusNotCopied"
+msgstr "No color variants copied yet — start with Step 1"
+
+#, csharp-format
+msgid "maMaterialHelper.guide.statusCopied"
+msgstr "Copied from '{0}' ({1} objects, {2} materials).\nNow select the outfit and run Step 2."
 
 msgid "maMaterialHelper.noSetupGroups"
 msgstr "No material setup groups found"
@@ -72,7 +88,7 @@ msgstr ""
 "{0}\n"
 "\n"
 "Solution:\n"
-"Please use 'Create Material Setter' instead."
+"Please use 'Create Color Menu' instead."
 
 #, csharp-format
 msgid "maMaterialHelper.swapLimitation.conflictHeader"
@@ -123,7 +139,7 @@ msgstr "Search..."
 
 msgid "slotRemap.description"
 msgstr ""
-"Use this when color setups created with Create Material Setter etc. do not map correctly "
+"Use this when color setups created with Create Color Menu etc. do not map correctly "
 "after converting an outfit with fitting tools such as Mochifitter.\n"
 "Maps the converted outfit's material slots back to a reference (original) outfit, "
 "so Material Setter/Swap color setups land on the correct slots.\n"
