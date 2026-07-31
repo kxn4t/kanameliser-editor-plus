@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Kanameliser.Editor.MAMaterialHelper.Common;
 using Kanameliser.EditorPlus;
 using Kanameliser.EditorPlus.Runtime;
@@ -15,36 +17,86 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         private RemapGenerationResult _lastResult;
         private readonly Dictionary<string, bool> _foldouts = new Dictionary<string, bool>();
 
-        public override void OnInspectorGUI()
+        private HelpBox _descriptionBox;
+        private ObjectField _referencePrefabField;
+        private Button _generateButton;
+        private VisualElement _messagesContainer;
+        private VisualElement _remapsContainer;
+
+        public override VisualElement CreateInspectorGUI()
         {
             var component = (MaterialSlotRemapping)target;
+            var root = new VisualElement();
 
-            EditorGUILayout.HelpBox(Localization.S("slotRemap.description"), MessageType.Info);
+            _descriptionBox = new HelpBox(Localization.S("slotRemap.description"), HelpBoxMessageType.Info);
+            root.Add(_descriptionBox);
 
-            EditorGUILayout.Space();
-
-            EditorGUI.BeginChangeCheck();
-            var newRef = (GameObject)EditorGUILayout.ObjectField(
-                Localization.S("slotRemap.referencePrefab"), component.referencePrefab, typeof(GameObject), true);
-            if (EditorGUI.EndChangeCheck())
+            _referencePrefabField = new ObjectField(Localization.S("slotRemap.referencePrefab"))
+            {
+                objectType = typeof(GameObject),
+                allowSceneObjects = true
+            };
+            _referencePrefabField.AddToClassList(ObjectField.alignedFieldUssClassName);
+            _referencePrefabField.style.marginTop = 8;
+            _referencePrefabField.SetValueWithoutNotify(component.referencePrefab);
+            _referencePrefabField.RegisterValueChangedCallback(evt =>
             {
                 Undo.RecordObject(component, "Set Reference Prefab");
-                component.referencePrefab = newRef;
+                component.referencePrefab = evt.newValue as GameObject;
                 CommitChange(component);
-            }
+                UpdateGenerateButtonState();
+            });
+            root.Add(_referencePrefabField);
 
-            using (new EditorGUI.DisabledScope(component.referencePrefab == null))
+            _generateButton = new Button(() => GenerateMapping(component))
             {
-                if (GUILayout.Button(Localization.S("slotRemap.generateMapping")))
-                {
-                    GenerateMapping(component);
-                }
-            }
+                text = Localization.S("slotRemap.generateMapping")
+            };
+            root.Add(_generateButton);
 
-            DrawResultMessages();
+            _messagesContainer = new VisualElement();
+            root.Add(_messagesContainer);
 
-            EditorGUILayout.Space();
-            DrawRemaps(component);
+            _remapsContainer = new VisualElement();
+            _remapsContainer.style.marginTop = 8;
+            root.Add(_remapsContainer);
+
+            UpdateGenerateButtonState();
+            RebuildRemaps();
+
+            // Keep the UI in sync with undo/redo and external modifications
+            root.TrackSerializedObjectValue(serializedObject, so => SyncFromComponent());
+
+            Localization.RegisterLanguageChangeCallback(this, e => e.RefreshLocalizedTexts());
+
+            return root;
+        }
+
+        private void SyncFromComponent()
+        {
+            if (target == null) return;
+
+            var component = (MaterialSlotRemapping)target;
+            _referencePrefabField.SetValueWithoutNotify(component.referencePrefab);
+            UpdateGenerateButtonState();
+            RebuildRemaps();
+        }
+
+        private void RefreshLocalizedTexts()
+        {
+            if (_descriptionBox == null || target == null) return;
+
+            _descriptionBox.text = Localization.S("slotRemap.description");
+            _referencePrefabField.label = Localization.S("slotRemap.referencePrefab");
+            _generateButton.text = Localization.S("slotRemap.generateMapping");
+            UpdateMessages();
+            RebuildRemaps();
+        }
+
+        private void UpdateGenerateButtonState()
+        {
+            var component = (MaterialSlotRemapping)target;
+            _generateButton.SetEnabled(component.referencePrefab != null);
         }
 
         private void GenerateMapping(MaterialSlotRemapping component)
@@ -61,6 +113,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                         Localization.S("common.cancel")))
                 {
                     _lastResult = null;
+                    UpdateMessages();
                     return;
                 }
 
@@ -69,6 +122,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 CommitChange(component);
                 Debug.Log($"[MA Material Helper] Generated slot remapping for {result.matchedRendererCount} renderer(s).");
             }
+
+            UpdateMessages();
+            RebuildRemaps();
         }
 
         internal static string BuildAmbiguityConfirmationMessage(RemapGenerationResult result)
@@ -91,28 +147,42 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             return Localization.S("slotRemap.ambiguousDialog.message", details);
         }
 
-        private void DrawResultMessages()
+        private void UpdateMessages()
         {
+            _messagesContainer.Clear();
+
             if (_lastResult == null) return;
 
             foreach (var error in _lastResult.errors)
-                EditorGUILayout.HelpBox(error, MessageType.Error);
+                _messagesContainer.Add(new HelpBox(error, HelpBoxMessageType.Error));
             foreach (var warning in _lastResult.warnings)
-                EditorGUILayout.HelpBox(warning, MessageType.Warning);
+                _messagesContainer.Add(new HelpBox(warning, HelpBoxMessageType.Warning));
 
             if (_lastResult.success && _lastResult.warnings.Count == 0 && _lastResult.errors.Count == 0)
-                EditorGUILayout.HelpBox(Localization.S("slotRemap.mappingGenerated", _lastResult.matchedRendererCount), MessageType.Info);
+            {
+                _messagesContainer.Add(new HelpBox(
+                    Localization.S("slotRemap.mappingGenerated", _lastResult.matchedRendererCount),
+                    HelpBoxMessageType.Info));
+            }
         }
 
-        private void DrawRemaps(MaterialSlotRemapping component)
+        private void RebuildRemaps()
         {
+            _remapsContainer.Clear();
+
+            var component = (MaterialSlotRemapping)target;
             if (component.remaps == null || component.remaps.Count == 0)
             {
-                EditorGUILayout.LabelField(Localization.S("slotRemap.noMapping"), EditorStyles.miniLabel);
+                var noMappingLabel = new Label(Localization.S("slotRemap.noMapping"));
+                noMappingLabel.style.fontSize = 10;
+                noMappingLabel.style.opacity = 0.8f;
+                _remapsContainer.Add(noMappingLabel);
                 return;
             }
 
-            EditorGUILayout.LabelField(Localization.S("slotRemap.slotMappings", component.remaps.Count), EditorStyles.boldLabel);
+            var headerLabel = new Label(Localization.S("slotRemap.slotMappings", component.remaps.Count));
+            headerLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _remapsContainer.Add(headerLabel);
 
             foreach (var remap in component.remaps)
             {
@@ -121,21 +191,32 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 string key = remap.rendererPath ?? "";
                 if (!_foldouts.ContainsKey(key)) _foldouts[key] = false;
 
-                string title = DisplayPath(component, remap);
-                _foldouts[key] = EditorGUILayout.Foldout(_foldouts[key], title, true);
-                if (!_foldouts[key]) continue;
-
-                EditorGUI.indentLevel++;
-                DrawRemapEntry(component, remap);
-                if (GUILayout.Button(Localization.S("slotRemap.resetToIdentity"), GUILayout.Width(260)))
+                var foldout = new Foldout
                 {
-                    ResetToIdentity(component, remap);
-                }
-                EditorGUI.indentLevel--;
+                    text = DisplayPath(component, remap),
+                    value = _foldouts[key]
+                };
+                foldout.RegisterValueChangedCallback(evt =>
+                {
+                    if (evt.target == foldout)
+                        _foldouts[key] = evt.newValue;
+                });
+
+                BuildRemapEntry(foldout.contentContainer, component, remap);
+
+                var resetButton = new Button(() => ResetToIdentity(component, remap))
+                {
+                    text = Localization.S("slotRemap.resetToIdentity")
+                };
+                resetButton.style.width = 260;
+                resetButton.style.alignSelf = Align.FlexStart;
+                foldout.contentContainer.Add(resetButton);
+
+                _remapsContainer.Add(foldout);
             }
         }
 
-        private void DrawRemapEntry(MaterialSlotRemapping component, RendererSlotRemap remap)
+        private void BuildRemapEntry(VisualElement container, MaterialSlotRemapping component, RendererSlotRemap remap)
         {
             var map = remap.referenceSlotForHostSlot;
             if (map == null) return;
@@ -143,9 +224,8 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             var hostMaterials = GetHostMaterials(component, remap);
             int refCount = map.Length;
 
-            var options = new string[refCount + 1];
-            options[0] = "(none)";
-            for (int i = 0; i < refCount; i++) options[i + 1] = $"Ref slot {i}";
+            var options = new List<string>(refCount + 1) { "(none)" };
+            for (int i = 0; i < refCount; i++) options.Add($"Ref slot {i}");
 
             for (int hostSlot = 0; hostSlot < map.Length; hostSlot++)
             {
@@ -156,14 +236,22 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 int current = map[hostSlot];
                 int popupIndex = (current >= 0 && current < refCount) ? current + 1 : 0;
 
-                int newPopup = EditorGUILayout.Popup($"Host slot {hostSlot} [{hostName}]", popupIndex, options);
-                int newValue = newPopup == 0 ? -1 : newPopup - 1;
-                if (newValue != current)
+                var dropdown = new DropdownField($"Host slot {hostSlot} [{hostName}]", options, popupIndex);
+                dropdown.AddToClassList(DropdownField.alignedFieldUssClassName);
+
+                int capturedHostSlot = hostSlot;
+                dropdown.RegisterValueChangedCallback(evt =>
                 {
-                    Undo.RecordObject(component, "Edit Slot Remapping");
-                    map[hostSlot] = newValue;
-                    CommitChange(component);
-                }
+                    int newValue = dropdown.index <= 0 ? -1 : dropdown.index - 1;
+                    if (newValue != map[capturedHostSlot])
+                    {
+                        Undo.RecordObject(component, "Edit Slot Remapping");
+                        map[capturedHostSlot] = newValue;
+                        CommitChange(component);
+                    }
+                });
+
+                container.Add(dropdown);
             }
         }
 
@@ -175,6 +263,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             for (int i = 0; i < remap.referenceSlotForHostSlot.Length; i++)
                 remap.referenceSlotForHostSlot[i] = i;
             CommitChange(component);
+            RebuildRemaps();
         }
 
         /// <summary>
