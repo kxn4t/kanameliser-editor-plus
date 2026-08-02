@@ -15,7 +15,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         private const int MaxAmbiguityDetailsInDialog = 5;
 
         // Keyed by component instance ID so results survive the editor instance being destroyed
-        // when the selection changes (cleared on domain reload).
+        // when the selection changes (pruned for destroyed components, cleared on domain reload).
         private static readonly Dictionary<int, RemapGenerationResult> lastResults =
             new Dictionary<int, RemapGenerationResult>();
 
@@ -46,8 +46,30 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 UpdateMessages();
         }
 
+        /// <summary>
+        /// Drops results whose component no longer exists so the static cache does not grow
+        /// for the lifetime of the editor session
+        /// </summary>
+        private static void PruneDestroyedComponentResults()
+        {
+            if (lastResults.Count == 0) return;
+
+            List<int> stale = null;
+            foreach (int instanceId in lastResults.Keys)
+            {
+                if (EditorUtility.InstanceIDToObject(instanceId) == null)
+                    (stale ??= new List<int>()).Add(instanceId);
+            }
+
+            if (stale == null) return;
+            foreach (int instanceId in stale)
+                lastResults.Remove(instanceId);
+        }
+
         public override VisualElement CreateInspectorGUI()
         {
+            PruneDestroyedComponentResults();
+
             var component = (MaterialSlotRemapping)target;
             var root = new VisualElement();
 
