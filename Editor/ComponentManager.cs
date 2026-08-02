@@ -230,7 +230,9 @@ namespace Kanameliser.EditorPlus
             });
             gameObjectFilterColumn.Add(gameObjectFilterField);
 
-            searchInPathsToggle = new Toggle(Localization.S("componentManager.includePathsInSearch"));
+            // Set toggle captions via text (right of the checkbox), not the label,
+            // so UpdateLocalizedTexts can swap them on language change
+            searchInPathsToggle = new Toggle { text = Localization.S("componentManager.includePathsInSearch") };
             searchInPathsToggle.AddToClassList("filter-option-toggle");
             searchInPathsToggle.RegisterValueChangedCallback(evt =>
             {
@@ -258,7 +260,7 @@ namespace Kanameliser.EditorPlus
             });
             componentColumn.Add(componentFilterField);
 
-            showAllComponentsOnMatchToggle = new Toggle(Localization.S("componentManager.showAllComponentsOnMatch"));
+            showAllComponentsOnMatchToggle = new Toggle { text = Localization.S("componentManager.showAllComponentsOnMatch") };
             showAllComponentsOnMatchToggle.AddToClassList("filter-option-toggle");
             showAllComponentsOnMatchToggle.RegisterValueChangedCallback(evt =>
             {
@@ -271,7 +273,7 @@ namespace Kanameliser.EditorPlus
 
             container.Add(filtersRow);
 
-            showEmptyObjectsToggle = new Toggle(Localization.S("componentManager.showEmptyObjects"));
+            showEmptyObjectsToggle = new Toggle { text = Localization.S("componentManager.showEmptyObjects") };
             showEmptyObjectsToggle.AddToClassList("show-empty-toggle");
             showEmptyObjectsToggle.RegisterValueChangedCallback(evt =>
             {
