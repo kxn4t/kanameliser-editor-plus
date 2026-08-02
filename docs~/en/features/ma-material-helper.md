@@ -59,7 +59,7 @@ When the same material (or an empty slot) occurs more than once, the slot order 
 
 Material Setter / Material Swap generate material replacement animations at build time, so meshes targeted by a color change menu are excluded from automatic mesh merging by AAO: Avatar Optimizer's Trace and Optimize. The unmerged meshes cost extra draw calls.
 
-When you can spare the effort, merge the target meshes with [Merge Skinned Mesh (Color Menu Safe)](./color-menu-safe-merge) to reduce the load without breaking the color change menu. Meshes that are toggled on/off, such as bags, must be merged in units that are toggled together — see the linked page for details.
+When you can spare the effort, merge the target meshes with [Merge Skinned Mesh (Color Menu Safe)](./color-menu-safe-merge) to reduce the load without breaking the color change menu. Meshes that are toggled on/off, such as bags, should normally be left out of the merge — see the linked page for details.
 
 ## Access
 

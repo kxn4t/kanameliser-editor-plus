@@ -38,12 +38,14 @@ Slots of excluded materials remain separate, so the draw call reduction is small
 
 ## Toggled Meshes
 
-Merged meshes become a single renderer, so meshes that are toggled on/off — bags, accessories, and so on — must be **merged in units that are toggled together**. This also applies to toggles built with MA Object Toggle. Merging them together with always-visible meshes or with meshes on a different toggle stops the toggle from working correctly (AAO shows a warning at build time when this applies).
+Meshes that are toggled on/off — bags, accessories, and so on, e.g. with MA Object Toggle — should **normally be left out of the merge**: merge only the always-visible meshes. Merged meshes become a single renderer, so mixing toggled meshes with always-visible ones stops the toggle from working correctly (AAO shows a warning at build time when this applies).
 
-After merging per toggle unit, the behavior depends on how the toggle is built:
+If you understand how your toggles work, you can still merge meshes that are toggled together and **build the menu so that it toggles the merged object itself**:
 
-- **The toggle switches a common parent object**: the merged object is created under that parent, so it works as is
-- **The toggle switches each mesh individually**: the merged object is not covered by the toggle, so enable "Copy Enablement Animation" on the created Merge Skinned Mesh (available when all merged meshes are toggled by the same animation)
+- When the toggle switches a common parent object, the merged object is created under that parent and works as is
+- When MA Object Toggle lists the meshes individually, add the created merged object to the toggle as well (with the same ON/OFF setting as the mesh entries). AAO shows a warning about the source meshes' visibility animations at build time, but the setup works correctly because the merged mesh itself is toggled
+
+Note that the "Copy Enablement Animation" option of Merge Skinned Mesh cannot be used when MA Object Toggle lists the meshes individually — each mesh gets its own animation, so the option raises an error.
 
 ## Notes
 
