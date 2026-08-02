@@ -90,6 +90,14 @@ namespace Kanameliser.EditorPlus
         private const string LegacyBlendShapeNormalsProperty =
             "legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes";
 
+        // Internal property listing the FBX's source material identifiers (the same
+        // names the Materials tab remap UI shows), independent of the import result
+        private static readonly System.Reflection.PropertyInfo SourceMaterialsProperty =
+            typeof(ModelImporter).GetProperty("sourceMaterials",
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.Public |
+                System.Reflection.BindingFlags.NonPublic);
+
         private static FbxSettingsData copiedSettings;
 
         [MenuItem("Assets/Kanameliser Editor Plus/Copy FBX Settings", false, 20)]
@@ -426,8 +434,11 @@ namespace Kanameliser.EditorPlus
         {
             if (data.materialRemaps == null || data.materialRemaps.Count == 0) return 0;
 
-            // Known material names on the target: existing remap keys plus
-            // embedded material sub-assets from the current import result.
+            // Known material names on the target: existing remap keys plus the FBX's
+            // own source material identifiers. sourceMaterials does not depend on the
+            // current import result, so remaps also resolve when the target has not
+            // imported materials yet (e.g. materialImportMode was None before this
+            // paste) or uses a material naming mode that renames the sub-assets.
             var knownNames = new HashSet<string>();
             var existingRemaps = new Dictionary<string, UnityEngine.Object>();
             foreach (var pair in importer.GetExternalObjectMap())
@@ -438,11 +449,25 @@ namespace Kanameliser.EditorPlus
                     existingRemaps[pair.Key.name] = pair.Value;
                 }
             }
-            foreach (var subAsset in AssetDatabase.LoadAllAssetsAtPath(importer.assetPath))
+            var sourceMaterials =
+                SourceMaterialsProperty?.GetValue(importer) as AssetImporter.SourceAssetIdentifier[];
+            if (sourceMaterials != null)
             {
-                if (subAsset is Material embeddedMaterial)
+                foreach (var sourceMaterial in sourceMaterials)
                 {
-                    knownNames.Add(embeddedMaterial.name);
+                    knownNames.Add(sourceMaterial.name);
+                }
+            }
+            else
+            {
+                // Fallback if the internal property disappears in a future Unity
+                // version: embedded material sub-assets from the current import result
+                foreach (var subAsset in AssetDatabase.LoadAllAssetsAtPath(importer.assetPath))
+                {
+                    if (subAsset is Material embeddedMaterial)
+                    {
+                        knownNames.Add(embeddedMaterial.name);
+                    }
                 }
             }
 
