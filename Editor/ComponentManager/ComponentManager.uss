@@ -16,12 +16,6 @@
     min-height: 0;
 }
 
-.window-title {
-    -unity-font-style: bold;
-    flex-shrink: 0;
-    margin-bottom: 8px;
-}
-
 /* Target object row */
 .target-row {
     flex-direction: row;
@@ -64,14 +58,13 @@
 
 /* Left filter column: width synced to the GameObject table column from code */
 .filter-column-left {
-    margin-left: 10px;
     flex-shrink: 0;
     min-width: 150px;
 }
 
 /* Right filter column: aligned with the component name column of the table */
 .filter-column-right {
-    margin-left: 38px;
+    margin-left: 48px;
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 150px;
@@ -88,6 +81,12 @@
 .show-empty-toggle {
     flex-shrink: 0;
     margin-bottom: 8px;
+}
+
+/* Wrap long toggle captions instead of clipping them */
+.filter-option-toggle .unity-toggle__text,
+.show-empty-toggle .unity-toggle__text {
+    white-space: normal;
 }
 
 /* Table */

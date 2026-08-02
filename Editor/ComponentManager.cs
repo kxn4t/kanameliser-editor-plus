@@ -88,10 +88,6 @@ namespace Kanameliser.EditorPlus
             langSwitcher.AddToClassList("language-switcher");
             mainContainer.Add(langSwitcher);
 
-            var titleLabel = new Label("Component Manager");
-            titleLabel.AddToClassList("window-title");
-            mainContainer.Add(titleLabel);
-
             CreateTargetObjectSection(mainContainer);
             CreateFilterSection(mainContainer);
             CreateTableSection(mainContainer);
