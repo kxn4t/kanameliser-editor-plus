@@ -36,11 +36,19 @@ Example: Mesh A and Mesh B both use the same material Gray.
 
 Slots of excluded materials remain separate, so the draw call reduction is smaller for them, but the meshes themselves are still merged into one, so the reduction in mesh count and skinning cost is preserved.
 
+## Toggled Meshes
+
+Merged meshes become a single renderer, so meshes that are toggled on/off — bags, accessories, and so on — must be **merged in units that are toggled together**. This also applies to toggles built with MA Object Toggle. Merging them together with always-visible meshes or with meshes on a different toggle stops the toggle from working correctly (AAO shows a warning at build time when this applies).
+
+After merging per toggle unit, the behavior depends on how the toggle is built:
+
+- **The toggle switches a common parent object**: the merged object is created under that parent, so it works as is
+- **The toggle switches each mesh individually**: the merged object is not covered by the toggle, so enable "Copy Enablement Animation" on the created Merge Skinned Mesh (available when all merged meshes are toggled by the same animation)
+
 ## Notes
 
 - The exclusion list does not update automatically when you change your Material Setter / Material Swap setup afterwards. Re-run the command to recreate it
 - Material replacements done directly with custom animation clips are not analyzed; uncheck "Merge" for those materials manually in the Inspector when needed
-- Merging meshes that are toggled separately can stop the toggles from working (a limitation of Merge Skinned Mesh itself; AAO shows a warning at build time when this applies)
 
 ## Access
 

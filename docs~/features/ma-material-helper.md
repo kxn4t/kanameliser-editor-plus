@@ -59,7 +59,7 @@ Material Swap は「マテリアルX」を1つのマテリアルにしか置き�
 
 Material Setter/Swapはビルド時にマテリアル差し替えアニメーションを生成するため、色変更メニューの対象メッシュはAAO: Avatar OptimizerのTrace and Optimizeによる自動メッシュ統合の対象外になります。メッシュが統合されない分、ドローコールなどの負荷が増えがちです。
 
-余裕があれば、[Merge Skinned Mesh (Color Menu Safe)](./color-menu-safe-merge)で対象メッシュを統合すると、色変更メニューを壊さずに負荷を抑えられます。
+余裕があれば、[Merge Skinned Mesh (Color Menu Safe)](./color-menu-safe-merge)で対象メッシュを統合すると、色変更メニューを壊さずに負荷を抑えられます。鞄などON/OFF切り替えのあるメッシュは一緒にON/OFFされる単位で統合する必要があるため、詳細はリンク先を参照してください。
 
 ## アクセス方法
 

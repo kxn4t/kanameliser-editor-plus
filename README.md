@@ -210,7 +210,7 @@ A material is excluded when any Material Setter / Material Swap changes only som
 
 - Re-run the command after changing your Material Setter / Material Swap setup — the exclusion list does not update automatically
 - Material replacements done directly with custom animation clips are not analyzed; uncheck "Merge" for those materials manually when needed
-- Merging meshes that are toggled separately can stop the toggles from working (a limitation of Merge Skinned Mesh itself; AAO warns at build time)
+- Merge meshes that are toggled on/off (bags, accessories, etc.) in units that are toggled together (e.g. per MA Object Toggle). Mixing them with always-visible meshes or other toggles stops the toggle from working (AAO warns at build time). When meshes are toggled individually, enable "Copy Enablement Animation" on the created Merge Skinned Mesh
 
 Access: Right-click in Hierarchy `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
 
