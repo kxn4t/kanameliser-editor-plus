@@ -187,6 +187,42 @@ msgstr "スロットマッピング（{0} 件のRenderer）"
 msgid "slotRemap.resetToIdentity"
 msgstr "このRendererをそのままの対応にリセット"
 
+msgid "slotRemap.error.noComponent"
+msgstr "MaterialSlotRemappingコンポーネントがありません。"
+
+msgid "slotRemap.error.referenceNotSet"
+msgstr "参照元Prefabが設定されていません。"
+
+#, csharp-format
+msgid "slotRemap.error.slotCountMismatch"
+msgstr "'{0}' のマテリアルスロット数が一致しません（変換後 {1} / 参照元 {2}）。"
+
+msgid "slotRemap.error.noMatchingRenderers"
+msgstr "変換後の衣装と参照元の間で対応するRendererが見つかりませんでした。"
+
+#, csharp-format
+msgid "slotRemap.warning.noMatchingRenderer"
+msgstr "'{0}' に対応するRendererが参照元に見つかりませんでした。"
+
+#, csharp-format
+msgid "slotRemap.warning.unresolvedSlots"
+msgstr "'{0}' のスロット [{1}] と一致するマテリアルが参照元にありません。手動で設定してください。"
+
+#, csharp-format
+msgid "slotRemap.warning.ambiguousDetail"
+msgstr ""
+"'{0}' の {1} のスロット対応が曖昧です: 変換後スロット [{2}]、参照元スロット [{3}]、"
+"推定対応（変換後 -> 参照元）[{4}]"
+
+#, csharp-format
+msgid "slotRemap.warning.ambiguous"
+msgstr ""
+"{0}。同じマテリアルまたは空のスロットが複数あるため、サブメッシュの対応関係を"
+"自動では決定できません。推定マッピングを手動で確認してください。"
+
+msgid "slotRemap.materialNone"
+msgstr "（なし / Missing）"
+
 # ── Component Manager ──
 
 msgid "componentManager.targetObject"

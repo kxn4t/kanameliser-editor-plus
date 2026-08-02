@@ -107,11 +107,16 @@ namespace Kanameliser.EditorPlus.Tests
             Assert.That(result.hasAmbiguousMappings, Is.True);
             Assert.That(result.remaps[0].referenceSlotForHostSlot, Is.EqualTo(new[] { 1, 2, 0 }));
             Assert.That(result.ambiguousMappingDetails, Has.Count.EqualTo(1));
+            Assert.That(result.ambiguousMappings, Has.Count.EqualTo(1));
+            var ambiguity = result.ambiguousMappings[0];
+            Assert.That(ambiguity.hostSlots, Is.EqualTo(new[] { 0, 1 }));
+            Assert.That(ambiguity.referenceSlots, Is.EqualTo(new[] { 1, 2 }));
+            Assert.That(ambiguity.estimatedReferenceSlots, Is.EqualTo(new[] { 1, 2 }));
             StringAssert.Contains(
-                "host slots [0, 1], reference slots [1, 2]",
+                result.ambiguousMappingDetails[0],
                 string.Join("\n", result.warnings));
             StringAssert.Contains(
-                "Estimated host -> reference [0 -> 1, 1 -> 2]",
+                result.ambiguousMappingDetails[0],
                 MaterialSlotRemappingEditor.BuildAmbiguityConfirmationMessage(result));
         }
 
@@ -135,7 +140,8 @@ namespace Kanameliser.EditorPlus.Tests
             Assert.That(result.success, Is.True);
             Assert.That(result.hasAmbiguousMappings, Is.True);
             Assert.That(result.remaps[0].referenceSlotForHostSlot, Is.EqualTo(new[] { 1, 2, 0 }));
-            StringAssert.Contains("(None / Missing)", string.Join("\n", result.warnings));
+            Assert.That(result.ambiguousMappings, Has.Count.EqualTo(1));
+            Assert.That(result.ambiguousMappings[0].material, Is.Null);
         }
 
         [Test]
