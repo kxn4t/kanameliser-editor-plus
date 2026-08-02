@@ -37,6 +37,7 @@ namespace Kanameliser.EditorPlus
         private HelpBox selectPromptBox;
         private Button selectButton;
         private Button removeButton;
+        private IVisualElementScheduledItem filterRebuildSchedule;
 
         // Rows currently displayed, kept for in-place toggle updates
         private List<GameObject> currentFilteredGameObjects = new List<GameObject>();
@@ -95,6 +96,9 @@ namespace Kanameliser.EditorPlus
 
             // Re-clamp column widths when the window is resized
             root.RegisterCallback<GeometryChangedEvent>(evt => ApplyColumnWidth(gameObjectColumnWidth));
+
+            filterRebuildSchedule = root.schedule.Execute(RebuildTable);
+            filterRebuildSchedule.Pause();
 
             RebuildTable();
 
@@ -223,7 +227,7 @@ namespace Kanameliser.EditorPlus
             gameObjectFilterField.RegisterValueChangedCallback(evt =>
             {
                 gameObjectFilter = evt.newValue ?? "";
-                RebuildTable();
+                ScheduleFilterRebuild();
             });
             gameObjectFilterColumn.Add(gameObjectFilterField);
 
@@ -268,7 +272,7 @@ namespace Kanameliser.EditorPlus
             componentFilterField.RegisterValueChangedCallback(evt =>
             {
                 componentFilter = evt.newValue ?? "";
-                RebuildTable();
+                ScheduleFilterRebuild();
             });
             componentColumn.Add(componentFilterField);
 
@@ -438,6 +442,14 @@ namespace Kanameliser.EditorPlus
 
         // ── Table building ──
 
+        /// <summary>
+        /// Debounces filter input so fast typing does not rebuild the table on every keystroke
+        /// </summary>
+        private void ScheduleFilterRebuild()
+        {
+            filterRebuildSchedule.ExecuteLater(ComponentConstants.FILTER_DEBOUNCE_MS);
+        }
+
         private void RebuildTable()
         {
             tableScrollView.Clear();
@@ -503,13 +515,21 @@ namespace Kanameliser.EditorPlus
             var nameLabel = new Label(gameObject.name);
             nameLabel.AddToClassList("go-name-label");
             nameLabel.AddToClassList("clickable-label");
-            nameLabel.RegisterCallback<MouseDownEvent>(evt => SelectGameObjectInHierarchy(gameObject));
+            nameLabel.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                SelectGameObjectInHierarchy(gameObject);
+            });
             gameObjectInfo.Add(nameLabel);
 
             var pathLabel = new Label(ComponentPathUtility.GetGameObjectPath(gameObject, targetObject));
             pathLabel.AddToClassList("go-path-label");
             pathLabel.AddToClassList("clickable-label");
-            pathLabel.RegisterCallback<MouseDownEvent>(evt => SelectGameObjectInHierarchy(gameObject));
+            pathLabel.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                SelectGameObjectInHierarchy(gameObject);
+            });
             gameObjectInfo.Add(pathLabel);
 
             gameObjectCell.Add(gameObjectInfo);

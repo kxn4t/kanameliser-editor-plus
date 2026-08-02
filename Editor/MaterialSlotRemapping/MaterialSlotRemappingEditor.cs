@@ -15,7 +15,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         private const int MaxAmbiguityDetailsInDialog = 5;
 
         // Keyed by component instance ID so results survive the editor instance being destroyed
-        // when the selection changes (cleared on domain reload).
+        // when the selection changes (pruned for destroyed components, cleared on domain reload).
         private static readonly Dictionary<int, RemapGenerationResult> lastResults =
             new Dictionary<int, RemapGenerationResult>();
 
@@ -27,8 +27,49 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         private VisualElement _messagesContainer;
         private VisualElement _remapsContainer;
 
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed += OnUndoRedoPerformed;
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+        }
+
+        private void OnUndoRedoPerformed()
+        {
+            // Undo/redo may revert the remaps the last generation produced, so the stored
+            // result no longer describes the component state and must not stay on screen
+            if (target == null) return;
+            if (lastResults.Remove(target.GetInstanceID()))
+                UpdateMessages();
+        }
+
+        /// <summary>
+        /// Drops results whose component no longer exists so the static cache does not grow
+        /// for the lifetime of the editor session
+        /// </summary>
+        private static void PruneDestroyedComponentResults()
+        {
+            if (lastResults.Count == 0) return;
+
+            List<int> stale = null;
+            foreach (int instanceId in lastResults.Keys)
+            {
+                if (EditorUtility.InstanceIDToObject(instanceId) == null)
+                    (stale ??= new List<int>()).Add(instanceId);
+            }
+
+            if (stale == null) return;
+            foreach (int instanceId in stale)
+                lastResults.Remove(instanceId);
+        }
+
         public override VisualElement CreateInspectorGUI()
         {
+            PruneDestroyedComponentResults();
+
             var component = (MaterialSlotRemapping)target;
             var root = new VisualElement();
 
@@ -162,6 +203,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
         private void UpdateMessages()
         {
+            // Undo can fire before the inspector UI is built
+            if (_messagesContainer == null) return;
+
             _messagesContainer.Clear();
 
             if (target == null) return;
