@@ -175,6 +175,10 @@ The mapping is generated from material references, so generate it before changin
 After generation, only the slot correspondence (indices) is stored, so changing the outfit's materials afterwards does not break the mapping.
 When the same material (or an empty slot) occurs more than once, the slot order cannot be determined uniquely. A confirmation dialog and warnings identify these cases; review the estimated mapping and adjust it manually in the Inspector when needed.
 
+#### Performance Note
+
+Material Setter / Material Swap generate material replacement animations at build time, so meshes targeted by a color change menu are excluded from automatic mesh merging by AAO: Avatar Optimizer's Trace and Optimize and cost extra draw calls. When you can spare the effort, merge the target meshes with [Merge Skinned Mesh (Color Menu Safe)](#merge-skinned-mesh-color-menu-safe) to reduce the load without breaking the color change menu.
+
 Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
 
 ### Merge Skinned Mesh (Color Menu Safe)

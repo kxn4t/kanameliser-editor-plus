@@ -55,6 +55,12 @@ Material Swap は「マテリアルX」を1つのマテリアルにしか置き�
 生成後はスロットの対応付け（インデックス）のみ保持するため、生成後に衣装のマテリアルを変更してもマッピングは壊れません。
 同じマテリアル（または空のスロット）が複数ある場合はスロット順を一意に判定できないため、確認ダイアログと警告が表示されます。推定結果を確認し、必要に応じてInspectorで手動修正してください。
 
+## パフォーマンスに関する注意
+
+Material Setter/Swapはビルド時にマテリアル差し替えアニメーションを生成するため、色変更メニューの対象メッシュはAAO: Avatar OptimizerのTrace and Optimizeによる自動メッシュ統合の対象外になります。メッシュが統合されない分、ドローコールなどの負荷が増えがちです。
+
+余裕があれば、[Merge Skinned Mesh (Color Menu Safe)](./color-menu-safe-merge)で対象メッシュを統合すると、色変更メニューを壊さずに負荷を抑えられます。
+
 ## アクセス方法
 
 ヒエラルキー右クリック → `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
