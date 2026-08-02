@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **MA Material Helper: Clearer Hierarchy context menu naming** — Renamed `Copy Material Setup` to `Copy Color Variants` and `Create Material Setter` to `Create Color Menu`, so the commands describe the color-menu workflow instead of internal component names and are no longer confusable with `Copy Materials`. The `[Optional]` variants and Material Swap commands moved into an `Advanced` submenu.
+- **MA Material Helper: Material Slot Remapping Inspector migrated to UI Toolkit** — The Inspector was rebuilt with Unity's UI Toolkit. Mapping generation, slot editing, and the reset action work the same as before, and the UI now stays in sync with undo/redo and external changes.
 
 ### Removed
 
@@ -57,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 変更
 
 - **MA Material Helper: 右クリックメニュー名の見直し** — `Copy Material Setup` を `Copy Color Variants` に、`Create Material Setter` を `Create Color Menu` に名称変更しました。コマンド名が内部コンポーネント名ではなく「色変更メニューを作る」という目的を表すようになり、`Copy Materials` とも混同しにくくなりました。あわせて `[Optional]` 系とMaterial Swap系のコマンドは `Advanced` サブメニューに移動しました。
+- **MA Material Helper: Material Slot RemappingのInspectorをUI Toolkitへ移行** — InspectorのUIをUnityのUI Toolkitで再構築しました。マッピング生成・スロット編集・リセットの動作は変わらず、Undo/Redoや外部からの変更にもUIが追従するようになりました。
 
 ### 削除
 
