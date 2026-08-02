@@ -53,7 +53,12 @@
 .filters-row {
     flex-direction: row;
     flex-shrink: 0;
-    margin-bottom: 5px;
+    margin-bottom: 12px;
+}
+
+/* Flush left so the field lines up with the checkboxes below it */
+.filter-field {
+    margin-left: 0;
 }
 
 /* Left filter column: width synced to the GameObject table column from code */
@@ -62,9 +67,10 @@
     min-width: 150px;
 }
 
-/* Right filter column: aligned with the component name column of the table */
+/* Right filter column: starts where the component checkbox column of the
+   table starts (checkbox 20px + resize handle 8px past the GameObject cell) */
 .filter-column-right {
-    margin-left: 48px;
+    margin-left: 28px;
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 150px;
@@ -74,18 +80,14 @@
     -unity-font-style: bold;
 }
 
+/* Zero left margins so the filter checkboxes line up with the table checkboxes */
 .filter-option-toggle {
     margin-top: 2px;
-}
-
-.show-empty-toggle {
-    flex-shrink: 0;
-    margin-bottom: 8px;
+    margin-left: 0;
 }
 
 /* Wrap long toggle captions instead of clipping them */
-.filter-option-toggle .unity-toggle__text,
-.show-empty-toggle .unity-toggle__text {
+.filter-option-toggle .unity-toggle__text {
     white-space: normal;
 }
 
@@ -137,8 +139,8 @@
 
 .table-row {
     flex-direction: row;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    padding-top: 5px;
+    padding-bottom: 8px;
     min-height: 36px;
     border-bottom-width: 1px;
     border-bottom-color: rgba(128, 128, 128, 0.5);

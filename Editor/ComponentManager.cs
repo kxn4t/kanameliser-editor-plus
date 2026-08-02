@@ -20,7 +20,7 @@ namespace Kanameliser.EditorPlus
         private bool showEmptyObjects = false;
         private bool searchInPaths = false;
         private bool showAllComponentsOnMatch = false;
-        private float gameObjectColumnWidth = 250f;
+        private float gameObjectColumnWidth = 300f;
 
         private ComponentDataManager dataManager;
 
@@ -219,6 +219,7 @@ namespace Kanameliser.EditorPlus
             gameObjectFilterColumn.Add(gameObjectFilterLabel);
 
             var gameObjectFilterField = new TextField();
+            gameObjectFilterField.AddToClassList("filter-field");
             gameObjectFilterField.RegisterValueChangedCallback(evt =>
             {
                 gameObjectFilter = evt.newValue ?? "";
@@ -237,6 +238,20 @@ namespace Kanameliser.EditorPlus
             });
             gameObjectFilterColumn.Add(searchInPathsToggle);
 
+            showEmptyObjectsToggle = new Toggle { text = Localization.S("componentManager.showEmptyObjects") };
+            showEmptyObjectsToggle.AddToClassList("filter-option-toggle");
+            showEmptyObjectsToggle.RegisterValueChangedCallback(evt =>
+            {
+                showEmptyObjects = evt.newValue;
+                dataManager.ShowEmptyObjects = showEmptyObjects;
+                if (targetObject != null)
+                {
+                    dataManager.RefreshComponentsList(targetObject);
+                }
+                RebuildTable();
+            });
+            gameObjectFilterColumn.Add(showEmptyObjectsToggle);
+
             filtersRow.Add(gameObjectFilterColumn);
 
             // Component filter column
@@ -249,6 +264,7 @@ namespace Kanameliser.EditorPlus
             componentColumn.Add(componentFilterLabel);
 
             var componentFilterField = new TextField();
+            componentFilterField.AddToClassList("filter-field");
             componentFilterField.RegisterValueChangedCallback(evt =>
             {
                 componentFilter = evt.newValue ?? "";
@@ -268,20 +284,6 @@ namespace Kanameliser.EditorPlus
             filtersRow.Add(componentColumn);
 
             container.Add(filtersRow);
-
-            showEmptyObjectsToggle = new Toggle { text = Localization.S("componentManager.showEmptyObjects") };
-            showEmptyObjectsToggle.AddToClassList("show-empty-toggle");
-            showEmptyObjectsToggle.RegisterValueChangedCallback(evt =>
-            {
-                showEmptyObjects = evt.newValue;
-                dataManager.ShowEmptyObjects = showEmptyObjects;
-                if (targetObject != null)
-                {
-                    dataManager.RefreshComponentsList(targetObject);
-                }
-                RebuildTable();
-            });
-            container.Add(showEmptyObjectsToggle);
         }
 
         private void CreateTableSection(VisualElement container)
