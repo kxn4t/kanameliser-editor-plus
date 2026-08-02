@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MA Material Helper: Clearer Hierarchy context menu naming** — Renamed `Copy Material Setup` to `Copy Color Variants` and `Create Material Setter` to `Create Color Menu`, so the commands describe the color-menu workflow instead of internal component names and are no longer confusable with `Copy Materials`. The `[Optional]` variants and Material Swap commands moved into an `Advanced` submenu.
 - **MA Material Helper: Material Slot Remapping Inspector migrated to UI Toolkit** — The Inspector was rebuilt with Unity's UI Toolkit. Mapping generation, slot editing, and the reset action work the same as before, and the UI now stays in sync with undo/redo and external changes.
 - **AO Bounds Setter: Transform selector fully migrated to UI Toolkit** — The remaining IMGUI code (Esc key handling) in the Transform selector popup was replaced with a UI Toolkit event callback. Closing with the Esc key works the same as before.
+- **Component Manager: Migrated to UI Toolkit** — The window UI was rebuilt with Unity's UI Toolkit. Filters, select-all checkboxes, column resizing, hierarchy selection, and the deletion flow all work the same as before, with a slightly cleaner layout.
 
 ### Removed
 
@@ -61,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MA Material Helper: 右クリックメニュー名の見直し** — `Copy Material Setup` を `Copy Color Variants` に、`Create Material Setter` を `Create Color Menu` に名称変更しました。コマンド名が内部コンポーネント名ではなく「色変更メニューを作る」という目的を表すようになり、`Copy Materials` とも混同しにくくなりました。あわせて `[Optional]` 系とMaterial Swap系のコマンドは `Advanced` サブメニューに移動しました。
 - **MA Material Helper: Material Slot RemappingのInspectorをUI Toolkitへ移行** — InspectorのUIをUnityのUI Toolkitで再構築しました。マッピング生成・スロット編集・リセットの動作は変わらず、Undo/Redoや外部からの変更にもUIが追従するようになりました。
 - **AO Bounds Setter: TransformセレクターをUI Toolkitへ完全移行** — Transformセレクターのポップアップに残っていたIMGUIコード（Escキー処理）をUI Toolkitのイベントコールバックに置き換えました。Escキーで閉じる動作は変わりません。
+- **Component Manager: UI Toolkitへ移行** — ウィンドウUIをUnityのUI Toolkitで再構築しました。フィルター・全選択チェックボックス・列リサイズ・Hierarchy選択・削除フローの動作は変わらず、レイアウトが少しすっきりしました。
 
 ### 削除
 

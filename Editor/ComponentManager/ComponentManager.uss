@@ -1,0 +1,235 @@
+/* Component Manager Window Styles */
+
+/* Fixed-height sections must not be compressed when the table fills the window,
+   so every section except the table scroll area has flex-shrink: 0. */
+
+/* Language switcher */
+.language-switcher {
+    flex-shrink: 0;
+    margin-bottom: 8px;
+}
+
+/* Main container */
+.main-container {
+    padding: 10px;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+/* Target object row */
+.target-row {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: 10px;
+}
+
+.target-label {
+    min-width: 120px;
+}
+
+.refresh-button {
+    width: 25px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-right: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.target-object-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+/* Filters */
+.filters-row {
+    flex-direction: row;
+    flex-shrink: 0;
+    margin-bottom: 12px;
+}
+
+/* Flush left so the field lines up with the checkboxes below it */
+.filter-field {
+    margin-left: 0;
+}
+
+/* Left filter column: width synced to the GameObject table column from code */
+.filter-column-left {
+    flex-shrink: 0;
+    min-width: 150px;
+}
+
+/* Right filter column: starts where the component checkbox column of the
+   table starts (checkbox 20px + resize handle 8px past the GameObject cell) */
+.filter-column-right {
+    margin-left: 28px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 150px;
+}
+
+.filter-label {
+    -unity-font-style: bold;
+}
+
+/* Zero left margins so the filter checkboxes line up with the table checkboxes */
+.filter-option-toggle {
+    margin-top: 2px;
+    margin-left: 0;
+}
+
+/* Wrap long toggle captions instead of clipping them */
+.filter-option-toggle .unity-toggle__text {
+    white-space: normal;
+}
+
+/* Table */
+.table-container {
+    flex-grow: 1;
+    min-height: 0;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-color: rgba(0, 0, 0, 0.5);
+}
+
+.table-header {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.5);
+}
+
+.header-label {
+    -unity-font-style: bold;
+}
+
+.resize-handle {
+    width: 8px;
+    flex-shrink: 0;
+    align-self: stretch;
+    flex-direction: row;
+    justify-content: center;
+    cursor: resize-horizontal;
+}
+
+.resize-handle-line {
+    width: 1px;
+    background-color: rgba(128, 128, 128, 0.8);
+}
+
+.table-header .go-column {
+    align-items: center;
+}
+
+.table-scroll {
+    flex-grow: 1;
+    min-height: 0;
+}
+
+.table-row {
+    flex-direction: row;
+    padding-top: 5px;
+    padding-bottom: 8px;
+    min-height: 36px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(128, 128, 128, 0.5);
+}
+
+.table-row:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.go-column {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: flex-start;
+}
+
+.row-toggle {
+    width: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.go-cell-content {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.go-name-label {
+    -unity-font-style: bold;
+}
+
+.go-path-label {
+    font-size: 10px;
+    white-space: normal;
+    opacity: 0.8;
+}
+
+.clickable-label {
+    cursor: link;
+}
+
+.clickable-label:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Component cell: starts after the resize handle gap */
+.component-cell {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin-left: 8px;
+}
+
+.component-row {
+    flex-direction: row;
+    align-items: center;
+    height: 18px;
+}
+
+.component-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.component-name-label {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+}
+
+/* Prompt and buttons */
+.select-prompt {
+    flex-shrink: 0;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.button-row {
+    flex-direction: row;
+    flex-shrink: 0;
+    margin-top: 8px;
+}
+
+.action-button {
+    flex-grow: 1;
+    height: 30px;
+}
