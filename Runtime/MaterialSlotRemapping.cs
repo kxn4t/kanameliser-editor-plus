@@ -15,6 +15,7 @@ namespace Kanameliser.EditorPlus.Runtime
     /// The component does nothing at runtime and is removed during avatar build (NDMF pass, plus the
     /// VRChat SDK strips non-whitelisted components as a backstop).
     /// </summary>
+    [AddComponentMenu("Kanameliser Editor Plus/Material Slot Remapping")]
     [DisallowMultipleComponent]
     public class MaterialSlotRemapping : MonoBehaviour
     {
