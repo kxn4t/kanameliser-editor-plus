@@ -177,6 +177,39 @@ When the same material (or an empty slot) occurs more than once, the slot order 
 
 Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
 
+### Merge Skinned Mesh (Color Menu Safe)
+
+Creates a Merge Skinned Mesh of AAO: Avatar Optimizer without breaking color change menus driven by Material Setter / Material Swap. AAO's Trace and Optimize never merges meshes targeted by material replacement animations automatically, and a naive manual merge can leak a color change into other meshes sharing the same material — this command analyzes the color change setup and excludes only the unsafe materials from material slot merging.
+
+Requirement: [AAO: Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/) 1.8.0 or higher, [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher
+
+#### Usage
+
+1. Select the meshes to merge (SkinnedMeshRenderer / MeshRenderer, multiple selection)
+2. Right-click → `Create Merge Skinned Mesh (Color Menu Safe)`
+
+A Merge Skinned Mesh object covering the selected meshes is created under their common parent, with unsafe materials pre-registered with their "Merge" checkbox turned off. Excluded materials are listed in the console log.
+
+#### How Exclusion Is Decided
+
+A material is excluded when any Material Setter / Material Swap changes only some of the slots sharing it, or changes them to different materials. When every component changes all of its slots in the same way (or none), the material stays merged for maximum draw call reduction.
+
+| Color change setup (A and B share material Gray) | Result |
+|---|---|
+| One setter changes Gray on both A and B to White | Merged (no exclusion) |
+| Gray on A → White, Gray on B → Blue | Gray excluded |
+| Only Gray on A is changed (B untouched) | Gray excluded |
+| Material Swap with empty Root (whole avatar) | Merged (no exclusion) |
+| Material Swap whose Root covers only Mesh A | Gray excluded |
+
+#### Notes
+
+- Re-run the command after changing your Material Setter / Material Swap setup — the exclusion list does not update automatically
+- Material replacements done directly with custom animation clips are not analyzed; uncheck "Merge" for those materials manually when needed
+- Merging meshes that are toggled separately can stop the toggles from working (a limitation of Merge Skinned Mesh itself; AAO warns at build time)
+
+Access: Right-click in Hierarchy `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
+
 ### AO Bounds Setter
 
 Batch configure Anchor Override, Root Bone, and Bounds for multiple meshes. Useful for outfit creation and avatar setup.
@@ -197,7 +230,8 @@ Access: `Tools > Kanameliser Editor Plus > AO Bounds Setter`
 
 - Unity 2022.3.22f1 or higher
 - Optional: NDMF 1.11.0 or higher (Japanese UI with language switching, enhanced build preview support)
-- Optional: Modular Avatar 1.13.0 or higher (required for MA Material Helper)
+- Optional: Modular Avatar 1.13.0 or higher (required for MA Material Helper and Merge Skinned Mesh (Color Menu Safe))
+- Optional: AAO: Avatar Optimizer 1.8.0 or higher (required for Merge Skinned Mesh (Color Menu Safe))
 
 ## Contributing
 

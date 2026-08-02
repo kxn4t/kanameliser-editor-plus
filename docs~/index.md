@@ -32,6 +32,9 @@ features:
   - title: MA Material Helper
     details: Modular Avatarの色変更メニューをカラーバリエーションPrefabから自動生成。
     link: /features/ma-material-helper
+  - title: Merge Skinned Mesh (Color Menu Safe)
+    details: 色変更メニューを壊さないAAOのMerge Skinned Meshを自動構成。
+    link: /features/color-menu-safe-merge
   - title: Component Manager
     details: 選択オブジェクトとその子の全コンポーネントを一覧表示。検索・一括削除が可能。
     link: /features/component-manager
