@@ -337,6 +337,8 @@ namespace Kanameliser.EditorPlus
             nameContainer.AddToClassList("clickable-label");
             nameContainer.RegisterCallback<MouseDownEvent>(evt =>
             {
+                if (evt.button != 0) return;
+
                 var renderer = data.Renderer;
                 if (renderer == null) return;
 
@@ -364,6 +366,8 @@ namespace Kanameliser.EditorPlus
             aoLabel.AddToClassList("clickable-label");
             aoLabel.RegisterCallback<MouseDownEvent>(evt =>
             {
+                if (evt.button != 0) return;
+
                 var renderer = data.Renderer;
                 if (renderer == null || renderer.probeAnchor == null) return;
 
@@ -378,6 +382,8 @@ namespace Kanameliser.EditorPlus
             rootBoneLabel.AddToClassList("clickable-label");
             rootBoneLabel.RegisterCallback<MouseDownEvent>(evt =>
             {
+                if (evt.button != 0) return;
+
                 var skinnedMeshRenderer = data.Renderer as SkinnedMeshRenderer;
                 if (skinnedMeshRenderer == null || skinnedMeshRenderer.rootBone == null) return;
 

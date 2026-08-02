@@ -24,20 +24,26 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
 #if MODULAR_AVATAR_INSTALLED
         // +20 leaves a gap (>= 11) after the Create items so Unity draws a separator above this item.
+        // GameObject/ menu handlers run once per selected object; MenuCommand.context
+        // identifies the object of the current invocation.
         [MenuItem(MENU_PATH_ADD_REMAPPING, false, MENU_PRIORITY + 20)]
-        public static void AddMaterialSlotRemapping()
+        public static void AddMaterialSlotRemapping(MenuCommand command)
         {
-            var selected = Selection.activeGameObject;
+            var selected = command.context as GameObject;
+            if (selected == null) selected = Selection.activeGameObject;
             if (selected == null) return;
 
             if (selected.GetComponent<MaterialSlotRemapping>() != null)
             {
-                MAMaterialHelperUtils.ShowInfoDialog(Localization.S("maMaterialHelper.alreadyHasRemapping"));
+                // A modal dialog per already-configured object would stack up on multi-selection
+                if (Selection.gameObjects.Length > 1)
+                    Debug.Log($"'{selected.name}' already has Material Slot Remapping; skipped");
+                else
+                    MAMaterialHelperUtils.ShowInfoDialog(Localization.S("maMaterialHelper.alreadyHasRemapping"));
                 return;
             }
 
             Undo.AddComponent<MaterialSlotRemapping>(selected);
-            Selection.activeGameObject = selected;
             MAMaterialHelperUtils.LogSuccess($"Added Material Slot Remapping to '{selected.name}'");
         }
 

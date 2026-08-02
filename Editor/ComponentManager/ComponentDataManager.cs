@@ -24,12 +24,21 @@ namespace Kanameliser.EditorPlus
         /// </summary>
         public void RefreshComponentsList(GameObject targetObject)
         {
-            if (targetObject == null) return;
+            // Keep checkbox state across refreshes (hierarchy changes, undo/redo)
+            var previouslySelectedObjects = new HashSet<GameObject>(
+                gameObjectSelectionState.Where(e => e.Value).Select(e => e.Key));
+            var previouslySelectedComponents = new HashSet<Component>(
+                componentsByGameObject.Values
+                    .SelectMany(list => list)
+                    .Where(c => c.IsSelected && c.Component != null)
+                    .Select(c => c.Component));
 
             componentsByGameObject.Clear();
             gameObjectSelectionState.Clear();
 
             ComponentPathUtility.ClearCache();
+
+            if (targetObject == null) return;
 
             try
             {
@@ -52,7 +61,7 @@ namespace Kanameliser.EditorPlus
                         {
                             GameObject = gameObject,
                             Component = c,
-                            IsSelected = false
+                            IsSelected = previouslySelectedComponents.Contains(c)
                         })
                         .ToList();
 
@@ -61,7 +70,7 @@ namespace Kanameliser.EditorPlus
                     {
                         // Register the GameObject even when it has no components
                         componentsByGameObject[gameObject] = componentInfos;
-                        gameObjectSelectionState[gameObject] = false;
+                        gameObjectSelectionState[gameObject] = previouslySelectedObjects.Contains(gameObject);
                     }
                 }
             }

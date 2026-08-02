@@ -15,9 +15,18 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         private const int MaxAmbiguityDetailsInDialog = 5;
 
         // Keyed by component instance ID so results survive the editor instance being destroyed
-        // when the selection changes (pruned for destroyed components, cleared on domain reload).
+        // when the selection changes (pruned for destroyed components, cleared on undo/redo
+        // and on domain reload).
         private static readonly Dictionary<int, RemapGenerationResult> lastResults =
             new Dictionary<int, RemapGenerationResult>();
+
+        static MaterialSlotRemappingEditor()
+        {
+            // Undo/redo can revert generated remaps even while no inspector for the
+            // component is open, so stored results are dropped globally; any open
+            // inspectors then refresh through their own handler below
+            Undo.undoRedoPerformed += () => lastResults.Clear();
+        }
 
         private readonly Dictionary<string, bool> _foldouts = new Dictionary<string, bool>();
 
@@ -39,11 +48,10 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
         private void OnUndoRedoPerformed()
         {
-            // Undo/redo may revert the remaps the last generation produced, so the stored
-            // result no longer describes the component state and must not stay on screen
+            // The static handler has already dropped the stored results (it subscribed
+            // first, so it runs first); refresh so no stale message stays on screen
             if (target == null) return;
-            if (lastResults.Remove(target.GetInstanceID()))
-                UpdateMessages();
+            UpdateMessages();
         }
 
         /// <summary>
