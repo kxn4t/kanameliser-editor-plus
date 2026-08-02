@@ -1,10 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Kanameliser.Editor.MAMaterialHelper.Common;
+using Kanameliser.EditorPlus;
 using Kanameliser.EditorPlus.Runtime;
 
 namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 {
+    /// <summary>
+    /// Structured description of one ambiguous material group on a renderer.
+    /// </summary>
+    public class AmbiguousSlotMappingInfo
+    {
+        public string rendererPath;
+        public Material material;
+        public List<int> hostSlots = new List<int>();
+        public List<int> referenceSlots = new List<int>();
+        /// <summary>Estimated reference slot per entry of <see cref="hostSlots"/> (-1 = none).</summary>
+        public List<int> estimatedReferenceSlots = new List<int>();
+    }
+
     /// <summary>
     /// Result of a <see cref="MaterialSlotRemapGenerator.Generate"/> call.
     /// </summary>
@@ -15,6 +29,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         public List<string> errors = new List<string>();
         public List<string> warnings = new List<string>();
         public List<string> ambiguousMappingDetails = new List<string>();
+        public List<AmbiguousSlotMappingInfo> ambiguousMappings = new List<AmbiguousSlotMappingInfo>();
         public int matchedRendererCount;
         public bool hasAmbiguousMappings;
     }
@@ -35,12 +50,12 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
             if (component == null)
             {
-                result.errors.Add("No MaterialSlotRemapping component.");
+                result.errors.Add(Localization.S("slotRemap.error.noComponent"));
                 return result;
             }
             if (component.referencePrefab == null)
             {
-                result.errors.Add("Reference prefab is not set.");
+                result.errors.Add(Localization.S("slotRemap.error.referenceNotSet"));
                 return result;
             }
 
@@ -65,7 +80,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
                 if (refT == null)
                 {
-                    result.warnings.Add($"No matching renderer in reference for '{DisplayPath(relPath)}'.");
+                    result.warnings.Add(Localization.S("slotRemap.warning.noMatchingRenderer", DisplayPath(relPath)));
                     continue;
                 }
 
@@ -75,8 +90,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
                 if (hostMaterials.Length != refMaterials.Length)
                 {
-                    result.errors.Add(
-                        $"Slot count mismatch at '{DisplayPath(relPath)}': host {hostMaterials.Length} vs reference {refMaterials.Length}.");
+                    result.errors.Add(Localization.S(
+                        "slotRemap.error.slotCountMismatch",
+                        DisplayPath(relPath), hostMaterials.Length, refMaterials.Length));
                     continue;
                 }
 
@@ -84,33 +100,42 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                 foreach (var ambiguity in FindAmbiguousMaterialGroups(hostMaterials, refMaterials))
                 {
                     var estimates = new List<string>();
+                    var estimatedSlots = new List<int>();
                     foreach (int hostSlot in ambiguity.hostSlots)
                     {
                         int referenceSlot = map[hostSlot];
+                        estimatedSlots.Add(referenceSlot);
                         estimates.Add($"{hostSlot} -> {(referenceSlot >= 0 ? referenceSlot.ToString() : "none")}");
                     }
 
                     string materialName = ambiguity.material == null
-                        ? "(None / Missing)"
+                        ? Localization.S("slotRemap.materialNone")
                         : $"'{ambiguity.material.name}'";
-                    string detail =
-                        $"Ambiguous slot mapping at '{DisplayPath(relPath)}' for {materialName}: " +
-                        $"host slots [{string.Join(", ", ambiguity.hostSlots)}], " +
-                        $"reference slots [{string.Join(", ", ambiguity.referenceSlots)}]. " +
-                        $"Estimated host -> reference [{string.Join(", ", estimates)}]";
-                    string warning =
-                        detail + ". " +
-                        "The same material or empty value occurs more than once, so submesh " +
-                        "correspondence cannot be determined automatically. Review the estimated mapping manually.";
-                    result.warnings.Add(warning);
+                    string detail = Localization.S(
+                        "slotRemap.warning.ambiguousDetail",
+                        DisplayPath(relPath),
+                        materialName,
+                        string.Join(", ", ambiguity.hostSlots),
+                        string.Join(", ", ambiguity.referenceSlots),
+                        string.Join(", ", estimates));
+                    result.warnings.Add(Localization.S("slotRemap.warning.ambiguous", detail));
                     result.ambiguousMappingDetails.Add(detail);
+                    result.ambiguousMappings.Add(new AmbiguousSlotMappingInfo
+                    {
+                        rendererPath = relPath,
+                        material = ambiguity.material,
+                        hostSlots = new List<int>(ambiguity.hostSlots),
+                        referenceSlots = new List<int>(ambiguity.referenceSlots),
+                        estimatedReferenceSlots = estimatedSlots,
+                    });
                     result.hasAmbiguousMappings = true;
                 }
 
                 if (unresolved.Count > 0)
                 {
-                    result.warnings.Add(
-                        $"Unresolved slot(s) at '{DisplayPath(relPath)}': [{string.Join(", ", unresolved)}] - no matching material in reference. Fix manually.");
+                    result.warnings.Add(Localization.S(
+                        "slotRemap.warning.unresolvedSlots",
+                        DisplayPath(relPath), string.Join(", ", unresolved)));
                 }
 
                 remaps.Add(new RendererSlotRemap
@@ -132,7 +157,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
             if (remaps.Count == 0)
             {
-                result.errors.Add("No matching renderers found between host and reference.");
+                result.errors.Add(Localization.S("slotRemap.error.noMatchingRenderers"));
                 result.success = false;
                 return result;
             }

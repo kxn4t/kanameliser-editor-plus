@@ -188,6 +188,42 @@ msgstr "Slot Mappings ({0} renderers)"
 msgid "slotRemap.resetToIdentity"
 msgstr "Reset This Renderer To Identity"
 
+msgid "slotRemap.error.noComponent"
+msgstr "No MaterialSlotRemapping component."
+
+msgid "slotRemap.error.referenceNotSet"
+msgstr "Reference prefab is not set."
+
+#, csharp-format
+msgid "slotRemap.error.slotCountMismatch"
+msgstr "Slot count mismatch at '{0}': host {1} vs reference {2}."
+
+msgid "slotRemap.error.noMatchingRenderers"
+msgstr "No matching renderers found between host and reference."
+
+#, csharp-format
+msgid "slotRemap.warning.noMatchingRenderer"
+msgstr "No matching renderer in reference for '{0}'."
+
+#, csharp-format
+msgid "slotRemap.warning.unresolvedSlots"
+msgstr "Unresolved slot(s) at '{0}': [{1}] - no matching material in reference. Fix manually."
+
+#, csharp-format
+msgid "slotRemap.warning.ambiguousDetail"
+msgstr ""
+"Ambiguous slot mapping at '{0}' for {1}: host slots [{2}], reference slots [{3}]. "
+"Estimated host -> reference [{4}]"
+
+#, csharp-format
+msgid "slotRemap.warning.ambiguous"
+msgstr ""
+"{0}. The same material or empty value occurs more than once, so submesh "
+"correspondence cannot be determined automatically. Review the estimated mapping manually."
+
+msgid "slotRemap.materialNone"
+msgstr "(None / Missing)"
+
 # ── Component Manager ──
 
 msgid "componentManager.targetObject"

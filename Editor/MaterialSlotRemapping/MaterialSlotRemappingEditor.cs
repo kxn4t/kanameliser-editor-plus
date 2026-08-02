@@ -14,7 +14,11 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
     {
         private const int MaxAmbiguityDetailsInDialog = 5;
 
-        private RemapGenerationResult _lastResult;
+        // Keyed by component instance ID so results survive the editor instance being destroyed
+        // when the selection changes (cleared on domain reload).
+        private static readonly Dictionary<int, RemapGenerationResult> lastResults =
+            new Dictionary<int, RemapGenerationResult>();
+
         private readonly Dictionary<string, bool> _foldouts = new Dictionary<string, bool>();
 
         private HelpBox _descriptionBox;
@@ -62,6 +66,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             root.Add(_remapsContainer);
 
             UpdateGenerateButtonState();
+            UpdateMessages();
             RebuildRemaps();
 
             // Keep the UI in sync with undo/redo and external modifications
@@ -102,7 +107,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         private void GenerateMapping(MaterialSlotRemapping component)
         {
             var result = MaterialSlotRemapGenerator.Generate(component);
-            _lastResult = result;
+            lastResults[component.GetInstanceID()] = result;
             if (result.success)
             {
                 if (result.hasAmbiguousMappings &&
@@ -112,7 +117,7 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
                         Localization.S("slotRemap.ambiguousDialog.useEstimated"),
                         Localization.S("common.cancel")))
                 {
-                    _lastResult = null;
+                    lastResults.Remove(component.GetInstanceID());
                     UpdateMessages();
                     return;
                 }
@@ -151,17 +156,18 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         {
             _messagesContainer.Clear();
 
-            if (_lastResult == null) return;
+            if (target == null) return;
+            if (!lastResults.TryGetValue(target.GetInstanceID(), out var lastResult)) return;
 
-            foreach (var error in _lastResult.errors)
+            foreach (var error in lastResult.errors)
                 _messagesContainer.Add(new HelpBox(error, HelpBoxMessageType.Error));
-            foreach (var warning in _lastResult.warnings)
+            foreach (var warning in lastResult.warnings)
                 _messagesContainer.Add(new HelpBox(warning, HelpBoxMessageType.Warning));
 
-            if (_lastResult.success && _lastResult.warnings.Count == 0 && _lastResult.errors.Count == 0)
+            if (lastResult.success && lastResult.warnings.Count == 0 && lastResult.errors.Count == 0)
             {
                 _messagesContainer.Add(new HelpBox(
-                    Localization.S("slotRemap.mappingGenerated", _lastResult.matchedRendererCount),
+                    Localization.S("slotRemap.mappingGenerated", lastResult.matchedRendererCount),
                     HelpBoxMessageType.Info));
             }
         }
