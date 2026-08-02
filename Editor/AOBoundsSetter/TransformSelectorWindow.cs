@@ -222,6 +222,7 @@ namespace Kanameliser.EditorPlus
             // Single-click to select
             item.RegisterCallback<MouseDownEvent>(evt =>
             {
+                if (evt.button != 0) return;
                 onSelectionChanged?.Invoke(transform);
                 Close();
             });

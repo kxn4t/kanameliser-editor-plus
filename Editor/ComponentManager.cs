@@ -515,13 +515,21 @@ namespace Kanameliser.EditorPlus
             var nameLabel = new Label(gameObject.name);
             nameLabel.AddToClassList("go-name-label");
             nameLabel.AddToClassList("clickable-label");
-            nameLabel.RegisterCallback<MouseDownEvent>(evt => SelectGameObjectInHierarchy(gameObject));
+            nameLabel.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                SelectGameObjectInHierarchy(gameObject);
+            });
             gameObjectInfo.Add(nameLabel);
 
             var pathLabel = new Label(ComponentPathUtility.GetGameObjectPath(gameObject, targetObject));
             pathLabel.AddToClassList("go-path-label");
             pathLabel.AddToClassList("clickable-label");
-            pathLabel.RegisterCallback<MouseDownEvent>(evt => SelectGameObjectInHierarchy(gameObject));
+            pathLabel.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                SelectGameObjectInHierarchy(gameObject);
+            });
             gameObjectInfo.Add(pathLabel);
 
             gameObjectCell.Add(gameObjectInfo);
