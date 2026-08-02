@@ -38,6 +38,7 @@ namespace Kanameliser.EditorPlus
         private Button selectButton;
         private Button removeButton;
         private IVisualElementScheduledItem filterRebuildSchedule;
+        private IVisualElementScheduledItem externalRefreshSchedule;
 
         // Rows currently displayed, kept for in-place toggle updates
         private List<GameObject> currentFilteredGameObjects = new List<GameObject>();
@@ -56,16 +57,38 @@ namespace Kanameliser.EditorPlus
             dataManager = new ComponentDataManager();
             PrefabStage.prefabStageOpened += OnPrefabStageChanged;
             PrefabStage.prefabStageClosing += OnPrefabStageChanged;
+            EditorApplication.hierarchyChanged += OnExternalChange;
+            Undo.undoRedoPerformed += OnExternalChange;
         }
 
         private void OnDisable()
         {
             PrefabStage.prefabStageOpened -= OnPrefabStageChanged;
             PrefabStage.prefabStageClosing -= OnPrefabStageChanged;
+            EditorApplication.hierarchyChanged -= OnExternalChange;
+            Undo.undoRedoPerformed -= OnExternalChange;
         }
 
         private void OnPrefabStageChanged(PrefabStage stage)
         {
+            UpdateButtonStates();
+        }
+
+        /// <summary>
+        /// Components can be added or removed outside the window (Inspector, undo/redo,
+        /// scripts); refresh so stale rows cannot be selected for deletion
+        /// </summary>
+        private void OnExternalChange()
+        {
+            externalRefreshSchedule?.ExecuteLater(ComponentConstants.EXTERNAL_REFRESH_DEBOUNCE_MS);
+        }
+
+        private void RefreshFromExternalChange()
+        {
+            if (targetObject == null && dataManager.ComponentsByGameObject.Count == 0) return;
+
+            dataManager.RefreshComponentsList(targetObject);
+            RebuildTable();
             UpdateButtonStates();
         }
 
@@ -99,6 +122,9 @@ namespace Kanameliser.EditorPlus
 
             filterRebuildSchedule = root.schedule.Execute(RebuildTable);
             filterRebuildSchedule.Pause();
+
+            externalRefreshSchedule = root.schedule.Execute(RefreshFromExternalChange);
+            externalRefreshSchedule.Pause();
 
             RebuildTable();
 
@@ -948,22 +974,43 @@ namespace Kanameliser.EditorPlus
                             }
                         }
 
-                        // Delete the selected components
-                        foreach (var componentInfo in selectedComponents)
+                        // Delete the selected components. A component another selected
+                        // component still requires (RequireComponent) cannot be deleted
+                        // first — Unity refuses, by logging an error or by throwing — so
+                        // retry while attempts make progress, which removes dependents
+                        // before their requirements regardless of list order
+                        var pendingComponents = selectedComponents
+                            .Where(c => c != null && c.Component != null)
+                            .ToList();
+                        bool deletedAny = true;
+                        while (pendingComponents.Count > 0 && deletedAny)
                         {
-                            if (componentInfo == null || componentInfo.Component == null) continue;
+                            deletedAny = false;
+                            var remaining = new List<ComponentInfo>();
+                            foreach (var componentInfo in pendingComponents)
+                            {
+                                Component component = componentInfo.Component;
+                                if (component == null) continue;
 
-                            Component component = componentInfo.Component;
-                            string componentName = componentInfo.Name;
-                            try
-                            {
-                                Undo.DestroyObjectImmediate(component);
+                                try
+                                {
+                                    Undo.DestroyObjectImmediate(component);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Debug.LogWarning($"Failed to delete component '{componentInfo.Name}': {ex.Message}");
+                                }
+
+                                if (component == null) deletedAny = true;
+                                else remaining.Add(componentInfo);
                             }
-                            catch (Exception ex)
-                            {
-                                failedItems.Add($"Component: {componentName}");
-                                Debug.LogWarning($"Failed to delete component '{componentName}': {ex.Message}");
-                            }
+                            pendingComponents = remaining;
+                        }
+
+                        foreach (var componentInfo in pendingComponents)
+                        {
+                            if (componentInfo.Component != null)
+                                failedItems.Add($"Component: {componentInfo.Name}");
                         }
                     }
                     finally
