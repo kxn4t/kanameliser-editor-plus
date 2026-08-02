@@ -118,6 +118,16 @@ namespace Kanameliser.EditorPlus
             transformListScrollView.style.borderRightColor = TransformListBorderColor;
             root.Add(transformListScrollView);
 
+            // Close on Escape key
+            root.RegisterCallback<KeyDownEvent>(evt =>
+            {
+                if (evt.keyCode == KeyCode.Escape)
+                {
+                    evt.StopPropagation();
+                    Close();
+                }
+            }, TrickleDown.TrickleDown);
+
             RefreshTransformList();
 
             // Focus search field
@@ -223,15 +233,6 @@ namespace Kanameliser.EditorPlus
         {
             // Close window when it loses focus
             Close();
-        }
-
-        private void OnGUI()
-        {
-            if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Escape)
-            {
-                Close();
-                Event.current.Use();
-            }
         }
     }
 }
