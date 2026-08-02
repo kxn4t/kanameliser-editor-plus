@@ -45,14 +45,20 @@
     margin-bottom: 5px;
 }
 
-.filter-column {
-    flex-grow: 1;
-    flex-basis: 0;
+/* Left filter column: indented past the checkbox column, width synced to the
+   GameObject table column from code */
+.filter-column-left {
+    margin-left: 20px;
+    flex-shrink: 0;
     min-width: 150px;
 }
 
-.filter-column-left {
-    margin-right: 10px;
+/* Right filter column: starts after the resize handle and checkbox columns */
+.filter-column-right {
+    margin-left: 28px;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 150px;
 }
 
 .filter-label {
@@ -91,8 +97,19 @@
 .resize-handle {
     width: 8px;
     flex-shrink: 0;
+    align-self: stretch;
+    flex-direction: row;
+    justify-content: center;
     cursor: resize-horizontal;
-    -unity-text-align: middle-center;
+}
+
+.resize-handle-line {
+    width: 1px;
+    background-color: rgba(128, 128, 128, 0.8);
+}
+
+.table-header .go-column {
+    align-items: center;
 }
 
 .table-scroll {
@@ -106,6 +123,10 @@
     min-height: 36px;
     border-bottom-width: 1px;
     border-bottom-color: rgba(128, 128, 128, 0.5);
+}
+
+.table-row:hover {
+    background-color: rgba(255, 255, 255, 0.03);
 }
 
 .go-column {

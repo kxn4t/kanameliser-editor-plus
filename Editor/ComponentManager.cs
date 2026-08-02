@@ -26,6 +26,7 @@ namespace Kanameliser.EditorPlus
 
         // UI elements
         private ObjectField targetObjectField;
+        private VisualElement gameObjectFilterColumn;
         private Toggle searchInPathsToggle;
         private Toggle showAllComponentsOnMatchToggle;
         private Toggle showEmptyObjectsToggle;
@@ -208,15 +209,14 @@ namespace Kanameliser.EditorPlus
             var filtersRow = new VisualElement();
             filtersRow.AddToClassList("filters-row");
 
-            // GameObject filter column
-            var gameObjectColumn = new VisualElement();
-            gameObjectColumn.AddToClassList("filter-column");
-            gameObjectColumn.AddToClassList("filter-column-left");
+            // GameObject filter column (width kept in sync with the GameObject table column)
+            gameObjectFilterColumn = new VisualElement();
+            gameObjectFilterColumn.AddToClassList("filter-column-left");
 
             var gameObjectFilterLabel = new Label("componentManager.gameObjectFilter");
             gameObjectFilterLabel.AddToClassList("filter-label");
             gameObjectFilterLabel.AddToClassList("ndmf-tr");
-            gameObjectColumn.Add(gameObjectFilterLabel);
+            gameObjectFilterColumn.Add(gameObjectFilterLabel);
 
             var gameObjectFilterField = new TextField();
             gameObjectFilterField.RegisterValueChangedCallback(evt =>
@@ -224,7 +224,7 @@ namespace Kanameliser.EditorPlus
                 gameObjectFilter = evt.newValue ?? "";
                 RebuildTable();
             });
-            gameObjectColumn.Add(gameObjectFilterField);
+            gameObjectFilterColumn.Add(gameObjectFilterField);
 
             searchInPathsToggle = new Toggle(Localization.S("componentManager.includePathsInSearch"));
             searchInPathsToggle.AddToClassList("filter-option-toggle");
@@ -233,13 +233,13 @@ namespace Kanameliser.EditorPlus
                 searchInPaths = evt.newValue;
                 RebuildTable();
             });
-            gameObjectColumn.Add(searchInPathsToggle);
+            gameObjectFilterColumn.Add(searchInPathsToggle);
 
-            filtersRow.Add(gameObjectColumn);
+            filtersRow.Add(gameObjectFilterColumn);
 
             // Component filter column
             var componentColumn = new VisualElement();
-            componentColumn.AddToClassList("filter-column");
+            componentColumn.AddToClassList("filter-column-right");
 
             var componentFilterLabel = new Label("componentManager.componentFilter");
             componentFilterLabel.AddToClassList("filter-label");
@@ -307,6 +307,9 @@ namespace Kanameliser.EditorPlus
 
             var resizeHandle = new VisualElement();
             resizeHandle.AddToClassList("resize-handle");
+            var resizeHandleLine = new VisualElement();
+            resizeHandleLine.AddToClassList("resize-handle-line");
+            resizeHandle.Add(resizeHandleLine);
             SetupColumnResize(resizeHandle);
             header.Add(resizeHandle);
 
@@ -361,19 +364,23 @@ namespace Kanameliser.EditorPlus
         private void SetupColumnResize(VisualElement handle)
         {
             bool isResizing = false;
+            float dragStartX = 0f;
+            float dragStartWidth = 0f;
 
             handle.RegisterCallback<PointerDownEvent>(evt =>
             {
                 if (evt.button != 0) return;
                 isResizing = true;
+                dragStartX = evt.position.x;
+                dragStartWidth = gameObjectColumnWidth;
                 handle.CapturePointer(evt.pointerId);
                 evt.StopPropagation();
             });
 
             handle.RegisterCallback<PointerMoveEvent>(evt =>
             {
-                if (!isResizing) return;
-                ApplyColumnWidth(gameObjectColumnWidth + evt.deltaPosition.x);
+                if (!isResizing || !handle.HasPointerCapture(evt.pointerId)) return;
+                ApplyColumnWidth(dragStartWidth + (evt.position.x - dragStartX));
             });
 
             handle.RegisterCallback<PointerUpEvent>(evt =>
@@ -417,6 +424,12 @@ namespace Kanameliser.EditorPlus
 
             float cellWidth = ComponentConstants.CHECKBOX_WIDTH + gameObjectColumnWidth;
             rootVisualElement.Query(className: "go-column").ForEach(cell => cell.style.width = cellWidth);
+
+            // Keep the GameObject filter column aligned with the table column
+            if (gameObjectFilterColumn != null)
+            {
+                gameObjectFilterColumn.style.width = gameObjectColumnWidth;
+            }
         }
 
         // ── Table building ──
