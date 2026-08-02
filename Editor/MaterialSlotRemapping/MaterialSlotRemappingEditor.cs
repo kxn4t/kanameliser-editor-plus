@@ -32,6 +32,10 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             var component = (MaterialSlotRemapping)target;
             var root = new VisualElement();
 
+            // Language switcher at top (renders nothing without NDMF)
+            var langSwitcher = new IMGUIContainer(Localization.ShowLanguageUI);
+            root.Add(langSwitcher);
+
             _descriptionBox = new HelpBox(Localization.S("slotRemap.description"), HelpBoxMessageType.Info);
             root.Add(_descriptionBox);
 
@@ -73,6 +77,10 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
             root.TrackSerializedObjectValue(serializedObject, so => SyncFromComponent());
 
             Localization.RegisterLanguageChangeCallback(this, e => e.RefreshLocalizedTexts());
+
+            // Applies the language-specific font (proper Japanese bold weights); texts themselves
+            // are set directly via S(), so there are no ndmf-tr elements to translate here.
+            Localization.LocalizeUIElements(root);
 
             return root;
         }
