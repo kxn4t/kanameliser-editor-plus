@@ -1,7 +1,11 @@
 /* Component Manager Window Styles */
 
+/* Fixed-height sections must not be compressed when the table fills the window,
+   so every section except the table scroll area has flex-shrink: 0. */
+
 /* Language switcher */
 .language-switcher {
+    flex-shrink: 0;
     margin-bottom: 8px;
 }
 
@@ -9,10 +13,12 @@
 .main-container {
     padding: 10px;
     flex-grow: 1;
+    min-height: 0;
 }
 
 .window-title {
     -unity-font-style: bold;
+    flex-shrink: 0;
     margin-bottom: 8px;
 }
 
@@ -20,6 +26,7 @@
 .target-row {
     flex-direction: row;
     align-items: center;
+    flex-shrink: 0;
     margin-bottom: 10px;
 }
 
@@ -29,8 +36,17 @@
 
 .refresh-button {
     width: 25px;
+    height: 18px;
     flex-shrink: 0;
     margin-right: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-icon {
+    width: 16px;
+    height: 16px;
 }
 
 .target-object-field {
@@ -42,20 +58,20 @@
 /* Filters */
 .filters-row {
     flex-direction: row;
+    flex-shrink: 0;
     margin-bottom: 5px;
 }
 
-/* Left filter column: indented past the checkbox column, width synced to the
-   GameObject table column from code */
+/* Left filter column: width synced to the GameObject table column from code */
 .filter-column-left {
-    margin-left: 20px;
+    margin-left: 10px;
     flex-shrink: 0;
     min-width: 150px;
 }
 
-/* Right filter column: starts after the resize handle and checkbox columns */
+/* Right filter column: aligned with the component name column of the table */
 .filter-column-right {
-    margin-left: 28px;
+    margin-left: 38px;
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 150px;
@@ -70,12 +86,14 @@
 }
 
 .show-empty-toggle {
+    flex-shrink: 0;
     margin-bottom: 8px;
 }
 
 /* Table */
 .table-container {
     flex-grow: 1;
+    min-height: 0;
     border-top-width: 1px;
     border-bottom-width: 1px;
     border-color: rgba(0, 0, 0, 0.5);
@@ -84,6 +102,7 @@
 .table-header {
     flex-direction: row;
     align-items: center;
+    flex-shrink: 0;
     padding-top: 3px;
     padding-bottom: 3px;
     border-bottom-width: 1px;
@@ -114,6 +133,7 @@
 
 .table-scroll {
     flex-grow: 1;
+    min-height: 0;
 }
 
 .table-row {
@@ -197,12 +217,14 @@
 
 /* Prompt and buttons */
 .select-prompt {
+    flex-shrink: 0;
     margin-top: 5px;
     margin-bottom: 5px;
 }
 
 .button-row {
     flex-direction: row;
+    flex-shrink: 0;
     margin-top: 8px;
 }
 

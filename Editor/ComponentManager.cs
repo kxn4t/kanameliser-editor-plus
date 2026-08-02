@@ -129,8 +129,12 @@ namespace Kanameliser.EditorPlus
             label.AddToClassList("ndmf-tr");
             row.Add(label);
 
-            var refreshButton = new Button(OnRefreshButtonClicked) { text = "↻" };
+            // Use the built-in refresh icon; the ↻ glyph is missing from some UI fonts
+            var refreshButton = new Button(OnRefreshButtonClicked);
             refreshButton.AddToClassList("refresh-button");
+            var refreshIcon = new Image { image = EditorGUIUtility.IconContent("Refresh").image };
+            refreshIcon.AddToClassList("refresh-icon");
+            refreshButton.Add(refreshIcon);
             row.Add(refreshButton);
 
             targetObjectField = new ObjectField
