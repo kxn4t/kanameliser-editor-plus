@@ -27,6 +27,25 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
         private VisualElement _messagesContainer;
         private VisualElement _remapsContainer;
 
+        private void OnEnable()
+        {
+            Undo.undoRedoPerformed += OnUndoRedoPerformed;
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+        }
+
+        private void OnUndoRedoPerformed()
+        {
+            // Undo/redo may revert the remaps the last generation produced, so the stored
+            // result no longer describes the component state and must not stay on screen
+            if (target == null) return;
+            if (lastResults.Remove(target.GetInstanceID()))
+                UpdateMessages();
+        }
+
         public override VisualElement CreateInspectorGUI()
         {
             var component = (MaterialSlotRemapping)target;
@@ -162,6 +181,9 @@ namespace Kanameliser.Editor.MAMaterialHelper.SlotRemapping
 
         private void UpdateMessages()
         {
+            // Undo can fire before the inspector UI is built
+            if (_messagesContainer == null) return;
+
             _messagesContainer.Clear();
 
             if (target == null) return;
