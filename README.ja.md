@@ -173,7 +173,44 @@ Material Swapは「マテリアルX」を1つのマテリアルにしか置き�
 生成後はスロットの対応付け（インデックス）のみ保持するため、生成後に衣装のマテリアルを変更してもマッピングは壊れません。
 同じマテリアル（または空のスロット）が複数ある場合はスロット順を一意に判定できないため、確認ダイアログと警告が表示されます。推定結果を確認し、必要に応じてInspectorで手動修正してください。
 
+#### パフォーマンスに関する注意
+
+Material Setter/Swapはビルド時にマテリアル差し替えアニメーションを生成するため、色変更メニューの対象メッシュはAAO: Avatar OptimizerのTrace and Optimizeによる自動メッシュ統合の対象外になり、ドローコールなどの負荷が増えがちです。余裕があれば[Merge Skinned Mesh (Color Menu Safe)](#merge-skinned-mesh-color-menu-safe)で対象メッシュを統合すると、色変更メニューを壊さずに負荷を抑えられます。
+
 アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
+
+### Merge Skinned Mesh (Color Menu Safe)
+
+Material Setter/Swapによる色変更メニューを壊さずに、AAO: Avatar OptimizerのMerge Skinned Meshを作成します。AAOのTrace and Optimizeは現状、マテリアル差し替えアニメーションの対象メッシュを自動統合しないため手動統合が必要ですが、単純に統合すると色変更が同じマテリアルを使う他のメッシュへ波及することがあります。この機能では色変更の内容を解析し、波及の危険があるマテリアルだけを自動でスロット統合から除外します。
+
+使用条件: [AAO: Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/ja/) 1.8.0以上、[Modular Avatar](https://modular-avatar.nadena.dev/ja) 1.13.0以上
+
+#### 使い方
+
+1. 統合したいメッシュ（SkinnedMeshRenderer・MeshRenderer）を複数選択
+2. 右クリック → `Create Merge Skinned Mesh (Color Menu Safe)`
+
+選択したメッシュを統合するMerge Skinned Meshオブジェクトが共通の親の下に作成され、危険なマテリアルはあらかじめ「統合する」チェックが外された状態になります。除外されたマテリアルはコンソールログで確認できます。
+
+#### 除外の判定ルール
+
+いずれかのMaterial Setter/Swapが、同じマテリアルを使うスロットの一部だけを変更する場合や、別々の変更先に変える場合にそのマテリアルを除外します。すべてのコンポーネントが全スロットを同じように変更する（あるいはまったく変更しない）場合は統合されたままになり、ドローコール削減効果を最大限維持します。
+
+| 色変更の構成（メッシュAとBが同じマテリアルGrayを使用） | 判定 |
+|---|---|
+| 1つのSetterがA・B両方のGrayをWhiteに変更 | 統合OK（除外なし） |
+| AのGrayをWhiteに、BのGrayをBlueに変更 | Grayを除外 |
+| AのGrayだけを変更（Bは変更なし） | Grayを除外 |
+| Root未設定（アバター全体）のSwapで変更 | 統合OK（除外なし） |
+| RootにメッシュAのみを含むSwapで変更 | Grayを除外 |
+
+#### 注意事項
+
+- 作成後にMaterial Setter/Swapの構成を変更した場合、除外リストは自動では追従しません。メニューを再実行して作り直してください
+- アニメーションクリップで直接マテリアルを差し替える自作ギミックは解析対象外です。必要に応じて「統合する」チェックを手動で外してください
+- 鞄などMA Object ToggleなどでON/OFFするメッシュは、基本的に統合対象へ含めず、常時表示のメッシュだけを統合してください。混ぜて統合するとトグルが動作しなくなります（該当する場合はビルド時にAAOが警告を表示します）。トグルの仕組みを理解している場合は、一緒にON/OFFされるメッシュだけを統合し、統合オブジェクト自体をON/OFFするようにメニューを組むと動作します
+
+アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
 
 ### AO Bounds Setter
 
@@ -192,7 +229,8 @@ Material Swapは「マテリアルX」を1つのマテリアルにしか置き�
 
 - Unity 2022.3.22f1以上
 - オプション: NDMF 1.11.0以上（日本語UI・言語切替、ビルドプレビュー機能拡張）
-- オプション: Modular Avatar 1.13.0以上（MA Material Helper機能に必要）
+- オプション: Modular Avatar 1.13.0以上（MA Material HelperとMerge Skinned Mesh (Color Menu Safe) 機能に必要）
+- オプション: AAO: Avatar Optimizer 1.8.0以上（Merge Skinned Mesh (Color Menu Safe) 機能に必要）
 
 ## 貢献
 

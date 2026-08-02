@@ -49,6 +49,15 @@ msgstr "No color variants copied yet — start with Step 1"
 msgid "maMaterialHelper.guide.statusCopied"
 msgstr "Copied from '{0}' ({1} objects, {2} materials).\nNow select the outfit and run Step 2."
 
+msgid "maMaterialHelper.guide.perfTitle"
+msgstr "Performance tip"
+
+msgid "maMaterialHelper.guide.perfNote"
+msgstr "Meshes targeted by a color change menu are excluded from automatic mesh merging by AAO: Avatar Optimizer's Trace and Optimize, so they stay separate and cost extra draw calls.\nTo merge them without breaking the color menu, select the meshes and right-click → 'Create Merge Skinned Mesh (Color Menu Safe)'.\nNote: leave meshes that are toggled on/off out of the merge. If you understand how your toggles work, you can merge them and build the menu to toggle the merged object itself."
+
+msgid "maMaterialHelper.guide.perfNoteNoAao"
+msgstr "Meshes targeted by a color change menu are excluded from automatic mesh merging by AAO: Avatar Optimizer's Trace and Optimize, so they stay separate and cost extra draw calls.\nWhen AAO is installed, 'Create Merge Skinned Mesh (Color Menu Safe)' appears in the right-click menu to merge them without breaking the color menu."
+
 msgid "maMaterialHelper.noSetupGroups"
 msgstr "No material setup groups found"
 

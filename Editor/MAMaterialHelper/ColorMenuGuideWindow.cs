@@ -27,7 +27,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
         {
             var window = GetWindow<ColorMenuGuideWindow>();
             window.titleContent = new GUIContent("How to Create Color Menu");
-            window.minSize = new Vector2(380, 320);
+            window.minSize = new Vector2(380, 420);
         }
 
         public void CreateGUI()
@@ -70,11 +70,36 @@ namespace Kanameliser.Editor.MAMaterialHelper
 
             container.Add(statusCard);
 
+            container.Add(CreatePerformanceNote());
+
             // Polled so the view follows copy operations and language changes
             UpdateStatus();
             statusCard.schedule.Execute(UpdateStatus).Every(StatusPollIntervalMs);
 
             Localization.LocalizeUIElements(root);
+        }
+
+        private static VisualElement CreatePerformanceNote()
+        {
+            var card = new VisualElement();
+            card.AddToClassList("perf-card");
+
+            var title = new Label("maMaterialHelper.guide.perfTitle");
+            title.AddToClassList("perf-title");
+            title.AddToClassList("ndmf-tr");
+            card.Add(title);
+
+            // The merge command only exists when AAO is installed, so guide to it accordingly
+#if AVATAR_OPTIMIZER_INSTALLED
+            var text = new Label("maMaterialHelper.guide.perfNote");
+#else
+            var text = new Label("maMaterialHelper.guide.perfNoteNoAao");
+#endif
+            text.AddToClassList("perf-text");
+            text.AddToClassList("ndmf-tr");
+            card.Add(text);
+
+            return card;
         }
 
         private static VisualElement CreateStepCard(string number, string textKey)

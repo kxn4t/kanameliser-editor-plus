@@ -87,3 +87,24 @@
 .copied-list-item {
     padding: 1px 2px;
 }
+
+.perf-card {
+    flex-shrink: 0;
+    background-color: var(--unity-colors-helpbox-background);
+    border-color: var(--unity-colors-helpbox-border);
+    border-width: 1px;
+    border-left-width: 3px;
+    border-left-color: rgb(70, 115, 190);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-top: 8px;
+}
+
+.perf-title {
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.perf-text {
+    white-space: normal;
+}

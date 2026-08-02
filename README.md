@@ -175,7 +175,44 @@ The mapping is generated from material references, so generate it before changin
 After generation, only the slot correspondence (indices) is stored, so changing the outfit's materials afterwards does not break the mapping.
 When the same material (or an empty slot) occurs more than once, the slot order cannot be determined uniquely. A confirmation dialog and warnings identify these cases; review the estimated mapping and adjust it manually in the Inspector when needed.
 
+#### Performance Note
+
+Material Setter / Material Swap generate material replacement animations at build time, so meshes targeted by a color change menu are excluded from automatic mesh merging by AAO: Avatar Optimizer's Trace and Optimize and cost extra draw calls. When you can spare the effort, merge the target meshes with [Merge Skinned Mesh (Color Menu Safe)](#merge-skinned-mesh-color-menu-safe) to reduce the load without breaking the color change menu.
+
 Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy Color Variants / Create Color Menu / Advanced / [How to Create Color Menu] / Add Material Slot Remapping`
+
+### Merge Skinned Mesh (Color Menu Safe)
+
+Creates a Merge Skinned Mesh of AAO: Avatar Optimizer without breaking color change menus driven by Material Setter / Material Swap. AAO's Trace and Optimize never merges meshes targeted by material replacement animations automatically, and a naive manual merge can leak a color change into other meshes sharing the same material — this command analyzes the color change setup and excludes only the unsafe materials from material slot merging.
+
+Requirement: [AAO: Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/) 1.8.0 or higher, [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher
+
+#### Usage
+
+1. Select the meshes to merge (SkinnedMeshRenderer / MeshRenderer, multiple selection)
+2. Right-click → `Create Merge Skinned Mesh (Color Menu Safe)`
+
+A Merge Skinned Mesh object covering the selected meshes is created under their common parent, with unsafe materials pre-registered with their "Merge" checkbox turned off. Excluded materials are listed in the console log.
+
+#### How Exclusion Is Decided
+
+A material is excluded when any Material Setter / Material Swap changes only some of the slots sharing it, or changes them to different materials. When every component changes all of its slots in the same way (or none), the material stays merged for maximum draw call reduction.
+
+| Color change setup (A and B share material Gray) | Result |
+|---|---|
+| One setter changes Gray on both A and B to White | Merged (no exclusion) |
+| Gray on A → White, Gray on B → Blue | Gray excluded |
+| Only Gray on A is changed (B untouched) | Gray excluded |
+| Material Swap with empty Root (whole avatar) | Merged (no exclusion) |
+| Material Swap whose Root covers only Mesh A | Gray excluded |
+
+#### Notes
+
+- Re-run the command after changing your Material Setter / Material Swap setup — the exclusion list does not update automatically
+- Material replacements done directly with custom animation clips are not analyzed; uncheck "Merge" for those materials manually when needed
+- Leave meshes that are toggled on/off (bags, accessories, etc. — e.g. with MA Object Toggle) out of the merge and merge only always-visible meshes; mixing them stops the toggle from working (AAO warns at build time). If you understand your toggle setup, you can merge meshes that are toggled together and build the menu to toggle the merged object itself
+
+Access: Right-click in Hierarchy `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
 
 ### AO Bounds Setter
 
@@ -197,7 +234,8 @@ Access: `Tools > Kanameliser Editor Plus > AO Bounds Setter`
 
 - Unity 2022.3.22f1 or higher
 - Optional: NDMF 1.11.0 or higher (Japanese UI with language switching, enhanced build preview support)
-- Optional: Modular Avatar 1.13.0 or higher (required for MA Material Helper)
+- Optional: Modular Avatar 1.13.0 or higher (required for MA Material Helper and Merge Skinned Mesh (Color Menu Safe))
+- Optional: AAO: Avatar Optimizer 1.8.0 or higher (required for Merge Skinned Mesh (Color Menu Safe))
 
 ## Contributing
 
