@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.1] - 2026-08-03
+
 ### Added
 
 - **Japanese language support (NDMF localization)** — Component Manager, MA Material Helper dialogs, AO Bounds Setter, and the Material Slot Remapping Inspector are now available in Japanese. The language follows NDMF's shared language preference and can be switched from the language selector shown in each window (requires NDMF 1.11.0+). Without NDMF, the UI remains in English.
@@ -90,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AO Bounds Setter**
   - リスト表示後に対象オブジェクトが削除されると、Apply（および行クリック）がMissingReferenceExceptionで中断する問題を修正
   - Transformセレクターのポップアップが閉じられないウィンドウとして残ってしまう問題を修正。フォーカスを失ったときとEscキーで閉じるようにしました
+
 ## [0.5.0] - 2026-04-23
 
 ### Improved
