@@ -5,6 +5,7 @@
         "Kanameliser.EditorPlus.Editor",
         "Kanameliser.EditorPlus.Runtime",
         "nadena.dev.modular-avatar.core",
+        "com.anatawa12.avatar-optimizer.runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
@@ -26,6 +27,11 @@
             "name": "nadena.dev.modular-avatar",
             "expression": "1.13.0",
             "define": "MODULAR_AVATAR_INSTALLED"
+        },
+        {
+            "name": "com.anatawa12.avatar-optimizer",
+            "expression": "1.8.0",
+            "define": "AVATAR_OPTIMIZER_INSTALLED"
         }
     ],
     "noEngineReferences": false

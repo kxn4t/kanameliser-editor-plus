@@ -183,7 +183,7 @@ Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy Color Variants 
 
 ### Merge Skinned Mesh (Color Menu Safe)
 
-Creates a Merge Skinned Mesh of AAO: Avatar Optimizer without breaking color change menus driven by Material Setter / Material Swap. AAO's Trace and Optimize never merges meshes targeted by material replacement animations automatically, and a naive manual merge can leak a color change into other meshes sharing the same material — this command analyzes the color change setup and excludes only the unsafe materials from material slot merging.
+Creates a Merge Skinned Mesh of AAO: Avatar Optimizer without breaking color change menus driven by Material Setter / Material Swap. AAO's Trace and Optimize currently never merges meshes targeted by material replacement animations automatically, and a naive manual merge can leak a color change into other meshes sharing the same material — this command analyzes the color change setup and excludes only the unsafe materials from material slot merging.
 
 Requirement: [AAO: Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/) 1.8.0 or higher, [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher
 
@@ -192,7 +192,11 @@ Requirement: [AAO: Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/
 1. Select the meshes to merge (SkinnedMeshRenderer / MeshRenderer, multiple selection)
 2. Right-click → `Create Merge Skinned Mesh (Color Menu Safe)`
 
-A Merge Skinned Mesh object covering the selected meshes is created under their common parent, with unsafe materials pre-registered with their "Merge" checkbox turned off. Excluded materials are listed in the console log.
+A Merge Skinned Mesh object covering the selected meshes is created under their common parent, with unsafe materials pre-registered with their "Merge" checkbox turned off. Excluded materials are listed in the console log. The created object can be renamed and moved freely within the avatar; note that after moving it inherits its parents' ON/OFF state.
+
+Two variants are available for MA Object Toggle setups: `Create Merge Skinned Mesh (Exclude Object Toggle)` merges the selection excluding meshes targeted by any MA Object Toggle, and `Create Merge Skinned Mesh (From Object Toggle)` (shown when right-clicking an object with an MA Object Toggle) merges the toggle's target meshes per ON/OFF state and adds the merged object to the toggle when needed.
+
+Recommended workflow: build your color menus and toggles first, then select the always-visible meshes and run `(Exclude Object Toggle)`, and right-click each MA Object Toggle object and run `(From Object Toggle)`. The analysis reflects the setup at the time the command runs, so re-create the merged objects after changing menus or toggles.
 
 #### How Exclusion Is Decided
 
@@ -212,7 +216,7 @@ A material is excluded when any Material Setter / Material Swap changes only som
 - Material replacements done directly with custom animation clips are not analyzed; uncheck "Merge" for those materials manually when needed
 - Leave meshes that are toggled on/off (bags, accessories, etc. — e.g. with MA Object Toggle) out of the merge and merge only always-visible meshes; mixing them stops the toggle from working (AAO warns at build time). If you understand your toggle setup, you can merge meshes that are toggled together and build the menu to toggle the merged object itself
 
-Access: Right-click in Hierarchy `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
+Access: Right-click in Hierarchy `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe) / (From Object Toggle) / (Exclude Object Toggle)`
 
 ### AO Bounds Setter
 

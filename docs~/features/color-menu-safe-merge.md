@@ -17,6 +17,26 @@ AAOのTrace and Optimizeによる自動メッシュ統合は、現状、マテ�
 
 選択したメッシュを統合するMerge Skinned Meshオブジェクトが共通の親の下に作成されます。アバター内のMaterial Setter/Swap（非アクティブなメニューオブジェクト上のものも含む）を解析し、統合すると色変更が壊れるマテリアルはあらかじめ「統合する」チェックが外された状態になります。除外されたマテリアルはコンソールログで確認できます。
 
+MA Object Toggleと組み合わせる場合向けに、2つのバリエーションがあります:
+
+| コマンド | 説明 |
+|---|---|
+| `Create Merge Skinned Mesh (Exclude Object Toggle)` | 選択したメッシュのうち、アバター内のMA Object Toggleの対象（配下を含む）を自動で除外して統合します |
+| `Create Merge Skinned Mesh (From Object Toggle)` | MA Object Toggleが付いたオブジェクトを右クリックして実行します。トグルに設定されたオブジェクト配下のメッシュを、トグルのON/OFF設定ごとに統合します。トグルが統合オブジェクトに届かない場合は、統合オブジェクトを自動でトグルの対象に追加します |
+
+作成されたMerge Skinned Meshオブジェクトは、名前を自由に変更でき、アバター内であれば階層の移動も可能です。移動すると親オブジェクトのON/OFFの影響を受けるようになる点だけ注意してください（トグルされる親の下へ移動して、あえて表示単位を合わせる使い方もできます）。`(From Object Toggle)` でトグルに自動追加された参照は、名前変更・移動後も維持されます。
+
+## 推奨ワークフロー
+
+色変更メニューとオブジェクトのON/OFFを、パフォーマンスを保ったまま実装する手順です:
+
+1. 色変更メニューを作成する（[MA Material Helper](./ma-material-helper)の `Copy Color Variants` → `Create Color Menu`）
+2. MA Object ToggleなどでオブジェクトのON/OFFメニューを作成する
+3. 常時表示のメッシュをまとめて選択し、右クリック → `Create Merge Skinned Mesh (Exclude Object Toggle)`
+4. MA Object Toggleが付いた各オブジェクトを右クリック → `Create Merge Skinned Mesh (From Object Toggle)`
+
+ポイントは、**メニュー類の構成が完成してから統合を実行する**ことです。統合時の解析は実行時点のMaterial Setter/Swap・Object Toggleの構成に基づくため、あとから色変更やトグルを追加・変更した場合は、作成済みのMerge Skinned Meshオブジェクトを削除してコマンドを再実行してください。
+
 ## 除外の判定ルール
 
 同じマテリアルを使うスロット同士は、統合時に1つのスロットにまとめられます。まとめても色変更の挙動が変わらないかどうかを次のルールで判定します:
@@ -38,12 +58,14 @@ AAOのTrace and Optimizeによる自動メッシュ統合は、現状、マテ�
 
 ## メッシュをON/OFFする場合
 
-鞄やアクセサリーなど、トグル（MA Object Toggleなど）でON/OFFするメッシュは、**基本的に統合対象へ含めず**、常時表示のメッシュだけを統合してください。統合したメッシュは1つのレンダラーになるため、常時表示のメッシュと混ぜて統合するとトグルが正しく動作しなくなります（該当する場合はビルド時にAAOが警告を表示します）。
+鞄やアクセサリーなど、トグル（MA Object Toggleなど）でON/OFFするメッシュは、**基本的に統合対象へ含めず**、常時表示のメッシュだけを統合してください。統合したメッシュは1つのレンダラーになるため、常時表示のメッシュと混ぜて統合するとトグルが正しく動作しなくなります（該当する場合はビルド時にAAOが警告を表示します）。`Create Merge Skinned Mesh (Exclude Object Toggle)` を使うと、この除外を自動で行えます。
 
 トグルの仕組みを理解している場合は、一緒にON/OFFされるメッシュだけを統合し、**統合オブジェクト自体をON/OFFするようにメニューを組む**と、トグルを保ったまま統合できます:
 
 - トグルが共通の親オブジェクトをON/OFFしている場合は、統合オブジェクトがその親の下に作成されるため、そのまま動作します
 - MA Object Toggleでメッシュを個別にON/OFFしている場合は、作成された統合オブジェクトをトグルの対象に追加してください（メッシュのエントリと同じON/OFF設定にします）。ビルド時に統合元の表示切り替えに関する警告が表示されますが、統合メッシュ自体がトグルされるため正しく動作します
+
+MA Object Toggleを使っている場合は、`Create Merge Skinned Mesh (From Object Toggle)` でこの構成を自動化できます。ON/OFF設定ごとに統合し、トグルが統合オブジェクトに届かない場合は自動でトグルの対象に追加します。別のObject Toggleの対象になっているメッシュは、表示単位が異なるため自動で統合から除外されます。
 
 なお、Merge Skinned Meshの「有効無効状態に関するアニメーションをコピーする」オプションは、MA Object Toggleでメッシュを個別に指定している場合はメッシュごとに別々のアニメーション扱いになるためエラーになり、使用できません。
 
@@ -54,4 +76,6 @@ AAOのTrace and Optimizeによる自動メッシュ統合は、現状、マテ�
 
 ## アクセス方法
 
-ヒエラルキー右クリック → `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
+ヒエラルキー右クリック → `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe) / (From Object Toggle) / (Exclude Object Toggle)`
+
+`(From Object Toggle)` はMA Object Toggleが付いたオブジェクトを右クリックした場合のみ表示されます。
