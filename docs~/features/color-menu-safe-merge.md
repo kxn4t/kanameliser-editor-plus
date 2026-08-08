@@ -24,6 +24,17 @@ MA Object Toggleと組み合わせる場合向けに、2つのバリエーショ
 | `Create Merge Skinned Mesh (Exclude Object Toggle)` | 選択したメッシュのうち、アバター内のMA Object Toggleの対象（配下を含む）を自動で除外して統合します |
 | `Create Merge Skinned Mesh (From Object Toggle)` | MA Object Toggleが付いたオブジェクトを右クリックして実行します。トグルに設定されたオブジェクト配下のメッシュを、トグルのON/OFF設定ごとに統合します。トグルが統合オブジェクトに届かない場合は、統合オブジェクトを自動でトグルの対象に追加します |
 
+## 推奨ワークフロー
+
+色変更メニューとオブジェクトのON/OFFを、パフォーマンスを保ったまま実装する手順です:
+
+1. 色変更メニューを作成する（[MA Material Helper](./ma-material-helper)の `Copy Color Variants` → `Create Color Menu`）
+2. MA Object ToggleなどでオブジェクトのON/OFFメニューを作成する
+3. 常時表示のメッシュをまとめて選択し、右クリック → `Create Merge Skinned Mesh (Exclude Object Toggle)`
+4. MA Object Toggleが付いた各オブジェクトを右クリック → `Create Merge Skinned Mesh (From Object Toggle)`
+
+ポイントは、**メニュー類の構成が完成してから統合を実行する**ことです。統合時の解析は実行時点のMaterial Setter/Swap・Object Toggleの構成に基づくため、あとから色変更やトグルを追加・変更した場合は、作成済みのMerge Skinned Meshオブジェクトを削除してコマンドを再実行してください。
+
 ## 除外の判定ルール
 
 同じマテリアルを使うスロット同士は、統合時に1つのスロットにまとめられます。まとめても色変更の挙動が変わらないかどうかを次のルールで判定します:

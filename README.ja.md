@@ -194,6 +194,8 @@ Material Setter/Swapによる色変更メニューを壊さずに、AAO: Avatar 
 
 MA Object Toggleとの組み合わせ用に2つのバリエーションがあります。`Create Merge Skinned Mesh (Exclude Object Toggle)` は選択からObject Toggleの対象（配下含む）を自動除外して統合します。`Create Merge Skinned Mesh (From Object Toggle)`（Object Toggleが付いたオブジェクトを右クリックで表示）は、トグル対象のメッシュをON/OFF設定ごとに統合し、必要に応じて統合オブジェクトを自動でトグルに追加します。
 
+推奨ワークフロー: 色変更メニューやトグルを作り終えてから、常時表示のメッシュを選択して `(Exclude Object Toggle)` を、MA Object Toggleの付いた各オブジェクトで `(From Object Toggle)` を実行します。解析は実行時点の構成に基づくため、メニューやトグルを変更した場合は統合オブジェクトを作り直してください。
+
 #### 除外の判定ルール
 
 いずれかのMaterial Setter/Swapが、同じマテリアルを使うスロットの一部だけを変更する場合や、別々の変更先に変える場合にそのマテリアルを除外します。すべてのコンポーネントが全スロットを同じように変更する（あるいはまったく変更しない）場合は統合されたままになり、ドローコール削減効果を最大限維持します。

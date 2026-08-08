@@ -53,7 +53,7 @@ msgid "maMaterialHelper.guide.perfTitle"
 msgstr "Performance tip"
 
 msgid "maMaterialHelper.guide.perfNote"
-msgstr "Meshes targeted by a color change menu are excluded from automatic mesh merging by AAO: Avatar Optimizer's Trace and Optimize, so they stay separate and cost extra draw calls.\nTo merge them without breaking the color menu, select the meshes and right-click → 'Create Merge Skinned Mesh (Color Menu Safe)'.\nNote: leave meshes that are toggled on/off out of the merge. If you understand how your toggles work, you can merge them and build the menu to toggle the merged object itself."
+msgstr "Meshes targeted by color change menus and toggles are excluded from automatic mesh merging by AAO: Avatar Optimizer's Trace and Optimize, so they cost extra draw calls.\nOnce your menus are built, merge the meshes with these steps to reduce the load while keeping everything working:\n1. Select the always-visible meshes → right-click → 'Create Merge Skinned Mesh (Exclude Object Toggle)'\n2. Right-click each object with an MA Object Toggle → 'Create Merge Skinned Mesh (From Object Toggle)'\nNote: when you change color menus or toggles afterwards, delete the created Merge Skinned Mesh objects and run the commands again."
 
 msgid "maMaterialHelper.guide.perfNoteNoAao"
 msgstr "Meshes targeted by a color change menu are excluded from automatic mesh merging by AAO: Avatar Optimizer's Trace and Optimize, so they stay separate and cost extra draw calls.\nWhen AAO is installed, 'Create Merge Skinned Mesh (Color Menu Safe)' appears in the right-click menu to merge them without breaking the color menu."

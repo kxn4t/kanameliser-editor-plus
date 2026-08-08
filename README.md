@@ -196,6 +196,8 @@ A Merge Skinned Mesh object covering the selected meshes is created under their 
 
 Two variants are available for MA Object Toggle setups: `Create Merge Skinned Mesh (Exclude Object Toggle)` merges the selection excluding meshes targeted by any MA Object Toggle, and `Create Merge Skinned Mesh (From Object Toggle)` (shown when right-clicking an object with an MA Object Toggle) merges the toggle's target meshes per ON/OFF state and adds the merged object to the toggle when needed.
 
+Recommended workflow: build your color menus and toggles first, then select the always-visible meshes and run `(Exclude Object Toggle)`, and right-click each MA Object Toggle object and run `(From Object Toggle)`. The analysis reflects the setup at the time the command runs, so re-create the merged objects after changing menus or toggles.
+
 #### How Exclusion Is Decided
 
 A material is excluded when any Material Setter / Material Swap changes only some of the slots sharing it, or changes them to different materials. When every component changes all of its slots in the same way (or none), the material stays merged for maximum draw call reduction.

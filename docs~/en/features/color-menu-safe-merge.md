@@ -24,6 +24,17 @@ Two variants are available for MA Object Toggle setups:
 | `Create Merge Skinned Mesh (Exclude Object Toggle)` | Merges the selected meshes excluding those targeted by any MA Object Toggle in the avatar (including their children) |
 | `Create Merge Skinned Mesh (From Object Toggle)` | Run by right-clicking an object with an MA Object Toggle. Merges the meshes under the toggle's target objects, grouped by the ON/OFF state the toggle sets. When the toggle cannot reach the merged object, the merged object is added to the toggle automatically |
 
+## Recommended Workflow
+
+Steps to implement both color change menus and object toggles while keeping performance:
+
+1. Create the color change menu (`Copy Color Variants` → `Create Color Menu` of [MA Material Helper](./ma-material-helper))
+2. Create the on/off menus with MA Object Toggle or similar
+3. Select all always-visible meshes and right-click → `Create Merge Skinned Mesh (Exclude Object Toggle)`
+4. Right-click each object with an MA Object Toggle → `Create Merge Skinned Mesh (From Object Toggle)`
+
+The key point is to **run the merge commands after your menus are complete**. The analysis reflects the Material Setter / Swap and Object Toggle setup at the time the command runs, so when you add or change color menus or toggles afterwards, delete the created Merge Skinned Mesh objects and run the commands again.
+
 ## How Exclusion Is Decided
 
 Slots sharing the same material are combined into one slot when merged. Whether that is safe is decided by the following rule:
