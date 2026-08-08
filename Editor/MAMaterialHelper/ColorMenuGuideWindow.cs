@@ -27,7 +27,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
         {
             var window = GetWindow<ColorMenuGuideWindow>();
             window.titleContent = new GUIContent("How to Create Color Menu");
-            window.minSize = new Vector2(380, 490);
+            window.minSize = new Vector2(380, 530);
         }
 
         public void CreateGUI()
@@ -89,17 +89,49 @@ namespace Kanameliser.Editor.MAMaterialHelper
             title.AddToClassList("ndmf-tr");
             card.Add(title);
 
-            // The merge command only exists when AAO is installed, so guide to it accordingly
+            // The merge commands only exist when AAO is installed, so guide to them accordingly
 #if AVATAR_OPTIMIZER_INSTALLED
-            var text = new Label("maMaterialHelper.guide.perfNote");
+            card.Add(CreatePerfParagraph("maMaterialHelper.guide.perfNote.intro"));
+            card.Add(CreatePerfParagraph("maMaterialHelper.guide.perfNote.lead"));
+
+            var stepList = new VisualElement();
+            stepList.AddToClassList("perf-step-list");
+            stepList.Add(CreatePerfStep("1.", "maMaterialHelper.guide.perfNote.step1"));
+            stepList.Add(CreatePerfStep("2.", "maMaterialHelper.guide.perfNote.step2"));
+            card.Add(stepList);
+
+            card.Add(CreatePerfParagraph("maMaterialHelper.guide.perfNote.rename"));
+            var caution = CreatePerfParagraph("maMaterialHelper.guide.perfNote.caution");
+            caution.AddToClassList("perf-caution");
+            card.Add(caution);
 #else
-            var text = new Label("maMaterialHelper.guide.perfNoteNoAao");
+            card.Add(CreatePerfParagraph("maMaterialHelper.guide.perfNoteNoAao.intro"));
+            card.Add(CreatePerfParagraph("maMaterialHelper.guide.perfNoteNoAao.suggest"));
 #endif
-            text.AddToClassList("perf-text");
-            text.AddToClassList("ndmf-tr");
-            card.Add(text);
 
             return card;
+        }
+
+        private static Label CreatePerfParagraph(string textKey)
+        {
+            var text = new Label(textKey);
+            text.AddToClassList("perf-text");
+            text.AddToClassList("ndmf-tr");
+            return text;
+        }
+
+        private static VisualElement CreatePerfStep(string number, string textKey)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("perf-step");
+
+            var num = new Label(number);
+            num.AddToClassList("perf-step-number");
+            row.Add(num);
+
+            row.Add(CreatePerfParagraph(textKey));
+
+            return row;
         }
 
         private static VisualElement CreateStepCard(string number, string textKey)
