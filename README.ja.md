@@ -190,7 +190,7 @@ Material Setter/Swapによる色変更メニューを壊さずに、AAO: Avatar 
 1. 統合したいメッシュ（SkinnedMeshRenderer・MeshRenderer）を複数選択
 2. 右クリック → `Create Merge Skinned Mesh (Color Menu Safe)`
 
-選択したメッシュを統合するMerge Skinned Meshオブジェクトが共通の親の下に作成され、危険なマテリアルはあらかじめ「統合する」チェックが外された状態になります。除外されたマテリアルはコンソールログで確認できます。
+選択したメッシュを統合するMerge Skinned Meshオブジェクトが共通の親の下に作成され、危険なマテリアルはあらかじめ「統合する」チェックが外された状態になります。除外されたマテリアルはコンソールログで確認できます。作成されたオブジェクトは名前の変更やアバター内での移動が可能です（移動後は親のON/OFF状態を引き継ぐ点のみ注意）。
 
 MA Object Toggleとの組み合わせ用に2つのバリエーションがあります。`Create Merge Skinned Mesh (Exclude Object Toggle)` は選択からObject Toggleの対象（配下含む）を自動除外して統合します。`Create Merge Skinned Mesh (From Object Toggle)`（Object Toggleが付いたオブジェクトを右クリックで表示）は、トグル対象のメッシュをON/OFF設定ごとに統合し、必要に応じて統合オブジェクトを自動でトグルに追加します。
 

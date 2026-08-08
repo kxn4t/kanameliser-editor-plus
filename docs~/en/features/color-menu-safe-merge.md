@@ -24,6 +24,8 @@ Two variants are available for MA Object Toggle setups:
 | `Create Merge Skinned Mesh (Exclude Object Toggle)` | Merges the selected meshes excluding those targeted by any MA Object Toggle in the avatar (including their children) |
 | `Create Merge Skinned Mesh (From Object Toggle)` | Run by right-clicking an object with an MA Object Toggle. Merges the meshes under the toggle's target objects, grouped by the ON/OFF state the toggle sets. When the toggle cannot reach the merged object, the merged object is added to the toggle automatically |
 
+The created Merge Skinned Mesh object can be renamed freely and moved anywhere inside the avatar. Just note that after moving it inherits the ON/OFF state of its new parents — which can also be used intentionally, by moving it under a toggled parent to match a visibility unit. References added to a toggle by `(From Object Toggle)` keep working after renaming or moving.
+
 ## Recommended Workflow
 
 Steps to implement both color change menus and object toggles while keeping performance:

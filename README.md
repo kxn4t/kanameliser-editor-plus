@@ -192,7 +192,7 @@ Requirement: [AAO: Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/
 1. Select the meshes to merge (SkinnedMeshRenderer / MeshRenderer, multiple selection)
 2. Right-click → `Create Merge Skinned Mesh (Color Menu Safe)`
 
-A Merge Skinned Mesh object covering the selected meshes is created under their common parent, with unsafe materials pre-registered with their "Merge" checkbox turned off. Excluded materials are listed in the console log.
+A Merge Skinned Mesh object covering the selected meshes is created under their common parent, with unsafe materials pre-registered with their "Merge" checkbox turned off. Excluded materials are listed in the console log. The created object can be renamed and moved freely within the avatar; note that after moving it inherits its parents' ON/OFF state.
 
 Two variants are available for MA Object Toggle setups: `Create Merge Skinned Mesh (Exclude Object Toggle)` merges the selection excluding meshes targeted by any MA Object Toggle, and `Create Merge Skinned Mesh (From Object Toggle)` (shown when right-clicking an object with an MA Object Toggle) merges the toggle's target meshes per ON/OFF state and adds the merged object to the toggle when needed.
 
