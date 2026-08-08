@@ -2,6 +2,8 @@
 
 複数メッシュの Anchor Override・Root Bone・Bounds を一括設定します。衣装制作やアバターセットアップ時に便利です。
 
+![AO Bounds Setter ウィンドウ](/images/ao-bounds-setter/window.png)
+
 ## 使い方
 
 1. Root Object フィールドにヒエラルキーのオブジェクトをドラッグ

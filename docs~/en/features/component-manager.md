@@ -2,6 +2,8 @@
 
 Lists all components on selected objects and their children.
 
+![Component Manager window](/images/component-manager/window.png)
+
 ## Features
 
 - Search for specific objects or component types

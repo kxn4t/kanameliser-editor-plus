@@ -2,6 +2,8 @@
 
 Batch configure Anchor Override, Root Bone, and Bounds for multiple meshes. Useful for outfit creation and avatar setup.
 
+![AO Bounds Setter window](/images/ao-bounds-setter/window.png)
+
 ## Usage
 
 1. Drag an object from the Hierarchy to the Root Object field
