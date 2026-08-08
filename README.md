@@ -183,7 +183,7 @@ Access: Right-click in Hierarchy `Kanameliser Editor Plus > Copy Color Variants 
 
 ### Merge Skinned Mesh (Color Menu Safe)
 
-Creates a Merge Skinned Mesh of AAO: Avatar Optimizer without breaking color change menus driven by Material Setter / Material Swap. AAO's Trace and Optimize never merges meshes targeted by material replacement animations automatically, and a naive manual merge can leak a color change into other meshes sharing the same material — this command analyzes the color change setup and excludes only the unsafe materials from material slot merging.
+Creates a Merge Skinned Mesh of AAO: Avatar Optimizer without breaking color change menus driven by Material Setter / Material Swap. AAO's Trace and Optimize currently never merges meshes targeted by material replacement animations automatically, and a naive manual merge can leak a color change into other meshes sharing the same material — this command analyzes the color change setup and excludes only the unsafe materials from material slot merging.
 
 Requirement: [AAO: Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/) 1.8.0 or higher, [Modular Avatar](https://modular-avatar.nadena.dev/) 1.13.0 or higher
 

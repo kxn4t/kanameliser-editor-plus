@@ -6,7 +6,7 @@ Creates a Merge Skinned Mesh of AAO: Avatar Optimizer without breaking color cha
 
 ## Background
 
-AAO's Trace and Optimize skips meshes with material replacement animations when merging meshes automatically. Material Setter / Material Swap generate such animations at build time, so meshes targeted by a color change menu are never merged automatically — a manual Merge Skinned Mesh setup is required.
+AAO's Trace and Optimize currently skips meshes with material replacement animations when merging meshes automatically. Material Setter / Material Swap generate such animations at build time, so meshes targeted by a color change menu are never merged automatically — a manual Merge Skinned Mesh setup is required.
 
 However, when merging manually, slots sharing the same material are combined into a single slot, so a color change that targets only one of the meshes can end up applying to the merged partners as well. Preventing this requires unchecking "Merge" for the affected materials, and finding out which materials are affected means reviewing every Material Setter / Material Swap in the avatar. This feature automates that analysis and setup.
 
