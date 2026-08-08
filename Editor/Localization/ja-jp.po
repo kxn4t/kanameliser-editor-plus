@@ -53,10 +53,10 @@ msgid "maMaterialHelper.guide.perfTitle"
 msgstr "パフォーマンスのヒント"
 
 msgid "maMaterialHelper.guide.perfNote"
-msgstr "色変更メニューやトグルの対象メッシュは、AAO: Avatar OptimizerのTrace and Optimizeによる自動メッシュ統合の対象外になるため、ドローコールなどの負荷が増えがちです。\nメニュー類を作り終えたら、次の手順でメッシュを統合すると、動作を保ったまま負荷を抑えられます。\n1. 常時表示のメッシュをまとめて選択 → 右クリック →「Create Merge Skinned Mesh (Exclude Object Toggle)」\n2. MA Object Toggleが付いた各オブジェクトを右クリック →「Create Merge Skinned Mesh (From Object Toggle)」\n※色変更やトグルを変更した場合は、作成したMerge Skinned Meshを削除してコマンドを再実行してください。"
+msgstr "現状、色変更メニューやトグルの対象メッシュは、AAO: Avatar OptimizerのTrace and Optimizeによる自動メッシュ統合の対象外になるため、ドローコールなどの負荷が増えがちです。\nメニュー類を作り終えたら、次の手順でメッシュを統合すると、動作を保ったまま負荷を抑えられます。\n1. 常時表示のメッシュをまとめて選択 → 右クリック →「Create Merge Skinned Mesh (Exclude Object Toggle)」\n2. MA Object Toggleが付いた各オブジェクトを右クリック →「Create Merge Skinned Mesh (From Object Toggle)」\n※色変更やトグルを変更した場合は、作成したMerge Skinned Meshを削除してコマンドを再実行してください。"
 
 msgid "maMaterialHelper.guide.perfNoteNoAao"
-msgstr "色変更メニューの対象メッシュは、AAO: Avatar OptimizerのTrace and Optimizeによる自動メッシュ統合の対象外になるため、メッシュが統合されずドローコールなどの負荷が増えがちです。\nAAO導入時は右クリックメニューに「Create Merge Skinned Mesh (Color Menu Safe)」が表示され、色変更を壊さずにメッシュを統合できます。"
+msgstr "現状、色変更メニューの対象メッシュは、AAO: Avatar OptimizerのTrace and Optimizeによる自動メッシュ統合の対象外になるため、メッシュが統合されずドローコールなどの負荷が増えがちです。\nAAO導入時は右クリックメニューに「Create Merge Skinned Mesh (Color Menu Safe)」が表示され、色変更を壊さずにメッシュを統合できます。"
 
 msgid "maMaterialHelper.noSetupGroups"
 msgstr "マテリアルセットアップのグループが見つかりませんでした"
