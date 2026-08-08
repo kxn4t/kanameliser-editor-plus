@@ -232,7 +232,7 @@ MA Object Toggleとの組み合わせ用に2つのバリエーションがあり
 ## 必要環境
 
 - Unity 2022.3.22f1以上
-- オプション: NDMF 1.11.0以上（日本語UI・言語切替、ビルドプレビュー機能拡張）
+- オプション: NDMF 1.11.0以上（多言語UI（日本語・韓国語・簡体字/繁体字中国語）・言語切替、ビルドプレビュー機能拡張）
 - オプション: Modular Avatar 1.13.0以上（MA Material HelperとMerge Skinned Mesh (Color Menu Safe) 機能に必要）
 - オプション: AAO: Avatar Optimizer 1.8.0以上（Merge Skinned Mesh (Color Menu Safe) 機能に必要）
 

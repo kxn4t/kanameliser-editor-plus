@@ -14,12 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Korean / Chinese (Simplified & Traditional) language support** — The editor UI (Component Manager, MA Material Helper dialogs and guide window, AO Bounds Setter, and the Material Slot Remapping Inspector) is now also available in Korean, Simplified Chinese, and Traditional Chinese via NDMF localization. As before, the language follows NDMF's shared language preference (requires NDMF 1.11.0+); without NDMF, the UI remains in English. The documentation site remains English/Japanese only.
 - **Merge Skinned Mesh (Color Menu Safe): MA Object Toggle variants** — Added two Hierarchy right-click variants. `Create Merge Skinned Mesh (Exclude Object Toggle)` merges the selected renderers excluding any targeted (directly or via an ancestor) by an MA Object Toggle in the avatar. `Create Merge Skinned Mesh (From Object Toggle)` (shown when right-clicking an object with an MA Object Toggle) merges the renderers under the toggle's targets grouped by the ON/OFF state each entry sets, and automatically adds the merged object to the toggle when no toggled subtree contains it, so the toggle keeps working. Renderers targeted by a different Object Toggle are excluded automatically. The `[How to Create Color Menu]` guide window tip and the docs now walk through the recommended workflow: build color menus and toggles first, then run the two commands.
 
 ---
 
 ### 追加
 
+- **韓国語・中国語（簡体字・繁体字）対応** — エディター UI（Component Manager、MA Material Helper のダイアログとガイドウィンドウ、AO Bounds Setter、Material Slot Remapping の Inspector）が NDMF ローカライズ経由で韓国語・簡体字中国語・繁体字中国語でも利用できるようになりました。従来どおり言語は NDMF 共通の言語設定に従います（NDMF 1.11.0 以降が必要）。NDMF がない場合は英語表示のままです。ドキュメントサイトは英語・日本語のみです。
 - **Merge Skinned Mesh (Color Menu Safe): MA Object Toggle向けバリエーション** — ヒエラルキー右クリックに2つのバリエーションを追加しました。`Create Merge Skinned Mesh (Exclude Object Toggle)` は、選択したメッシュのうちアバター内のMA Object Toggleの対象（配下を含む）を自動で除外して統合します。`Create Merge Skinned Mesh (From Object Toggle)`（MA Object Toggleが付いたオブジェクトを右クリックで表示）は、トグル対象のメッシュをON/OFF設定ごとに統合し、トグルが統合オブジェクトに届かない場合は自動でトグルの対象に追加します。別のObject Toggleの対象になっているメッシュは自動で統合から除外されます。`[How to Create Color Menu]` ガイドウィンドウのヒントとドキュメントに、メニュー類を作り終えてから2つのコマンドで統合する推奨ワークフローの手順を追記しました。
 
 ## [1.0.0-beta.1] - 2026-08-03

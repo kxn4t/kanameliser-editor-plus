@@ -1,0 +1,311 @@
+msgid ""
+msgstr ""
+"Language: ko-kr\n"
+
+# ── Common ──
+
+msgid "common.ok"
+msgstr "확인"
+
+msgid "common.cancel"
+msgstr "취소"
+
+msgid "common.delete"
+msgstr "삭제"
+
+msgid "common.continue"
+msgstr "계속"
+
+# ── MA Material Helper ──
+
+msgid "maMaterialHelper.dialogTitle"
+msgstr "MA Material Helper"
+
+msgid "maMaterialHelper.dialogTitle.error"
+msgstr "MA Material Helper - 오류"
+
+msgid "maMaterialHelper.dialogTitle.warning"
+msgstr "MA Material Helper - 경고"
+
+msgid "maMaterialHelper.alreadyHasRemapping"
+msgstr "이 오브젝트에는 이미 Material Slot Remapping 컴포넌트가 있습니다."
+
+msgid "maMaterialHelper.noCopiedSetup"
+msgstr "아직 색상 데이터가 복사되지 않았습니다.\n먼저 색상 배리에이션 Prefab을 선택하고 'Copy Color Variants'를 실행해 주세요."
+
+msgid "maMaterialHelper.guide.title"
+msgstr "색상 변경 메뉴 만드는 방법"
+
+msgid "maMaterialHelper.guide.step1"
+msgstr "색상 배리에이션 Prefab을 선택하고 우클릭 → 'Copy Color Variants' (다중 선택 가능)"
+
+msgid "maMaterialHelper.guide.step2"
+msgstr "대상 의상을 선택하고 우클릭 → 'Create Color Menu' (1단계 이후에 메뉴에 표시됩니다)"
+
+msgid "maMaterialHelper.guide.statusNotCopied"
+msgstr "아직 색상 데이터가 복사되지 않았습니다. 1단계부터 시작해 주세요"
+
+#, csharp-format
+msgid "maMaterialHelper.guide.statusCopied"
+msgstr "'{0}'에서 복사됨 ({1}개 오브젝트, {2}개 머티리얼)\n의상을 선택하고 2단계를 실행해 주세요."
+
+msgid "maMaterialHelper.guide.perfTitle"
+msgstr "성능 팁"
+
+msgid "maMaterialHelper.guide.perfNote.intro"
+msgstr "현재 색상 변경 메뉴나 토글의 대상 메시는 AAO: Avatar Optimizer의 Trace and Optimize에 의한 자동 메시 병합 대상에서 제외되므로, 드로우 콜 등의 부하가 늘어나기 쉽습니다."
+
+msgid "maMaterialHelper.guide.perfNote.lead"
+msgstr "메뉴를 모두 만든 후 다음 단계로 메시를 병합하면, 동작을 유지하면서 부하를 줄일 수 있습니다."
+
+msgid "maMaterialHelper.guide.perfNote.step1"
+msgstr "항상 표시되는 메시를 모두 선택 → 우클릭 → 'Create Merge Skinned Mesh (Exclude Object Toggle)'"
+
+msgid "maMaterialHelper.guide.perfNote.step2"
+msgstr "MA Object Toggle이 있는 각 오브젝트를 우클릭 → 'Create Merge Skinned Mesh (From Object Toggle)'"
+
+msgid "maMaterialHelper.guide.perfNote.rename"
+msgstr "생성된 Merge Skinned Mesh 오브젝트는 이름을 변경하거나 아바타 내에서 이동할 수 있습니다."
+
+msgid "maMaterialHelper.guide.perfNote.caution"
+msgstr "※색상 변경 메뉴나 토글을 나중에 변경한 경우, 생성된 Merge Skinned Mesh 오브젝트를 삭제하고 명령을 다시 실행해 주세요."
+
+msgid "maMaterialHelper.guide.perfNoteNoAao.intro"
+msgstr "현재 색상 변경 메뉴의 대상 메시는 AAO: Avatar Optimizer의 Trace and Optimize에 의한 자동 메시 병합 대상에서 제외되어 메시가 병합되지 않으므로, 드로우 콜 등의 부하가 늘어나기 쉽습니다."
+
+msgid "maMaterialHelper.guide.perfNoteNoAao.suggest"
+msgstr "AAO가 설치되어 있으면 우클릭 메뉴에 'Create Merge Skinned Mesh (Color Menu Safe)'가 표시되며, 색상 변경 메뉴를 손상시키지 않고 메시를 병합할 수 있습니다."
+
+msgid "maMaterialHelper.noSetupGroups"
+msgstr "머티리얼 설정 그룹을 찾을 수 없습니다"
+
+msgid "maMaterialHelper.noMatchingObjects"
+msgstr "복사 원본과 대상 간에 일치하는 오브젝트를 찾을 수 없습니다"
+
+msgid "maMaterialHelper.invalidParameters"
+msgstr "파라미터가 잘못되었습니다"
+
+msgid "maMaterialHelper.modularAvatarNotInstalled"
+msgstr "Modular Avatar가 설치되어 있지 않습니다"
+
+#, csharp-format
+msgid "maMaterialHelper.createSetterFailed"
+msgstr "Material Setter 생성에 실패했습니다: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.createSwapFailed"
+msgstr "Material Swap 생성에 실패했습니다: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.createSwapPerObjectFailed"
+msgstr "Material Swap (Per Object) 생성에 실패했습니다: {0}"
+
+#, csharp-format
+msgid "maMaterialHelper.operationFailed"
+msgstr "작업에 실패했습니다 ({0}):\n{1}"
+
+#, csharp-format
+msgid "maMaterialHelper.swapLimitation"
+msgstr ""
+"Material Swap의 제한이 감지되었습니다\n"
+"\n"
+"Material Swap은 같은 메시 내의 동일한 머티리얼을 여러 개의 서로 다른 머티리얼로 변경할 수 없습니다.\n"
+"\n"
+"감지된 충돌:\n"
+"{0}\n"
+"\n"
+"해결 방법:\n"
+"대신 'Create Color Menu'를 사용해 주세요."
+
+#, csharp-format
+msgid "maMaterialHelper.swapLimitation.conflictHeader"
+msgstr "머티리얼 '{0}'에 다음 충돌이 있습니다:"
+
+# ── AO Bounds Setter ──
+
+msgid "aoBounds.rootObject"
+msgstr "루트 오브젝트"
+
+msgid "aoBounds.refresh:tooltip"
+msgstr "루트 오브젝트에서 메시를 다시 불러오기"
+
+msgid "aoBounds.batchSettings"
+msgstr "일괄 설정"
+
+msgid "aoBounds.anchorOverride"
+msgstr "Anchor Override:"
+
+msgid "aoBounds.rootBone"
+msgstr "Root Bone (SkinnedMeshRenderer 전용):"
+
+msgid "aoBounds.bounds"
+msgstr "Bounds (SkinnedMeshRenderer 전용):"
+
+msgid "aoBounds.apply"
+msgstr "선택한 메시에 적용"
+
+msgid "aoBounds.meshList"
+msgstr "메시 목록"
+
+msgid "aoBounds.header.objectName"
+msgstr "오브젝트 이름"
+
+msgid "aoBounds.header.anchorOverride"
+msgstr "Anchor Override"
+
+msgid "aoBounds.header.rootBone"
+msgstr "Root Bone"
+
+msgid "aoBounds.header.bounds"
+msgstr "Bounds"
+
+msgid "aoBounds.search"
+msgstr "검색..."
+
+# ── Material Slot Remapping ──
+
+msgid "slotRemap.description"
+msgstr ""
+"Mochifitter 등의 피팅 도구로 의상을 변환한 후, Create Color Menu 등으로 만든 색상 설정이 "
+"올바르게 매핑되지 않을 때 사용해 주세요.\n"
+"변환된 의상의 머티리얼 슬롯을 참조(원본) 의상에 대응시켜, "
+"Material Setter/Swap의 색상 설정이 올바른 슬롯에 적용되도록 합니다.\n"
+"매핑은 변환 직후, 의상의 색을 변경(메시의 머티리얼 변경)하기 전에 생성해 주세요."
+
+msgid "slotRemap.referencePrefab"
+msgstr "참조 Prefab"
+
+msgid "slotRemap.generateMapping"
+msgstr "매핑 생성"
+
+msgid "slotRemap.ambiguousDialog.title"
+msgstr "머티리얼 슬롯 매핑이 모호합니다"
+
+msgid "slotRemap.ambiguousDialog.useEstimated"
+msgstr "추정 매핑 사용"
+
+#, csharp-format
+msgid "slotRemap.ambiguousDialog.message"
+msgstr ""
+"동일한 머티리얼 또는 빈 슬롯이 여러 번 나타나므로, 서브메시의 대응 관계를 "
+"확실하게 결정할 수 없습니다.\n"
+"\n"
+"{0}\n"
+"\n"
+"계속하면 추정 매핑이 저장됩니다. Material Setter/Swap 컴포넌트를 만들기 전에 "
+"해당 슬롯을 수동으로 확인하고 조정해 주세요.\n"
+"\n"
+"추정 매핑을 사용하시겠습니까?"
+
+#, csharp-format
+msgid "slotRemap.ambiguousDialog.more"
+msgstr "...외 {0}건. 자세한 내용은 Inspector의 경고에 표시됩니다."
+
+#, csharp-format
+msgid "slotRemap.mappingGenerated"
+msgstr "{0}개 Renderer의 매핑을 생성했습니다."
+
+msgid "slotRemap.noMapping"
+msgstr "아직 매핑이 생성되지 않았습니다."
+
+#, csharp-format
+msgid "slotRemap.slotMappings"
+msgstr "슬롯 매핑 ({0}개 Renderer)"
+
+msgid "slotRemap.resetToIdentity"
+msgstr "이 Renderer를 순서 그대로의 매핑으로 재설정"
+
+msgid "slotRemap.error.noComponent"
+msgstr "MaterialSlotRemapping 컴포넌트가 없습니다."
+
+msgid "slotRemap.error.referenceNotSet"
+msgstr "참조 Prefab이 설정되지 않았습니다."
+
+#, csharp-format
+msgid "slotRemap.error.slotCountMismatch"
+msgstr "'{0}'의 머티리얼 슬롯 수가 일치하지 않습니다 (변환 후 {1} / 참조 {2})."
+
+msgid "slotRemap.error.noMatchingRenderers"
+msgstr "변환 후 의상과 참조 간에 대응하는 Renderer를 찾을 수 없습니다."
+
+#, csharp-format
+msgid "slotRemap.warning.noMatchingRenderer"
+msgstr "'{0}'에 대응하는 Renderer를 참조에서 찾을 수 없습니다."
+
+#, csharp-format
+msgid "slotRemap.warning.unresolvedSlots"
+msgstr "'{0}'의 슬롯 [{1}]과 일치하는 머티리얼이 참조에 없습니다. 수동으로 설정해 주세요."
+
+#, csharp-format
+msgid "slotRemap.warning.ambiguousDetail"
+msgstr ""
+"'{0}'의 {1} 슬롯 대응이 모호합니다: 변환 후 슬롯 [{2}], 참조 슬롯 [{3}], "
+"추정 대응 (변환 후 -> 참조) [{4}]"
+
+#, csharp-format
+msgid "slotRemap.warning.ambiguous"
+msgstr ""
+"{0}. 동일한 머티리얼 또는 빈 값이 여러 번 나타나므로, 서브메시의 대응 관계를 "
+"자동으로 결정할 수 없습니다. 추정 매핑을 수동으로 확인해 주세요."
+
+msgid "slotRemap.materialNone"
+msgstr "(없음 / Missing)"
+
+# ── Component Manager ──
+
+msgid "componentManager.targetObject"
+msgstr "대상 오브젝트"
+
+msgid "componentManager.gameObjectFilter"
+msgstr "GameObject 필터:"
+
+msgid "componentManager.componentFilter"
+msgstr "Component 필터:"
+
+msgid "componentManager.includePathsInSearch"
+msgstr "경로를 포함하여 검색"
+
+msgid "componentManager.showAllComponentsOnMatch"
+msgstr "일치한 GameObject의 모든 Component 표시"
+
+msgid "componentManager.showEmptyObjects"
+msgstr "Component가 없는 GameObject도 표시"
+
+msgid "componentManager.selectPrompt"
+msgstr "Component를 표시할 GameObject를 선택해 주세요"
+
+msgid "componentManager.selectInHierarchy"
+msgstr "Hierarchy에서 선택"
+
+msgid "componentManager.removeSelectedItems"
+msgstr "선택한 항목 삭제"
+
+msgid "componentManager.confirmDeletion"
+msgstr "삭제 확인"
+
+msgid "componentManager.confirmDeletion.header"
+msgstr "다음 항목을 삭제하시겠습니까?"
+
+msgid "componentManager.confirmDeletion.selectedGameObjects"
+msgstr "[선택된 GameObject]"
+
+msgid "componentManager.confirmDeletion.selectedComponents"
+msgstr "[선택된 Component]"
+
+#, csharp-format
+msgid "componentManager.confirmDeletion.moreGameObjects"
+msgstr "- ... (외 {0}개의 GameObject)"
+
+#, csharp-format
+msgid "componentManager.confirmDeletion.moreComponents"
+msgstr "- ... (외 {0}개의 Component)"
+
+msgid "componentManager.confirmDeletion.undoAvailable"
+msgstr "Undo로 되돌릴 수 있습니다."
+
+msgid "componentManager.deletionPartiallyCompleted"
+msgstr "일부 항목을 삭제하지 못했습니다"
+
+#, csharp-format
+msgid "componentManager.deletionPartiallyCompleted.message"
+msgstr "다음 항목을 삭제할 수 없었습니다:\n\n{0}"

@@ -1,0 +1,310 @@
+msgid ""
+msgstr ""
+"Language: zh-hant\n"
+
+# ── Common ──
+
+msgid "common.ok"
+msgstr "確定"
+
+msgid "common.cancel"
+msgstr "取消"
+
+msgid "common.delete"
+msgstr "刪除"
+
+msgid "common.continue"
+msgstr "繼續"
+
+# ── MA Material Helper ──
+
+msgid "maMaterialHelper.dialogTitle"
+msgstr "MA Material Helper"
+
+msgid "maMaterialHelper.dialogTitle.error"
+msgstr "MA Material Helper - 錯誤"
+
+msgid "maMaterialHelper.dialogTitle.warning"
+msgstr "MA Material Helper - 警告"
+
+msgid "maMaterialHelper.alreadyHasRemapping"
+msgstr "該物件已附加 Material Slot Remapping 元件。"
+
+msgid "maMaterialHelper.noCopiedSetup"
+msgstr "尚未複製顏色資料。\n請先選擇顏色變體 Prefab 並執行「Copy Color Variants」。"
+
+msgid "maMaterialHelper.guide.title"
+msgstr "顏色切換選單的製作方法"
+
+msgid "maMaterialHelper.guide.step1"
+msgstr "選擇顏色變體 Prefab 並按右鍵 →「Copy Color Variants」（支援多選）"
+
+msgid "maMaterialHelper.guide.step2"
+msgstr "選擇目標服裝並按右鍵 →「Create Color Menu」（此項目會在步驟 1 之後才顯示）"
+
+msgid "maMaterialHelper.guide.statusNotCopied"
+msgstr "尚未複製顏色資料，請從步驟 1 開始"
+
+#, csharp-format
+msgid "maMaterialHelper.guide.statusCopied"
+msgstr "已從「{0}」複製（{1} 個物件、{2} 個材質）\n請選擇服裝並執行步驟 2。"
+
+msgid "maMaterialHelper.guide.perfTitle"
+msgstr "效能提示"
+
+msgid "maMaterialHelper.guide.perfNote.intro"
+msgstr "目前，顏色切換選單與開關的目標網格會被排除在 AAO: Avatar Optimizer 的 Trace and Optimize 自動網格合併之外，因此容易增加 Draw Call 等負載。"
+
+msgid "maMaterialHelper.guide.perfNote.lead"
+msgstr "製作完選單後，依照以下步驟合併網格，即可在維持功能的同時降低負載："
+
+msgid "maMaterialHelper.guide.perfNote.step1"
+msgstr "選取所有常駐顯示的網格 → 按右鍵 →「Create Merge Skinned Mesh (Exclude Object Toggle)」"
+
+msgid "maMaterialHelper.guide.perfNote.step2"
+msgstr "對每個帶有 MA Object Toggle 的物件按右鍵 →「Create Merge Skinned Mesh (From Object Toggle)」"
+
+msgid "maMaterialHelper.guide.perfNote.rename"
+msgstr "建立的 Merge Skinned Mesh 物件可以重新命名，也可以在 Avatar 內移動。"
+
+msgid "maMaterialHelper.guide.perfNote.caution"
+msgstr "注意：之後若變更了顏色切換選單或開關，請刪除已建立的 Merge Skinned Mesh 物件並重新執行指令。"
+
+msgid "maMaterialHelper.guide.perfNoteNoAao.intro"
+msgstr "目前，顏色切換選單的目標網格會被排除在 AAO: Avatar Optimizer 的 Trace and Optimize 自動網格合併之外，網格不會被合併，因此容易增加 Draw Call 等負載。"
+
+msgid "maMaterialHelper.guide.perfNoteNoAao.suggest"
+msgstr "安裝 AAO 後，右鍵選單中會顯示「Create Merge Skinned Mesh (Color Menu Safe)」，可在不破壞顏色切換選單的情況下合併網格。"
+
+msgid "maMaterialHelper.noSetupGroups"
+msgstr "找不到材質設定群組"
+
+msgid "maMaterialHelper.noMatchingObjects"
+msgstr "在複製來源與目標之間找不到相符的物件"
+
+msgid "maMaterialHelper.invalidParameters"
+msgstr "參數無效"
+
+msgid "maMaterialHelper.modularAvatarNotInstalled"
+msgstr "未安裝 Modular Avatar"
+
+#, csharp-format
+msgid "maMaterialHelper.createSetterFailed"
+msgstr "建立 Material Setter 失敗：{0}"
+
+#, csharp-format
+msgid "maMaterialHelper.createSwapFailed"
+msgstr "建立 Material Swap 失敗：{0}"
+
+#, csharp-format
+msgid "maMaterialHelper.createSwapPerObjectFailed"
+msgstr "建立 Material Swap (Per Object) 失敗：{0}"
+
+#, csharp-format
+msgid "maMaterialHelper.operationFailed"
+msgstr "操作失敗（{0}）：\n{1}"
+
+#, csharp-format
+msgid "maMaterialHelper.swapLimitation"
+msgstr ""
+"偵測到 Material Swap 的限制\n"
+"\n"
+"Material Swap 無法將同一網格中的同一材質替換為多個不同的材質。\n"
+"\n"
+"偵測到的衝突：\n"
+"{0}\n"
+"\n"
+"解決方法：\n"
+"請改用「Create Color Menu」。"
+
+#, csharp-format
+msgid "maMaterialHelper.swapLimitation.conflictHeader"
+msgstr "材質「{0}」存在以下衝突："
+
+# ── AO Bounds Setter ──
+
+msgid "aoBounds.rootObject"
+msgstr "根物件"
+
+msgid "aoBounds.refresh:tooltip"
+msgstr "從根物件重新載入網格"
+
+msgid "aoBounds.batchSettings"
+msgstr "批次設定"
+
+msgid "aoBounds.anchorOverride"
+msgstr "Anchor Override:"
+
+msgid "aoBounds.rootBone"
+msgstr "Root Bone（僅 SkinnedMeshRenderer）:"
+
+msgid "aoBounds.bounds"
+msgstr "Bounds（僅 SkinnedMeshRenderer）:"
+
+msgid "aoBounds.apply"
+msgstr "套用到選取的網格"
+
+msgid "aoBounds.meshList"
+msgstr "網格列表"
+
+msgid "aoBounds.header.objectName"
+msgstr "物件名稱"
+
+msgid "aoBounds.header.anchorOverride"
+msgstr "Anchor Override"
+
+msgid "aoBounds.header.rootBone"
+msgstr "Root Bone"
+
+msgid "aoBounds.header.bounds"
+msgstr "Bounds"
+
+msgid "aoBounds.search"
+msgstr "搜尋..."
+
+# ── Material Slot Remapping ──
+
+msgid "slotRemap.description"
+msgstr ""
+"當使用 Mochifitter 等調整工具轉換服裝後，Create Color Menu 等建立的顏色設定"
+"無法正確對應時，請使用此功能。\n"
+"它會將轉換後服裝的材質插槽對應回參照（原始）服裝，"
+"使 Material Setter/Swap 的顏色設定套用到正確的材質插槽上。\n"
+"請在轉換後、對服裝進行改色（變更網格材質）之前產生映射。"
+
+msgid "slotRemap.referencePrefab"
+msgstr "參照 Prefab"
+
+msgid "slotRemap.generateMapping"
+msgstr "產生映射"
+
+msgid "slotRemap.ambiguousDialog.title"
+msgstr "材質插槽映射不明確"
+
+msgid "slotRemap.ambiguousDialog.useEstimated"
+msgstr "使用推測的映射"
+
+#, csharp-format
+msgid "slotRemap.ambiguousDialog.message"
+msgstr ""
+"某些材質或空插槽出現了多次，因此無法可靠地判斷子網格的對應關係。\n"
+"\n"
+"{0}\n"
+"\n"
+"若繼續，將會儲存推測的映射。請在建立 Material Setter/Swap 元件之前，"
+"手動確認並調整這些插槽。\n"
+"\n"
+"要使用推測的映射嗎？"
+
+#, csharp-format
+msgid "slotRemap.ambiguousDialog.more"
+msgstr "...另有 {0} 項。詳細資訊將顯示在 Inspector 的警告中。"
+
+#, csharp-format
+msgid "slotRemap.mappingGenerated"
+msgstr "已為 {0} 個 Renderer 產生映射。"
+
+msgid "slotRemap.noMapping"
+msgstr "尚未產生映射。"
+
+#, csharp-format
+msgid "slotRemap.slotMappings"
+msgstr "材質插槽映射（{0} 個 Renderer）"
+
+msgid "slotRemap.resetToIdentity"
+msgstr "將此 Renderer 重設為依原順序對應"
+
+msgid "slotRemap.error.noComponent"
+msgstr "沒有 MaterialSlotRemapping 元件。"
+
+msgid "slotRemap.error.referenceNotSet"
+msgstr "未設定參照 Prefab。"
+
+#, csharp-format
+msgid "slotRemap.error.slotCountMismatch"
+msgstr "「{0}」的材質插槽數量不一致（轉換後 {1} / 參照 {2}）。"
+
+msgid "slotRemap.error.noMatchingRenderers"
+msgstr "在轉換後的服裝與參照之間找不到對應的 Renderer。"
+
+#, csharp-format
+msgid "slotRemap.warning.noMatchingRenderer"
+msgstr "在參照中找不到與「{0}」對應的 Renderer。"
+
+#, csharp-format
+msgid "slotRemap.warning.unresolvedSlots"
+msgstr "「{0}」的材質插槽 [{1}] 在參照中沒有相符的材質。請手動設定。"
+
+#, csharp-format
+msgid "slotRemap.warning.ambiguousDetail"
+msgstr ""
+"「{0}」中 {1} 的材質插槽對應關係不明確：轉換後插槽 [{2}]，參照插槽 [{3}]，"
+"推測對應（轉換後 -> 參照）[{4}]"
+
+#, csharp-format
+msgid "slotRemap.warning.ambiguous"
+msgstr ""
+"{0}。同一材質或空值出現了多次，因此無法自動判斷子網格的對應關係。"
+"請手動確認推測的映射。"
+
+msgid "slotRemap.materialNone"
+msgstr "（無 / Missing）"
+
+# ── Component Manager ──
+
+msgid "componentManager.targetObject"
+msgstr "目標物件"
+
+msgid "componentManager.gameObjectFilter"
+msgstr "GameObject 篩選:"
+
+msgid "componentManager.componentFilter"
+msgstr "Component 篩選:"
+
+msgid "componentManager.includePathsInSearch"
+msgstr "搜尋時包含路徑"
+
+msgid "componentManager.showAllComponentsOnMatch"
+msgstr "顯示符合的 GameObject 的所有 Component"
+
+msgid "componentManager.showEmptyObjects"
+msgstr "顯示沒有 Component 的 GameObject"
+
+msgid "componentManager.selectPrompt"
+msgstr "請選擇要顯示 Component 的 GameObject"
+
+msgid "componentManager.selectInHierarchy"
+msgstr "在 Hierarchy 中選取"
+
+msgid "componentManager.removeSelectedItems"
+msgstr "刪除選取的項目"
+
+msgid "componentManager.confirmDeletion"
+msgstr "確認刪除"
+
+msgid "componentManager.confirmDeletion.header"
+msgstr "確定要刪除以下項目嗎？"
+
+msgid "componentManager.confirmDeletion.selectedGameObjects"
+msgstr "【選取的 GameObject】"
+
+msgid "componentManager.confirmDeletion.selectedComponents"
+msgstr "【選取的 Component】"
+
+#, csharp-format
+msgid "componentManager.confirmDeletion.moreGameObjects"
+msgstr "- ...（另有 {0} 個 GameObject）"
+
+#, csharp-format
+msgid "componentManager.confirmDeletion.moreComponents"
+msgstr "- ...（另有 {0} 個 Component）"
+
+msgid "componentManager.confirmDeletion.undoAvailable"
+msgstr "可以透過 Undo 復原。"
+
+msgid "componentManager.deletionPartiallyCompleted"
+msgstr "部分項目未能刪除"
+
+#, csharp-format
+msgid "componentManager.deletionPartiallyCompleted.message"
+msgstr "以下項目未能刪除：\n\n{0}"
