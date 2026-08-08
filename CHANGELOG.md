@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Merge Skinned Mesh (Color Menu Safe): MA Object Toggle variants** — Added two Hierarchy right-click variants. `Create Merge Skinned Mesh (Exclude Object Toggle)` merges the selected renderers excluding any targeted (directly or via an ancestor) by an MA Object Toggle in the avatar. `Create Merge Skinned Mesh (From Object Toggle)` (shown when right-clicking an object with an MA Object Toggle) merges the renderers under the toggle's targets grouped by the ON/OFF state each entry sets, and automatically adds the merged object to the toggle when no toggled subtree contains it, so the toggle keeps working. Renderers targeted by a different Object Toggle are excluded automatically.
+
+---
+
+### 追加
+
+- **Merge Skinned Mesh (Color Menu Safe): MA Object Toggle向けバリエーション** — ヒエラルキー右クリックに2つのバリエーションを追加しました。`Create Merge Skinned Mesh (Exclude Object Toggle)` は、選択したメッシュのうちアバター内のMA Object Toggleの対象（配下を含む）を自動で除外して統合します。`Create Merge Skinned Mesh (From Object Toggle)`（MA Object Toggleが付いたオブジェクトを右クリックで表示）は、トグル対象のメッシュをON/OFF設定ごとに統合し、トグルが統合オブジェクトに届かない場合は自動でトグルの対象に追加します。別のObject Toggleの対象になっているメッシュは自動で統合から除外されます。
+
 ## [1.0.0-beta.1] - 2026-08-03
 
 ### Added
@@ -21,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MA Material Helper: Verbose Matching Logs toggle** — Added a menu toggle at `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` to enable detailed matching diagnostics in the console.
 - **MA Material Helper: `[How to Create Color Menu]` guide window** — Added a guide item to the Hierarchy right-click menu. It opens a window explaining the two-step workflow, with a live status and a list of the currently copied objects (available in English and Japanese).
 - **FBX Settings Copier** — Copy & paste FBX import settings between FBX assets from the Project window right-click menu (`Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`). Copies Model tab settings (including Legacy Blend Shape Normals), basic Rig settings (Animation Type, Avatar Definition, Skin Weights, Optimize Bones / Optimize Game Objects), and Materials tab settings including Remapped Materials. Remaps are applied only to material names that exist on the target; animation clip definitions and Humanoid bone mappings are not copied. Pasting to multiple FBX files at once is supported, and files whose settings already match are skipped without reimporting.
-- **Merge Skinned Mesh (Color Menu Safe)** — Added a `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)` command to the Hierarchy right-click menu (shown when both AAO: Avatar Optimizer 1.8.0+ and Modular Avatar 1.13.0+ are installed). It creates an AAO Merge Skinned Mesh from the selected renderers and analyzes MA Material Setter / Material Swap components in the avatar: materials whose color changes would leak into other meshes after slot merging are automatically excluded, while materials changed uniformly across all merged slots stay merged. This lets color change menus keep working after the merge while preserving as much draw call reduction as possible. The `[How to Create Color Menu]` guide window now also shows a performance tip explaining that color-changed meshes are not auto-merged by AAO's Trace and Optimize and pointing to this command. Two MA Object Toggle variants are also available: `(Exclude Object Toggle)` merges the selection excluding meshes targeted by any MA Object Toggle, and `(From Object Toggle)` merges the targets of the clicked MA Object Toggle per ON/OFF state, adding the merged object to the toggle when needed.
+- **Merge Skinned Mesh (Color Menu Safe)** — Added a `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)` command to the Hierarchy right-click menu (shown when both AAO: Avatar Optimizer 1.8.0+ and Modular Avatar 1.13.0+ are installed). It creates an AAO Merge Skinned Mesh from the selected renderers and analyzes MA Material Setter / Material Swap components in the avatar: materials whose color changes would leak into other meshes after slot merging are automatically excluded, while materials changed uniformly across all merged slots stay merged. This lets color change menus keep working after the merge while preserving as much draw call reduction as possible. The `[How to Create Color Menu]` guide window now also shows a performance tip explaining that color-changed meshes are not auto-merged by AAO's Trace and Optimize and pointing to this command.
 
 ### Changed
 
@@ -61,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MA Material Helper: 詳細マッチングログのトグル** — `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` にデバッグ用ログのトグルを追加。有効にするとマッチング判定の詳細情報をコンソールに出力します。
 - **MA Material Helper: `[How to Create Color Menu]` ガイドウィンドウ** — ヒエラルキー右クリックメニューにガイド項目を追加。2ステップの作成手順の説明と、コピー済みオブジェクトの状態・一覧をリアルタイム表示するウィンドウが開きます（日本語・英語対応）。
 - **FBX Settings Copier** — ProjectウィンドウのFBX右クリックメニュー（`Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`）でFBXアセット間のインポート設定をコピー&ペーストできるようになりました。Modelタブの全設定（Legacy Blend Shape Normalsを含む）、Rigタブの基本設定（Animation Type、Avatar Definition、Skin Weights、Optimize Bones / Optimize Game Objects）、MaterialsタブのRemapped Materialsを含む設定をコピーします。リマップはターゲットに同名のマテリアルが存在する場合のみ適用され、AnimationタブのクリップとHumanoidのボーンマッピングはコピーされません。複数FBXへの一括ペーストに対応し、設定に差分のないファイルは再インポートせずスキップします。
-- **Merge Skinned Mesh (Color Menu Safe)** — ヒエラルキー右クリックメニューに `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)` を追加しました（AAO: Avatar Optimizer 1.8.0以上とModular Avatar 1.13.0以上の両方がある場合に表示）。選択したレンダラーからAAOのMerge Skinned Meshを作成し、アバター内のMA Material Setter/Swapを解析して、スロット統合すると色変更が他のメッシュへ波及するマテリアルだけを自動で統合対象から除外します。全スロットが同じように変更されるマテリアルは統合されたままになるため、色変更メニューを壊さずにドローコール削減効果を最大限維持できます。また、`[How to Create Color Menu]` ガイドウィンドウに、色変更対象のメッシュがAAOのTrace and Optimizeで自動統合されないことと、本コマンドで統合できることを案内するパフォーマンスのヒントを追加しました。MA Object Toggle向けのバリエーションとして、選択からObject Toggleの対象を自動除外して統合する `(Exclude Object Toggle)` と、右クリックしたObject Toggleの対象をON/OFF設定ごとに統合して必要に応じて統合オブジェクトをトグルへ自動追加する `(From Object Toggle)` も用意しています。
+- **Merge Skinned Mesh (Color Menu Safe)** — ヒエラルキー右クリックメニューに `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)` を追加しました（AAO: Avatar Optimizer 1.8.0以上とModular Avatar 1.13.0以上の両方がある場合に表示）。選択したレンダラーからAAOのMerge Skinned Meshを作成し、アバター内のMA Material Setter/Swapを解析して、スロット統合すると色変更が他のメッシュへ波及するマテリアルだけを自動で統合対象から除外します。全スロットが同じように変更されるマテリアルは統合されたままになるため、色変更メニューを壊さずにドローコール削減効果を最大限維持できます。また、`[How to Create Color Menu]` ガイドウィンドウに、色変更対象のメッシュがAAOのTrace and Optimizeで自動統合されないことと、本コマンドで統合できることを案内するパフォーマンスのヒントを追加しました。
 
 ### 変更
 
