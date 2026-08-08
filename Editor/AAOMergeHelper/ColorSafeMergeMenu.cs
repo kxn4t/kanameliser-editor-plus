@@ -194,7 +194,7 @@ namespace Kanameliser.Editor.AAOMergeHelper
             return entries;
         }
 
-        private static GameObject CreateMergeObject(
+        internal static GameObject CreateMergeObject(
             List<SkinnedMeshRenderer> skinnedRenderers, List<MeshRenderer> basicRenderers)
         {
             var allRenderers = skinnedRenderers.Cast<Renderer>().Concat(basicRenderers).ToList();
@@ -266,7 +266,7 @@ namespace Kanameliser.Editor.AAOMergeHelper
                 property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
         }
 
-        private static Transform FindCommonParent(IReadOnlyList<Transform> transforms)
+        internal static Transform FindCommonParent(IReadOnlyList<Transform> transforms)
         {
             List<Transform> common = null;
             foreach (var transform in transforms)
