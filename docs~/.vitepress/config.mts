@@ -1,4 +1,5 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig, type HeadConfig } from 'vitepress'
+import type { DefaultTheme } from 'vitepress'
 
 const sidebarJa = [
   {
@@ -43,19 +44,53 @@ const sidebarEn = [
 const siteUrl = 'https://kxn4t.github.io/kanameliser-editor-plus'
 const ogImage = `${siteUrl}/og-image.png`
 
+// Version info injected by the docs deployment workflow (.github/workflows/docs.yml).
+// All variables are unset for local dev builds.
+const docsVersion = process.env.DOCS_VERSION
+const docsChannel = process.env.DOCS_CHANNEL
+const stableVersion = process.env.DOCS_STABLE_VERSION
+const betaVersion = process.env.DOCS_BETA_VERSION
+
+const versionMenuItems: DefaultTheme.NavItemWithLink[] = [
+  ...(stableVersion ? [{ text: `v${stableVersion} (stable)`, link: `${siteUrl}/` }] : []),
+  ...(betaVersion ? [{ text: `v${betaVersion} (beta)`, link: `${siteUrl}/beta/` }] : []),
+]
+
+const versionNav: DefaultTheme.NavItem[] = docsVersion
+  ? [
+      versionMenuItems.length > 0
+        ? { text: `v${docsVersion}`, items: versionMenuItems }
+        : { text: `v${docsVersion}`, link: `${siteUrl}/` },
+    ]
+  : []
+
+const head: HeadConfig[] = [
+  ['meta', { property: 'og:type', content: 'website' }],
+  ['meta', { property: 'og:site_name', content: 'Kanameliser Editor Plus' }],
+  ['meta', { property: 'og:image', content: ogImage }],
+  ['meta', { property: 'og:url', content: siteUrl }],
+  ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+  ['meta', { name: 'twitter:image', content: ogImage }],
+  ['meta', { name: 'twitter:site', content: '@kanameliser' }],
+]
+
+if (docsChannel === 'beta') {
+  // Keep beta docs out of search results
+  head.push(['meta', { name: 'robots', content: 'noindex' }])
+  // Reserve space for the fixed beta banner (BetaBanner.vue); the default
+  // theme offsets nav/sidebar/content by --vp-layout-top-height
+  head.push([
+    'style',
+    {},
+    ':root { --vp-layout-top-height: 32px; } @media (max-width: 560px) { :root { --vp-layout-top-height: 52px; } }',
+  ])
+}
+
 export default defineConfig({
   title: 'Kanameliser Editor Plus',
   base: '/kanameliser-editor-plus/',
 
-  head: [
-    ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:site_name', content: 'Kanameliser Editor Plus' }],
-    ['meta', { property: 'og:image', content: ogImage }],
-    ['meta', { property: 'og:url', content: siteUrl }],
-    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:image', content: ogImage }],
-    ['meta', { name: 'twitter:site', content: '@kanameliser' }],
-  ],
+  head,
 
   locales: {
     root: {
@@ -66,6 +101,7 @@ export default defineConfig({
         nav: [
           { text: 'ドキュメント', link: '/guide/getting-started' },
           { text: '更新履歴', link: '/changelog' },
+          ...versionNav,
         ],
         sidebar: sidebarJa,
         outline: { label: 'このページ' },
@@ -85,6 +121,7 @@ export default defineConfig({
         nav: [
           { text: 'Docs', link: '/en/guide/getting-started' },
           { text: 'Changelog', link: '/en/changelog' },
+          ...versionNav,
         ],
         sidebar: sidebarEn,
       },
@@ -95,5 +132,10 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/kxn4t/kanameliser-editor-plus' },
     ],
-  },
+    // Custom key consumed by the theme (BetaBanner.vue)
+    versionBadge: {
+      channel: docsChannel,
+      stableUrl: stableVersion ? `${siteUrl}/` : undefined,
+    },
+  } as DefaultTheme.Config,
 })

@@ -1,4 +1,37 @@
+/* Lift the theme's 392/576px cap so the title renders on one line where it
+   fits, and wrap in balanced lines (natural ja phrase breaks in Chromium)
+   instead of overflowing where it does not */
 .VPHero .name,
 .VPHero .text {
-  white-space: nowrap;
+  max-width: none;
+  text-wrap: balance;
+  word-break: auto-phrase;
 }
+
+/* Fixed banner at the very top; the page is offset via --vp-layout-top-height,
+   which is injected in config.mts only for beta channel builds */
+.beta-banner {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: calc(var(--vp-z-index-nav, 30) + 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--vp-layout-top-height, 32px);
+  padding: 0 16px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+  /* Opaque warning tint: --vp-c-warning-soft is translucent, so layer it over the bg */
+  background-color: var(--vp-c-bg);
+  background-image: linear-gradient(var(--vp-c-warning-soft), var(--vp-c-warning-soft));
+  color: var(--vp-c-warning-1);
+}
+
+.beta-banner a {
+  font-weight: 500;
+  text-decoration: underline;
+}
+

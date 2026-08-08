@@ -16,6 +16,9 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v4"
 
+      - name: "Remove dev files"
+        run: rm -rf CLAUDE.md CLAUDE.md.meta .gitignore .gitattributes
+
       - name: "Build"
         id: "build"
         uses: "docker://ghcr.io/rerigferl/vpm-packager:latest"
