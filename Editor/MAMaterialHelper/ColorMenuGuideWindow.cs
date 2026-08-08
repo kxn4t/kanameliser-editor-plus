@@ -27,7 +27,7 @@ namespace Kanameliser.Editor.MAMaterialHelper
         {
             var window = GetWindow<ColorMenuGuideWindow>();
             window.titleContent = new GUIContent("How to Create Color Menu");
-            window.minSize = new Vector2(380, 470);
+            window.minSize = new Vector2(380, 490);
         }
 
         public void CreateGUI()
