@@ -22,6 +22,12 @@ namespace Kanameliser.EditorPlus
                 "Packages/net.kanameliser.editor-plus/Editor/Localization/en-us.po"),
             AssetDatabase.LoadAssetAtPath<LocalizationAsset>(
                 "Packages/net.kanameliser.editor-plus/Editor/Localization/ja-jp.po"),
+            AssetDatabase.LoadAssetAtPath<LocalizationAsset>(
+                "Packages/net.kanameliser.editor-plus/Editor/Localization/ko-kr.po"),
+            AssetDatabase.LoadAssetAtPath<LocalizationAsset>(
+                "Packages/net.kanameliser.editor-plus/Editor/Localization/zh-hans.po"),
+            AssetDatabase.LoadAssetAtPath<LocalizationAsset>(
+                "Packages/net.kanameliser.editor-plus/Editor/Localization/zh-hant.po"),
         });
 
         public static string S(string key) =>

@@ -5,7 +5,7 @@
 | Requirement | Version |
 |---|---|
 | Unity | 2022.3.22f1 or higher |
-| NDMF (optional) | 1.11.0 or higher recommended — required for the Japanese UI (language switching) and Mesh Info Display build preview |
+| NDMF (optional) | 1.11.0 or higher recommended — required for the localized UI (Japanese, Korean, and Simplified/Traditional Chinese, with language switching) and Mesh Info Display build preview |
 | Modular Avatar (optional) | 1.13.0 or higher — required for MA Material Helper |
 
 ## Language
