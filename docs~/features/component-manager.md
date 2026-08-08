@@ -2,6 +2,8 @@
 
 選択したオブジェクトとその子オブジェクトの全コンポーネントを一覧表示します。
 
+![Component Manager ウィンドウ](/images/component-manager/window.png)
+
 ## 主な機能
 
 - 特定のオブジェクト名やコンポーネント型でフィルタリング
