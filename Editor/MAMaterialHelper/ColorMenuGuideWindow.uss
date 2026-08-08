@@ -102,9 +102,38 @@
 
 .perf-title {
     -unity-font-style: bold;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .perf-text {
     white-space: normal;
+    margin-top: 4px;
+}
+
+.perf-step-list {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.perf-step {
+    flex-direction: row;
+    margin-top: 4px;
+    margin-left: 4px;
+}
+
+.perf-step .perf-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-top: 0;
+}
+
+.perf-step-number {
+    flex-shrink: 0;
+    margin-right: 3px;
+    -unity-font-style: bold;
+}
+
+.perf-caution {
+    margin-top: 6px;
+    opacity: 0.75;
 }
