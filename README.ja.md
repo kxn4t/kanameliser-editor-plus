@@ -192,6 +192,8 @@ Material Setter/Swapによる色変更メニューを壊さずに、AAO: Avatar 
 
 選択したメッシュを統合するMerge Skinned Meshオブジェクトが共通の親の下に作成され、危険なマテリアルはあらかじめ「統合する」チェックが外された状態になります。除外されたマテリアルはコンソールログで確認できます。
 
+MA Object Toggleとの組み合わせ用に2つのバリエーションがあります。`Create Merge Skinned Mesh (Exclude Object Toggle)` は選択からObject Toggleの対象（配下含む）を自動除外して統合します。`Create Merge Skinned Mesh (From Object Toggle)`（Object Toggleが付いたオブジェクトを右クリックで表示）は、トグル対象のメッシュをON/OFF設定ごとに統合し、必要に応じて統合オブジェクトを自動でトグルに追加します。
+
 #### 除外の判定ルール
 
 いずれかのMaterial Setter/Swapが、同じマテリアルを使うスロットの一部だけを変更する場合や、別々の変更先に変える場合にそのマテリアルを除外します。すべてのコンポーネントが全スロットを同じように変更する（あるいはまったく変更しない）場合は統合されたままになり、ドローコール削減効果を最大限維持します。
@@ -210,7 +212,7 @@ Material Setter/Swapによる色変更メニューを壊さずに、AAO: Avatar 
 - アニメーションクリップで直接マテリアルを差し替える自作ギミックは解析対象外です。必要に応じて「統合する」チェックを手動で外してください
 - 鞄などMA Object ToggleなどでON/OFFするメッシュは、基本的に統合対象へ含めず、常時表示のメッシュだけを統合してください。混ぜて統合するとトグルが動作しなくなります（該当する場合はビルド時にAAOが警告を表示します）。トグルの仕組みを理解している場合は、一緒にON/OFFされるメッシュだけを統合し、統合オブジェクト自体をON/OFFするようにメニューを組むと動作します
 
-アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
+アクセス: ヒエラルキー右クリック `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe) / (From Object Toggle) / (Exclude Object Toggle)`
 
 ### AO Bounds Setter
 

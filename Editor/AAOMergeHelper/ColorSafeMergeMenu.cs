@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -5,26 +6,45 @@ using UnityEngine;
 
 #if AVATAR_OPTIMIZER_INSTALLED && MODULAR_AVATAR_INSTALLED
 using Anatawa12.AvatarOptimizer;
+using nadena.dev.modular_avatar.core;
 using nadena.dev.ndmf.runtime;
 #endif
 
 namespace Kanameliser.Editor.AAOMergeHelper
 {
     /// <summary>
-    /// Hierarchy context menu that creates an AAO Merge Skinned Mesh from the selected
-    /// renderers, pre-configured so that MA Material Setter / Material Swap color menus
-    /// keep working after the merge: materials changed non-uniformly across the merged
-    /// renderers are excluded from material slot merging.
+    /// Hierarchy context menus that create an AAO Merge Skinned Mesh pre-configured so
+    /// that MA Material Setter / Material Swap color menus keep working after the merge:
+    /// materials changed non-uniformly across the merged renderers are excluded from
+    /// material slot merging.
+    ///
+    /// Three source-selection variants are provided:
+    /// - Color Menu Safe: merge the selected renderers as-is
+    /// - From Object Toggle: merge the renderers targeted by the clicked MA Object
+    ///   Toggle, grouped by the active state the toggle sets, and keep the toggle
+    ///   working by adding the merged object to it when needed
+    /// - Exclude Object Toggle: merge the selected renderers except those targeted by
+    ///   any MA Object Toggle in the avatar
     /// </summary>
     public static class ColorSafeMergeMenu
     {
         private const string MENU_PATH = "GameObject/Kanameliser Editor Plus/Create Merge Skinned Mesh (Color Menu Safe)";
+        private const string MENU_PATH_FROM_TOGGLE = "GameObject/Kanameliser Editor Plus/Create Merge Skinned Mesh (From Object Toggle)";
+        private const string MENU_PATH_EXCLUDE_TOGGLE = "GameObject/Kanameliser Editor Plus/Create Merge Skinned Mesh (Exclude Object Toggle)";
         // Gap of >= 11 from the previous group draws a separator above this item
         private const int MENU_PRIORITY = 140;
 
 #if AVATAR_OPTIMIZER_INSTALLED && MODULAR_AVATAR_INSTALLED
         // GameObject/ menu handlers run once per selected object; collapse into one execution
         private static bool _executed;
+
+        private static void RunOnce(Action action)
+        {
+            if (_executed) return;
+            _executed = true;
+            EditorApplication.delayCall += () => _executed = false;
+            action();
+        }
 
         [MenuItem(MENU_PATH, true, MENU_PRIORITY)]
         public static bool ValidateCreateColorSafeMerge()
@@ -38,23 +58,147 @@ namespace Kanameliser.Editor.AAOMergeHelper
         }
 
         [MenuItem(MENU_PATH, false, MENU_PRIORITY)]
-        public static void CreateColorSafeMerge()
+        public static void CreateColorSafeMerge() => RunOnce(() =>
         {
-            if (_executed) return;
-            _executed = true;
-            EditorApplication.delayCall += () => _executed = false;
+            var (skinnedRenderers, basicRenderers) = CollectSelectedRenderers();
+            CreateMergeObject(skinnedRenderers, basicRenderers);
+        });
 
+        [MenuItem(MENU_PATH_FROM_TOGGLE, true, MENU_PRIORITY + 1)]
+        public static bool ValidateCreateFromObjectToggle()
+        {
+            var selected = Selection.activeGameObject;
+            return selected != null && selected.TryGetComponent<ModularAvatarObjectToggle>(out _);
+        }
+
+        [MenuItem(MENU_PATH_FROM_TOGGLE, false, MENU_PRIORITY + 1)]
+        public static void CreateFromObjectToggle() => RunOnce(() =>
+        {
+            var selected = Selection.activeGameObject;
+            if (selected == null || !selected.TryGetComponent<ModularAvatarObjectToggle>(out var toggle)) return;
+
+            var avatarRoot = RuntimeUtil.FindAvatarInParents(selected.transform);
+            if (avatarRoot == null)
+            {
+                Debug.LogWarning("[Kanameliser Editor Plus] The MA Object Toggle is not inside an avatar; " +
+                                 "cannot resolve its targets.");
+                return;
+            }
+
+            var allEntries = CollectToggleEntries(avatarRoot.gameObject);
+            var ownEntries = allEntries.Where(x => ReferenceEquals(x.Toggle, toggle)).ToList();
+
+            var candidates = new List<Renderer>();
+            var seen = new HashSet<Renderer>();
+            foreach (var entry in ownEntries)
+                foreach (var renderer in entry.Root.GetComponentsInChildren<Renderer>(true))
+                    if ((renderer is SkinnedMeshRenderer || renderer is MeshRenderer)
+                        // a merged object added to the toggle by a previous run is not a source
+                        && !renderer.TryGetComponent<MergeSkinnedMesh>(out _)
+                        && seen.Add(renderer))
+                        candidates.Add(renderer);
+
+            var createdCount = 0;
+            foreach (var (setActive, renderers) in
+                     ObjectToggleMergeAnalyzer.GroupByEntryValue(candidates, toggle, allEntries))
+            {
+                if (renderers.Count < 2) continue; // merging a single renderer only adds overhead
+
+                var merged = CreateMergeObject(
+                    renderers.OfType<SkinnedMeshRenderer>().ToList(),
+                    renderers.OfType<MeshRenderer>().ToList());
+                if (merged == null) continue;
+                createdCount++;
+
+                // The toggle must reach the merged geometry: it already does when the merged
+                // object was created under a toggled subtree; otherwise add it to the toggle.
+                if (!ownEntries.Any(e => merged.transform.IsChildOf(e.Root)))
+                {
+                    Undo.RecordObject(toggle, "Add Merged Object to MA Object Toggle");
+                    toggle.Objects.Add(new ToggledObject
+                    {
+                        Object = new AvatarObjectReference(merged),
+                        Active = setActive,
+                    });
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(toggle);
+                    Debug.Log($"[Kanameliser Editor Plus] Added '{merged.name}' to the MA Object Toggle on " +
+                              $"'{selected.name}' so the toggle keeps working.");
+                }
+            }
+
+            if (createdCount == 0)
+                Debug.LogWarning("[Kanameliser Editor Plus] No mergeable renderers found on the MA Object Toggle: " +
+                                 "each toggle state needs at least 2 renderers not targeted by another Object Toggle.");
+        });
+
+        [MenuItem(MENU_PATH_EXCLUDE_TOGGLE, true, MENU_PRIORITY + 2)]
+        public static bool ValidateCreateExcludingObjectToggle() => ValidateCreateColorSafeMerge();
+
+        [MenuItem(MENU_PATH_EXCLUDE_TOGGLE, false, MENU_PRIORITY + 2)]
+        public static void CreateExcludingObjectToggle() => RunOnce(() =>
+        {
+            var (skinnedRenderers, basicRenderers) = CollectSelectedRenderers();
+            var allRenderers = skinnedRenderers.Cast<Renderer>().Concat(basicRenderers).ToList();
+            if (allRenderers.Count == 0) return;
+
+            var avatarRoot = RuntimeUtil.FindAvatarInParents(allRenderers[0].transform);
+            var entries = avatarRoot != null
+                ? CollectToggleEntries(avatarRoot.gameObject)
+                : new List<ObjectToggleMergeAnalyzer.ToggleEntry>();
+
+            var filtered = ObjectToggleMergeAnalyzer.ExcludeToggled(allRenderers, entries);
+            if (filtered.Count == 0)
+            {
+                Debug.LogWarning("[Kanameliser Editor Plus] All selected renderers are targeted by " +
+                                 "MA Object Toggle; nothing to merge.");
+                return;
+            }
+
+            var excluded = allRenderers.Except(filtered).ToList();
+            if (excluded.Count > 0)
+                Debug.Log("[Kanameliser Editor Plus] Excluded renderer(s) targeted by MA Object Toggle " +
+                          "from the merge: " + string.Join(", ", excluded.Select(x => x.name)));
+
+            CreateMergeObject(
+                filtered.OfType<SkinnedMeshRenderer>().ToList(),
+                filtered.OfType<MeshRenderer>().ToList());
+        });
+
+        private static (List<SkinnedMeshRenderer> skinned, List<MeshRenderer> basic) CollectSelectedRenderers()
+        {
             var gameObjects = Selection.gameObjects;
-            var skinnedRenderers = gameObjects
+            var skinned = gameObjects
                 .Select(x => x.GetComponent<SkinnedMeshRenderer>())
                 .Where(x => x != null)
                 .ToList();
-            var basicRenderers = gameObjects
+            var basic = gameObjects
                 .Select(x => x.GetComponent<MeshRenderer>())
                 .Where(x => x != null)
                 .ToList();
+            return (skinned, basic);
+        }
+
+        private static List<ObjectToggleMergeAnalyzer.ToggleEntry> CollectToggleEntries(GameObject avatarRoot)
+        {
+            var entries = new List<ObjectToggleMergeAnalyzer.ToggleEntry>();
+            foreach (var toggle in avatarRoot.GetComponentsInChildren<ModularAvatarObjectToggle>(true))
+            {
+                if (toggle.Objects == null) continue;
+                foreach (var entry in toggle.Objects)
+                {
+                    var target = entry.Object?.Get(toggle);
+                    if (target == null) continue;
+                    entries.Add(new ObjectToggleMergeAnalyzer.ToggleEntry(toggle, target.transform, entry.Active));
+                }
+            }
+            return entries;
+        }
+
+        private static GameObject CreateMergeObject(
+            List<SkinnedMeshRenderer> skinnedRenderers, List<MeshRenderer> basicRenderers)
+        {
             var allRenderers = skinnedRenderers.Cast<Renderer>().Concat(basicRenderers).ToList();
-            if (allRenderers.Count == 0) return;
+            if (allRenderers.Count == 0) return null;
 
             var newObject = new GameObject("Merge Skinned Mesh");
             newObject.transform.SetParent(FindCommonParent(allRenderers.Select(x => x.transform).ToList()), false);
@@ -84,6 +228,8 @@ namespace Kanameliser.Editor.AAOMergeHelper
                 message += " Excluded material(s) changed by MA Material Setter/Swap from slot merging: " +
                            string.Join(", ", doNotMerge.Select(x => x.name));
             Debug.Log($"[Kanameliser Editor Plus] {message}");
+
+            return newObject;
         }
 
         // MergeSkinnedMesh exposes no public API for doNotMergeMaterials, so all sets are
@@ -104,7 +250,7 @@ namespace Kanameliser.Editor.AAOMergeHelper
         }
 
         private static void SetObjectArray<T>(SerializedObject serialized, string propertyPath, IReadOnlyList<T> values)
-            where T : Object
+            where T : UnityEngine.Object
         {
             var property = serialized.FindProperty(propertyPath);
             if (property == null)

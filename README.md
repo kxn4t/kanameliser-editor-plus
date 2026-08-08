@@ -194,6 +194,8 @@ Requirement: [AAO: Avatar Optimizer](https://vpm.anatawa12.com/avatar-optimizer/
 
 A Merge Skinned Mesh object covering the selected meshes is created under their common parent, with unsafe materials pre-registered with their "Merge" checkbox turned off. Excluded materials are listed in the console log.
 
+Two variants are available for MA Object Toggle setups: `Create Merge Skinned Mesh (Exclude Object Toggle)` merges the selection excluding meshes targeted by any MA Object Toggle, and `Create Merge Skinned Mesh (From Object Toggle)` (shown when right-clicking an object with an MA Object Toggle) merges the toggle's target meshes per ON/OFF state and adds the merged object to the toggle when needed.
+
 #### How Exclusion Is Decided
 
 A material is excluded when any Material Setter / Material Swap changes only some of the slots sharing it, or changes them to different materials. When every component changes all of its slots in the same way (or none), the material stays merged for maximum draw call reduction.
@@ -212,7 +214,7 @@ A material is excluded when any Material Setter / Material Swap changes only som
 - Material replacements done directly with custom animation clips are not analyzed; uncheck "Merge" for those materials manually when needed
 - Leave meshes that are toggled on/off (bags, accessories, etc. — e.g. with MA Object Toggle) out of the merge and merge only always-visible meshes; mixing them stops the toggle from working (AAO warns at build time). If you understand your toggle setup, you can merge meshes that are toggled together and build the menu to toggle the merged object itself
 
-Access: Right-click in Hierarchy `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
+Access: Right-click in Hierarchy `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe) / (From Object Toggle) / (Exclude Object Toggle)`
 
 ### AO Bounds Setter
 

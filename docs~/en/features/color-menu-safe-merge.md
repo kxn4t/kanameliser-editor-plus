@@ -17,6 +17,13 @@ However, when merging manually, slots sharing the same material are combined int
 
 A Merge Skinned Mesh object covering the selected meshes is created under their common parent. Material Setter / Material Swap components in the avatar (including those on inactive menu objects) are analyzed, and materials whose color changes would break are pre-registered with their "Merge" checkbox turned off. Excluded materials are listed in the console log.
 
+Two variants are available for MA Object Toggle setups:
+
+| Command | Description |
+|---|---|
+| `Create Merge Skinned Mesh (Exclude Object Toggle)` | Merges the selected meshes excluding those targeted by any MA Object Toggle in the avatar (including their children) |
+| `Create Merge Skinned Mesh (From Object Toggle)` | Run by right-clicking an object with an MA Object Toggle. Merges the meshes under the toggle's target objects, grouped by the ON/OFF state the toggle sets. When the toggle cannot reach the merged object, the merged object is added to the toggle automatically |
+
 ## How Exclusion Is Decided
 
 Slots sharing the same material are combined into one slot when merged. Whether that is safe is decided by the following rule:
@@ -38,12 +45,14 @@ Slots of excluded materials remain separate, so the draw call reduction is small
 
 ## Toggled Meshes
 
-Meshes that are toggled on/off — bags, accessories, and so on, e.g. with MA Object Toggle — should **normally be left out of the merge**: merge only the always-visible meshes. Merged meshes become a single renderer, so mixing toggled meshes with always-visible ones stops the toggle from working correctly (AAO shows a warning at build time when this applies).
+Meshes that are toggled on/off — bags, accessories, and so on, e.g. with MA Object Toggle — should **normally be left out of the merge**: merge only the always-visible meshes. Merged meshes become a single renderer, so mixing toggled meshes with always-visible ones stops the toggle from working correctly (AAO shows a warning at build time when this applies). `Create Merge Skinned Mesh (Exclude Object Toggle)` automates this exclusion.
 
 If you understand how your toggles work, you can still merge meshes that are toggled together and **build the menu so that it toggles the merged object itself**:
 
 - When the toggle switches a common parent object, the merged object is created under that parent and works as is
 - When MA Object Toggle lists the meshes individually, add the created merged object to the toggle as well (with the same ON/OFF setting as the mesh entries). AAO shows a warning about the source meshes' visibility animations at build time, but the setup works correctly because the merged mesh itself is toggled
+
+When you use MA Object Toggle, `Create Merge Skinned Mesh (From Object Toggle)` automates this setup: it merges per ON/OFF state and adds the merged object to the toggle when the toggle cannot reach it. Meshes targeted by a different Object Toggle belong to another visibility unit and are excluded automatically.
 
 Note that the "Copy Enablement Animation" option of Merge Skinned Mesh cannot be used when MA Object Toggle lists the meshes individually — each mesh gets its own animation, so the option raises an error.
 
@@ -54,4 +63,6 @@ Note that the "Copy Enablement Animation" option of Merge Skinned Mesh cannot be
 
 ## Access
 
-Right-click in Hierarchy → `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)`
+Right-click in Hierarchy → `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe) / (From Object Toggle) / (Exclude Object Toggle)`
+
+`(From Object Toggle)` appears only when right-clicking an object that has an MA Object Toggle.
