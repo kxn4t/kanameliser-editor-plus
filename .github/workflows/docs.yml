@@ -1,12 +1,26 @@
+# Docs site deployment
+#
+# Channels:
+#   - Site root serves the stable docs, built from the `docs-release` branch.
+#     The branch is force-updated to the release tag automatically whenever a
+#     stable (x.y.z) release is published. For docs-only fixes, cherry-pick the
+#     fix onto `docs-release` and push — the site rebuilds without a release.
+#     Always land the same fix on main so the next release keeps it.
+#   - /beta/ serves the latest pre-release docs, built from the newest
+#     pre-release tag when it is newer than the stable release.
+#   - Until a stable release contains docs~, the pre-release docs serve as root.
+
 name: Deploy docs
 
 on:
   release:
     types: [published]
+  push:
+    branches: [docs-release]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -14,11 +28,16 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  SITE_BASE: /kanameliser-editor-plus/
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -29,17 +48,120 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: docs~
+      - name: Sync docs-release branch to stable release tag
+        if: github.event_name == 'release'
+        run: |
+          tag="${{ github.event.release.tag_name }}"
+          if ! echo "$tag" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Tag $tag is not a stable release — skipping sync"
+            exit 0
+          fi
+          if ! git cat-file -e "$tag:docs~/package.json" 2>/dev/null; then
+            echo "Tag $tag does not contain docs~ — skipping sync"
+            exit 0
+          fi
 
-      - name: Build docs
-        run: npm run docs:build
-        working-directory: docs~
+          # Never move the branch backwards (e.g. when re-publishing an old release)
+          if git rev-parse -q --verify origin/docs-release >/dev/null 2>&1; then
+            current=$(git show origin/docs-release:package.json | jq -r .version)
+            newest=$(printf '%s\n%s\n' "$current" "$tag" | sort -V | tail -n 1)
+            if [ "$newest" != "$tag" ] || [ "$tag" = "$current" ]; then
+              echo "docs-release is already at $current — skipping sync"
+              exit 0
+            fi
+          fi
+
+          commit=$(git rev-parse "$tag^{commit}")
+          git push --force origin "$commit:refs/heads/docs-release"
+          git update-ref refs/remotes/origin/docs-release "$commit"
+          echo "Synced docs-release to $tag ($commit)"
+
+      - name: Resolve docs versions
+        id: versions
+        run: |
+          root_ref=""
+          root_channel="stable"
+          stable_version=""
+
+          if git rev-parse -q --verify origin/docs-release >/dev/null 2>&1 \
+            && git cat-file -e origin/docs-release:docs~/package.json 2>/dev/null; then
+            root_ref="origin/docs-release"
+            stable_version=$(git show origin/docs-release:package.json | jq -r .version)
+          fi
+
+          beta=""
+          for tag in $(git tag --list | grep -E '^[0-9]+\.[0-9]+\.[0-9]+-' | sort -rV); do
+            if git cat-file -e "$tag:docs~/package.json" 2>/dev/null; then
+              beta="$tag"
+              break
+            fi
+          done
+
+          # Drop the beta when it is not newer than the stable release
+          if [ -n "$stable_version" ] && [ -n "$beta" ]; then
+            beta_base="${beta%%-*}"
+            newest=$(printf '%s\n%s\n' "$stable_version" "$beta_base" | sort -V | tail -n 1)
+            if [ "$newest" = "$stable_version" ]; then
+              beta=""
+            fi
+          fi
+
+          # Until a stable release contains docs~, the pre-release docs serve as root
+          root_version="$stable_version"
+          if [ -z "$root_ref" ]; then
+            root_ref="$beta"
+            root_version="$beta"
+            root_channel="beta"
+            beta=""
+          fi
+
+          if [ -z "$root_ref" ]; then
+            echo "No docs source found (no docs-release branch and no docs~ in any tag)" >&2
+            exit 1
+          fi
+
+          {
+            echo "root_ref=$root_ref"
+            echo "root_version=$root_version"
+            echo "root_channel=$root_channel"
+            echo "stable_version=$stable_version"
+            echo "beta=$beta"
+          } >> "$GITHUB_OUTPUT"
+          echo "Deploying root=$root_version from $root_ref ($root_channel), beta=${beta:-none}"
+
+      - name: Build root docs (${{ steps.versions.outputs.root_version }})
+        env:
+          ROOT_REF: ${{ steps.versions.outputs.root_ref }}
+          DOCS_VERSION: ${{ steps.versions.outputs.root_version }}
+          DOCS_CHANNEL: ${{ steps.versions.outputs.root_channel }}
+          DOCS_STABLE_VERSION: ${{ steps.versions.outputs.stable_version }}
+          DOCS_BETA_VERSION: ${{ steps.versions.outputs.beta }}
+        run: |
+          git worktree add "$RUNNER_TEMP/root-src" "$ROOT_REF"
+          cd "$RUNNER_TEMP/root-src/docs~"
+          npm ci
+          npm run docs:build
+          mkdir -p "$GITHUB_WORKSPACE/_site"
+          cp -R .vitepress/dist/. "$GITHUB_WORKSPACE/_site/"
+
+      - name: Build beta docs (${{ steps.versions.outputs.beta }})
+        if: steps.versions.outputs.beta != ''
+        env:
+          DOCS_VERSION: ${{ steps.versions.outputs.beta }}
+          DOCS_CHANNEL: beta
+          DOCS_STABLE_VERSION: ${{ steps.versions.outputs.stable_version }}
+          DOCS_BETA_VERSION: ${{ steps.versions.outputs.beta }}
+        run: |
+          git worktree add "$RUNNER_TEMP/beta-src" "$DOCS_VERSION"
+          cd "$RUNNER_TEMP/beta-src/docs~"
+          npm ci
+          npm run docs:build -- --base "${SITE_BASE}beta/"
+          mkdir -p "$GITHUB_WORKSPACE/_site/beta"
+          cp -R .vitepress/dist/. "$GITHUB_WORKSPACE/_site/beta/"
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs~/.vitepress/dist
+          path: _site
 
   deploy:
     environment:
