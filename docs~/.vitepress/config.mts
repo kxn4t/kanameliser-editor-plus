@@ -89,6 +89,8 @@ if (docsChannel === 'beta') {
 export default defineConfig({
   title: 'Kanameliser Editor Plus',
   base: '/kanameliser-editor-plus/',
+  // GitHub Pages serves /foo from foo.html natively, so no host config is needed
+  cleanUrls: true,
 
   head,
 
