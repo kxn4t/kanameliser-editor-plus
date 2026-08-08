@@ -14,7 +14,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v7"
 
       - name: "Remove dev files"
         run: rm -rf CLAUDE.md CLAUDE.md.meta .gitignore .gitattributes
@@ -26,7 +26,7 @@ jobs:
           args: "-z -u"
 
       - name: "Create Release"
-        uses: "softprops/action-gh-release@v2"
+        uses: "softprops/action-gh-release@v3"
         if: ${{ steps.build.outputs.package-version != '0.0.0' }}
         with:
           tag_name: ${{ steps.build.outputs.package-version }}
