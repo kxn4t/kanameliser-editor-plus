@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.2] - 2026-08-08
+
 ### Added
 
 - **Korean / Chinese (Simplified & Traditional) language support** — The editor UI (Component Manager, MA Material Helper dialogs and guide window, AO Bounds Setter, and the Material Slot Remapping Inspector) is now also available in Korean, Simplified Chinese, and Traditional Chinese via NDMF localization. As before, the language follows NDMF's shared language preference (requires NDMF 1.11.0+); without NDMF, the UI remains in English. The documentation site remains English/Japanese only.
