@@ -12,51 +12,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0-beta.3] - 2026-08-09
+## [1.0.0] - 2026-08-09
+
+First stable release. This entry consolidates the changes from 1.0.0-beta.1 through 1.0.0-beta.3.
 
 ### Added
 
-- **Mesh Info Display: Particle system info** — When the selection contains particle systems or Trail/Line renderers, the Mesh Info display now shows a separate section below the mesh counts: `Particle Systems` (component count), `Particle Slots` (material slots used by particle systems; trails use a second slot), and `Trail/Line Slots` (material slots used by Trail/Line renderers). These renderers consume Material Slots in VRChat's avatar performance rank separately from Mesh/Skinned Mesh Renderers, so they are shown apart from the mesh-based counts, which keep their meaning; the rank's actual Material Slots value is the sum of `Material Slots` and the new slot counts. The section can be toggled via `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display`.
 - **Documentation site** — Launched the official documentation site at [https://kxn4t.github.io/kanameliser-editor-plus/](https://kxn4t.github.io/kanameliser-editor-plus/) (available in Japanese and English). It provides getting-started and per-feature guides; explanations and screenshots are still being expanded.
-
----
-
-### 追加
-
-- **Mesh Info Display: パーティクルシステム情報** — 選択中のオブジェクトにパーティクルシステムや Trail/Line レンダラーが含まれる場合、メッシュ情報の下に別セクションとして `Particle Systems`（コンポーネント数）、`Particle Slots`（パーティクルが消費するマテリアルスロット数。Trails 有効時は 2 スロット）、`Trail/Line Slots`（Trail/Line レンダラーが消費するマテリアルスロット数）を表示するようになりました。これらは Mesh/Skinned Mesh Renderer とは別枠で VRChat のパフォーマンスランクの Material Slots を消費するため、既存のメッシュ系カウントの意味は変えずに分けて表示します（ランク上の実際の Material Slots は既存の `Material Slots` と追加スロットの合計です）。表示は `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display` でオンオフできます。
-- **ドキュメントサイト** — 公式ドキュメントサイト [https://kxn4t.github.io/kanameliser-editor-plus/](https://kxn4t.github.io/kanameliser-editor-plus/) を公開しました（日本語・英語対応）。導入手順と各機能の使い方を掲載しています。説明やスクリーンショットは今後も拡充していく予定です。
-
-## [1.0.0-beta.2] - 2026-08-08
-
-### Added
-
-- **Korean / Chinese (Simplified & Traditional) language support** — The editor UI (Component Manager, MA Material Helper dialogs and guide window, AO Bounds Setter, and the Material Slot Remapping Inspector) is now also available in Korean, Simplified Chinese, and Traditional Chinese via NDMF localization. As before, the language follows NDMF's shared language preference (requires NDMF 1.11.0+); without NDMF, the UI remains in English. The documentation site remains English/Japanese only.
-- **Merge Skinned Mesh (Color Menu Safe): MA Object Toggle variants** — Added two Hierarchy right-click variants. `Create Merge Skinned Mesh (Exclude Object Toggle)` merges the selected renderers excluding any targeted (directly or via an ancestor) by an MA Object Toggle in the avatar. `Create Merge Skinned Mesh (From Object Toggle)` (shown when right-clicking an object with an MA Object Toggle) merges the renderers under the toggle's targets grouped by the ON/OFF state each entry sets, and automatically adds the merged object to the toggle when no toggled subtree contains it, so the toggle keeps working. Renderers targeted by a different Object Toggle are excluded automatically. The `[How to Create Color Menu]` guide window tip and the docs now walk through the recommended workflow: build color menus and toggles first, then run the two commands.
-
----
-
-### 追加
-
-- **韓国語・中国語（簡体字・繁体字）対応** — エディター UI（Component Manager、MA Material Helper のダイアログとガイドウィンドウ、AO Bounds Setter、Material Slot Remapping の Inspector）が NDMF ローカライズ経由で韓国語・簡体字中国語・繁体字中国語でも利用できるようになりました。従来どおり言語は NDMF 共通の言語設定に従います（NDMF 1.11.0 以降が必要）。NDMF がない場合は英語表示のままです。ドキュメントサイトは英語・日本語のみです。
-- **Merge Skinned Mesh (Color Menu Safe): MA Object Toggle向けバリエーション** — ヒエラルキー右クリックに2つのバリエーションを追加しました。`Create Merge Skinned Mesh (Exclude Object Toggle)` は、選択したメッシュのうちアバター内のMA Object Toggleの対象（配下を含む）を自動で除外して統合します。`Create Merge Skinned Mesh (From Object Toggle)`（MA Object Toggleが付いたオブジェクトを右クリックで表示）は、トグル対象のメッシュをON/OFF設定ごとに統合し、トグルが統合オブジェクトに届かない場合は自動でトグルの対象に追加します。別のObject Toggleの対象になっているメッシュは自動で統合から除外されます。`[How to Create Color Menu]` ガイドウィンドウのヒントとドキュメントに、メニュー類を作り終えてから2つのコマンドで統合する推奨ワークフローの手順を追記しました。
-
-## [1.0.0-beta.1] - 2026-08-03
-
-### Added
-
-- **Japanese language support (NDMF localization)** — Component Manager, MA Material Helper dialogs, AO Bounds Setter, and the Material Slot Remapping Inspector are now available in Japanese. The language follows NDMF's shared language preference and can be switched from the language selector shown in each window (requires NDMF 1.11.0+). Without NDMF, the UI remains in English.
+- **Multi-language support (NDMF localization)** — Component Manager, MA Material Helper dialogs and the guide window, AO Bounds Setter, and the Material Slot Remapping Inspector are now available in Japanese, Korean, Simplified Chinese, and Traditional Chinese. The language follows NDMF's shared language preference and can be switched from the language selector shown in each window (requires NDMF 1.11.0+). Without NDMF, the UI remains in English. The documentation site remains English/Japanese only.
 - **MA Material Helper: Material Slot Remapping** — Added a `Kanameliser Editor Plus > Add Material Slot Remapping` component (Hierarchy right-click). Use it when an outfit conversion (e.g. auto-fitting tools) reorders a renderer's material slots and Material Setter/Swap color changes no longer land correctly. It maps the converted outfit's material slots back to the original (reference) outfit's slots, so Material Setter/Swap color changes apply to the correct slots even when the conversion shifted the slot order.
+- **MA Material Helper: `[How to Create Color Menu]` guide window** — Added a guide item to the Hierarchy right-click menu. It opens a window explaining the two-step workflow, with a live status and a list of the currently copied objects.
 - **MA Material Helper: Verbose Matching Logs toggle** — Added a menu toggle at `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` to enable detailed matching diagnostics in the console.
-- **MA Material Helper: `[How to Create Color Menu]` guide window** — Added a guide item to the Hierarchy right-click menu. It opens a window explaining the two-step workflow, with a live status and a list of the currently copied objects (available in English and Japanese).
+- **Merge Skinned Mesh (Color Menu Safe)** — Added Hierarchy right-click commands that create an AAO Merge Skinned Mesh without breaking color change menus (shown when both AAO: Avatar Optimizer 1.8.0+ and Modular Avatar 1.13.0+ are installed). They analyze MA Material Setter / Material Swap components in the avatar: materials whose color changes would leak into other meshes after slot merging are automatically excluded, while materials changed uniformly across all merged slots stay merged, so color change menus keep working after the merge while preserving as much draw call reduction as possible.
+  - `Create Merge Skinned Mesh (Color Menu Safe)` — merges the selected renderers
+  - `Create Merge Skinned Mesh (Exclude Object Toggle)` — merges the selected renderers excluding any targeted (directly or via an ancestor) by an MA Object Toggle in the avatar
+  - `Create Merge Skinned Mesh (From Object Toggle)` — shown when right-clicking an object with an MA Object Toggle; merges the renderers under the toggle's targets grouped by the ON/OFF state each entry sets, and automatically adds the merged object to the toggle when no toggled subtree contains it, so the toggle keeps working. Renderers targeted by a different Object Toggle are excluded automatically
+  - The `[How to Create Color Menu]` guide window and the docs explain the recommended workflow — build color menus and toggles first, then merge with these commands — and note that color-changed meshes are not auto-merged by AAO's Trace and Optimize
 - **FBX Settings Copier** — Copy & paste FBX import settings between FBX assets from the Project window right-click menu (`Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`). Copies Model tab settings (including Legacy Blend Shape Normals), basic Rig settings (Animation Type, Avatar Definition, Skin Weights, Optimize Bones / Optimize Game Objects), and Materials tab settings including Remapped Materials. Remaps are applied only to material names that exist on the target; animation clip definitions and Humanoid bone mappings are not copied. Pasting to multiple FBX files at once is supported, and files whose settings already match are skipped without reimporting.
-- **Merge Skinned Mesh (Color Menu Safe)** — Added a `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)` command to the Hierarchy right-click menu (shown when both AAO: Avatar Optimizer 1.8.0+ and Modular Avatar 1.13.0+ are installed). It creates an AAO Merge Skinned Mesh from the selected renderers and analyzes MA Material Setter / Material Swap components in the avatar: materials whose color changes would leak into other meshes after slot merging are automatically excluded, while materials changed uniformly across all merged slots stay merged. This lets color change menus keep working after the merge while preserving as much draw call reduction as possible. The `[How to Create Color Menu]` guide window now also shows a performance tip explaining that color-changed meshes are not auto-merged by AAO's Trace and Optimize and pointing to this command.
+- **Mesh Info Display: Particle system info** — When the selection contains particle systems or Trail/Line renderers, the Mesh Info display now shows a separate section below the mesh counts: `Particle Systems` (component count), `Particle Slots` (material slots used by particle systems; trails use a second slot), and `Trail/Line Slots` (material slots used by Trail/Line renderers). These renderers consume Material Slots in VRChat's avatar performance rank separately from Mesh/Skinned Mesh Renderers, so they are shown apart from the mesh-based counts, which keep their meaning; the rank's actual Material Slots value is the sum of `Material Slots` and the new slot counts. The section can be toggled via `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display`.
 
 ### Changed
 
 - **MA Material Helper: Clearer Hierarchy context menu naming** — Renamed `Copy Material Setup` to `Copy Color Variants` and `Create Material Setter` to `Create Color Menu`, so the commands describe the color-menu workflow instead of internal component names and are no longer confusable with `Copy Materials`. The `[Optional]` variants and Material Swap commands moved into an `Advanced` submenu.
-- **MA Material Helper: Material Slot Remapping Inspector migrated to UI Toolkit** — The Inspector was rebuilt with Unity's UI Toolkit. Mapping generation, slot editing, and the reset action work the same as before, and the UI now stays in sync with undo/redo and external changes.
-- **AO Bounds Setter: Transform selector fully migrated to UI Toolkit** — The remaining IMGUI code (Esc key handling) in the Transform selector popup was replaced with a UI Toolkit event callback. Closing with the Esc key works the same as before.
 - **Component Manager: Migrated to UI Toolkit** — The window UI was rebuilt with Unity's UI Toolkit. Filters, select-all checkboxes, column resizing, hierarchy selection, and the deletion flow all work the same as before, with a slightly cleaner layout.
+- **AO Bounds Setter: Transform selector fully migrated to UI Toolkit** — The remaining IMGUI code (Esc key handling) in the Transform selector popup was replaced with a UI Toolkit event callback. Closing with the Esc key works the same as before.
 
 ### Removed
 
@@ -80,46 +59,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AO Bounds Setter**
   - Fixed a MissingReferenceException that could abort Apply (and row clicks) when a listed object was deleted before applying
   - Fixed the Transform selector popup remaining open as an unclosable window; it now closes on focus loss and with the Esc key
+
 ---
+
+初の安定版リリースです。この項目は 1.0.0-beta.1 〜 1.0.0-beta.3 の変更をまとめたものです。
 
 ### 追加
 
-- **日本語UI対応（NDMFローカライズ）** — Component Manager、MA Material Helperのダイアログ、AO Bounds Setter、Material Slot RemappingのInspectorが日本語表示に対応しました。言語はNDMF共通の言語設定に従い、各ウィンドウの言語セレクターから切り替えできます（NDMF 1.11.0以上が必要）。NDMFがない環境では従来どおり英語表示になります。
-- **MA Material Helper: Material Slot Remapping** — `Kanameliser Editor Plus > Add Material Slot Remapping`（ヒエラルキー右クリック）コンポーネントを追加。もちふぃった～等で変換を行った際にマテリアルスロット順が変わってしまい、Material Setter/Swapの色変更がうまく行かないときに使用します。変換後の衣装のマテリアルスロットを元（参照）衣装のスロットに対応付けることで、変換でスロット順がずれていてもMaterial Setter/Swapの色変更が正しいスロットに適用されるようにします。
+- **ドキュメントサイト** — 公式ドキュメントサイト [https://kxn4t.github.io/kanameliser-editor-plus/](https://kxn4t.github.io/kanameliser-editor-plus/) を公開しました（日本語・英語対応）。導入手順と各機能の使い方を掲載しています。説明やスクリーンショットは今後も拡充していく予定です。
+- **多言語対応（NDMF ローカライズ）** — Component Manager、MA Material Helper のダイアログとガイドウィンドウ、AO Bounds Setter、Material Slot Remapping の Inspector が日本語・韓国語・簡体字中国語・繁体字中国語の表示に対応しました。言語は NDMF 共通の言語設定に従い、各ウィンドウの言語セレクターから切り替えできます（NDMF 1.11.0 以上が必要）。NDMF がない環境では英語表示になります。ドキュメントサイトは英語・日本語のみです。
+- **MA Material Helper: Material Slot Remapping** — `Kanameliser Editor Plus > Add Material Slot Remapping`（ヒエラルキー右クリック）コンポーネントを追加。もちふぃった～等で変換を行った際にマテリアルスロット順が変わってしまい、Material Setter/Swap の色変更がうまく行かないときに使用します。変換後の衣装のマテリアルスロットを元（参照）衣装のスロットに対応付けることで、変換でスロット順がずれていても Material Setter/Swap の色変更が正しいスロットに適用されるようにします。
+- **MA Material Helper: `[How to Create Color Menu]` ガイドウィンドウ** — ヒエラルキー右クリックメニューにガイド項目を追加。2 ステップの作成手順の説明と、コピー済みオブジェクトの状態・一覧をリアルタイム表示するウィンドウが開きます。
 - **MA Material Helper: 詳細マッチングログのトグル** — `Tools > Kanameliser Editor Plus > [Settings] > Verbose Matching Logs` にデバッグ用ログのトグルを追加。有効にするとマッチング判定の詳細情報をコンソールに出力します。
-- **MA Material Helper: `[How to Create Color Menu]` ガイドウィンドウ** — ヒエラルキー右クリックメニューにガイド項目を追加。2ステップの作成手順の説明と、コピー済みオブジェクトの状態・一覧をリアルタイム表示するウィンドウが開きます（日本語・英語対応）。
-- **FBX Settings Copier** — ProjectウィンドウのFBX右クリックメニュー（`Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`）でFBXアセット間のインポート設定をコピー&ペーストできるようになりました。Modelタブの全設定（Legacy Blend Shape Normalsを含む）、Rigタブの基本設定（Animation Type、Avatar Definition、Skin Weights、Optimize Bones / Optimize Game Objects）、MaterialsタブのRemapped Materialsを含む設定をコピーします。リマップはターゲットに同名のマテリアルが存在する場合のみ適用され、AnimationタブのクリップとHumanoidのボーンマッピングはコピーされません。複数FBXへの一括ペーストに対応し、設定に差分のないファイルは再インポートせずスキップします。
-- **Merge Skinned Mesh (Color Menu Safe)** — ヒエラルキー右クリックメニューに `Kanameliser Editor Plus > Create Merge Skinned Mesh (Color Menu Safe)` を追加しました（AAO: Avatar Optimizer 1.8.0以上とModular Avatar 1.13.0以上の両方がある場合に表示）。選択したレンダラーからAAOのMerge Skinned Meshを作成し、アバター内のMA Material Setter/Swapを解析して、スロット統合すると色変更が他のメッシュへ波及するマテリアルだけを自動で統合対象から除外します。全スロットが同じように変更されるマテリアルは統合されたままになるため、色変更メニューを壊さずにドローコール削減効果を最大限維持できます。また、`[How to Create Color Menu]` ガイドウィンドウに、色変更対象のメッシュがAAOのTrace and Optimizeで自動統合されないことと、本コマンドで統合できることを案内するパフォーマンスのヒントを追加しました。
+- **Merge Skinned Mesh (Color Menu Safe)** — 色変更メニューを壊さずに AAO の Merge Skinned Mesh を作成するコマンド群をヒエラルキー右クリックメニューに追加しました（AAO: Avatar Optimizer 1.8.0 以上と Modular Avatar 1.13.0 以上の両方がある場合に表示）。アバター内の MA Material Setter/Swap を解析し、スロット統合すると色変更が他のメッシュへ波及するマテリアルだけを自動で統合対象から除外します。全スロットが同じように変更されるマテリアルは統合されたままになるため、色変更メニューを壊さずにドローコール削減効果を最大限維持できます。
+  - `Create Merge Skinned Mesh (Color Menu Safe)` — 選択したメッシュを統合します
+  - `Create Merge Skinned Mesh (Exclude Object Toggle)` — 選択したメッシュのうち、アバター内の MA Object Toggle の対象（配下を含む）を自動で除外して統合します
+  - `Create Merge Skinned Mesh (From Object Toggle)`（MA Object Toggle が付いたオブジェクトを右クリックで表示）— トグル対象のメッシュを ON/OFF 設定ごとに統合し、トグルが統合オブジェクトに届かない場合は自動でトグルの対象に追加します。別の Object Toggle の対象になっているメッシュは自動で統合から除外されます
+  - `[How to Create Color Menu]` ガイドウィンドウとドキュメントに、メニュー類を作り終えてからこれらのコマンドで統合する推奨ワークフローの手順と、色変更対象のメッシュが AAO の Trace and Optimize では自動統合されないことの案内を追加しました
+- **FBX Settings Copier** — Project ウィンドウの FBX 右クリックメニュー（`Kanameliser Editor Plus > Copy FBX Settings / Paste FBX Settings`）で FBX アセット間のインポート設定をコピー & ペーストできるようになりました。Model タブの全設定（Legacy Blend Shape Normals を含む）、Rig タブの基本設定（Animation Type、Avatar Definition、Skin Weights、Optimize Bones / Optimize Game Objects）、Materials タブの Remapped Materials を含む設定をコピーします。リマップはターゲットに同名のマテリアルが存在する場合のみ適用され、Animation タブのクリップと Humanoid のボーンマッピングはコピーされません。複数 FBX への一括ペーストに対応し、設定に差分のないファイルは再インポートせずスキップします。
+- **Mesh Info Display: パーティクルシステム情報** — 選択中のオブジェクトにパーティクルシステムや Trail/Line レンダラーが含まれる場合、メッシュ情報の下に別セクションとして `Particle Systems`（コンポーネント数）、`Particle Slots`（パーティクルが消費するマテリアルスロット数。Trails 有効時は 2 スロット）、`Trail/Line Slots`（Trail/Line レンダラーが消費するマテリアルスロット数）を表示するようになりました。これらは Mesh/Skinned Mesh Renderer とは別枠で VRChat のパフォーマンスランクの Material Slots を消費するため、既存のメッシュ系カウントの意味は変えずに分けて表示します（ランク上の実際の Material Slots は既存の `Material Slots` と追加スロットの合計です）。表示は `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display` でオンオフできます。
 
 ### 変更
 
-- **MA Material Helper: 右クリックメニュー名の見直し** — `Copy Material Setup` を `Copy Color Variants` に、`Create Material Setter` を `Create Color Menu` に名称変更しました。コマンド名が内部コンポーネント名ではなく「色変更メニューを作る」という目的を表すようになり、`Copy Materials` とも混同しにくくなりました。あわせて `[Optional]` 系とMaterial Swap系のコマンドは `Advanced` サブメニューに移動しました。
-- **MA Material Helper: Material Slot RemappingのInspectorをUI Toolkitへ移行** — InspectorのUIをUnityのUI Toolkitで再構築しました。マッピング生成・スロット編集・リセットの動作は変わらず、Undo/Redoや外部からの変更にもUIが追従するようになりました。
-- **AO Bounds Setter: TransformセレクターをUI Toolkitへ完全移行** — Transformセレクターのポップアップに残っていたIMGUIコード（Escキー処理）をUI Toolkitのイベントコールバックに置き換えました。Escキーで閉じる動作は変わりません。
-- **Component Manager: UI Toolkitへ移行** — ウィンドウUIをUnityのUI Toolkitで再構築しました。フィルター・全選択チェックボックス・列リサイズ・Hierarchy選択・削除フローの動作は変わらず、レイアウトが少しすっきりしました。
+- **MA Material Helper: 右クリックメニュー名の見直し** — `Copy Material Setup` を `Copy Color Variants` に、`Create Material Setter` を `Create Color Menu` に名称変更しました。コマンド名が内部コンポーネント名ではなく「色変更メニューを作る」という目的を表すようになり、`Copy Materials` とも混同しにくくなりました。あわせて `[Optional]` 系と Material Swap 系のコマンドは `Advanced` サブメニューに移動しました。
+- **Component Manager: UI Toolkit へ移行** — ウィンドウ UI を Unity の UI Toolkit で再構築しました。フィルター・全選択チェックボックス・列リサイズ・Hierarchy 選択・削除フローの動作は変わらず、レイアウトが少しすっきりしました。
+- **AO Bounds Setter: Transform セレクターを UI Toolkit へ完全移行** — Transform セレクターのポップアップに残っていた IMGUI コード（Esc キー処理）を UI Toolkit のイベントコールバックに置き換えました。Esc キーで閉じる動作は変わりません。
 
 ### 削除
 
-- **Missing BlendShape Inserter** — Kanameliser Editor Plusから削除しました。同等機能については、[Zatools版 Missing BlendShape Inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/) をご利用ください。
+- **Missing BlendShape Inserter** — Kanameliser Editor Plus から削除しました。同等機能については、[Zatools 版 Missing BlendShape Inserter](https://zatools.kb10uy.dev/editor-extension/missing-blendshape-inserter/) をご利用ください。
 
 ### 修正
 
 - **Component Manager**
-  - 削除確認ダイアログをEscキーや閉じる（×）ボタンで閉じると、キャンセルではなく削除が実行されてしまう問題を修正。ダイアログのボタンと確認メッセージを修正しました
+  - 削除確認ダイアログを Esc キーや閉じる（×）ボタンで閉じると、キャンセルではなく削除が実行されてしまう問題を修正。ダイアログのボタンと確認メッセージを修正しました
   - ターゲットオブジェクトを差し替えた際にコンソールに「Mismatched LayoutGroup」エラーが出る問題を修正
-  - 削除に失敗するコンポーネント（Prefabインスタンス上の非追加コンポーネント等）があっても残りの削除が中断されないように修正。失敗した項目は処理完了後にまとめて通知するようにしました
-  - Component ManagerのUI補助メソッドで例外を握り潰さないようにし、Unityのコンソールへ表出するように修正
-  - ウィンドウがヒエラルキーの変更やUndo/Redoに追従するようになり、ウィンドウ外でコンポーネントを追加・削除しても一覧が古いまま残らないように修正（以前は古い行にチェックを入れても削除時に黙ってスキップされていました）
+  - 削除に失敗するコンポーネント（Prefab インスタンス上の非追加コンポーネント等）があっても残りの削除が中断されないように修正。失敗した項目は処理完了後にまとめて通知するようにしました
+  - Component Manager の UI 補助メソッドで例外を握り潰さないようにし、Unity のコンソールへ表出するように修正
+  - ウィンドウがヒエラルキーの変更や Undo/Redo に追従するようになり、ウィンドウ外でコンポーネントを追加・削除しても一覧が古いまま残らないように修正（以前は古い行にチェックを入れても削除時に黙ってスキップされていました）
   - コンポーネントとそれを必要とするコンポーネント（`RequireComponent`）を同時に削除した際、依存する側を先に削除することで順序に関係なく両方削除されるように修正。それでも削除できないコンポーネントは黙って残さず通知するようにしました
 - **MA Material Helper**
-  - あるグループで検出されたMaterial Swap制限の警告が、後続グループに競合がない場合に上書きされて消えてしまう問題を修正
-  - 失敗時（マッチ0件）のクリーンアップをUndo対応の削除に変更し、生成失敗後にUndo履歴が壊れる問題を修正
-  - 階層スキャンの深さ上限を10から32に引き上げ、深い階層のメッシュ（アバターのボーン下など）が漏れる問題を修正。上限到達時には警告を出力するようにしました
+  - あるグループで検出された Material Swap 制限の警告が、後続グループに競合がない場合に上書きされて消えてしまう問題を修正
+  - 失敗時（マッチ 0 件）のクリーンアップを Undo 対応の削除に変更し、生成失敗後に Undo 履歴が壊れる問題を修正
+  - 階層スキャンの深さ上限を 10 から 32 に引き上げ、深い階層のメッシュ（アバターのボーン下など）が漏れる問題を修正。上限到達時には警告を出力するようにしました
 - **Mesh Info**
-  - 親とその子を同時に選択した際にMaterial Slotsが二重カウントされる問題を修正
+  - 親とその子を同時に選択した際に Material Slots が二重カウントされる問題を修正
 - **AO Bounds Setter**
-  - リスト表示後に対象オブジェクトが削除されると、Apply（および行クリック）がMissingReferenceExceptionで中断する問題を修正
-  - Transformセレクターのポップアップが閉じられないウィンドウとして残ってしまう問題を修正。フォーカスを失ったときとEscキーで閉じるようにしました
+  - リスト表示後に対象オブジェクトが削除されると、Apply（および行クリック）が MissingReferenceException で中断する問題を修正
+  - Transform セレクターのポップアップが閉じられないウィンドウとして残ってしまう問題を修正。フォーカスを失ったときと Esc キーで閉じるようにしました
 
 ## [0.5.0] - 2026-04-23
 
