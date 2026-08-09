@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.3] - 2026-08-09
+
 ### Added
 
 - **Mesh Info Display: Particle system info** — When the selection contains particle systems or Trail/Line renderers, the Mesh Info display now shows a separate section below the mesh counts: `Particle Systems` (component count), `Particle Slots` (material slots used by particle systems; trails use a second slot), and `Trail/Line Slots` (material slots used by Trail/Line renderers). These renderers consume Material Slots in VRChat's avatar performance rank separately from Mesh/Skinned Mesh Renderers, so they are shown apart from the mesh-based counts, which keep their meaning; the rank's actual Material Slots value is the sum of `Material Slots` and the new slot counts. The section can be toggled via `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display`.
