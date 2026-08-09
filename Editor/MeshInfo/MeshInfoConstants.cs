@@ -6,6 +6,8 @@ namespace Kanameliser.EditorPlus
     {
         public const string MenuPath = "Tools/Kanameliser Editor Plus/[Settings]/Show Mesh Info Display";
         public const string PreferenceKey = "MeshInfoDisplayVisible";
+        public const string ParticleInfoMenuPath = "Tools/Kanameliser Editor Plus/[Settings]/Show Particle Info Display";
+        public const string ParticleInfoPreferenceKey = "MeshInfoParticleInfoVisible";
 
         public const int WindowWidth = 170;
         public const int WindowHeight = 95;
@@ -26,6 +28,10 @@ namespace Kanameliser.EditorPlus
         public const int TitleSpacing = 20;
         public const int WarningSpacing = 5;
 
+        public const int InfoLineHeight = 16;
+        public const int SeparatorHeight = 1;
+        public const int SeparatorSpacing = 4;
+
         public const double UpdateIntervalSeconds = 0.2;
 
         public static readonly Color BackgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.3f);
@@ -33,5 +39,6 @@ namespace Kanameliser.EditorPlus
         public static readonly Color DiffDecreaseBackgroundColor = new Color(0.2f, 0.8f, 0.2f, 0.6f);
         public static readonly Color PreviewDotColor = new Color(0.3f, 1f, 0.3f, 1f);
         public static readonly Color WarningTextColor = new Color(1f, 1f, 0.5f);
+        public static readonly Color SeparatorColor = new Color(1f, 1f, 1f, 0.25f);
     }
 }

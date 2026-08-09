@@ -8,6 +8,7 @@ namespace Kanameliser.EditorPlus
     internal class MeshInfoDisplay
     {
         private static bool isDisplayVisible;
+        private static bool isParticleInfoVisible;
         private static GameObject[] previousSelection;
         private static readonly MeshInfoCalculator calculator = new MeshInfoCalculator();
         private static readonly MeshInfoRenderer renderer = new MeshInfoRenderer();
@@ -26,6 +27,8 @@ namespace Kanameliser.EditorPlus
         {
             isDisplayVisible = EditorPrefs.GetBool(MeshInfoConstants.PreferenceKey, true);
             Menu.SetChecked(MeshInfoConstants.MenuPath, isDisplayVisible);
+            isParticleInfoVisible = EditorPrefs.GetBool(MeshInfoConstants.ParticleInfoPreferenceKey, true);
+            Menu.SetChecked(MeshInfoConstants.ParticleInfoMenuPath, isParticleInfoVisible);
             forceUpdate = true;
             lastUpdateTime = 0;
             SceneView.duringSceneGui += OnSceneGUI;
@@ -38,6 +41,19 @@ namespace Kanameliser.EditorPlus
             isDisplayVisible = !isDisplayVisible;
             EditorPrefs.SetBool(MeshInfoConstants.PreferenceKey, isDisplayVisible);
             Menu.SetChecked(MeshInfoConstants.MenuPath, isDisplayVisible);
+
+            if (SceneView.lastActiveSceneView != null)
+                SceneView.lastActiveSceneView.Repaint();
+            else
+                SceneView.RepaintAll();
+        }
+
+        [MenuItem(MeshInfoConstants.ParticleInfoMenuPath)]
+        private static void ToggleParticleInfoVisibility()
+        {
+            isParticleInfoVisible = !isParticleInfoVisible;
+            EditorPrefs.SetBool(MeshInfoConstants.ParticleInfoPreferenceKey, isParticleInfoVisible);
+            Menu.SetChecked(MeshInfoConstants.ParticleInfoMenuPath, isParticleInfoVisible);
 
             if (SceneView.lastActiveSceneView != null)
                 SceneView.lastActiveSceneView.Repaint();
@@ -102,9 +118,9 @@ namespace Kanameliser.EditorPlus
         {
 #if NDMF_INSTALLED
             renderer.DrawMeshInfo(currentData, originalData,
-                ndmfIntegration.IsShowingProxyInfo, ndmfIntegration.HasProxyInSelection);
+                ndmfIntegration.IsShowingProxyInfo, ndmfIntegration.HasProxyInSelection, isParticleInfoVisible);
 #else
-            renderer.DrawMeshInfo(currentData);
+            renderer.DrawMeshInfo(currentData, showParticleInfo: isParticleInfoVisible);
 #endif
         }
 

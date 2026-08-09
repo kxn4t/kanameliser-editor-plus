@@ -6,6 +6,9 @@ namespace Kanameliser.EditorPlus
         public int Materials { get; set; }
         public int Meshes { get; set; }
         public int MaterialSlots { get; set; }
+        public int ParticleSystems { get; set; }
+        public int ParticleMaterialSlots { get; set; }
+        public int TrailLineMaterialSlots { get; set; }
         public bool HasChildObjects { get; set; }
 
         public void Reset()
@@ -14,6 +17,9 @@ namespace Kanameliser.EditorPlus
             Materials = 0;
             Meshes = 0;
             MaterialSlots = 0;
+            ParticleSystems = 0;
+            ParticleMaterialSlots = 0;
+            TrailLineMaterialSlots = 0;
             HasChildObjects = false;
         }
 
@@ -25,6 +31,9 @@ namespace Kanameliser.EditorPlus
                 Materials = Materials,
                 Meshes = Meshes,
                 MaterialSlots = MaterialSlots,
+                ParticleSystems = ParticleSystems,
+                ParticleMaterialSlots = ParticleMaterialSlots,
+                TrailLineMaterialSlots = TrailLineMaterialSlots,
                 HasChildObjects = HasChildObjects
             };
         }
