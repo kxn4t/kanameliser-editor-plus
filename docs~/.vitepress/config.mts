@@ -41,8 +41,11 @@ const sidebarEn = [
   },
 ]
 
+const siteTitle = 'Kanameliser Editor Plus'
 const siteUrl = 'https://kxn4t.github.io/kanameliser-editor-plus'
 const ogImage = `${siteUrl}/og-image.png`
+const descriptionJa = 'Unity・VRChat向けエディター拡張セット'
+const descriptionEn = 'A set of useful editor extensions for Unity and VRChat'
 
 // Version info injected by the docs deployment workflow (.github/workflows/docs.yml).
 // All variables are unset for local dev builds.
@@ -66,13 +69,17 @@ const versionNav: DefaultTheme.NavItem[] = docsVersion
 
 const head: HeadConfig[] = [
   ['meta', { property: 'og:type', content: 'website' }],
-  ['meta', { property: 'og:site_name', content: 'Kanameliser Editor Plus' }],
+  ['meta', { property: 'og:site_name', content: siteTitle }],
   ['meta', { property: 'og:image', content: ogImage }],
-  ['meta', { property: 'og:url', content: siteUrl }],
   ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
   ['meta', { name: 'twitter:image', content: ogImage }],
   ['meta', { name: 'twitter:site', content: '@kanameliser' }],
 ]
+
+// Per-page OG tags. X (Twitter) requires og:title/twitter:title to render a
+// card at all — it does not fall back to the <title> tag — and VitePress only
+// emits <title>/description on its own, so inject them per page here.
+const pageUrlBase = docsChannel === 'beta' ? `${siteUrl}/beta` : siteUrl
 
 if (docsChannel === 'beta') {
   // Keep beta docs out of search results
@@ -87,18 +94,34 @@ if (docsChannel === 'beta') {
 }
 
 export default defineConfig({
-  title: 'Kanameliser Editor Plus',
+  title: siteTitle,
   base: '/kanameliser-editor-plus/',
   // GitHub Pages serves /foo from foo.html natively, so no host config is needed
   cleanUrls: true,
 
   head,
 
+  transformPageData(pageData) {
+    const title = pageData.title ? `${pageData.title} | ${siteTitle}` : siteTitle
+    const description =
+      pageData.description ||
+      (pageData.relativePath.startsWith('en/') ? descriptionEn : descriptionJa)
+    const pagePath = pageData.relativePath
+      .replace(/(^|\/)index\.md$/, '$1')
+      .replace(/\.md$/, '')
+    const pageHead = (pageData.frontmatter.head ??= [])
+    pageHead.push(
+      ['meta', { property: 'og:title', content: title }],
+      ['meta', { property: 'og:description', content: description }],
+      ['meta', { property: 'og:url', content: `${pageUrlBase}/${pagePath}` }],
+    )
+  },
+
   locales: {
     root: {
       label: '日本語',
       lang: 'ja',
-      description: 'Unity・VRChat向けエディター拡張セット',
+      description: descriptionJa,
       themeConfig: {
         nav: [
           { text: 'ドキュメント', link: '/guide/getting-started' },
@@ -118,7 +141,7 @@ export default defineConfig({
     en: {
       label: 'English',
       lang: 'en',
-      description: 'A set of useful editor extensions for Unity and VRChat',
+      description: descriptionEn,
       themeConfig: {
         nav: [
           { text: 'Docs', link: '/en/guide/getting-started' },
