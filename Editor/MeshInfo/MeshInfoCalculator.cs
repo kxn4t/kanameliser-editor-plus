@@ -16,7 +16,7 @@ namespace Kanameliser.EditorPlus
 
             foreach (var obj in gameObjects)
             {
-                data.Triangles += ProcessGameObject(obj, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref materialSlots);
+                data.Triangles += ProcessGameObject(obj, data, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref materialSlots);
             }
 
             data.Meshes = processedMeshes.Count;
@@ -27,7 +27,7 @@ namespace Kanameliser.EditorPlus
             return data;
         }
 
-        private int ProcessGameObject(GameObject obj, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, HashSet<Renderer> processedRenderers,
+        private int ProcessGameObject(GameObject obj, MeshInfoData data, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, HashSet<Renderer> processedRenderers,
             ref bool hasChildObjects, ref int totalMaterialSlots)
         {
             // Skip objects tagged as EditorOnly as they won't be included in builds
@@ -41,10 +41,11 @@ namespace Kanameliser.EditorPlus
             int triangleCount = 0;
 
             triangleCount += MeshInfoUtility.ProcessStandardMeshComponents(obj, processedMeshes, processedMaterials, processedRenderers, ref totalMaterialSlots);
+            MeshInfoUtility.ProcessParticleComponents(obj, data);
 
             foreach (Transform child in obj.transform)
             {
-                triangleCount += ProcessGameObject(child.gameObject, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref totalMaterialSlots);
+                triangleCount += ProcessGameObject(child.gameObject, data, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref totalMaterialSlots);
             }
 
             return triangleCount;

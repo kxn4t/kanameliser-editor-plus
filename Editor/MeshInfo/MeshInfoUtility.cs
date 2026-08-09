@@ -68,5 +68,29 @@ namespace Kanameliser.EditorPlus
 
             return triangleCount;
         }
+
+        public static void ProcessParticleComponents(GameObject obj, MeshInfoData data)
+        {
+            // Particle systems consume material slots on VRChat avatars (trails add a second slot),
+            // tracked separately from the mesh-based counts. Mesh particle polygons are excluded
+            // on purpose: VRChat counts them as a separate stat, not as avatar polygons
+            if (obj.GetComponent<ParticleSystem>() != null)
+            {
+                data.ParticleSystems++;
+
+                var particleRenderer = obj.GetComponent<ParticleSystemRenderer>();
+                if (particleRenderer != null && particleRenderer.sharedMaterials != null)
+                    data.ParticleMaterialSlots += particleRenderer.sharedMaterials.Length;
+            }
+
+            // Trail/Line renderers also consume material slots outside the mesh-based counts
+            var trailRenderer = obj.GetComponent<TrailRenderer>();
+            if (trailRenderer != null && trailRenderer.sharedMaterials != null)
+                data.TrailLineMaterialSlots += trailRenderer.sharedMaterials.Length;
+
+            var lineRenderer = obj.GetComponent<LineRenderer>();
+            if (lineRenderer != null && lineRenderer.sharedMaterials != null)
+                data.TrailLineMaterialSlots += lineRenderer.sharedMaterials.Length;
+        }
     }
 }

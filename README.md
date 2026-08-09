@@ -24,6 +24,8 @@ A set of useful editor extensions for Unity and VRChat.
 Displays mesh information for selected objects and their children in the top-left corner of the Scene view.
 You can check polygon count, material count, material slot count, and mesh count.
 
+When the selection contains particle systems or Trail/Line renderers, a separate section below the mesh counts shows the particle system count and the material slots these renderers consume. They count toward VRChat's Material Slots performance stat but are not included in the mesh-based counts above.
+
 #### NDMF Preview Support
 
 When NDMF preview is active, you can check optimization results from AAO/TTT/Meshia and adjust accordingly.
@@ -32,6 +34,7 @@ When NDMF preview is active, you can check optimization results from AAO/TTT/Mes
 - Automatically detects NDMF proxy meshes and shows a green dot to indicate preview state
 
 Toggle: `Tools > Kanameliser Editor Plus > [Settings] > Show Mesh Info Display`
+Particle info toggle: `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display`
 
 ### Toggle Objects Active
 

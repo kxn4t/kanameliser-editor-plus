@@ -24,6 +24,8 @@ UnityおよびVRChatのための便利なエディター拡張機能セット。
 選択したオブジェクトとその子オブジェクトのメッシュ情報をシーンビュー左上に表示します。
 ポリゴン数・マテリアル数・マテリアルスロット数・メッシュ数を確認できます。
 
+選択したオブジェクトにパーティクルシステムやTrail/Lineレンダラーが含まれる場合は、メッシュ情報の下に別セクションとしてパーティクルシステム数とこれらが消費するマテリアルスロット数を表示します。これらもVRChatのパフォーマンスランクのMaterial Slotsを消費しますが、上のメッシュ系カウントには含まれないため分けて表示します。
+
 #### NDMFプレビュー対応
 
 NDMFプレビューがアクティブな場合、AAO/TTT/Meshiaなどの最適化結果を確認しながら調整できます。
@@ -32,6 +34,7 @@ NDMFプレビューがアクティブな場合、AAO/TTT/Meshiaなどの最適�
 - NDMFプロキシメッシュを自動検出し、緑のドットでプレビュー中であることを表示
 
 表示切替: `Tools > Kanameliser Editor Plus > [Settings] > Show Mesh Info Display`
+パーティクル情報の表示切替: `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display`
 
 ### Toggle Objects Active
 

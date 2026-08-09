@@ -71,13 +71,25 @@ namespace Kanameliser.EditorPlus
         }
 
         public void DrawMeshInfo(MeshInfoData currentData, MeshInfoData originalData = null,
-            bool isShowingProxyInfo = false, bool hasProxyInSelection = false)
+            bool isShowingProxyInfo = false, bool hasProxyInSelection = false, bool showParticleInfo = true)
         {
             Handles.BeginGUI();
             EnsureStylesInitialized();
 
+            GetParticleLineVisibility(currentData, originalData, showParticleInfo,
+                out bool showParticleSystems, out bool showParticleSlots, out bool showTrailLineSlots);
+            int particleLineCount = (showParticleSystems ? 1 : 0) + (showParticleSlots ? 1 : 0) + (showTrailLineSlots ? 1 : 0);
+
+            // Extend the window below the base layout when the particle section is visible
+            float windowHeight = MeshInfoConstants.WindowHeight;
+            if (particleLineCount > 0)
+            {
+                windowHeight += MeshInfoConstants.SeparatorSpacing * 2 + MeshInfoConstants.SeparatorHeight
+                    + particleLineCount * MeshInfoConstants.InfoLineHeight;
+            }
+
             var windowRect = new Rect(MeshInfoConstants.WindowPositionX, MeshInfoConstants.WindowPositionY,
-                MeshInfoConstants.WindowWidth, MeshInfoConstants.WindowHeight);
+                MeshInfoConstants.WindowWidth, windowHeight);
 
             // Draw background
             GUI.DrawTexture(windowRect, backgroundTexture);
@@ -106,6 +118,32 @@ namespace Kanameliser.EditorPlus
 #endif
             {
                 DrawStaticLabels(currentData);
+            }
+
+            if (particleLineCount > 0)
+            {
+                DrawSeparator();
+#if NDMF_INSTALLED
+                if (originalData != null)
+                {
+                    bool showDiff = isShowingProxyInfo && hasProxyInSelection;
+                    if (showParticleSystems)
+                        DrawDynamicLabel("Particle Systems", originalData.ParticleSystems, currentData.ParticleSystems, showDiff);
+                    if (showParticleSlots)
+                        DrawDynamicLabel("Particle Slots", originalData.ParticleMaterialSlots, currentData.ParticleMaterialSlots, showDiff);
+                    if (showTrailLineSlots)
+                        DrawDynamicLabel("Trail/Line Slots", originalData.TrailLineMaterialSlots, currentData.TrailLineMaterialSlots, showDiff);
+                }
+                else
+#endif
+                {
+                    if (showParticleSystems)
+                        GUILayout.Label($"Particle Systems: {currentData.ParticleSystems}", infoStyle);
+                    if (showParticleSlots)
+                        GUILayout.Label($"Particle Slots: {currentData.ParticleMaterialSlots}", infoStyle);
+                    if (showTrailLineSlots)
+                        GUILayout.Label($"Trail/Line Slots: {currentData.TrailLineMaterialSlots}", infoStyle);
+                }
             }
 
 #if NDMF_INSTALLED
@@ -139,6 +177,38 @@ namespace Kanameliser.EditorPlus
             GUILayout.Label($"Materials: {data.Materials}", infoStyle);
             GUILayout.Label($"Material Slots: {data.MaterialSlots}", infoStyle);
             GUILayout.Label($"Meshes: {data.Meshes}", infoStyle);
+        }
+
+        private static void GetParticleLineVisibility(MeshInfoData current, MeshInfoData original, bool showParticleInfo,
+            out bool showParticleSystems, out bool showParticleSlots, out bool showTrailLineSlots)
+        {
+            showParticleSystems = false;
+            showParticleSlots = false;
+            showTrailLineSlots = false;
+
+            if (!showParticleInfo)
+                return;
+
+            // Compare against both current and original data so removals (e.g. by NDMF plugins) stay visible as diffs
+            int particleSystems = Mathf.Max(current.ParticleSystems, original != null ? original.ParticleSystems : 0);
+            int trailLineSlots = Mathf.Max(current.TrailLineMaterialSlots, original != null ? original.TrailLineMaterialSlots : 0);
+
+            showParticleSystems = particleSystems > 0;
+            showParticleSlots = particleSystems > 0;
+            showTrailLineSlots = trailLineSlots > 0;
+        }
+
+        private void DrawSeparator()
+        {
+            GUILayout.Space(MeshInfoConstants.SeparatorSpacing);
+
+            var separatorRect = GUILayoutUtility.GetRect(1f, MeshInfoConstants.SeparatorHeight, GUILayout.ExpandWidth(true));
+            Color originalColor = GUI.color;
+            GUI.color = MeshInfoConstants.SeparatorColor;
+            GUI.DrawTexture(separatorRect, Texture2D.whiteTexture);
+            GUI.color = originalColor;
+
+            GUILayout.Space(MeshInfoConstants.SeparatorSpacing);
         }
 
 #if NDMF_INSTALLED

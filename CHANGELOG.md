@@ -14,12 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Mesh Info Display: Particle system info** — When the selection contains particle systems or Trail/Line renderers, the Mesh Info display now shows a separate section below the mesh counts: `Particle Systems` (component count), `Particle Slots` (material slots used by particle systems; trails use a second slot), and `Trail/Line Slots` (material slots used by Trail/Line renderers). These renderers consume Material Slots in VRChat's avatar performance rank separately from Mesh/Skinned Mesh Renderers, so they are shown apart from the mesh-based counts, which keep their meaning; the rank's actual Material Slots value is the sum of `Material Slots` and the new slot counts. The section can be toggled via `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display`.
 - **Documentation site** — Launched the official documentation site at [https://kxn4t.github.io/kanameliser-editor-plus/](https://kxn4t.github.io/kanameliser-editor-plus/) (available in Japanese and English). It provides getting-started and per-feature guides; explanations and screenshots are still being expanded.
 
 ---
 
 ### 追加
 
+- **Mesh Info Display: パーティクルシステム情報** — 選択中のオブジェクトにパーティクルシステムや Trail/Line レンダラーが含まれる場合、メッシュ情報の下に別セクションとして `Particle Systems`（コンポーネント数）、`Particle Slots`（パーティクルが消費するマテリアルスロット数。Trails 有効時は 2 スロット）、`Trail/Line Slots`（Trail/Line レンダラーが消費するマテリアルスロット数）を表示するようになりました。これらは Mesh/Skinned Mesh Renderer とは別枠で VRChat のパフォーマンスランクの Material Slots を消費するため、既存のメッシュ系カウントの意味は変えずに分けて表示します（ランク上の実際の Material Slots は既存の `Material Slots` と追加スロットの合計です）。表示は `Tools > Kanameliser Editor Plus > [Settings] > Show Particle Info Display` でオンオフできます。
 - **ドキュメントサイト** — 公式ドキュメントサイト [https://kxn4t.github.io/kanameliser-editor-plus/](https://kxn4t.github.io/kanameliser-editor-plus/) を公開しました（日本語・英語対応）。導入手順と各機能の使い方を掲載しています。説明やスクリーンショットは今後も拡充していく予定です。
 
 ## [1.0.0-beta.2] - 2026-08-08

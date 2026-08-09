@@ -43,7 +43,7 @@ namespace Kanameliser.EditorPlus
 
             foreach (var obj in gameObjects)
             {
-                data.Triangles += ProcessGameObjectWithProxy(obj, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref materialSlots);
+                data.Triangles += ProcessGameObjectWithProxy(obj, data, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref materialSlots);
             }
 
             data.Meshes = processedMeshes.Count;
@@ -54,7 +54,7 @@ namespace Kanameliser.EditorPlus
             return data;
         }
 
-        private int ProcessGameObjectWithProxy(GameObject obj, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, HashSet<Renderer> processedRenderers,
+        private int ProcessGameObjectWithProxy(GameObject obj, MeshInfoData data, HashSet<Mesh> processedMeshes, HashSet<Material> processedMaterials, HashSet<Renderer> processedRenderers,
             ref bool hasChildObjects, ref int totalMaterialSlots)
         {
             if (obj.CompareTag("EditorOnly"))
@@ -62,6 +62,9 @@ namespace Kanameliser.EditorPlus
 
             if (!hasChildObjects && obj.transform.childCount > 0)
                 hasChildObjects = true;
+
+            // Particle components are never proxied by NDMF, so always count them on the original object
+            MeshInfoUtility.ProcessParticleComponents(obj, data);
 
             int triangleCount = 0;
             var renderer = obj.GetComponent<Renderer>();
@@ -78,7 +81,7 @@ namespace Kanameliser.EditorPlus
 
                     foreach (Transform child in obj.transform)
                     {
-                        triangleCount += ProcessGameObjectWithProxy(child.gameObject, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref totalMaterialSlots);
+                        triangleCount += ProcessGameObjectWithProxy(child.gameObject, data, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref totalMaterialSlots);
                     }
 
                     return triangleCount;
@@ -89,7 +92,7 @@ namespace Kanameliser.EditorPlus
 
             foreach (Transform child in obj.transform)
             {
-                triangleCount += ProcessGameObjectWithProxy(child.gameObject, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref totalMaterialSlots);
+                triangleCount += ProcessGameObjectWithProxy(child.gameObject, data, processedMeshes, processedMaterials, processedRenderers, ref hasChildObjects, ref totalMaterialSlots);
             }
 
             return triangleCount;
