@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Documentation site** — Launched the official documentation site at [https://kxn4t.github.io/kanameliser-editor-plus/](https://kxn4t.github.io/kanameliser-editor-plus/) (available in Japanese and English). It provides getting-started and per-feature guides; explanations and screenshots are still being expanded.
+
+---
+
+### 追加
+
+- **ドキュメントサイト** — 公式ドキュメントサイト [https://kxn4t.github.io/kanameliser-editor-plus/](https://kxn4t.github.io/kanameliser-editor-plus/) を公開しました（日本語・英語対応）。導入手順と各機能の使い方を掲載しています。説明やスクリーンショットは今後も拡充していく予定です。
+
 ## [1.0.0-beta.2] - 2026-08-08
 
 ### Added
