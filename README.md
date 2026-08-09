@@ -2,6 +2,8 @@
 
 A set of useful editor extensions for Unity and VRChat.
 
+**Documentation**: [https://kxn4t.github.io/kanameliser-editor-plus/en/](https://kxn4t.github.io/kanameliser-editor-plus/en/)
+
 ## Installation
 
 ### Via VRChat Creator Companion (Recommended)
