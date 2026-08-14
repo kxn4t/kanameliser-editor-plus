@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-14
+
 ### Fixed
 
 - **Merge Skinned Mesh (Color Menu Safe)** — Renderers driven by a Cloth component are now excluded from the merge sources in all three commands. AAO does not merge cloth-driven renderers, so including one made the build fail. Excluded renderers are listed in the console log.
