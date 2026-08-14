@@ -25,6 +25,9 @@ namespace Kanameliser.Editor.AAOMergeHelper
     ///   working by adding the merged object to it when needed
     /// - Exclude Object Toggle: merge the selected renderers except those targeted by
     ///   any MA Object Toggle in the avatar
+    ///
+    /// All variants skip renderers driven by a Cloth component: AAO does not merge them
+    /// and fails the build when one is included.
     /// </summary>
     public static class ColorSafeMergeMenu
     {
@@ -53,8 +56,9 @@ namespace Kanameliser.Editor.AAOMergeHelper
             if (objects.Length == 0) return false;
             var gameObjects = objects.OfType<GameObject>().ToArray();
             if (gameObjects.Length != objects.Length) return false;
-            return gameObjects.Any(x => x.TryGetComponent<SkinnedMeshRenderer>(out _)
-                                        || x.TryGetComponent<MeshRenderer>(out _));
+            return gameObjects.Any(x => (x.TryGetComponent<SkinnedMeshRenderer>(out _)
+                                         || x.TryGetComponent<MeshRenderer>(out _))
+                                        && !x.TryGetComponent<Cloth>(out _));
         }
 
         [MenuItem(MENU_PATH, false, MENU_PRIORITY)]
@@ -97,6 +101,7 @@ namespace Kanameliser.Editor.AAOMergeHelper
                         && !renderer.TryGetComponent<MergeSkinnedMesh>(out _)
                         && seen.Add(renderer))
                         candidates.Add(renderer);
+            candidates = ExcludeClothRenderers(candidates);
 
             var createdCount = 0;
             foreach (var (setActive, renderers) in
@@ -167,15 +172,28 @@ namespace Kanameliser.Editor.AAOMergeHelper
         private static (List<SkinnedMeshRenderer> skinned, List<MeshRenderer> basic) CollectSelectedRenderers()
         {
             var gameObjects = Selection.gameObjects;
-            var skinned = gameObjects
+            // Cloth requires a SkinnedMeshRenderer, so only the skinned list can contain cloth
+            var skinned = ExcludeClothRenderers(gameObjects
                 .Select(x => x.GetComponent<SkinnedMeshRenderer>())
                 .Where(x => x != null)
-                .ToList();
+                .ToList());
             var basic = gameObjects
                 .Select(x => x.GetComponent<MeshRenderer>())
                 .Where(x => x != null)
                 .ToList();
             return (skinned, basic);
+        }
+
+        // AAO Merge Skinned Mesh does not merge cloth-driven renderers and fails the build
+        // when one is included, so they are dropped from the merge sources up front
+        internal static List<T> ExcludeClothRenderers<T>(List<T> renderers) where T : Renderer
+        {
+            var cloth = renderers.Where(x => x.TryGetComponent<Cloth>(out _)).ToList();
+            if (cloth.Count == 0) return renderers;
+
+            Debug.Log("[Kanameliser Editor Plus] Excluded renderer(s) with a Cloth component " +
+                      "from the merge: " + string.Join(", ", cloth.Select(x => x.name)));
+            return renderers.Except(cloth).ToList();
         }
 
         private static List<ObjectToggleMergeAnalyzer.ToggleEntry> CollectToggleEntries(GameObject avatarRoot)

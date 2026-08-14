@@ -71,6 +71,7 @@ Note that the "Copy Enablement Animation" option of Merge Skinned Mesh cannot be
 
 ## Notes
 
+- Meshes with a Cloth component are excluded from the merge automatically (AAO does not merge cloth-driven meshes, and including one makes the build fail). Excluded meshes are listed in the console log
 - The exclusion list does not update automatically when you change your Material Setter / Material Swap setup afterwards. Re-run the command to recreate it
 - Material replacements done directly with custom animation clips are not analyzed; uncheck "Merge" for those materials manually in the Inspector when needed
 

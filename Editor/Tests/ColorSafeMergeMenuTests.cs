@@ -92,6 +92,34 @@ namespace Kanameliser.EditorPlus.Tests
         }
 
         [Test]
+        public void ExcludeClothRenderers_RemovesClothDrivenRenderers()
+        {
+            var root = CreateGameObject("Root");
+            var plain = CreateGameObject("Plain", root).AddComponent<SkinnedMeshRenderer>();
+            var clothObject = CreateGameObject("ClothDriven", root);
+            var clothRenderer = clothObject.AddComponent<SkinnedMeshRenderer>();
+            clothObject.AddComponent<Cloth>();
+
+            var result = ColorSafeMergeMenu.ExcludeClothRenderers(
+                new List<SkinnedMeshRenderer> { plain, clothRenderer });
+
+            Assert.That(result, Is.EqualTo(new[] { plain }));
+        }
+
+        [Test]
+        public void ExcludeClothRenderers_NoCloth_KeepsAll()
+        {
+            var root = CreateGameObject("Root");
+            var a = CreateGameObject("A", root).AddComponent<SkinnedMeshRenderer>();
+            var b = CreateGameObject("B", root).AddComponent<SkinnedMeshRenderer>();
+
+            var result = ColorSafeMergeMenu.ExcludeClothRenderers(
+                new List<SkinnedMeshRenderer> { a, b });
+
+            Assert.That(result, Is.EqualTo(new[] { a, b }));
+        }
+
+        [Test]
         public void CreateMergeObject_NoRenderers_ReturnsNull()
         {
             var merged = ColorSafeMergeMenu.CreateMergeObject(
