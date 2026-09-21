@@ -60,8 +60,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     Add(ReferenceWalker.GetTransform(reference.SourceValue));
             }
 
+            // Listed in Hierarchy order. The order of discovery jumps between a component's object and the
+            // objects it references, which makes a row hard to find.
+            var hierarchyOrder = new Dictionary<Transform, int>();
+            foreach (var transform in map.SourceRoot.GetComponentsInChildren<Transform>(true))
+                hierarchyOrder[transform] = hierarchyOrder.Count;
+
             // Blocked components have no references collected yet, but their host is what needs attention
-            return relevant.Select(t => map.Get(t)).Where(m => m != null).ToList();
+            return relevant
+                .OrderBy(t => hierarchyOrder.TryGetValue(t, out int index) ? index : int.MaxValue)
+                .Select(t => map.Get(t))
+                .Where(m => m != null)
+                .ToList();
         }
 
         private void RenderMapping()
