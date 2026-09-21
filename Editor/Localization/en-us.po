@@ -535,14 +535,20 @@ msgstr "References to the outside"
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "References to scene objects outside of the source. They are kept as they are, because the source and the target sit in the same avatar, or one of them has no parent to look at."
 
+msgid "componentCopier.mapping.note.externalNoCounterpart"
+msgstr "No counterpart (kept as is)"
+
 msgid "componentCopier.mapping.note.externalKept"
 msgstr "Kept as is"
 
+msgid "componentCopier.report.externalMappedTo"
+msgstr "References to {0} object(s) outside of the source ({1} place(s)) are redirected to their counterparts in {2}."
+
 msgid "componentCopier.report.externalMapped"
-msgstr "{0} reference(s) point outside of the source. They are redirected to the replacements shown in the mapping section."
+msgstr "References to {0} object(s) outside of the source ({1} place(s)) are redirected to the replacements shown in the mapping section."
 
 msgid "componentCopier.report.external"
-msgstr "{0} reference(s) point outside of the source and are kept as they are."
+msgstr "References to {0} object(s) outside of the source ({1} place(s)) are kept as they are."
 
 #, csharp-format
 msgid "componentCopier.report.brokenReference"

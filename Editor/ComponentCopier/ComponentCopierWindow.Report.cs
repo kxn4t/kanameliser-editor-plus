@@ -144,13 +144,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 reportContainer.Add(prefabLabel);
             }
 
-            int redirected = plan.Components.SelectMany(c => c.References)
-                .Count(r => r.Kind == ReferenceKind.ExternalMapped);
-            if (redirected > 0)
+            var (redirectedObjects, redirectedPlaces) = CountExternalReferences(ReferenceKind.ExternalMapped);
+            if (redirectedPlaces > 0)
             {
-                // No avatar name here: replacements picked by hand work without a map of the surroundings
-                // (plan.ExternalMap is null then), and they can point anywhere
-                var redirectedLabel = new Label(Localization.S("componentCopier.report.externalMapped", redirected));
+                // The avatar is named when there is one. Replacements picked by hand also work without a map
+                // of the surroundings (plan.ExternalMap is null then), and those can point anywhere.
+                var redirectedLabel = new Label(plan.ExternalMap != null
+                    ? Localization.S("componentCopier.report.externalMappedTo",
+                        redirectedObjects, redirectedPlaces, plan.ExternalMap.TargetRoot.name)
+                    : Localization.S("componentCopier.report.externalMapped", redirectedObjects, redirectedPlaces));
                 redirectedLabel.AddToClassList("report-summary");
                 reportContainer.Add(redirectedLabel);
             }
@@ -186,9 +188,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 }
             }
 
-            int external = plan.Components.SelectMany(c => c.References)
-                .Count(r => r.Kind == ReferenceKind.ExternalScene);
-            if (external > 0) AddWarning("componentCopier.report.external", external);
+            var (keptObjects, keptPlaces) = CountExternalReferences(ReferenceKind.ExternalScene);
+            if (keptPlaces > 0) AddWarning("componentCopier.report.external", keptObjects, keptPlaces);
 
             foreach (var broken in plan.BrokenReferences.Take(10))
             {
@@ -201,6 +202,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (plan.Components.Any(c => c.Entry.Type.FullName == ComponentScanner.PipelineManagerTypeName))
                 AddWarning("componentCopier.warning.pipelineManager");
+        }
+
+        /// <summary>
+        /// Counts references to the outside by the object they point at, like the rows of the mapping section,
+        /// and by place. A single Blendshape Sync refers to the body mesh once per binding: "25 references"
+        /// next to one row for that mesh looks like a miscount.
+        /// </summary>
+        private (int objects, int places) CountExternalReferences(ReferenceKind kind)
+        {
+            var references = plan.Components
+                .SelectMany(c => c.References)
+                .Where(r => r.Kind == kind)
+                .ToList();
+            int objects = references
+                .Select(r => ReferenceWalker.GetTransform(r.SourceValue))
+                .Where(t => t != null)
+                .Distinct()
+                .Count();
+            return (objects, references.Count);
         }
 
         private VisualElement AddWarning(string key, params object[] args)

@@ -534,14 +534,20 @@ msgstr "指向複製來源之外的參照"
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "指向複製來源之外的場景物件的參照。由於複製來源和複製目標位於同一個 Avatar 中，或其中一方沒有外層父物件，因此不取代，保持不變。"
 
+msgid "componentCopier.mapping.note.externalNoCounterpart"
+msgstr "無對應（保持不變）"
+
 msgid "componentCopier.mapping.note.externalKept"
 msgstr "保持不變"
 
+msgid "componentCopier.report.externalMappedTo"
+msgstr "對複製來源之外 {0} 個物件的參照（{1} 處）將取代為 {2} 中對應的物件。"
+
 msgid "componentCopier.report.externalMapped"
-msgstr "{0} 個參照指向複製來源之外，將取代為對應關係區段中顯示的物件。"
+msgstr "對複製來源之外 {0} 個物件的參照（{1} 處）將取代為對應關係區段中顯示的物件。"
 
 msgid "componentCopier.report.external"
-msgstr "{0} 個參照指向複製來源之外，將保持不變。"
+msgstr "對複製來源之外 {0} 個物件的參照（{1} 處）將保持不變。"
 
 #, csharp-format
 msgid "componentCopier.report.brokenReference"

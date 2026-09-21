@@ -535,14 +535,20 @@ msgstr "복사 원본 바깥에 대한 참조"
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "복사 원본 바깥의 씬 오브젝트를 가리키는 참조입니다. 복사 원본과 복사 대상이 같은 아바타 안에 있거나 어느 한쪽에 바깥쪽 부모가 없으므로, 교체하지 않고 그대로 유지합니다."
 
+msgid "componentCopier.mapping.note.externalNoCounterpart"
+msgstr "대응 없음(그대로 유지)"
+
 msgid "componentCopier.mapping.note.externalKept"
 msgstr "그대로 유지"
 
+msgid "componentCopier.report.externalMappedTo"
+msgstr "복사 원본 바깥의 오브젝트 {0}개에 대한 참조({1}곳)를 {2}의 대응하는 오브젝트로 교체합니다."
+
 msgid "componentCopier.report.externalMapped"
-msgstr "참조 {0}개는 복사 원본 바깥을 가리킵니다. 대응 섹션에 표시된 대상으로 교체합니다."
+msgstr "복사 원본 바깥의 오브젝트 {0}개에 대한 참조({1}곳)를 대응 섹션에 표시된 대상으로 교체합니다."
 
 msgid "componentCopier.report.external"
-msgstr "참조 {0}개는 복사 원본 바깥을 가리키므로 그대로 유지합니다."
+msgstr "복사 원본 바깥의 오브젝트 {0}개에 대한 참조({1}곳)는 그대로 유지합니다."
 
 #, csharp-format
 msgid "componentCopier.report.brokenReference"

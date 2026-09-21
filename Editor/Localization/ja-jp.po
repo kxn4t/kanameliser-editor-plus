@@ -534,14 +534,20 @@ msgstr "コピー元の外への参照"
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "コピー元の外のシーンオブジェクトを指している参照です。コピー元とコピー先が同じアバターの中にあるか、どちらかの外側に親がないため、置き換えずにそのまま残します。"
 
+msgid "componentCopier.mapping.note.externalNoCounterpart"
+msgstr "対応なし（そのまま残す）"
+
 msgid "componentCopier.mapping.note.externalKept"
 msgstr "そのまま残す"
 
+msgid "componentCopier.report.externalMappedTo"
+msgstr "コピー元の外にあるオブジェクト {0} 個への参照（{1} か所）を、{2} の対応するオブジェクトへ向け直します。"
+
 msgid "componentCopier.report.externalMapped"
-msgstr "{0} 件の参照はコピー元の外を指しています。対応付けセクションに表示している置き換え先へ向け直します。"
+msgstr "コピー元の外にあるオブジェクト {0} 個への参照（{1} か所）を、対応付けセクションに表示している置き換え先へ向け直します。"
 
 msgid "componentCopier.report.external"
-msgstr "{0} 件の参照はコピー元の外を指しているため、そのまま残します。"
+msgstr "コピー元の外にあるオブジェクト {0} 個への参照（{1} か所）は、そのまま残します。"
 
 #, csharp-format
 msgid "componentCopier.report.brokenReference"

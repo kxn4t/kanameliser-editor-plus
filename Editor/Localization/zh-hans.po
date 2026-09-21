@@ -534,14 +534,20 @@ msgstr "指向复制源之外的引用"
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "指向复制源之外的场景对象的引用。由于复制源和复制目标位于同一个 Avatar 中，或其中一方没有外层父对象，因此不替换，保持不变。"
 
+msgid "componentCopier.mapping.note.externalNoCounterpart"
+msgstr "无对应（保持不变）"
+
 msgid "componentCopier.mapping.note.externalKept"
 msgstr "保持不变"
 
+msgid "componentCopier.report.externalMappedTo"
+msgstr "对复制源之外 {0} 个对象的引用（{1} 处）将替换为 {2} 中对应的对象。"
+
 msgid "componentCopier.report.externalMapped"
-msgstr "{0} 个引用指向复制源之外，将替换为对应关系部分中显示的对象。"
+msgstr "对复制源之外 {0} 个对象的引用（{1} 处）将替换为对应关系部分中显示的对象。"
 
 msgid "componentCopier.report.external"
-msgstr "{0} 个引用指向复制源之外，将保持不变。"
+msgstr "对复制源之外 {0} 个对象的引用（{1} 处）将保持不变。"
 
 #, csharp-format
 msgid "componentCopier.report.brokenReference"

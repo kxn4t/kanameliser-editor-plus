@@ -131,11 +131,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var confirmed = mappings.Where(m => m.State == MappingState.Confirmed).ToList();
 
             // "x/y mapped" is about the objects that need a counterpart; the ones to create are counted apart.
-            // References to the outside only count when a suggestion waits for an answer: without a
-            // counterpart they are simply kept, which is no problem to solve.
+            // References to the outside count as "to review", never as unmapped: without a counterpart they
+            // are kept, so nothing breaks, but the user should decide whether that is what they want.
             int unresolved = unmapped.Count - pickingExisting.Count;
-            int toReview = needsReview.Count +
-                           external.Count(e => plan.ExternalMap?.Get(e.Target)?.State == MappingState.NeedsReview);
+            int toReview = needsReview.Count + external.Count(e =>
+            {
+                var externalMapping = plan.ExternalMap?.Get(e.Target);
+                return externalMapping?.State == MappingState.NeedsReview || NeedsDecision(externalMapping, true);
+            });
             mappingSummaryLabel.text = Localization.S("componentCopier.mapping.summary",
                 confirmed.Count + manual.Count, mappings.Count, toReview, unresolved, planned.Count);
             mappingSummaryLabel.EnableInClassList("section-summary--warning", toReview + unresolved > 0);
@@ -499,19 +502,40 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
         }
 
+        /// <summary>
+        /// True for a reference to the outside that found no counterpart although there are surroundings to look
+        /// in. Settled once the user picks a replacement or says "keep as is" (both are manual mappings).
+        /// </summary>
+        private static bool NeedsDecision(TransformMapping mapping, bool external)
+        {
+            return external && mapping != null && mapping.State == MappingState.Unmapped;
+        }
+
         private VisualElement CreateMappingRow(
             TransformMapping mapping, PlannedObject plannedObject, TransformMap owner = null)
         {
-            var row = new VisualElement();
-            row.AddToClassList("mapping-row");
-            // Only here while the user picks an existing object for it; still nothing to be alarmed about
-            row.AddToClassList(plannedObject != null
-                ? "mapping-row--willcreate"
-                : "mapping-row--" + mapping.State.ToString().ToLowerInvariant());
-
             // Rows about the outside belong to the map of the surroundings; their paths start at its root
             bool external = owner != null;
             owner ??= map;
+
+            var row = new VisualElement();
+            row.AddToClassList("mapping-row");
+            if (plannedObject != null)
+            {
+                // Only here while the user picks an existing object for it; still nothing to be alarmed about
+                row.AddToClassList("mapping-row--willcreate");
+            }
+            else if (NeedsDecision(mapping, external))
+            {
+                // A reference to the outside without a counterpart is kept, so nothing is lost and it does
+                // not get the red of an unmapped object. But it keeps pointing at the other avatar, which is
+                // rarely what a copy to a new avatar wants: the user should have a look, as with a suggestion.
+                row.AddToClassList("mapping-row--needsreview");
+            }
+            else
+            {
+                row.AddToClassList("mapping-row--" + mapping.State.ToString().ToLowerInvariant());
+            }
 
             string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, owner.SourceRoot);
             if (external)
@@ -665,8 +689,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         ? "componentCopier.mapping.note.manual"
                         : "componentCopier.mapping.note.manualNone");
                 case MappingState.Unmapped when external:
-                    // Not a problem to solve: the object stays where it is, so the reference stays valid
-                    return Localization.S("componentCopier.mapping.note.externalKept");
+                    // Kept, but worth a look: see NeedsDecision
+                    return Localization.S("componentCopier.mapping.note.externalNoCounterpart");
                 case MappingState.Unmapped:
                     return Localization.S(map.SourceSkeleton.IsBone(mapping.Source)
                         ? "componentCopier.mapping.note.boneMissing"
