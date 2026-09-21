@@ -858,8 +858,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private static string ActionTooltip(PlannedComponent planned)
         {
-            if (planned.Action != ComponentAction.Blocked) return "";
-            return Localization.S("componentCopier.blocked." + Camel(planned.BlockReason));
+            switch (planned.Action)
+            {
+                case ComponentAction.Blocked:
+                    return Localization.S("componentCopier.blocked." + Camel(planned.BlockReason));
+                // Both leave the target alone, but for different reasons; with the Overwrite policy an
+                // unexplained "Identical" reads as if the policy was ignored
+                case ComponentAction.Skip:
+                case ComponentAction.SkipIdentical:
+                    return Localization.S("componentCopier.action." + Camel(planned.Action) + ":tooltip");
+                default:
+                    return "";
+            }
         }
 
         private Func<ComponentEntry, bool> BuildSearchFilter()

@@ -384,6 +384,12 @@ msgstr "건너뛰기"
 msgid "componentCopier.action.skipIdentical"
 msgstr "동일"
 
+msgid "componentCopier.action.skip:tooltip"
+msgstr "대상에 이미 이 컴포넌트가 있으므로 설정에 따라 그대로 둡니다"
+
+msgid "componentCopier.action.skipIdentical:tooltip"
+msgstr "대상이 이미 같은 내용이므로 쓰지 않습니다"
+
 msgid "componentCopier.action.blocked"
 msgstr "보류"
 
@@ -471,7 +477,7 @@ msgstr "적용 전 확인"
 
 #, csharp-format
 msgid "componentCopier.report.summary"
-msgstr "신규 {0} · 덮어쓰기 {1} · 교체 {2} · 건너뛰기 {3} · 생성할 오브젝트 {4}"
+msgstr "신규 {0} · 덮어쓰기 {1} · 교체 {2} · 건너뛰기 {3} · 동일 {4} · 생성할 오브젝트 {5}"
 
 #, csharp-format
 msgid "componentCopier.report.blocked"

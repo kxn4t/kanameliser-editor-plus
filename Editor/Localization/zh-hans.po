@@ -383,6 +383,12 @@ msgstr "跳过"
 msgid "componentCopier.action.skipIdentical"
 msgstr "相同"
 
+msgid "componentCopier.action.skip:tooltip"
+msgstr "目标上已有此组件，按设置保留不变"
+
+msgid "componentCopier.action.skipIdentical:tooltip"
+msgstr "目标的内容已相同，因此不写入"
+
 msgid "componentCopier.action.blocked"
 msgstr "待定"
 
@@ -470,7 +476,7 @@ msgstr "应用前检查"
 
 #, csharp-format
 msgid "componentCopier.report.summary"
-msgstr "新建 {0} · 覆盖 {1} · 替换 {2} · 跳过 {3} · 要创建的对象 {4}"
+msgstr "新建 {0} · 覆盖 {1} · 替换 {2} · 跳过 {3} · 相同 {4} · 要创建的对象 {5}"
 
 #, csharp-format
 msgid "componentCopier.report.blocked"

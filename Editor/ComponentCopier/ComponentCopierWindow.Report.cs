@@ -120,9 +120,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             int prefabs = plan.ObjectsToCreate.Count(o => o.IsPrefabRoot && o.PrefabRoot == null);
             int plainObjects = plan.ObjectsToCreate.Count(o => !o.IsPrefabRoot && o.PrefabRoot == null);
 
+            // "Identical" is counted apart from "Skip": lumped together, a target that is already up to date
+            // looks as if the Overwrite policy had been ignored
             var summary = new Label(Localization.S("componentCopier.report.summary",
                 Count(ComponentAction.Add), Count(ComponentAction.Overwrite), Count(ComponentAction.Replace),
-                Count(ComponentAction.Skip) + Count(ComponentAction.SkipIdentical), plainObjects));
+                Count(ComponentAction.Skip), Count(ComponentAction.SkipIdentical), plainObjects));
             summary.AddToClassList("report-summary");
             reportContainer.Add(summary);
 

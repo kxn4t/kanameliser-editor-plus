@@ -383,6 +383,12 @@ msgstr "略過"
 msgid "componentCopier.action.skipIdentical"
 msgstr "相同"
 
+msgid "componentCopier.action.skip:tooltip"
+msgstr "目標上已有此元件，依設定保留不變"
+
+msgid "componentCopier.action.skipIdentical:tooltip"
+msgstr "目標的內容已相同，因此不寫入"
+
 msgid "componentCopier.action.blocked"
 msgstr "待定"
 
@@ -470,7 +476,7 @@ msgstr "套用前檢查"
 
 #, csharp-format
 msgid "componentCopier.report.summary"
-msgstr "新增 {0} · 覆蓋 {1} · 取代 {2} · 略過 {3} · 要建立的物件 {4}"
+msgstr "新增 {0} · 覆蓋 {1} · 取代 {2} · 略過 {3} · 相同 {4} · 要建立的物件 {5}"
 
 #, csharp-format
 msgid "componentCopier.report.blocked"

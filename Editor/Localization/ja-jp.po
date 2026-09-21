@@ -383,6 +383,12 @@ msgstr "スキップ"
 msgid "componentCopier.action.skipIdentical"
 msgstr "同一"
 
+msgid "componentCopier.action.skip:tooltip"
+msgstr "コピー先にすでにこのコンポーネントがあるので、設定に従ってそのまま残します"
+
+msgid "componentCopier.action.skipIdentical:tooltip"
+msgstr "コピー先がすでに同じ内容なので、書き込みません"
+
 msgid "componentCopier.action.blocked"
 msgstr "保留"
 
@@ -470,7 +476,7 @@ msgstr "適用前チェック"
 
 #, csharp-format
 msgid "componentCopier.report.summary"
-msgstr "新規 {0} · 上書き {1} · 置き換え {2} · スキップ {3} · 作成するオブジェクト {4}"
+msgstr "新規 {0} · 上書き {1} · 置き換え {2} · スキップ {3} · 同一 {4} · 作成するオブジェクト {5}"
 
 #, csharp-format
 msgid "componentCopier.report.blocked"

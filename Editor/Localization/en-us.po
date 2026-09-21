@@ -384,6 +384,12 @@ msgstr "Skip"
 msgid "componentCopier.action.skipIdentical"
 msgstr "Identical"
 
+msgid "componentCopier.action.skip:tooltip"
+msgstr "The target already has this component, and the setting says to keep it"
+
+msgid "componentCopier.action.skipIdentical:tooltip"
+msgstr "The target already has the same values, so nothing is written"
+
 msgid "componentCopier.action.blocked"
 msgstr "Blocked"
 
@@ -471,7 +477,7 @@ msgstr "Pre-check"
 
 #, csharp-format
 msgid "componentCopier.report.summary"
-msgstr "New {0} · Overwrite {1} · Replace {2} · Skip {3} · Objects to create {4}"
+msgstr "New {0} · Overwrite {1} · Replace {2} · Skip {3} · Identical {4} · Objects to create {5}"
 
 #, csharp-format
 msgid "componentCopier.report.blocked"
