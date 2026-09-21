@@ -241,6 +241,28 @@
     font-size: 11px;
 }
 
+/* Object tree — children hang from a guide line, like the Hierarchy window */
+.object-tree-children {
+    margin-left: 9px;
+    padding-left: 5px;
+    border-left-width: 1px;
+    border-left-color: rgba(127, 127, 127, 0.3);
+}
+
+.object-tree-heading {
+    margin-top: 3px;
+    margin-bottom: 2px;
+    margin-left: 2px;
+    opacity: 0.7;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.object-tree-heading:hover {
+    color: rgb(100, 150, 255);
+}
+
 .excluded-divider {
     margin-top: 6px;
     margin-bottom: 3px;
@@ -288,6 +310,22 @@
     flex-shrink: 1;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Shrinks long before the name does, so the object name stays readable */
+.group-name-prefix {
+    opacity: 0.6;
+    flex-shrink: 1000;
+    min-width: 0;
+    margin-right: 0;
+    padding-right: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.group-name--prefixed {
+    margin-left: 0;
+    padding-left: 0;
 }
 
 .count-badge {

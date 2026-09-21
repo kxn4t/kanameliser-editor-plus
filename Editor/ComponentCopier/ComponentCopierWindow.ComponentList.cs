@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -442,6 +443,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private sealed class GroupInfo
         {
             public string Id;
+            /// <summary>Dimmed lead-in of the title: the folded parents of an object in the object tree.</summary>
+            public string TitlePrefix;
             public string Title;
             public string Tooltip;
             public Texture Icon;
@@ -460,24 +463,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             if (groupMode == GroupMode.ByObject)
             {
-                // Scan order is hierarchy order, so the groups read like the Hierarchy window
-                foreach (var group in groupEntries.GroupBy(e => e.Host))
-                {
-                    var first = group.First();
-                    string path = DisplayPath(first);
-                    listContainer.Add(CreateGroup(new GroupInfo
-                    {
-                        Id = GroupId(first),
-                        Title = path,
-                        Tooltip = path,
-                        Icon = EditorGUIUtility.ObjectContent(first.Host.gameObject, typeof(GameObject)).image,
-                        Entries = group.ToList(),
-                        // Dimmed only when nothing in the group is copied by default
-                        Excluded = group.All(e => e.Category == ComponentCategory.ExcludedByDefault),
-                        PingTarget = first.Host.gameObject,
-                    }));
-                }
-
+                AddObjectTree(groupEntries);
                 return;
             }
 
@@ -531,6 +517,109 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 case ComponentCategory.Tool: return entry.Tool.DisplayName;
                 default: return Localization.S("componentCopier.category.other");
             }
+        }
+
+        /// <summary>An object of the source that has listed components, or an ancestor of one.</summary>
+        private sealed class ObjectNode
+        {
+            public Transform Transform;
+            public readonly List<ComponentEntry> Entries = new();
+            public readonly List<ObjectNode> Children = new();
+        }
+
+        /// <summary>
+        /// Lays the objects out like the Hierarchy window, so siblings such as Breast_L / Breast_R sit together
+        /// under their parent instead of repeating the full path on every line.
+        /// </summary>
+        private void AddObjectTree(List<ComponentEntry> groupEntries)
+        {
+            var root = sourceRoot.transform;
+            var nodes = new Dictionary<Transform, ObjectNode>();
+
+            ObjectNode NodeFor(Transform transform)
+            {
+                if (nodes.TryGetValue(transform, out var node)) return node;
+
+                node = new ObjectNode { Transform = transform };
+                nodes[transform] = node;
+                if (transform != root && transform.parent != null)
+                    NodeFor(transform.parent).Children.Add(node);
+                return node;
+            }
+
+            // Scan order is hierarchy order, so the children end up in sibling order
+            foreach (var entry in groupEntries)
+            {
+                if (entry.Host != null) NodeFor(entry.Host).Entries.Add(entry);
+            }
+
+            if (!nodes.TryGetValue(root, out var rootNode)) return;
+
+            // The root's children are not indented; everything is below the root anyway
+            if (rootNode.Entries.Count > 0)
+                listContainer.Add(CreateObjectGroup(rootNode, "", sourceRoot.name));
+            foreach (var child in rootNode.Children)
+                AddObjectNode(listContainer, child, "");
+        }
+
+        private void AddObjectNode(VisualElement container, ObjectNode node, string prefix)
+        {
+            string name = node.Transform.name;
+
+            // Bones that only lead to the next object are folded into its title ("Spine/Chest/Breast_L")
+            if (node.Entries.Count == 0 && node.Children.Count == 1)
+            {
+                AddObjectNode(container, node.Children[0], prefix + name + "/");
+                return;
+            }
+
+            if (node.Entries.Count > 0)
+            {
+                container.Add(CreateObjectGroup(node, prefix, name));
+            }
+            else
+            {
+                // A branching point without components of its own
+                var pingTarget = node.Transform.gameObject;
+                var heading = new Label(prefix + name) { tooltip = GetObjectPath(node.Transform) };
+                heading.AddToClassList("object-tree-heading");
+                heading.RegisterCallback<ClickEvent>(_ =>
+                {
+                    if (pingTarget != null) EditorGUIUtility.PingObject(pingTarget);
+                });
+                container.Add(heading);
+            }
+
+            if (node.Children.Count == 0) return;
+
+            var children = new VisualElement();
+            children.AddToClassList("object-tree-children");
+            container.Add(children);
+            foreach (var child in node.Children)
+                AddObjectNode(children, child, "");
+        }
+
+        private VisualElement CreateObjectGroup(ObjectNode node, string prefix, string name)
+        {
+            var first = node.Entries[0];
+            return CreateGroup(new GroupInfo
+            {
+                Id = GroupId(first),
+                TitlePrefix = prefix,
+                Title = name,
+                Tooltip = DisplayPath(first),
+                Icon = EditorGUIUtility.ObjectContent(node.Transform.gameObject, typeof(GameObject)).image,
+                Entries = node.Entries,
+                // Dimmed only when nothing in the group is copied by default
+                Excluded = node.Entries.All(e => e.Category == ComponentCategory.ExcludedByDefault),
+                PingTarget = node.Transform.gameObject,
+            });
+        }
+
+        private string GetObjectPath(Transform transform)
+        {
+            string path = ObjectMatcher.GetRelativePathFromRoot(transform, sourceRoot.transform);
+            return string.IsNullOrEmpty(path) ? sourceRoot.name : path;
         }
 
         private VisualElement CreateGroup(GroupInfo info)
@@ -591,6 +680,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             var nameLabel = new Label(info.Title) { tooltip = info.Tooltip };
             nameLabel.AddToClassList("group-name");
+            if (!string.IsNullOrEmpty(info.TitlePrefix))
+            {
+                // A label of its own, so a narrow window cuts the parents off before the object name
+                var prefixLabel = new Label(info.TitlePrefix) { tooltip = info.Tooltip };
+                prefixLabel.AddToClassList("group-name-prefix");
+                header.Add(prefixLabel);
+                nameLabel.AddToClassList("group-name--prefixed");
+            }
+
             if (info.PingTarget != null)
             {
                 var pingTarget = info.PingTarget;
