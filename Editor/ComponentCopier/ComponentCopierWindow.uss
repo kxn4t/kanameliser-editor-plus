@@ -127,6 +127,19 @@
     border-radius: 3px;
 }
 
+/* Same "on" color as the preset chips and the grouping toggle.
+ * The second selector outranks Unity's own :checked rule for toolbar toggles. */
+.regex-toggle:checked,
+.regex-toggle.unity-toolbar-toggle:checked {
+    background-color: rgba(100, 150, 255, 0.35);
+    border-color: rgba(100, 150, 255, 0.8);
+}
+
+.regex-toggle:checked:hover,
+.regex-toggle.unity-toolbar-toggle:checked:hover {
+    background-color: rgba(100, 150, 255, 0.45);
+}
+
 /* Grouping mode — pill toggle, same look as the mode toggle of Color Variant Generator.
  * Inactive text is dimmed with opacity instead of a fixed color so it stays readable in the light skin. */
 .mode-toggle-group {
