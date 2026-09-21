@@ -637,12 +637,23 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private void AddObjectNode(VisualElement container, ObjectNode node, string prefix)
         {
             string name = node.Transform.name;
+            var prefabBadge = CreatePrefabBadge(node.Transform);
 
-            // Bones that only lead to the next object are folded into its title ("Spine/Chest/Breast_L")
-            if (node.Entries.Count == 0 && node.Children.Count == 1)
+            // Bones that only lead to the next object are folded into its title ("Spine/Chest/Breast_L").
+            // A nested prefab keeps a line of its own, where it can say that it is one.
+            if (node.Entries.Count == 0 && node.Children.Count == 1 && prefabBadge == null)
             {
                 AddObjectNode(container, node.Children[0], prefix + name + "/");
                 return;
+            }
+
+            if (prefabBadge != null)
+            {
+                // The prefab and everything below it, set apart from its neighbors: it arrives as one unit
+                var prefabBlock = new VisualElement();
+                prefabBlock.AddToClassList("object-tree-prefab");
+                container.Add(prefabBlock);
+                container = prefabBlock;
             }
 
             if (node.Entries.Count > 0)
@@ -659,7 +670,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 {
                     Reveal(pingTarget);
                 });
-                container.Add(heading);
+
+                if (prefabBadge == null)
+                {
+                    container.Add(heading);
+                }
+                else
+                {
+                    var headingRow = new VisualElement();
+                    headingRow.AddToClassList("object-tree-heading-row");
+                    headingRow.Add(heading);
+                    headingRow.Add(prefabBadge);
+                    container.Add(headingRow);
+                }
             }
 
             if (node.Children.Count == 0) return;
@@ -686,6 +709,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 Excluded = node.Entries.All(e => e.Category == ComponentCategory.ExcludedByDefault),
                 PingTarget = node.Transform.gameObject,
             });
+        }
+
+        /// <summary>
+        /// Marks the root of a nested prefab in the object tree. Everything below it is added as one prefab
+        /// instance when the target lacks it, which the rows alone do not explain. Null for other objects.
+        /// </summary>
+        private Label CreatePrefabBadge(Transform transform)
+        {
+            var asset = NestedPrefabs.GetPrefabAsset(transform, sourceRoot.transform);
+            if (asset == null) return null;
+
+            // A product term, like the preset chips
+            var badge = new Label("Prefab") { tooltip = AssetDatabase.GetAssetPath(asset) };
+            badge.AddToClassList("prefab-badge");
+            return badge;
         }
 
         private string GetObjectPath(Transform transform)
@@ -770,6 +808,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             header.Add(nameLabel);
+
+            var prefabBadge = info.PingTarget != null ? CreatePrefabBadge(info.PingTarget.transform) : null;
+            if (prefabBadge != null) header.Add(prefabBadge);
 
             var countLabel = new Label(groupEntries.Count.ToString());
             countLabel.AddToClassList("count-badge");

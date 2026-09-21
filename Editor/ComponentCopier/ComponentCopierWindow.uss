@@ -311,6 +311,29 @@
     color: rgb(100, 150, 255);
 }
 
+/* A nested prefab with everything below it */
+.object-tree-prefab {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+/* A heading that carries a badge */
+.object-tree-heading-row {
+    flex-direction: row;
+    align-items: center;
+    align-self: flex-start;
+}
+
+/* Root of a nested prefab, on a tree heading or a group header. Accent color: it is a fact, not a state */
+.prefab-badge {
+    flex-shrink: 0;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    background-color: rgba(100, 150, 255, 0.3);
+}
+
 .excluded-divider {
     margin-top: 6px;
     margin-bottom: 3px;
