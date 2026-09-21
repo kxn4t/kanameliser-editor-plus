@@ -88,7 +88,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             var mappings = CollectRelevantMappings();
-            if (mappings.Count == 0)
+            var external = CollectExternalReferences();
+            if (mappings.Count == 0 && external.Count == 0)
             {
                 mappingContainer.Add(InfoLabel("componentCopier.info.noMappings"));
                 return;
@@ -106,12 +107,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var manual = mappings.Where(m => m.State == MappingState.Manual && m.IsUsable).ToList();
             var confirmed = mappings.Where(m => m.State == MappingState.Confirmed).ToList();
 
-            // An object that is going to be created is taken care of; only the rest needs the user
+            // An object that is going to be created is taken care of; only the rest needs the user.
+            // References to the outside only count when a suggestion waits for an answer: without a
+            // counterpart they are simply kept, which is no problem to solve.
             int unresolved = unmapped.Count(m => !created.ContainsKey(m.Source));
+            int toReview = needsReview.Count +
+                           external.Count(e => plan.ExternalMap?.Get(e.Target)?.State == MappingState.NeedsReview);
             mappingSummaryLabel.text = Localization.S("componentCopier.mapping.summary",
-                confirmed.Count + manual.Count, mappings.Count, needsReview.Count, unresolved);
-            mappingSummaryLabel.EnableInClassList("section-summary--warning",
-                needsReview.Count + unresolved > 0);
+                confirmed.Count + manual.Count, mappings.Count, toReview, unresolved);
+            mappingSummaryLabel.EnableInClassList("section-summary--warning", toReview + unresolved > 0);
 
             int affixCount = needsReview.Count(m => m.Reason == MappingReason.AffixStripped);
             if (affixCount > 1)
@@ -161,6 +165,201 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 mappingContainer.Add(foldout);
             }
+
+            AddExternalGroup(external);
+        }
+
+        /// <summary>
+        /// Scene objects outside of the source hierarchy that the copied components refer to, typically parts
+        /// of the avatar the source outfit sits on.
+        /// </summary>
+        private List<ExternalReference> CollectExternalReferences()
+        {
+            var byTarget = new Dictionary<Transform, ExternalReference>();
+
+            foreach (var planned in plan.Components)
+            {
+                foreach (var reference in planned.References)
+                {
+                    if (reference.Kind != ReferenceKind.ExternalScene &&
+                        reference.Kind != ReferenceKind.ExternalMapped) continue;
+
+                    var target = ReferenceWalker.GetTransform(reference.SourceValue);
+                    if (target == null) continue;
+
+                    if (!byTarget.TryGetValue(target, out var external))
+                        byTarget[target] = external = new ExternalReference { Target = target };
+                    external.Holders.Add((planned, reference.PropertyPath));
+                }
+            }
+
+            return byTarget.Values.OrderBy(e => ScenePath(e.Target), System.StringComparer.Ordinal).ToList();
+        }
+
+        /// <summary>An object outside of the source, and the copied components that refer to it.</summary>
+        private sealed class ExternalReference
+        {
+            public Transform Target;
+            public readonly List<(PlannedComponent component, string propertyPath)> Holders = new();
+        }
+
+        /// <summary>
+        /// Lists every reference to the outside, redirected or not, so that the user sees what the copied
+        /// components will depend on. With surroundings on both sides the rows work like the ones above.
+        /// </summary>
+        private void AddExternalGroup(List<ExternalReference> external)
+        {
+            if (external.Count == 0) return;
+
+            var owner = plan.ExternalMap;
+            bool canRedirect = ExternalContext.CanRedirect(sourceRoot.transform, targetRoot.transform);
+
+            var titleRow = new VisualElement();
+            titleRow.AddToClassList("mapping-group-title-row");
+            mappingContainer.Add(titleRow);
+
+            var title = new Label(owner != null
+                ? Localization.S("componentCopier.mapping.group.external", owner.SourceRoot.name, owner.TargetRoot.name)
+                : Localization.S("componentCopier.mapping.group.externalKept"))
+            {
+                tooltip = Localization.S(canRedirect
+                    ? "componentCopier.mapping.group.external:tooltip"
+                    : "componentCopier.mapping.group.externalKept:tooltip"),
+            };
+            title.AddToClassList("mapping-group-title");
+            titleRow.Add(title);
+
+            // Whether to redirect at all is a choice of its own: a gimmick may be meant to keep following the
+            // other avatar. Single rows can still be kept through their menu.
+            if (canRedirect)
+            {
+                var redirectToggle = new Toggle(Localization.S("componentCopier.mapping.external.redirect"))
+                {
+                    value = settings.RedirectExternalReferences,
+                    tooltip = Localization.S("componentCopier.mapping.external.redirect:tooltip"),
+                };
+                redirectToggle.AddToClassList("mapping-group-toggle");
+                redirectToggle.RegisterValueChangedCallback(evt =>
+                {
+                    settings.RedirectExternalReferences = evt.newValue;
+                    settings.Save();
+                    Recompute();
+                });
+                titleRow.Add(redirectToggle);
+            }
+            else
+            {
+                // Said in the open rather than in a tooltip: rows that only say "kept" look like a failure
+                mappingContainer.Add(InfoLabel("componentCopier.mapping.external.noSurroundings"));
+            }
+
+            foreach (var reference in external)
+            {
+                var mapping = owner != null && ReferenceWalker.IsInside(reference.Target, owner.SourceRoot)
+                    ? owner.Get(reference.Target)
+                    : null;
+                mappingContainer.Add(mapping != null
+                    ? CreateMappingRow(mapping, null, owner)
+                    : CreateKeptReferenceRow(reference.Target));
+                mappingContainer.Add(CreateHoldersLabel(reference));
+            }
+        }
+
+        /// <summary>Says which components hold the reference: the row alone only names what is pointed at.</summary>
+        private VisualElement CreateHoldersLabel(ExternalReference reference)
+        {
+            const int maxListed = 3;
+
+            var holders = reference.Holders
+                .GroupBy(h => h.component)
+                .Select(g => (component: g.Key, properties: g.Select(h => h.propertyPath).ToList()))
+                .ToList();
+
+            string Describe(PlannedComponent planned) =>
+                $"{DisplayPath(planned.Entry)} ({planned.Entry.Type.Name})";
+
+            string text = string.Join(", ", holders.Take(maxListed).Select(h => Describe(h.component)));
+            if (holders.Count > maxListed)
+                text += " " + Localization.S("componentCopier.mapping.external.more", holders.Count - maxListed);
+
+            var label = new Label(Localization.S("componentCopier.mapping.external.holders", text))
+            {
+                // The full list, with the properties, for the cases the line has no room for
+                tooltip = string.Join("\n", holders.Select(h =>
+                    Describe(h.component) + "\n    " + string.Join("\n    ", h.properties))),
+            };
+            label.AddToClassList("mapping-holders");
+
+            var first = holders[0].component.Entry.Host;
+            label.RegisterCallback<ClickEvent>(_ => Reveal(first));
+            return label;
+        }
+
+        /// <summary>
+        /// A reference to the outside without a map to look it up in: there are no surroundings to compare, or
+        /// redirecting is turned off. It is kept unless the user names a replacement.
+        /// </summary>
+        private VisualElement CreateKeptReferenceRow(Transform transform)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("mapping-row");
+
+            string path = ScenePath(transform);
+            var sourceLabel = new Label(path) { tooltip = path };
+            sourceLabel.AddToClassList("mapping-source");
+            sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(transform));
+            row.Add(sourceLabel);
+
+            var arrow = new Label("→");
+            arrow.AddToClassList("mapping-arrow");
+            row.Add(arrow);
+
+            // Nothing can be suggested here, but the user may know better: e.g. the avatar the target is
+            // going to be placed on is in the scene already
+            manualMappings.TryGetValue(transform, out var chosen);
+            var targetPicker = new ObjectField
+            {
+                objectType = typeof(Transform),
+                allowSceneObjects = true,
+                // The right-hand side always shows what the reference points at afterwards. An empty field
+                // next to "kept" would read as if the reference was going to be cleared.
+                value = chosen != null ? chosen : transform,
+            };
+            targetPicker.AddToClassList("mapping-target");
+            targetPicker.EnableInClassList("mapping-target--kept", chosen == null);
+            targetPicker.RegisterValueChangedCallback(evt =>
+            {
+                var picked = evt.newValue as Transform;
+                if (picked != null && picked != transform &&
+                    (EditorUtility.IsPersistent(picked) || ReferenceWalker.IsInside(picked, sourceRoot.transform)))
+                {
+                    targetPicker.SetValueWithoutNotify(evt.previousValue);
+                    return;
+                }
+
+                // Emptying the field, or picking the object itself, goes back to keeping the reference
+                if (picked == null || picked == transform) manualMappings.Remove(transform);
+                else manualMappings[transform] = picked;
+                Recompute();
+            });
+            row.Add(targetPicker);
+
+            var note = new Label(Localization.S(chosen != null
+                ? "componentCopier.mapping.note.manual"
+                : "componentCopier.mapping.note.externalKept"));
+            note.AddToClassList("mapping-note");
+            row.Add(note);
+            row.EnableInClassList("mapping-row--manual", chosen != null);
+
+            return row;
+        }
+
+        private static string ScenePath(Transform transform)
+        {
+            string path = transform.name;
+            for (var current = transform.parent; current != null; current = current.parent)
+                path = current.name + "/" + path;
+            return path;
         }
 
         private void AddMappingGroup(
@@ -182,13 +381,20 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
         }
 
-        private VisualElement CreateMappingRow(TransformMapping mapping, PlannedObject plannedObject)
+        private VisualElement CreateMappingRow(
+            TransformMapping mapping, PlannedObject plannedObject, TransformMap owner = null)
         {
             var row = new VisualElement();
             row.AddToClassList("mapping-row");
             row.AddToClassList("mapping-row--" + mapping.State.ToString().ToLowerInvariant());
 
-            string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, map.SourceRoot);
+            // Rows about the outside belong to the map of the surroundings; their paths start at its root
+            bool external = owner != null;
+            owner ??= map;
+
+            string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, owner.SourceRoot);
+            if (external)
+                sourcePath = string.IsNullOrEmpty(sourcePath) ? owner.SourceRoot.name : owner.SourceRoot.name + "/" + sourcePath;
             var sourceLabel = new Label(sourcePath) { tooltip = sourcePath };
             sourceLabel.AddToClassList("mapping-source");
             sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(mapping.Source));
@@ -198,17 +404,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             arrow.AddToClassList("mapping-arrow");
             row.Add(arrow);
 
+            // A reference to the outside without a counterpart is kept, so the field shows the object it keeps
+            // pointing at. Inside the source an empty field is the truth: that reference gets cleared.
+            bool keptAsIs = external && mapping.Target == null;
             var targetPicker = new ObjectField
             {
                 objectType = typeof(Transform),
                 allowSceneObjects = true,
-                value = mapping.Target,
+                value = keptAsIs ? mapping.Source : mapping.Target,
             };
             targetPicker.AddToClassList("mapping-target");
+            targetPicker.EnableInClassList("mapping-target--kept", keptAsIs);
             targetPicker.RegisterValueChangedCallback(evt =>
             {
                 var picked = evt.newValue as Transform;
-                if (picked != null && !ReferenceWalker.IsInside(picked, map.TargetRoot))
+
+                // Picking the object itself is another way of saying "keep it"
+                if (external && picked == mapping.Source) picked = null;
+
+                if (picked != null && !ReferenceWalker.IsInside(picked, owner.TargetRoot))
                 {
                     targetPicker.SetValueWithoutNotify(evt.previousValue);
                     return;
@@ -218,7 +432,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             });
             row.Add(targetPicker);
 
-            var note = new Label(MappingNote(mapping, plannedObject));
+            var note = new Label(MappingNote(mapping, plannedObject, external));
             note.AddToClassList("mapping-note");
             row.Add(note);
 
@@ -232,10 +446,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 row.Add(confirmButton);
             }
 
-            if (mapping.State != MappingState.Confirmed)
+            // A confirmed match inside the source needs no second thought. A reference to the outside does:
+            // keeping it is a legitimate choice even when a counterpart was found.
+            if (external || mapping.State != MappingState.Confirmed)
             {
                 var menuButton = new Button { text = "▾" };
-                menuButton.clicked += () => ShowMappingMenu(mapping);
+                menuButton.clicked += () => ShowMappingMenu(mapping, owner);
                 menuButton.AddToClassList("mapping-menu-button");
                 menuButton.tooltip = Localization.S("componentCopier.mapping.menu:tooltip");
                 row.Add(menuButton);
@@ -244,7 +460,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return row;
         }
 
-        private void ShowMappingMenu(TransformMapping mapping)
+        private void ShowMappingMenu(TransformMapping mapping, TransformMap owner)
         {
             var menu = new GenericMenu();
 
@@ -254,15 +470,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (target == null) continue;
 
                 // GenericMenu turns '/' into submenus
-                string path = ObjectMatcher.GetRelativePathFromRoot(target, map.TargetRoot).Replace("/", " ∕ ");
+                string path = ObjectMatcher.GetRelativePathFromRoot(target, owner.TargetRoot).Replace("/", " ∕ ");
                 menu.AddItem(new GUIContent(path), mapping.Target == target,
                     () => SetManualMapping(mapping.Source, target));
             }
 
             if (mapping.Candidates.Count > 0) menu.AddSeparator("");
 
-            menu.AddItem(new GUIContent(Localization.S("componentCopier.mapping.menu.none")), false,
-                () => SetManualMapping(mapping.Source, null));
+            // "No counterpart" clears a reference into the source, but keeps one to the outside as it is
+            bool keepsReference = owner != map;
+            bool isNone = mapping.State == MappingState.Manual && mapping.Target == null;
+            menu.AddItem(
+                new GUIContent(Localization.S(keepsReference
+                    ? "componentCopier.mapping.menu.keep"
+                    : "componentCopier.mapping.menu.none")),
+                isNone, () => SetManualMapping(mapping.Source, null));
 
             if (manualMappings.ContainsKey(mapping.Source))
             {
@@ -293,7 +515,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Recompute();
         }
 
-        private string MappingNote(TransformMapping mapping, PlannedObject plannedObject)
+        private string MappingNote(TransformMapping mapping, PlannedObject plannedObject, bool external)
         {
             if (plannedObject != null)
             {
@@ -304,10 +526,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             switch (mapping.State)
             {
+                case MappingState.Manual when mapping.Target == null && external:
+                    return Localization.S("componentCopier.mapping.note.externalKeptManual");
                 case MappingState.Manual:
                     return Localization.S(mapping.Target != null
                         ? "componentCopier.mapping.note.manual"
                         : "componentCopier.mapping.note.manualNone");
+                case MappingState.Unmapped when external:
+                    // Not a problem to solve: the object stays where it is, so the reference stays valid
+                    return Localization.S("componentCopier.mapping.note.externalKept");
                 case MappingState.Unmapped:
                     return Localization.S(map.SourceSkeleton.IsBone(mapping.Source)
                         ? "componentCopier.mapping.note.boneMissing"

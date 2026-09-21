@@ -491,6 +491,45 @@ msgid "componentCopier.report.addDependencies"
 msgstr "同時複製被參照的元件（{0}）"
 
 #, csharp-format
+msgid "componentCopier.mapping.external.redirect"
+msgstr "取代為複製目標一側"
+
+msgid "componentCopier.mapping.external.redirect:tooltip"
+msgstr "開啟時，複製目標一側有對應物件的參照會取代為該物件。關閉時，全部保持不變。如果只想保留其中一部分，請在該列的 ▾ 選單中選擇「保持不變」。"
+
+msgid "componentCopier.mapping.external.noSurroundings"
+msgstr "在複製目標之外找不到其他 Avatar，因此不會自動取代（複製目標不在 Avatar 中，或與複製來源位於同一個 Avatar 中）。如需取代，請在該列中指定取代物件。"
+
+msgid "componentCopier.mapping.external.holders"
+msgstr "參照來源：{0}"
+
+msgid "componentCopier.mapping.external.more"
+msgstr "另有 {0} 個"
+
+msgid "componentCopier.mapping.menu.keep"
+msgstr "保持不變"
+
+msgid "componentCopier.mapping.note.externalKeptManual"
+msgstr "保持不變（手動）"
+
+msgid "componentCopier.mapping.group.external"
+msgstr "指向複製來源之外的參照（{0} → {1}）"
+
+msgid "componentCopier.mapping.group.external:tooltip"
+msgstr "指向複製來源之外（例如穿著該服裝的 Avatar）的參照。如果複製目標一側有對應的物件，則取代為該物件；沒有則保持不變。"
+
+msgid "componentCopier.mapping.group.externalKept"
+msgstr "指向複製來源之外的參照"
+
+msgid "componentCopier.mapping.group.externalKept:tooltip"
+msgstr "指向複製來源之外的場景物件的參照。由於複製來源和複製目標位於同一個 Avatar 中，或其中一方沒有外層父物件，因此不取代，保持不變。"
+
+msgid "componentCopier.mapping.note.externalKept"
+msgstr "保持不變"
+
+msgid "componentCopier.report.externalMapped"
+msgstr "{0} 個參照指向複製來源之外，將取代為對應關係區段中顯示的物件。"
+
 msgid "componentCopier.report.external"
 msgstr "{0} 個參照指向複製來源之外，將保持不變。"
 

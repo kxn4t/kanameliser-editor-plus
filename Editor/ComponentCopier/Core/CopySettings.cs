@@ -24,6 +24,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public ExistingComponentPolicy ExistingPolicy = ExistingComponentPolicy.Overwrite;
         public bool CreateMissingObjects = true;
 
+        /// <summary>
+        /// Redirect references to the avatar around the source to the avatar around the target.
+        /// Off keeps all of them as they are, e.g. for a gimmick that is meant to follow the other avatar.
+        /// </summary>
+        public bool RedirectExternalReferences = true;
+
         public static CopySettings Load()
         {
             return new CopySettings
@@ -31,6 +37,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 ExistingPolicy = (ExistingComponentPolicy)EditorPrefs.GetInt(
                     PrefsPrefix + nameof(ExistingPolicy), (int)ExistingComponentPolicy.Overwrite),
                 CreateMissingObjects = EditorPrefs.GetBool(PrefsPrefix + nameof(CreateMissingObjects), true),
+                RedirectExternalReferences = EditorPrefs.GetBool(
+                    PrefsPrefix + nameof(RedirectExternalReferences), true),
             };
         }
 
@@ -38,6 +46,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             EditorPrefs.SetInt(PrefsPrefix + nameof(ExistingPolicy), (int)ExistingPolicy);
             EditorPrefs.SetBool(PrefsPrefix + nameof(CreateMissingObjects), CreateMissingObjects);
+            EditorPrefs.SetBool(PrefsPrefix + nameof(RedirectExternalReferences), RedirectExternalReferences);
         }
     }
 }

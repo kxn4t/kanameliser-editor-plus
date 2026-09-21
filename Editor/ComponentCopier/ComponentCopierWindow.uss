@@ -226,12 +226,14 @@
 /* Unity top-aligns a field label and nudges it down with padding, which only lines up with its own font and
  * row height. Text and checkbox are centered on each other instead. */
 .show-excluded-toggle.unity-toggle,
+.mapping-group-toggle.unity-toggle,
 .settings-create.unity-toggle {
     align-items: center;
 }
 
 /* Unity also reserves 150px for the label, which leaves the checkbox far away from a short text */
 .show-excluded-toggle.unity-toggle > .unity-toggle__label,
+.mapping-group-toggle.unity-toggle > .unity-toggle__label,
 .settings-create.unity-toggle > .unity-toggle__label {
     min-width: auto;
     margin-right: 4px;
@@ -243,6 +245,7 @@
 }
 
 .show-excluded-toggle.unity-toggle > .unity-toggle__input,
+.mapping-group-toggle.unity-toggle > .unity-toggle__input,
 .settings-create.unity-toggle > .unity-toggle__input {
     align-items: center;
     margin-top: 0;
@@ -255,6 +258,7 @@
  * center of the text, because the glyphs sit low in their line box. Inside a centered container a top
  * margin of 1px moves the box down by half of it. */
 .show-excluded-toggle.unity-toggle .unity-toggle__checkmark,
+.mapping-group-toggle.unity-toggle .unity-toggle__checkmark,
 .settings-create.unity-toggle .unity-toggle__checkmark {
     margin-top: 1px;
     margin-bottom: 0;
@@ -477,6 +481,33 @@
     opacity: 0.7;
 }
 
+/* Title on the left, the option of the group on the right */
+.mapping-group-title-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+.mapping-group-toggle {
+    flex-shrink: 0;
+    font-size: 11px;
+}
+
+/* Components that hold a reference to the outside, below the row of the object they point at */
+.mapping-holders {
+    margin-left: 8px;
+    margin-bottom: 3px;
+    font-size: 10px;
+    opacity: 0.6;
+    white-space: normal;
+}
+
+.mapping-holders:hover {
+    color: rgb(100, 150, 255);
+    opacity: 1;
+}
+
 .mapping-row {
     flex-direction: row;
     align-items: center;
@@ -524,6 +555,11 @@
     flex-grow: 1;
     flex-shrink: 1;
     min-width: 60px;
+}
+
+/* Shows the object a kept reference keeps pointing at; dimmed because nothing was chosen or changed */
+.mapping-target--kept {
+    opacity: 0.6;
 }
 
 .mapping-note {

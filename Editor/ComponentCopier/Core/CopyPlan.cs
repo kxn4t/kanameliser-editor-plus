@@ -37,6 +37,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         NewComponent,
         /// <summary>Points to a scene object outside of the source hierarchy. Kept as is.</summary>
         ExternalScene,
+        /// <summary>
+        /// Points to a scene object outside of the source hierarchy (typically the avatar the source outfit
+        /// sits on) that has a counterpart around the target, see <see cref="CopyPlan.ExternalMap"/>.
+        /// </summary>
+        ExternalMapped,
     }
 
     /// <summary>A GameObject that does not exist in the target yet and will be created.</summary>
@@ -164,6 +169,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     {
         public TransformMap Map;
         public CopySettings Settings;
+
+        /// <summary>
+        /// Maps the surroundings of the source (the avatar it sits on) to the surroundings of the target.
+        /// Null when no reference points outside, or when both sides share the same surroundings.
+        /// </summary>
+        public TransformMap ExternalMap;
 
         public List<PlannedComponent> Components = new();
         public List<PlannedObject> ObjectsToCreate = new();

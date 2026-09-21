@@ -32,13 +32,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// User-specified mappings. They take priority over every automatic rule.
         /// A null value marks the source as having no counterpart.
         /// </param>
+        /// <param name="scope">
+        /// When given, only these source transforms (and the ancestors leading to them) are resolved beyond
+        /// exact matches. Resolving compares a transform against every target, which is too slow for whole
+        /// avatars when just a few of their objects are of interest.
+        /// </param>
         public static TransformMap Build(
-            Transform sourceRoot, Transform targetRoot, IReadOnlyDictionary<Transform, Transform> manual = null)
+            Transform sourceRoot, Transform targetRoot, IReadOnlyDictionary<Transform, Transform> manual = null,
+            IEnumerable<Transform> scope = null)
         {
             if (sourceRoot == null) throw new ArgumentNullException(nameof(sourceRoot));
             if (targetRoot == null) throw new ArgumentNullException(nameof(targetRoot));
 
-            var context = new Context(sourceRoot, targetRoot, manual);
+            var context = new Context(sourceRoot, targetRoot, manual, scope);
             context.Run();
             return context.Map;
         }
@@ -58,6 +64,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             private readonly Transform targetRoot;
             private readonly IReadOnlyDictionary<Transform, Transform> manual;
             private readonly HashSet<Transform> usedTargets = new();
+            // Null resolves everything
+            private readonly HashSet<Transform> resolveScope;
 
             // Regions are only told apart when both sides have a skeleton to compare
             private readonly bool separateRegions;
@@ -77,11 +85,24 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             private AffixRule affixRule;
 
-            public Context(Transform sourceRoot, Transform targetRoot, IReadOnlyDictionary<Transform, Transform> manual)
+            public Context(
+                Transform sourceRoot, Transform targetRoot, IReadOnlyDictionary<Transform, Transform> manual,
+                IEnumerable<Transform> scope)
             {
                 this.sourceRoot = sourceRoot;
                 this.targetRoot = targetRoot;
                 this.manual = manual ?? new Dictionary<Transform, Transform>();
+
+                if (scope != null)
+                {
+                    resolveScope = new HashSet<Transform>();
+                    foreach (var transform in scope)
+                    {
+                        for (var current = transform; current != null && current != sourceRoot; current = current.parent)
+                            resolveScope.Add(current);
+                    }
+                }
+
                 Map = new TransformMap(sourceRoot, targetRoot);
                 separateRegions = Map.SourceSkeleton.HasSkeleton && Map.TargetSkeleton.HasSkeleton;
 
@@ -200,6 +221,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 foreach (Transform child in source)
                 {
+                    // Nothing of interest below; the exact pass has already covered what it could
+                    if (resolveScope != null && !resolveScope.Contains(child)) continue;
+
                     if (!Map.Contains(child))
                     {
                         Resolve(child, contextTarget);
@@ -556,6 +580,63 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 string stripped = Strip(sourceName);
                 return stripped == sourceName ? null : stripped;
             }
+        }
+    }
+
+    /// <summary>
+    /// The surroundings of a copied hierarchy: usually the avatar an outfit sits on. Components of the outfit
+    /// refer to it (a bone a constraint follows, a collider on the body), and when the outfit is copied to
+    /// another avatar those references should follow.
+    /// </summary>
+    internal static class ExternalContext
+    {
+        private const string AvatarDescriptorTypeName = "VRC.SDK3.Avatars.Components.VRCAvatarDescriptor";
+
+        /// <summary>
+        /// Returns the avatar root above <paramref name="root"/>, or else its topmost ancestor.
+        /// Null when <paramref name="root"/> has no parent, i.e. there are no surroundings to speak of.
+        /// </summary>
+        public static Transform FindRoot(Transform root)
+        {
+            if (root == null || root.parent == null) return null;
+
+            for (var current = root.parent; current != null; current = current.parent)
+            {
+                // Compared by name because the SDK is not referenced from this assembly
+                if (current.GetComponents<Component>().Any(c => c != null && c.GetType().FullName == AvatarDescriptorTypeName))
+                    return current;
+            }
+
+            return root.root;
+        }
+
+        /// <summary>
+        /// False when there is nothing to redirect to: one side has no surroundings, or both share them (two
+        /// outfits on the same avatar), in which case the references are right as they are.
+        /// </summary>
+        public static bool CanRedirect(Transform sourceRoot, Transform targetRoot)
+        {
+            var sourceContext = FindRoot(sourceRoot);
+            var targetContext = FindRoot(targetRoot);
+            return sourceContext != null && targetContext != null && sourceContext != targetContext;
+        }
+
+        /// <summary>
+        /// Maps the surroundings of the source to the surroundings of the target, resolving only the referenced
+        /// objects. Returns null when <see cref="CanRedirect"/> says no, or none of the objects is part of the
+        /// source's surroundings.
+        /// </summary>
+        public static TransformMap BuildMap(
+            Transform sourceRoot, Transform targetRoot, IEnumerable<Transform> referenced,
+            IReadOnlyDictionary<Transform, Transform> manual = null)
+        {
+            if (!CanRedirect(sourceRoot, targetRoot)) return null;
+
+            var sourceContext = FindRoot(sourceRoot);
+            var targetContext = FindRoot(targetRoot);
+
+            var scope = referenced.Where(t => ReferenceWalker.IsInside(t, sourceContext)).ToList();
+            return scope.Count > 0 ? TransformMapper.Build(sourceContext, targetContext, manual, scope) : null;
         }
     }
 }

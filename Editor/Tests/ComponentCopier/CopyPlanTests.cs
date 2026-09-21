@@ -157,6 +157,169 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             Assert.IsEmpty(plan.ObjectsToCreate);
         }
 
+        private static CopyPlan BuildPlanWithSurroundings(Transform source, Transform target, params System.Type[] types)
+        {
+            var map = TransformMapper.Build(source, target);
+            return CopyPlanBuilder.Build(Select(source, types), map, new CopySettings(), null,
+                referenced => ExternalContext.BuildMap(source, target, referenced));
+        }
+
+        [Test]
+        public void ExternalReference_IsRedirectedToTheSurroundingsOfTheTarget()
+        {
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Hips", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature/Hips", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Hips"));
+
+            var plan = BuildPlanWithSurroundings(
+                avatarA.Find("Outfit"), avatarB.Find("Outfit"), typeof(ParentConstraint));
+            Assert.AreEqual(ReferenceKind.ExternalMapped, plan.Components.Single().References.Single().Kind);
+
+            CopyExecutor.Execute(plan);
+
+            var copied = avatarB.Find("Outfit/Item").GetComponent<ParentConstraint>();
+            Assert.AreSame(avatarB.Find("Armature/Hips"), copied.GetSource(0).sourceTransform);
+        }
+
+        [Test]
+        public void ExternalReference_IsKeptWhenRedirectingIsOff()
+        {
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Hips", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature/Hips", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Hips"));
+            var source = avatarA.Find("Outfit");
+            var target = avatarB.Find("Outfit");
+
+            var plan = CopyPlanBuilder.Build(
+                Select(source, typeof(ParentConstraint)), TransformMapper.Build(source, target),
+                new CopySettings { RedirectExternalReferences = false }, null,
+                referenced => ExternalContext.BuildMap(source, target, referenced));
+
+            Assert.IsNull(plan.ExternalMap);
+            Assert.AreEqual(ReferenceKind.ExternalScene, plan.Components.Single().References.Single().Kind);
+        }
+
+        [Test]
+        public void ExternalReference_FollowsAManualChoiceWhileRedirectingIsOff()
+        {
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Hips", "Armature/Chest", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature/Hips", "Armature/Chest", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Hips"));
+            var source = avatarA.Find("Outfit");
+            var target = avatarB.Find("Outfit");
+
+            var manual = new Dictionary<Transform, Transform>
+            {
+                { avatarA.Find("Armature/Hips"), avatarB.Find("Armature/Chest") },
+            };
+            var plan = CopyPlanBuilder.Build(
+                Select(source, typeof(ParentConstraint)), TransformMapper.Build(source, target, manual),
+                new CopySettings { RedirectExternalReferences = false }, null,
+                referenced => ExternalContext.BuildMap(source, target, referenced, manual));
+
+            // Consumers must not assume a map behind a redirected reference
+            Assert.IsNull(plan.ExternalMap);
+            Assert.AreEqual(ReferenceKind.ExternalMapped, plan.Components.Single().References.Single().Kind);
+
+            CopyExecutor.Execute(plan);
+
+            var copied = target.Find("Item").GetComponent<ParentConstraint>();
+            Assert.AreSame(avatarB.Find("Armature/Chest"), copied.GetSource(0).sourceTransform);
+        }
+
+        [Test]
+        public void ExternalReference_IsKeptWhenTheUserSaysSo()
+        {
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Hips", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature/Hips", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Hips"));
+            var source = avatarA.Find("Outfit");
+            var target = avatarB.Find("Outfit");
+
+            // What "Keep as is" in the row menu stores
+            var manual = new Dictionary<Transform, Transform> { { avatarA.Find("Armature/Hips"), null } };
+            var plan = CopyPlanBuilder.Build(
+                Select(source, typeof(ParentConstraint)), TransformMapper.Build(source, target, manual),
+                new CopySettings(), null,
+                referenced => ExternalContext.BuildMap(source, target, referenced, manual));
+
+            Assert.AreEqual(ReferenceKind.ExternalScene, plan.Components.Single().References.Single().Kind);
+        }
+
+        [Test]
+        public void ExternalReference_FollowsAManualChoiceWithoutSurroundings()
+        {
+            // The target is not placed on its avatar yet, so there is nothing to compare the source's avatar with
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Hips", "Outfit/Item");
+            var target = CreateHierarchy("Outfit", "Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature/Hips");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Hips"));
+            var source = avatarA.Find("Outfit");
+
+            var manual = new Dictionary<Transform, Transform>
+            {
+                { avatarA.Find("Armature/Hips"), avatarB.Find("Armature/Hips") },
+            };
+            var plan = CopyPlanBuilder.Build(
+                Select(source, typeof(ParentConstraint)), TransformMapper.Build(source, target, manual),
+                new CopySettings(), null,
+                referenced => ExternalContext.BuildMap(source, target, referenced, manual));
+            Assert.IsNull(plan.ExternalMap);
+
+            CopyExecutor.Execute(plan);
+
+            var copied = target.Find("Item").GetComponent<ParentConstraint>();
+            Assert.AreSame(avatarB.Find("Armature/Hips"), copied.GetSource(0).sourceTransform);
+        }
+
+        [Test]
+        public void ExternalReference_IsKeptWhenBothSidesShareTheirSurroundings()
+        {
+            var avatar = CreateHierarchy("Avatar", "Armature/Hips", "OutfitV1/Item", "OutfitV2/Item");
+            AddParentConstraint(avatar.Find("OutfitV1/Item"), avatar.Find("Armature/Hips"));
+
+            var plan = BuildPlanWithSurroundings(
+                avatar.Find("OutfitV1"), avatar.Find("OutfitV2"), typeof(ParentConstraint));
+            Assert.IsNull(plan.ExternalMap);
+            Assert.AreEqual(ReferenceKind.ExternalScene, plan.Components.Single().References.Single().Kind);
+
+            CopyExecutor.Execute(plan);
+
+            var copied = avatar.Find("OutfitV2/Item").GetComponent<ParentConstraint>();
+            Assert.AreSame(avatar.Find("Armature/Hips"), copied.GetSource(0).sourceTransform);
+        }
+
+        [Test]
+        public void ExternalReference_IsKeptWithoutACounterpart()
+        {
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Tail", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Tail"));
+
+            var plan = BuildPlanWithSurroundings(
+                avatarA.Find("Outfit"), avatarB.Find("Outfit"), typeof(ParentConstraint));
+            Assert.AreEqual(ReferenceKind.ExternalScene, plan.Components.Single().References.Single().Kind);
+
+            CopyExecutor.Execute(plan);
+
+            var copied = avatarB.Find("Outfit/Item").GetComponent<ParentConstraint>();
+            Assert.AreSame(avatarA.Find("Armature/Tail"), copied.GetSource(0).sourceTransform,
+                "The object stays where it is, so the reference is kept rather than cleared");
+        }
+
+        [Test]
+        public void Mapper_ResolvesOnlyTheScopeBeyondExactMatches()
+        {
+            var source = CreateHierarchy("Source", "A/Wanted_old", "B/Ignored_old", "C");
+            var target = CreateHierarchy("Target", "A/Wanted", "B/Ignored", "C");
+
+            var map = TransformMapper.Build(source, target, null, new[] { source.Find("A/Wanted_old") });
+
+            Assert.IsNotNull(map.Get(source.Find("A/Wanted_old")));
+            Assert.IsNull(map.Get(source.Find("B/Ignored_old")));
+            Assert.IsTrue(map.TryResolve(source.Find("C"), out _), "Exact matches are cheap and always made");
+        }
+
         [Test]
         public void MissingEmptyObjects_AreListedByTheirTopmostObject()
         {

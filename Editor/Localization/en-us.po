@@ -492,6 +492,45 @@ msgid "componentCopier.report.addDependencies"
 msgstr "Also copy the referenced components ({0})"
 
 #, csharp-format
+msgid "componentCopier.mapping.external.redirect"
+msgstr "Redirect to the target side"
+
+msgid "componentCopier.mapping.external.redirect:tooltip"
+msgstr "When on, references with a counterpart on the target side are redirected to it. When off, all of them are kept as they are. To keep only some, choose Keep as is from the ▾ menu of their rows."
+
+msgid "componentCopier.mapping.external.noSurroundings"
+msgstr "No other avatar was found around the target, so nothing is redirected automatically (the target is not inside an avatar, or sits in the same avatar as the source). To redirect a reference, pick its replacement in the row."
+
+msgid "componentCopier.mapping.external.holders"
+msgstr "Referenced by: {0}"
+
+msgid "componentCopier.mapping.external.more"
+msgstr "and {0} more"
+
+msgid "componentCopier.mapping.menu.keep"
+msgstr "Keep as is"
+
+msgid "componentCopier.mapping.note.externalKeptManual"
+msgstr "Kept as is (manual)"
+
+msgid "componentCopier.mapping.group.external"
+msgstr "References to the outside ({0} → {1})"
+
+msgid "componentCopier.mapping.group.external:tooltip"
+msgstr "References that point outside of the source, e.g. to the avatar the outfit sits on. They are redirected when the target side has a counterpart, and kept as they are otherwise."
+
+msgid "componentCopier.mapping.group.externalKept"
+msgstr "References to the outside"
+
+msgid "componentCopier.mapping.group.externalKept:tooltip"
+msgstr "References to scene objects outside of the source. They are kept as they are, because the source and the target sit in the same avatar, or one of them has no parent to look at."
+
+msgid "componentCopier.mapping.note.externalKept"
+msgstr "Kept as is"
+
+msgid "componentCopier.report.externalMapped"
+msgstr "{0} reference(s) point outside of the source. They are redirected to the replacements shown in the mapping section."
+
 msgid "componentCopier.report.external"
 msgstr "{0} reference(s) point outside of the source and are kept as they are."
 

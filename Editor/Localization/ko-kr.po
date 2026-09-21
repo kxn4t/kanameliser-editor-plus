@@ -492,6 +492,45 @@ msgid "componentCopier.report.addDependencies"
 msgstr "참조 대상 컴포넌트도 복사 ({0})"
 
 #, csharp-format
+msgid "componentCopier.mapping.external.redirect"
+msgstr "복사 대상 쪽으로 교체"
+
+msgid "componentCopier.mapping.external.redirect:tooltip"
+msgstr "켜면 복사 대상 쪽에 대응하는 오브젝트가 있는 참조를 그쪽으로 교체합니다. 끄면 모두 그대로 유지합니다. 일부만 유지하려면 해당 행의 ▾ 메뉴에서 「그대로 유지」를 선택하세요."
+
+msgid "componentCopier.mapping.external.noSurroundings"
+msgstr "복사 대상 바깥에서 다른 아바타를 찾지 못해 자동으로 교체하지 않습니다(복사 대상이 아바타 안에 없거나, 복사 원본과 같은 아바타 안에 있습니다). 교체하려는 참조는 행에서 교체할 대상을 지정하세요."
+
+msgid "componentCopier.mapping.external.holders"
+msgstr "참조하는 곳: {0}"
+
+msgid "componentCopier.mapping.external.more"
+msgstr "외 {0}개"
+
+msgid "componentCopier.mapping.menu.keep"
+msgstr "그대로 유지"
+
+msgid "componentCopier.mapping.note.externalKeptManual"
+msgstr "그대로 유지(수동)"
+
+msgid "componentCopier.mapping.group.external"
+msgstr "복사 원본 바깥에 대한 참조 ({0} → {1})"
+
+msgid "componentCopier.mapping.group.external:tooltip"
+msgstr "복사 원본 바깥(의상을 입힌 아바타 등)을 가리키는 참조입니다. 복사 대상 쪽에 대응하는 오브젝트가 있으면 그쪽으로 교체하고, 없으면 그대로 유지합니다."
+
+msgid "componentCopier.mapping.group.externalKept"
+msgstr "복사 원본 바깥에 대한 참조"
+
+msgid "componentCopier.mapping.group.externalKept:tooltip"
+msgstr "복사 원본 바깥의 씬 오브젝트를 가리키는 참조입니다. 복사 원본과 복사 대상이 같은 아바타 안에 있거나 어느 한쪽에 바깥쪽 부모가 없으므로, 교체하지 않고 그대로 유지합니다."
+
+msgid "componentCopier.mapping.note.externalKept"
+msgstr "그대로 유지"
+
+msgid "componentCopier.report.externalMapped"
+msgstr "참조 {0}개는 복사 원본 바깥을 가리킵니다. 대응 섹션에 표시된 대상으로 교체합니다."
+
 msgid "componentCopier.report.external"
 msgstr "참조 {0}개는 복사 원본 바깥을 가리키므로 그대로 유지합니다."
 

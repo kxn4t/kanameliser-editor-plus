@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The source can be a Hierarchy object, a Prefab instance, or a Prefab asset. Copying is applied to scene objects only, so it can always be undone in a single step
   - Components are listed by type or by object, and can be selected per group or individually, with PhysBone / Contact / Constraint / MA presets and a search box that also accepts regular expressions. Other non-destructive tools found in the source (AAO, VRCFury, ...) get a preset of their own, the type list is arranged under a heading per category, and the object list is laid out as a tree that follows the Hierarchy
   - Objects are matched by path and name, and humanoid bones are also matched across naming conventions. Bones and other objects are matched separately, and renames such as `Armature.1` or a common prefix / suffix are recognized. Similar-name matches are only suggested and must be confirmed; every match can be corrected by hand
+  - References that point outside of the source, such as to the avatar an outfit sits on, are listed too. When the target sits on another avatar, they are redirected to the corresponding objects of that avatar; without a counterpart they are kept as they are
   - Existing components can be overwritten, duplicated, skipped, or replaced. Objects missing in the target can be created, except bones: the objects the components sit on, and the empty objects they refer to (constraint sources, anchors, ...)
   - Prefabs nested in the source (a prefab bundling PhysBone settings, a hat below the Head bone, ...) are added to the target as prefab instances instead of being rebuilt object by object. Prefabs and empty objects the target lacks are listed, so ones no selected component needs, such as a mesh-only hat or an unused anchor, can be added too
   - References that cannot be redirected are listed before applying, and a diff check verifies the result after copying (or compares two hierarchies without copying)
@@ -30,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - コピー元には、Hierarchy のオブジェクト、Prefab インスタンス、Prefab アセットを指定できます。コピーの適用先はシーン上のオブジェクトに限定しており、1 回の Undo で元に戻せます
   - コンポーネントは種類別またはオブジェクト別に一覧表示され、グループ単位でも個別でも選択できます。PhysBone / Contact / Constraint / MA のプリセットと、正規表現も使える検索ボックスがあります。コピー元に含まれるその他の非破壊ツール（AAO、VRCFury など）にもツールごとのプリセットが表示され、種類別の一覧はカテゴリーごとの見出しで、オブジェクト別の一覧は Hierarchy に沿ったツリーで整理されます
   - オブジェクトはパスと名前で対応付け、Humanoid ボーンは命名規則が違っても対応付けます。ボーンとそれ以外のオブジェクトは別々に対応付け、`Armature.1` のような改名や共通の prefix / suffix も認識します。類似名による対応は候補として表示するだけで、確定操作が必要です。すべての対応は手動で補正できます
+  - 衣装を着せているアバターなど、コピー元の外を指している参照も一覧に表示します。コピー先が別のアバターにある場合は、そのアバターの対応するオブジェクトへ置き換えます。対応するものがなければ、そのまま残します
   - 既存のコンポーネントは、上書き、追加、スキップ、置き換えから選べます。コピー先に足りないオブジェクトは作成できます（ボーンは作成しません）。対象は、コンポーネントを付けるオブジェクトと、コンポーネントが参照している空のオブジェクト（Constraint のソースやアンカーなど）です
   - コピー元に入っている Prefab（PB の設定をまとめた Prefab や、Head ボーンの下の帽子など）は、オブジェクトを作り直さず、Prefab のままコピー先に追加します。コピー先にない Prefab と空のオブジェクトは一覧に表示されるので、メッシュだけの帽子や使われていないアンカーのように、選択したコンポーネントが必要としないものも追加できます
   - 置き換えられない参照を適用前に一覧表示します。コピー後は差分チェックで結果を検証できます（コピーせずに 2 つの階層を比較するだけの使い方もできます）

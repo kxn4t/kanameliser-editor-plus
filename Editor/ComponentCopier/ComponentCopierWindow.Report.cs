@@ -78,6 +78,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 ExistingPolicy = ExistingComponentPolicy.Overwrite,
                 CreateMissingObjects = settings.CreateMissingObjects,
+                RedirectExternalReferences = settings.RedirectExternalReferences,
             };
             var diffPlan = BuildPlan(diffSettings);
 
@@ -138,6 +139,17 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     : Localization.S("componentCopier.report.prefabsOnly", prefabs));
                 prefabLabel.AddToClassList("report-summary");
                 reportContainer.Add(prefabLabel);
+            }
+
+            int redirected = plan.Components.SelectMany(c => c.References)
+                .Count(r => r.Kind == ReferenceKind.ExternalMapped);
+            if (redirected > 0)
+            {
+                // No avatar name here: replacements picked by hand work without a map of the surroundings
+                // (plan.ExternalMap is null then), and they can point anywhere
+                var redirectedLabel = new Label(Localization.S("componentCopier.report.externalMapped", redirected));
+                redirectedLabel.AddToClassList("report-summary");
+                reportContainer.Add(redirectedLabel);
             }
 
             if (IsTargetAsset()) AddWarning("componentCopier.warning.targetIsAsset");

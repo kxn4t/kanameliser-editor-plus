@@ -31,6 +31,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private TransformMap map;
         private CopyPlan plan;
+
+        // Cache of the map for references that point outside of the source, see GetExternalMap
+        private TransformMap externalMap;
+        private HashSet<Transform> externalMapScope;
+        private int externalMapSignature;
+        private int rescanCount;
         private readonly Dictionary<ComponentKey, PlannedComponent> plannedByKey = new();
 
         private VisualElement listContainer;
@@ -127,6 +133,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private void Rescan(bool resetSelection)
         {
+            rescanCount++;
             var previousKeys = new HashSet<ComponentKey>(entries.Select(e => e.Key));
             entries = sourceRoot != null ? ComponentScanner.Scan(sourceRoot.transform) : new List<ComponentEntry>();
 
@@ -182,7 +189,43 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             return CopyPlanBuilder.Build(
                 entries.Where(e => selectedKeys.Contains(e.Key)), map, planSettings,
-                missingObjects.Where(p => selectedObjectPaths.Contains(ObjectPath(p))));
+                missingObjects.Where(p => selectedObjectPaths.Contains(ObjectPath(p))),
+                GetExternalMap);
+        }
+
+        /// <summary>
+        /// The map of the surroundings spans whole avatars, so it is kept while nothing it depends on changes.
+        /// Ticking a checkbox rebuilds the plan, but usually asks for objects that are resolved already.
+        /// </summary>
+        private TransformMap GetExternalMap(IReadOnlyCollection<Transform> referenced)
+        {
+            int signature = System.HashCode.Combine(
+                sourceRoot.GetInstanceID(), targetRoot.GetInstanceID(), rescanCount, ManualMappingSignature());
+
+            if (externalMapScope == null || signature != externalMapSignature ||
+                !externalMapScope.IsSupersetOf(referenced))
+            {
+                externalMapScope = new HashSet<Transform>(referenced);
+                externalMapSignature = signature;
+                externalMap = ExternalContext.BuildMap(
+                    sourceRoot.transform, targetRoot.transform, referenced, manualMappings);
+            }
+
+            return externalMap;
+        }
+
+        private int ManualMappingSignature()
+        {
+            int signature = manualMappings.Count;
+            foreach (var pair in manualMappings)
+            {
+                // Destroyed objects compare equal to null but still have an instance id
+                int key = ReferenceEquals(pair.Key, null) ? 0 : pair.Key.GetInstanceID();
+                int value = ReferenceEquals(pair.Value, null) ? 0 : pair.Value.GetInstanceID();
+                signature ^= System.HashCode.Combine(key, value);
+            }
+
+            return signature;
         }
 
         /// <summary>The objects chosen for adding are kept by path so that they survive a rescan.</summary>

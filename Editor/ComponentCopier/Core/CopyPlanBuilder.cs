@@ -18,9 +18,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// them: nested prefab roots (e.g. a hat that only consists of meshes) and empty objects, which bring
         /// the empty objects below them along.
         /// </param>
+        /// <param name="externalMapProvider">
+        /// Called with the scene objects outside of the source hierarchy that the copied components refer to,
+        /// if there are any. Returns the map that redirects them (see <see cref="ExternalContext"/>), or null
+        /// to keep all of them as they are. A callback because the caller may want to cache the map.
+        /// </param>
         public static CopyPlan Build(
             IEnumerable<ComponentEntry> selected, TransformMap map, CopySettings settings,
-            IEnumerable<Transform> objectsToAdd = null)
+            IEnumerable<Transform> objectsToAdd = null,
+            Func<IReadOnlyCollection<Transform>, TransformMap> externalMapProvider = null)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
             settings ??= new CopySettings();
@@ -43,7 +49,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     plan.BlockedObjects.Add(new BlockedObject { Source = source, Reason = blockReason });
             }
 
-            PlanDependencies(plan, context);
+            var externalTransforms = new HashSet<Transform>();
+            PlanDependencies(plan, context, externalTransforms);
+            if (externalTransforms.Count > 0 && externalMapProvider != null && settings.RedirectExternalReferences)
+                plan.ExternalMap = externalMapProvider(externalTransforms);
+
             CollectReferences(plan, context);
 
             // Needs the references, so it runs last
@@ -233,7 +243,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// other: a referenced object can sit in a nested prefab, whose components then come along and hold
         /// references of their own.
         /// </summary>
-        private static void PlanDependencies(CopyPlan plan, HostResolver context)
+        private static void PlanDependencies(CopyPlan plan, HostResolver context, HashSet<Transform> externalTransforms)
         {
             var walked = new HashSet<Component>();
             int objectCount;
@@ -242,7 +252,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 objectCount = plan.ObjectsToCreate.Count;
                 AddImplicitComponents(plan, context);
                 DecideActions(plan);
-                PlanReferencedObjects(plan, context, walked);
+                PlanReferencedObjects(plan, context, walked, externalTransforms);
             } while (plan.ObjectsToCreate.Count != objectCount);
         }
 
@@ -251,8 +261,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// like the object a component sits on; without it the reference would be cleared and the component
         /// would not work. Objects with components of their own are not created bare: the reference stays
         /// unresolved until the user selects those components.
+        /// The same walk notes the scene objects outside of the source that are referred to.
         /// </summary>
-        private static void PlanReferencedObjects(CopyPlan plan, HostResolver context, HashSet<Component> walked)
+        private static void PlanReferencedObjects(
+            CopyPlan plan, HostResolver context, HashSet<Component> walked, HashSet<Transform> externalTransforms)
         {
             foreach (var planned in plan.Components)
             {
@@ -266,11 +278,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     if (property.propertyType != SerializedPropertyType.ObjectReference) continue;
 
                     var value = property.objectReferenceValue;
-                    if (!(value is GameObject) && !(value is Transform)) continue;
-
                     var transform = ReferenceWalker.GetTransform(value);
                     if (transform == null || transform == plan.Map.SourceRoot) continue;
-                    if (!ReferenceWalker.IsInside(transform, plan.Map.SourceRoot)) continue;
+
+                    if (!ReferenceWalker.IsInside(transform, plan.Map.SourceRoot))
+                    {
+                        if (!EditorUtility.IsPersistent(value)) externalTransforms.Add(transform);
+                        continue;
+                    }
+
+                    if (!(value is GameObject) && !(value is Transform)) continue;
                     if (!MissingObjects.IsEmpty(transform)) continue;
 
                     // Does nothing for mapped objects; bones, unconfirmed matches and the "create missing
@@ -387,11 +404,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (!ReferenceWalker.IsInside(transform, plan.Map.SourceRoot))
             {
                 if (EditorUtility.IsPersistent(value)) return null;
-                return new PlannedReference
-                {
-                    Kind = ReferenceKind.ExternalScene,
-                    Expected = new TargetRef { Fixed = value },
-                };
+                return ClassifyExternalReference(plan, transform, value);
             }
 
             if (value is GameObject || value is Transform)
@@ -440,6 +453,48 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 MissingDependency = new ComponentKey(
                     ObjectMatcher.GetRelativePathFromRoot(transform, plan.Map.SourceRoot),
                     component.GetType().FullName, index),
+            };
+        }
+
+        /// <summary>
+        /// A reference to the avatar around the source (a bone a constraint follows, a collider on the body, ...)
+        /// is redirected to the avatar around the target when the counterpart is known. Anything else is kept:
+        /// unlike a reference into the source hierarchy, the object it points at is not going away.
+        /// </summary>
+        private static PlannedReference ClassifyExternalReference(
+            CopyPlan plan, Transform transform, UnityEngine.Object value)
+        {
+            var kept = new PlannedReference
+            {
+                Kind = ReferenceKind.ExternalScene,
+                Expected = new TargetRef { Fixed = value },
+            };
+
+            // Without surroundings to map there is still the user's word: manual mappings are part of every
+            // map, whatever object they are about
+            Transform counterpart = null;
+            bool resolved = (plan.ExternalMap != null && plan.ExternalMap.TryResolve(transform, out counterpart)) ||
+                            plan.Map.TryResolve(transform, out counterpart);
+            if (!resolved) return kept;
+
+            if (value is GameObject || value is Transform)
+            {
+                return new PlannedReference
+                {
+                    Kind = ReferenceKind.ExternalMapped,
+                    Expected = new TargetRef { Transform = counterpart, AsGameObject = value is GameObject },
+                };
+            }
+
+            var component = (Component)value;
+            var existing = ComponentScanner.FindByTypeAndIndex(
+                counterpart, component.GetType(), ComponentScanner.IndexAmongSameType(component));
+            if (existing == null) return kept;
+
+            return new PlannedReference
+            {
+                Kind = ReferenceKind.ExternalMapped,
+                Expected = new TargetRef { ExistingComponent = existing },
             };
         }
 

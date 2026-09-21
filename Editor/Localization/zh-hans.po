@@ -491,6 +491,45 @@ msgid "componentCopier.report.addDependencies"
 msgstr "同时复制被引用的组件（{0}）"
 
 #, csharp-format
+msgid "componentCopier.mapping.external.redirect"
+msgstr "替换为复制目标一侧"
+
+msgid "componentCopier.mapping.external.redirect:tooltip"
+msgstr "开启时，复制目标一侧有对应对象的引用会替换为该对象。关闭时，全部保持不变。如果只想保留其中一部分，请在该行的 ▾ 菜单中选择「保持不变」。"
+
+msgid "componentCopier.mapping.external.noSurroundings"
+msgstr "在复制目标之外找不到其他 Avatar，因此不会自动替换（复制目标不在 Avatar 中，或与复制源位于同一个 Avatar 中）。如需替换，请在该行中指定替换对象。"
+
+msgid "componentCopier.mapping.external.holders"
+msgstr "引用来源：{0}"
+
+msgid "componentCopier.mapping.external.more"
+msgstr "另有 {0} 个"
+
+msgid "componentCopier.mapping.menu.keep"
+msgstr "保持不变"
+
+msgid "componentCopier.mapping.note.externalKeptManual"
+msgstr "保持不变（手动）"
+
+msgid "componentCopier.mapping.group.external"
+msgstr "指向复制源之外的引用（{0} → {1}）"
+
+msgid "componentCopier.mapping.group.external:tooltip"
+msgstr "指向复制源之外（例如穿着该服装的 Avatar）的引用。如果复制目标一侧有对应的对象，则替换为该对象；没有则保持不变。"
+
+msgid "componentCopier.mapping.group.externalKept"
+msgstr "指向复制源之外的引用"
+
+msgid "componentCopier.mapping.group.externalKept:tooltip"
+msgstr "指向复制源之外的场景对象的引用。由于复制源和复制目标位于同一个 Avatar 中，或其中一方没有外层父对象，因此不替换，保持不变。"
+
+msgid "componentCopier.mapping.note.externalKept"
+msgstr "保持不变"
+
+msgid "componentCopier.report.externalMapped"
+msgstr "{0} 个引用指向复制源之外，将替换为对应关系部分中显示的对象。"
+
 msgid "componentCopier.report.external"
 msgstr "{0} 个引用指向复制源之外，将保持不变。"
 

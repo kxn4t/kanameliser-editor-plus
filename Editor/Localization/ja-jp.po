@@ -491,6 +491,45 @@ msgid "componentCopier.report.addDependencies"
 msgstr "参照先のコンポーネントもコピーする（{0}）"
 
 #, csharp-format
+msgid "componentCopier.mapping.external.redirect"
+msgstr "コピー先側へ置き換える"
+
+msgid "componentCopier.mapping.external.redirect:tooltip"
+msgstr "オンにすると、コピー先側に対応するオブジェクトがある参照を、そちらへ置き換えます。オフにすると、すべてそのまま残します。一部だけ残したいときは、その行の ▾ メニューから「そのまま残す」を選んでください。"
+
+msgid "componentCopier.mapping.external.noSurroundings"
+msgstr "コピー先の外側に別のアバターが見つからないため、自動では置き換えません（コピー先がアバターの中にない、またはコピー元と同じアバターの中にあります）。置き換えたいものは、行で置き換え先を指定してください。"
+
+msgid "componentCopier.mapping.external.holders"
+msgstr "参照元: {0}"
+
+msgid "componentCopier.mapping.external.more"
+msgstr "ほか {0} 件"
+
+msgid "componentCopier.mapping.menu.keep"
+msgstr "そのまま残す"
+
+msgid "componentCopier.mapping.note.externalKeptManual"
+msgstr "そのまま残す（手動）"
+
+msgid "componentCopier.mapping.group.external"
+msgstr "コピー元の外への参照（{0} → {1}）"
+
+msgid "componentCopier.mapping.group.external:tooltip"
+msgstr "コピー元の外（衣装を着せているアバターなど）を指している参照です。コピー先側に対応するオブジェクトがあれば、そちらへ置き換えます。対応するものがなければ、そのまま残します。"
+
+msgid "componentCopier.mapping.group.externalKept"
+msgstr "コピー元の外への参照"
+
+msgid "componentCopier.mapping.group.externalKept:tooltip"
+msgstr "コピー元の外のシーンオブジェクトを指している参照です。コピー元とコピー先が同じアバターの中にあるか、どちらかの外側に親がないため、置き換えずにそのまま残します。"
+
+msgid "componentCopier.mapping.note.externalKept"
+msgstr "そのまま残す"
+
+msgid "componentCopier.report.externalMapped"
+msgstr "{0} 件の参照はコピー元の外を指しています。対応付けセクションに表示している置き換え先へ向け直します。"
+
 msgid "componentCopier.report.external"
 msgstr "{0} 件の参照はコピー元の外を指しているため、そのまま残します。"
 
