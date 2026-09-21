@@ -31,6 +31,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private Button groupByTypeButton;
         private Button groupByObjectButton;
         private ToolbarSearchField searchField;
+        private ToolbarToggle regexToggle;
         private readonly Dictionary<ComponentCategory, Button> presetButtons = new();
         // Chips of the tools found in the source, keyed by ToolInfo.Id and kept in display order
         private readonly List<(string id, Button button)> toolPresetButtons = new();
@@ -82,7 +83,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             });
             filterRow.Add(searchField);
 
-            var regexToggle = new ToolbarToggle { text = ".*" };
+            regexToggle = new ToolbarToggle { text = ".*" };
             regexToggle.AddToClassList("regex-toggle");
             regexToggle.RegisterValueChangedCallback(evt =>
             {
@@ -227,13 +228,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             RenderComponentList();
         }
 
-        private void UpdateGroupModeButtons()
+        private void UpdateListControls()
         {
             groupByTypeButton.text = Localization.S("componentCopier.groupBy.type");
             groupByTypeButton.tooltip = Localization.S("componentCopier.groupBy.type:tooltip");
             groupByObjectButton.text = Localization.S("componentCopier.groupBy.object");
             groupByObjectButton.tooltip = Localization.S("componentCopier.groupBy.object:tooltip");
-
+            // The toggle only shows ".*", so its text is no key and NDMF cannot localize the tooltip for us
+            regexToggle.tooltip = Localization.S("componentCopier.search.regex:tooltip");
             groupByTypeButton.EnableInClassList("mode-toggle-button--active", groupMode == GroupMode.ByType);
             groupByObjectButton.EnableInClassList("mode-toggle-button--active", groupMode == GroupMode.ByObject);
         }
@@ -242,7 +244,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             listContainer.Clear();
             UpdatePresetButtons();
-            UpdateGroupModeButtons();
+            UpdateListControls();
 
             if (sourceRoot == null)
             {

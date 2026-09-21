@@ -627,5 +627,8 @@ msgstr "一覧をコンポーネントの種類ごとにまとめます。各行
 msgid "componentCopier.groupBy.object"
 msgstr "オブジェクト別"
 
+msgid "componentCopier.search.regex:tooltip"
+msgstr "検索文字列を正規表現として扱います（大文字と小文字は区別しません）。オブジェクトのパスとコンポーネントの型名が対象です。例: Skirt|Hair"
+
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "一覧をオブジェクトごとにまとめます。各行はそのオブジェクトに付いているコンポーネントです。"

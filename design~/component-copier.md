@@ -284,6 +284,8 @@ Blender の `BLI_string_flip_side_name` に合わせる。
 
 - 既存の `Editor/Localization/Localization.cs` と 5 言語の `.po` を使う。キーの接頭辞は `componentCopier.`、ツールチップは `:tooltip`
 - 固定ラベルは `ndmf-tr` クラス + キー。ルートで `LocalizeUIElements(root)` を必ず呼ぶ（フォントの適用を兼ねる）
+- 表示が記号だけの要素（正規表現の `.*`）は `ndmf-tr` を使えないので、`S()` でツールチップを設定する
+- Toggle は Unity 標準どおり、文言を左、チェックボックスを右に置く（「その他も表示」「足りないオブジェクトを作成」）。チェックボックスを左にする案は試したうえで戻した。左にするには `label` ではなく `text` を使う必要があるが、NDMF の自動翻訳は `label` を `text` より優先するため、手動でのローカライズが必要になる
 - 動的な文言は `S(key, args)` で作り、`RegisterLanguageChangeCallback` でモデルから描き直す
 - Core 層は文字列を返さず、enum と引数で返す。UI 層でローカライズする
 - 英語のままにするもの: MenuItem のパス、Undo グループ名、コンソールログ、コンポーネントの型名、プリセット名とカテゴリーの見出しの `PhysBone` / `Contact` / `Constraint` / `MA`、ツール名
