@@ -175,7 +175,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var warning = AddWarning("componentCopier.report.brokenReference",
                     broken.Holder.name, broken.Holder.GetType().Name, broken.PropertyPath);
                 var holder = broken.Holder;
-                warning.RegisterCallback<ClickEvent>(_ => EditorGUIUtility.PingObject(holder));
+                warning.RegisterCallback<ClickEvent>(_ => Reveal(holder));
             }
 
             if (plan.Components.Any(c => c.Entry.Type.FullName == ComponentScanner.PipelineManagerTypeName))
@@ -274,7 +274,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 var selectButton = new Button(() =>
                 {
-                    if (actual != null) EditorGUIUtility.PingObject(actual);
+                    Reveal(actual);
                 }) { text = Localization.S("componentCopier.diff.select") };
                 actions.Add(selectButton);
 

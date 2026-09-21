@@ -412,7 +412,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             pathLabel.AddToClassList("row-path");
             pathLabel.RegisterCallback<ClickEvent>(_ =>
             {
-                if (prefab != null) EditorGUIUtility.PingObject(prefab.gameObject);
+                Reveal(prefab);
             });
             row.Add(pathLabel);
 
@@ -585,7 +585,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 heading.AddToClassList("object-tree-heading");
                 heading.RegisterCallback<ClickEvent>(_ =>
                 {
-                    if (pingTarget != null) EditorGUIUtility.PingObject(pingTarget);
+                    Reveal(pingTarget);
                 });
                 container.Add(heading);
             }
@@ -696,7 +696,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 nameLabel.RegisterCallback<ClickEvent>(evt =>
                 {
                     evt.StopPropagation();
-                    if (pingTarget != null) EditorGUIUtility.PingObject(pingTarget);
+                    Reveal(pingTarget);
                 });
             }
 
@@ -779,7 +779,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             rowLabel.AddToClassList("row-path");
             rowLabel.RegisterCallback<ClickEvent>(_ =>
             {
-                if (entry.Host != null) EditorGUIUtility.PingObject(entry.Host.gameObject);
+                Reveal(entry.Host);
             });
             row.Add(rowLabel);
 

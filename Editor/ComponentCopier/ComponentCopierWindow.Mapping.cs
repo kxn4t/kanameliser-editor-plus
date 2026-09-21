@@ -179,7 +179,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, map.SourceRoot);
             var sourceLabel = new Label(sourcePath) { tooltip = sourcePath };
             sourceLabel.AddToClassList("mapping-source");
-            sourceLabel.RegisterCallback<ClickEvent>(_ => EditorGUIUtility.PingObject(mapping.Source.gameObject));
+            sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(mapping.Source));
             row.Add(sourceLabel);
 
             var arrow = new Label("→");

@@ -275,6 +275,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return char.ToLowerInvariant(name[0]) + name.Substring(1);
         }
 
+        /// <summary>
+        /// Shows an object that was clicked in the window: pings it and selects it, so the Inspector follows
+        /// and the components can be checked right away.
+        /// </summary>
+        private static void Reveal(Object target)
+        {
+            if (target == null) return;
+
+            Selection.activeObject = target is Component component ? component.gameObject : target;
+            EditorGUIUtility.PingObject(target);
+        }
+
         private void UpdateFooterTexts()
         {
             if (applyButton == null) return;
