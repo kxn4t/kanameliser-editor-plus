@@ -403,17 +403,80 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (holders.Count > maxListed)
                 text += " " + Localization.S("componentCopier.mapping.external.more", holders.Count - maxListed);
 
+            // The full list, with the properties, for the cases the line has no room for
+            var tooltipLines = new List<string>();
+            foreach (var holder in holders)
+            {
+                tooltipLines.Add(Describe(holder.component));
+                tooltipLines.AddRange(SummarizePropertyPaths(holder.properties).Select(p => "    " + p));
+            }
+
+            // Unity moves a tooltip that does not fit next to the cursor to the middle of the window
+            const int maxTooltipLines = 12;
+            if (tooltipLines.Count > maxTooltipLines)
+            {
+                tooltipLines = tooltipLines.Take(maxTooltipLines - 1).ToList();
+                tooltipLines.Add("…");
+            }
+
             var label = new Label(Localization.S("componentCopier.mapping.external.holders", text))
             {
-                // The full list, with the properties, for the cases the line has no room for
-                tooltip = string.Join("\n", holders.Select(h =>
-                    Describe(h.component) + "\n    " + string.Join("\n    ", h.properties))),
+                tooltip = string.Join("\n", tooltipLines),
             };
             label.AddToClassList("mapping-holders");
 
             var first = holders[0].component.Entry.Host;
             label.RegisterCallback<ClickEvent>(_ => Reveal(first));
             return label;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex ArrayElement =
+            new System.Text.RegularExpressions.Regex(@"\.Array\.data\[(\d+)\]");
+
+        /// <summary>
+        /// Shortens serialized property paths for display: "m_shapes.Array.data[3].Object" becomes
+        /// "m_shapes[3].Object", and the elements of one array are folded into "m_shapes[0-18].Object".
+        /// A Shape Changer refers to the body mesh once per shape, which would fill the tooltip otherwise.
+        /// </summary>
+        private static List<string> SummarizePropertyPaths(IEnumerable<string> paths)
+        {
+            // Keyed by the path with its first array index taken out; insertion order is display order
+            var order = new List<string>();
+            var indices = new Dictionary<string, List<int>>();
+
+            foreach (var path in paths)
+            {
+                var match = ArrayElement.Match(path);
+                string key = match.Success
+                    ? path.Substring(0, match.Index) + "[#]" + path.Substring(match.Index + match.Length)
+                    : path;
+                key = ArrayElement.Replace(key, "[$1]");
+
+                if (!indices.TryGetValue(key, out var list))
+                {
+                    indices[key] = list = new List<int>();
+                    order.Add(key);
+                }
+
+                if (match.Success) list.Add(int.Parse(match.Groups[1].Value));
+            }
+
+            return order.Select(key => key.Replace("[#]", "[" + FormatRanges(indices[key]) + "]")).ToList();
+        }
+
+        /// <summary>"0, 1, 2, 5" becomes "0-2, 5".</summary>
+        private static string FormatRanges(List<int> values)
+        {
+            var sorted = values.Distinct().OrderBy(v => v).ToList();
+            var parts = new List<string>();
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                int start = sorted[i];
+                while (i + 1 < sorted.Count && sorted[i + 1] == sorted[i] + 1) i++;
+                parts.Add(start == sorted[i] ? start.ToString() : $"{start}-{sorted[i]}");
+            }
+
+            return string.Join(", ", parts);
         }
 
         /// <summary>
