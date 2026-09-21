@@ -582,3 +582,17 @@ msgstr "Bone not found"
 
 msgid "componentCopier.mapping.reason.renamedChild"
 msgstr "Renamed (.1, prefix / suffix)"
+
+msgid "componentCopier.action.withPrefab"
+msgstr "With prefab"
+
+msgid "componentCopier.mapping.note.prefab"
+msgstr "Prefab will be added"
+
+#, csharp-format
+msgid "componentCopier.report.prefabs"
+msgstr "{0} prefab(s) will be added as prefab instances. The {1} component(s) inside them are copied too, so they match the source."
+
+#, csharp-format
+msgid "componentCopier.report.appliedPrefabs"
+msgstr "Added {0} prefab(s)."

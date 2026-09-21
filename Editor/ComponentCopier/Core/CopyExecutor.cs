@@ -7,6 +7,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     internal sealed class ExecutionResult
     {
         public int CreatedObjects;
+        public int InstantiatedPrefabs;
         public int RemovedComponents;
         public int WrittenComponents;
 
@@ -72,24 +73,56 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var parent = planned.ExistingParent != null ? planned.ExistingParent : planned.ParentToCreate?.Created;
                 if (parent == null) continue;
 
-                var source = planned.Source;
-                var gameObject = new GameObject(source.name)
+                // Objects below an instantiated prefab are usually there already
+                Transform transform = planned.PrefabRoot != null
+                    ? NestedPrefabs.FindChild(parent, planned.Source.name, planned.SiblingOccurrence)
+                    : null;
+
+                if (transform == null && planned.PrefabAsset != null)
                 {
-                    layer = source.gameObject.layer,
-                    tag = source.gameObject.tag,
-                };
-                gameObject.SetActive(source.gameObject.activeSelf);
-                Undo.RegisterCreatedObjectUndo(gameObject, UndoGroupName);
+                    var instance = PrefabUtility.InstantiatePrefab(planned.PrefabAsset, parent) as GameObject;
+                    if (instance != null)
+                    {
+                        instance.name = planned.Source.name;
+                        Undo.RegisterCreatedObjectUndo(instance, UndoGroupName);
+                        transform = instance.transform;
+                        result.InstantiatedPrefabs++;
+                    }
+                }
 
-                var transform = gameObject.transform;
-                transform.SetParent(parent, false);
-                transform.localPosition = source.localPosition;
-                transform.localRotation = source.localRotation;
-                transform.localScale = source.localScale;
+                if (transform == null)
+                {
+                    var gameObject = new GameObject(planned.Source.name);
+                    Undo.RegisterCreatedObjectUndo(gameObject, UndoGroupName);
+                    transform = gameObject.transform;
+                    transform.SetParent(parent, false);
+                    result.CreatedObjects++;
+                }
 
+                CopyObjectState(planned.Source, transform);
                 planned.Created = transform;
-                result.CreatedObjects++;
             }
+        }
+
+        /// <summary>
+        /// Transforms are never copied with CopySerialized: that would also copy the parent and child links.
+        /// </summary>
+        private static void CopyObjectState(Transform source, Transform target)
+        {
+            var sourceObject = source.gameObject;
+            var targetObject = target.gameObject;
+
+            targetObject.layer = sourceObject.layer;
+            targetObject.tag = sourceObject.tag;
+            targetObject.SetActive(sourceObject.activeSelf);
+
+            target.localPosition = source.localPosition;
+            target.localRotation = source.localRotation;
+            target.localScale = source.localScale;
+
+            // Values equal to the prefab asset do not become overrides
+            PrefabUtility.RecordPrefabInstancePropertyModifications(targetObject);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(target);
         }
 
         private static void RemoveReplacedComponents(CopyPlan plan, ExecutionResult result)
@@ -112,6 +145,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             var host = planned.TargetHost != null ? planned.TargetHost : planned.HostToCreate?.Created;
             if (host == null) return null;
+
+            // A freshly created host can already carry the component: it came with an instantiated prefab,
+            // or Unity added it to satisfy a RequireComponent. Adding another one would duplicate it.
+            if (planned.HostToCreate != null)
+            {
+                var arrived = ComponentScanner.FindByTypeAndIndex(host, planned.Entry.Type, planned.Entry.Key.Index);
+                if (arrived != null) return arrived;
+            }
 
             return Undo.AddComponent(host.gameObject, planned.Entry.Type);
         }

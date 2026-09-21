@@ -581,3 +581,17 @@ msgstr "ボーンが見つかりません"
 
 msgid "componentCopier.mapping.reason.renamedChild"
 msgstr "名前の変更のみ（.1、prefix / suffix）"
+
+msgid "componentCopier.action.withPrefab"
+msgstr "Prefab と一緒に追加"
+
+msgid "componentCopier.mapping.note.prefab"
+msgstr "Prefab を追加"
+
+#, csharp-format
+msgid "componentCopier.report.prefabs"
+msgstr "{0} 個の Prefab を、Prefab のまま追加します。コピー元と同じ状態にするため、中のコンポーネント {1} 件も一緒にコピーします。"
+
+#, csharp-format
+msgid "componentCopier.report.appliedPrefabs"
+msgstr "Prefab を {0} 個追加しました。"

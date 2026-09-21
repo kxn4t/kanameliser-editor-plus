@@ -581,3 +581,17 @@ msgstr "找不到骨骼"
 
 msgid "componentCopier.mapping.reason.renamedChild"
 msgstr "僅名稱變更（.1、prefix / suffix）"
+
+msgid "componentCopier.action.withPrefab"
+msgstr "隨 Prefab 新增"
+
+msgid "componentCopier.mapping.note.prefab"
+msgstr "新增 Prefab"
+
+#, csharp-format
+msgid "componentCopier.report.prefabs"
+msgstr "將以 Prefab 實例的形式新增 {0} 個 Prefab。為了與複製來源保持一致，其中的 {1} 個元件也會一併複製。"
+
+#, csharp-format
+msgid "componentCopier.report.appliedPrefabs"
+msgstr "已新增 {0} 個 Prefab。"

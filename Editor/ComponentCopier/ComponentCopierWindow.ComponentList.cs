@@ -336,17 +336,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private string BuildGroupSummary(List<ComponentEntry> groupEntries)
         {
-            var counts = new Dictionary<ComponentAction, int>();
+            // Counted by label rather than by action, so components that arrive with a prefab show up apart
+            var counts = new List<(string label, int count)>();
             foreach (var entry in groupEntries)
             {
                 if (!plannedByKey.TryGetValue(entry.Key, out var planned)) continue;
-                counts.TryGetValue(planned.Action, out var count);
-                counts[planned.Action] = count + 1;
+
+                string label = ActionLabel(planned);
+                int index = counts.FindIndex(c => c.label == label);
+                if (index < 0) counts.Add((label, 1));
+                else counts[index] = (label, counts[index].count + 1);
             }
 
-            return string.Join(" · ", counts
-                .OrderBy(p => p.Key)
-                .Select(p => $"{ActionName(p.Key)} {p.Value}"));
+            return string.Join(" · ", counts.Select(c => $"{c.label} {c.count}"));
         }
 
         private static string ActionName(ComponentAction action)
@@ -354,7 +356,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return Localization.S("componentCopier.action." + Camel(action));
         }
 
-        private static string ActionLabel(PlannedComponent planned) => ActionName(planned.Action);
+        /// <summary>
+        /// Components that were not selected but come along with an instantiated prefab get their own label;
+        /// "New" next to an unchecked row would look like a bug.
+        /// </summary>
+        private static string ActionLabel(PlannedComponent planned)
+        {
+            return planned.Implicit && planned.WillWrite
+                ? Localization.S("componentCopier.action.withPrefab")
+                : ActionName(planned.Action);
+        }
 
         private static string ActionTooltip(PlannedComponent planned)
         {

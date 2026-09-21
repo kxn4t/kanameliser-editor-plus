@@ -51,6 +51,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             detailTitleKey = "componentCopier.report.afterApply";
             detailMessage = Localization.S("componentCopier.report.applied",
                 result.WrittenComponents, result.CreatedObjects, result.RemovedComponents);
+            if (result.InstantiatedPrefabs > 0)
+            {
+                detailMessage += "\n" +
+                    Localization.S("componentCopier.report.appliedPrefabs", result.InstantiatedPrefabs);
+            }
+
             if (result.Failed.Count > 0)
                 detailMessage += "\n" + Localization.S("componentCopier.report.failed", result.Failed.Count);
 
@@ -108,13 +114,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void RenderPreCheck()
         {
-            int Count(ComponentAction action) => plan.Components.Count(c => c.Action == action);
+            // Components that merely arrive with a prefab are reported on the prefab line, not as selected work
+            int Count(ComponentAction action) => plan.Components.Count(c => c.Action == action && !c.Implicit);
+
+            int prefabs = plan.ObjectsToCreate.Count(o => o.IsPrefabRoot && o.PrefabRoot == null);
+            int plainObjects = plan.ObjectsToCreate.Count(o => !o.IsPrefabRoot && o.PrefabRoot == null);
 
             var summary = new Label(Localization.S("componentCopier.report.summary",
                 Count(ComponentAction.Add), Count(ComponentAction.Overwrite), Count(ComponentAction.Replace),
-                Count(ComponentAction.Skip) + Count(ComponentAction.SkipIdentical), plan.ObjectsToCreate.Count));
+                Count(ComponentAction.Skip) + Count(ComponentAction.SkipIdentical), plainObjects));
             summary.AddToClassList("report-summary");
             reportContainer.Add(summary);
+
+            if (prefabs > 0)
+            {
+                var prefabLabel = new Label(Localization.S("componentCopier.report.prefabs",
+                    prefabs, plan.Components.Count(c => c.Implicit)));
+                prefabLabel.AddToClassList("report-summary");
+                reportContainer.Add(prefabLabel);
+            }
 
             if (IsTargetAsset()) AddWarning("componentCopier.warning.targetIsAsset");
 

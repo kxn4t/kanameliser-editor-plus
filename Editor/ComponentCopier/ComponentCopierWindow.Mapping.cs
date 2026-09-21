@@ -84,7 +84,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return;
             }
 
-            var created = new HashSet<Transform>(plan.ObjectsToCreate.Select(o => o.Source));
+            var created = plan.ObjectsToCreate.ToDictionary(o => o.Source);
+
+            // Objects inside a nested prefab that gets instantiated are not decisions of their own;
+            // only the prefab root is listed.
+            mappings = mappings
+                .Where(m => !created.TryGetValue(m.Source, out var inPrefab) || inPrefab.PrefabRoot == null)
+                .ToList();
             var needsReview = mappings.Where(m => m.State == MappingState.NeedsReview).ToList();
             var unmapped = mappings.Where(m => !m.IsUsable && m.State != MappingState.NeedsReview).ToList();
             var manual = mappings.Where(m => m.State == MappingState.Manual && m.IsUsable).ToList();
@@ -132,20 +138,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     if (evt.newValue && foldout.childCount == 0)
                     {
                         foreach (var mapping in confirmed)
-                            foldout.Add(CreateMappingRow(mapping, false));
+                            foldout.Add(CreateMappingRow(mapping, null));
                     }
                 });
                 if (confirmedMappingsExpanded)
                 {
                     foreach (var mapping in confirmed)
-                        foldout.Add(CreateMappingRow(mapping, false));
+                        foldout.Add(CreateMappingRow(mapping, null));
                 }
 
                 mappingContainer.Add(foldout);
             }
         }
 
-        private void AddMappingGroup(List<TransformMapping> mappings, string titleKey, HashSet<Transform> created)
+        private void AddMappingGroup(
+            List<TransformMapping> mappings, string titleKey, Dictionary<Transform, PlannedObject> created)
         {
             if (mappings.Count == 0) return;
 
@@ -157,10 +164,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             foreach (var mapping in mappings)
-                mappingContainer.Add(CreateMappingRow(mapping, created.Contains(mapping.Source)));
+            {
+                created.TryGetValue(mapping.Source, out var plannedObject);
+                mappingContainer.Add(CreateMappingRow(mapping, plannedObject));
+            }
         }
 
-        private VisualElement CreateMappingRow(TransformMapping mapping, bool willBeCreated)
+        private VisualElement CreateMappingRow(TransformMapping mapping, PlannedObject plannedObject)
         {
             var row = new VisualElement();
             row.AddToClassList("mapping-row");
@@ -196,7 +206,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             });
             row.Add(targetPicker);
 
-            var note = new Label(MappingNote(mapping, willBeCreated));
+            var note = new Label(MappingNote(mapping, plannedObject));
             note.AddToClassList("mapping-note");
             row.Add(note);
 
@@ -271,9 +281,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Recompute();
         }
 
-        private string MappingNote(TransformMapping mapping, bool willBeCreated)
+        private string MappingNote(TransformMapping mapping, PlannedObject plannedObject)
         {
-            if (willBeCreated) return Localization.S("componentCopier.mapping.note.willCreate");
+            if (plannedObject != null)
+            {
+                return Localization.S(plannedObject.IsPrefabRoot
+                    ? "componentCopier.mapping.note.prefab"
+                    : "componentCopier.mapping.note.willCreate");
+            }
 
             switch (mapping.State)
             {

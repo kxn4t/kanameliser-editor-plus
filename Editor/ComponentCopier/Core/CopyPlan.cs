@@ -46,8 +46,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public Transform ExistingParent;
         public PlannedObject ParentToCreate;
 
+        /// <summary>
+        /// Set when <see cref="Source"/> is the root of a nested prefab. The prefab is instantiated instead of
+        /// rebuilding its objects, so the link to the prefab asset is kept.
+        /// </summary>
+        public GameObject PrefabAsset;
+
+        /// <summary>
+        /// The nested prefab root this object arrives with, or null. Objects below an instantiated prefab
+        /// usually exist already once the prefab is in place; only the missing ones are created.
+        /// </summary>
+        public PlannedObject PrefabRoot;
+
+        /// <summary>Index among same-name siblings, used to find the object inside an instantiated prefab.</summary>
+        public int SiblingOccurrence;
+
         /// <summary>Filled in by <see cref="CopyExecutor"/>.</summary>
         public Transform Created;
+
+        public bool IsPrefabRoot => PrefabAsset != null;
     }
 
     /// <summary>
@@ -107,6 +124,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public ComponentAction Action;
         public BlockReason BlockReason;
         public List<PlannedReference> References = new();
+
+        /// <summary>
+        /// True for components that were not selected but belong to a nested prefab that gets instantiated.
+        /// A prefab is brought over as a whole, so everything in it is made to match the source.
+        /// </summary>
+        public bool Implicit;
 
         /// <summary>Component written by <see cref="CopyExecutor"/>.</summary>
         public Component Result;
