@@ -218,7 +218,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             row.AddToClassList("mapping-row--willcreate");
 
             string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, map.SourceRoot);
-            var sourceLabel = new Label(sourcePath) { tooltip = sourcePath };
+            var sourceLabel = WithOverflowTooltip(new Label(sourcePath));
             sourceLabel.AddToClassList("mapping-source");
             sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(mapping.Source));
             row.Add(sourceLabel);
@@ -228,7 +228,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             row.Add(arrow);
 
             string createdPath = PlannedTargetPath(plannedObject);
-            var createdLabel = new Label("+ " + createdPath) { tooltip = createdPath };
+            var createdLabel = WithOverflowTooltip(new Label("+ " + createdPath));
             createdLabel.AddToClassList("mapping-target");
             createdLabel.AddToClassList("mapping-created-path");
             row.Add(createdLabel);
@@ -489,7 +489,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             row.AddToClassList("mapping-row");
 
             string path = ScenePath(transform);
-            var sourceLabel = new Label(path) { tooltip = path };
+            var sourceLabel = WithOverflowTooltip(new Label(path));
             sourceLabel.AddToClassList("mapping-source");
             sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(transform));
             row.Add(sourceLabel);
@@ -603,7 +603,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, owner.SourceRoot);
             if (external)
                 sourcePath = string.IsNullOrEmpty(sourcePath) ? owner.SourceRoot.name : owner.SourceRoot.name + "/" + sourcePath;
-            var sourceLabel = new Label(sourcePath) { tooltip = sourcePath };
+            var sourceLabel = WithOverflowTooltip(new Label(sourcePath));
             sourceLabel.AddToClassList("mapping-source");
             sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(mapping.Source));
             row.Add(sourceLabel);

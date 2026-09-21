@@ -297,6 +297,7 @@
 }
 
 .object-tree-heading {
+    align-self: flex-start;
     margin-top: 3px;
     margin-bottom: 2px;
     margin-left: 2px;
@@ -430,7 +431,10 @@
 }
 
 .row-path {
-    flex-grow: 1;
+    /* Sized by its text: a tooltip is centered on the element, see WithOverflowTooltip.
+     * The auto margin pushes the chips to the right instead. */
+    flex-grow: 0;
+    margin-right: auto;
     flex-shrink: 1;
     min-width: 0;
     overflow: hidden;
@@ -496,6 +500,8 @@
 
 /* Components that hold a reference to the outside, below the row of the object they point at */
 .mapping-holders {
+    /* Not stretched to the full width, so its tooltip stays near the text */
+    align-self: flex-start;
     margin-left: 8px;
     margin-bottom: 3px;
     font-size: 10px;

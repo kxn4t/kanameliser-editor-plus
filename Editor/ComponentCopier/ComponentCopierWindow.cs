@@ -331,6 +331,35 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             EditorGUIUtility.PingObject(target);
         }
 
+        /// <summary>
+        /// Makes the whole row reveal its object, except for the checkbox. The label alone is only as wide as
+        /// its text (see <see cref="WithOverflowTooltip"/>), which would leave most of the row dead.
+        /// </summary>
+        private static void RevealOnRowClick(VisualElement row, VisualElement checkbox, Object target)
+        {
+            row.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.target is VisualElement element && (element == checkbox || checkbox.Contains(element))) return;
+                Reveal(target);
+            });
+        }
+
+        /// <summary>
+        /// Shows the label's own text as a tooltip, but only while the label cuts it off. UI Toolkit centers a
+        /// tooltip on its element, so a wide label with a short text shows it far away from the text and the
+        /// cursor, where it only repeats what is readable anyway.
+        /// </summary>
+        private static Label WithOverflowTooltip(Label label)
+        {
+            label.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                float textWidth = label.MeasureTextSize(
+                    label.text, 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).x;
+                label.tooltip = textWidth > label.contentRect.width + 0.5f ? label.text : "";
+            });
+            return label;
+        }
+
         private void UpdateFooterTexts()
         {
             if (applyButton == null) return;

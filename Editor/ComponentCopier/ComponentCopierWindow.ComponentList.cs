@@ -431,13 +431,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             icon.AddToClassList("row-icon");
             row.Add(icon);
 
-            var pathLabel = new Label(path) { tooltip = path };
+            var pathLabel = WithOverflowTooltip(new Label(path));
             pathLabel.AddToClassList("row-path");
-            pathLabel.RegisterCallback<ClickEvent>(_ =>
-            {
-                Reveal(missing);
-            });
             row.Add(pathLabel);
+            RevealOnRowClick(row, toggle, missing);
 
             bool isPrefab = NestedPrefabs.GetPrefabAsset(missing, sourceRoot.transform) != null;
             int emptyChildren = isPrefab ? 0 : MissingObjects.CountBelow(missing, map);
@@ -808,15 +805,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             else
             {
                 string path = DisplayPath(entry);
-                rowLabel = new Label(path) { tooltip = path };
+                rowLabel = WithOverflowTooltip(new Label(path));
             }
 
             rowLabel.AddToClassList("row-path");
-            rowLabel.RegisterCallback<ClickEvent>(_ =>
-            {
-                Reveal(entry.Host);
-            });
             row.Add(rowLabel);
+            RevealOnRowClick(row, toggle, entry.Host);
 
             if (plannedByKey.TryGetValue(entry.Key, out var planned))
             {
