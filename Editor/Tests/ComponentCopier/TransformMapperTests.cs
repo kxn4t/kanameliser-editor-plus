@@ -270,6 +270,39 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void ManualMapping_StillOffersWhatAutomaticWouldHaveChosen()
+        {
+            var source = CreateHierarchy("Source", "Thing", "Other");
+            var target = CreateHierarchy("Target", "Thing", "Other");
+
+            // "No counterpart" must stay reversible from the menu
+            var manual = new Dictionary<Transform, Transform> { { source.Find("Thing"), null } };
+            var map = TransformMapper.Build(source, target, manual);
+
+            var mapping = map.Get(source.Find("Thing"));
+            Assert.AreEqual(MappingState.Manual, mapping.State);
+            Assert.IsNull(mapping.Target);
+            Assert.AreEqual(new[] { target.Find("Thing") }, mapping.Candidates.Select(c => c.Target).ToArray());
+
+            // Offering a target does not take it away from anything else
+            Assert.IsTrue(map.TryResolve(source.Find("Other"), out var other));
+            Assert.AreSame(target.Find("Other"), other);
+        }
+
+        [Test]
+        public void ManualMapping_OffersSuggestionsToo()
+        {
+            var source = CreateHierarchy("Source", "Group/Item");
+            var target = CreateHierarchy("Target", "A/Item", "B/Item");
+
+            var manual = new Dictionary<Transform, Transform> { { source.Find("Group/Item"), null } };
+            var map = TransformMapper.Build(source, target, manual);
+
+            var candidates = map.Get(source.Find("Group/Item")).Candidates.Select(c => c.Target).ToList();
+            CollectionAssert.AreEquivalent(new[] { target.Find("A/Item"), target.Find("B/Item") }, candidates);
+        }
+
+        [Test]
         public void TargetsAreNotAssignedTwice()
         {
             var source = CreateHierarchy("Source", "Armature/Hips", "Armature/pelvis");

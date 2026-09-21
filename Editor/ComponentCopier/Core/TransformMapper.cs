@@ -163,6 +163,52 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 BuildDictionaryBones();
 
                 ResolvePass(sourceRoot, targetRoot);
+                AddCandidatesToManualMappings();
+            }
+
+            /// <summary>
+            /// A manual mapping skips every automatic rule, which also left it without candidates: after
+            /// choosing "no counterpart" (or "keep as is") the menu had nothing to offer for changing one's
+            /// mind. So the automatic answer is worked out after all and kept as candidates only.
+            /// </summary>
+            private void AddCandidatesToManualMappings()
+            {
+                foreach (var pair in manual)
+                {
+                    var source = pair.Key;
+                    if (source == null || source == sourceRoot || !source.IsChildOf(sourceRoot)) continue;
+
+                    var manualMapping = Map.Get(source);
+                    if (manualMapping == null || manualMapping.State != MappingState.Manual) continue;
+
+                    // Runs last, so everything else has claimed its target and the answer does not disturb it
+                    Resolve(source, NearestMappedAncestorTarget(source));
+                    var automatic = Map.Get(source);
+
+                    var candidates = automatic.Candidates;
+                    if (automatic.State == MappingState.Confirmed && automatic.Target != null)
+                    {
+                        candidates = new List<MappingCandidate>
+                        {
+                            new MappingCandidate { Target = automatic.Target, Score = 1f },
+                        };
+                        // Confirming claimed the target; it is only on offer
+                        if (automatic.Target != manualMapping.Target) usedTargets.Remove(automatic.Target);
+                    }
+
+                    manualMapping.Candidates = candidates;
+                    Map.Set(manualMapping);
+                }
+            }
+
+            private Transform NearestMappedAncestorTarget(Transform source)
+            {
+                for (var parent = source.parent; parent != null && parent != sourceRoot; parent = parent.parent)
+                {
+                    if (Map.TryResolve(parent, out var target)) return target;
+                }
+
+                return targetRoot;
             }
 
             #region Regions
