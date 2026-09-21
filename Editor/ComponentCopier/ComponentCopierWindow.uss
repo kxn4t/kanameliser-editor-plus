@@ -200,12 +200,16 @@
     margin-bottom: 6px;
 }
 
+/* Unity's buttons have a larger bottom margin than top margin while toggles are symmetric, so centering the
+ * row leaves them a pixel apart. Both get the same symmetric margins instead. */
 .preset-chip {
     border-radius: 10px;
     padding-left: 8px;
     padding-right: 8px;
     margin-left: 0;
     margin-right: 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
 }
 
 .preset-chip--active {
@@ -215,6 +219,45 @@
 
 .show-excluded-toggle {
     margin-left: 8px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+/* Unity top-aligns a field label and nudges it down with padding, which only lines up with its own font and
+ * row height. Text and checkbox are centered on each other instead. */
+.show-excluded-toggle.unity-toggle,
+.settings-create.unity-toggle {
+    align-items: center;
+}
+
+/* Unity also reserves 150px for the label, which leaves the checkbox far away from a short text */
+.show-excluded-toggle.unity-toggle > .unity-toggle__label,
+.settings-create.unity-toggle > .unity-toggle__label {
+    min-width: auto;
+    margin-right: 4px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    -unity-text-align: middle-left;
+}
+
+.show-excluded-toggle.unity-toggle > .unity-toggle__input,
+.settings-create.unity-toggle > .unity-toggle__input {
+    align-items: center;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Measured on a screenshot: centered boxes still leave the checkbox a physical pixel above the optical
+ * center of the text, because the glyphs sit low in their line box. Inside a centered container a top
+ * margin of 1px moves the box down by half of it. */
+.show-excluded-toggle.unity-toggle .unity-toggle__checkmark,
+.settings-create.unity-toggle .unity-toggle__checkmark {
+    margin-top: 1px;
+    margin-bottom: 0;
 }
 
 /* ── Component list ── */
