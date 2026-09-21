@@ -261,7 +261,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (normal.Count == 0 && (!showExcluded || excluded.Count == 0))
             {
                 listContainer.Add(InfoLabel("componentCopier.info.noComponents"));
-                AddMissingPrefabGroup();
+                AddMissingObjectGroup();
                 return;
             }
 
@@ -270,7 +270,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // An object keeps all of its components together; the ones that are not copied by default
                 // are dimmed per row instead of being moved to a section of their own.
                 AddGroups(visible, false);
-                AddMissingPrefabGroup();
+                AddMissingObjectGroup();
                 return;
             }
 
@@ -285,22 +285,24 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 AddGroups(excluded, true);
             }
 
-            AddMissingPrefabGroup();
+            AddMissingObjectGroup();
         }
 
-        private const string PrefabGroupId = "__missingPrefabs";
+        private const string MissingObjectGroupId = "__missingObjects";
 
         /// <summary>
-        /// Nested prefabs that the target lacks. A prefab is added automatically when a selected component lives
-        /// inside it; here the user can also add prefabs without one, such as a hat that only has meshes.
+        /// Nested prefabs and empty objects that the target lacks. They are added automatically when a selected
+        /// component needs them; here the user can also add the ones nothing asks for, such as a hat that only
+        /// has meshes or an anchor object.
         /// </summary>
-        private void AddMissingPrefabGroup()
+        private void AddMissingObjectGroup()
         {
-            if (plan == null || missingPrefabs.Count == 0) return;
+            if (plan == null || missingObjects.Count == 0) return;
 
             var plannedRoots = new HashSet<Transform>(
-                plan.ObjectsToCreate.Where(o => o.IsPrefabRoot && o.PrefabRoot == null).Select(o => o.Source));
-            var blockedReasons = plan.BlockedPrefabs.ToDictionary(b => b.Source, b => b.Reason);
+                plan.ObjectsToCreate.Where(o => o.PrefabRoot == null).Select(o => o.Source));
+            plannedRoots.IntersectWith(missingObjects);
+            var blockedReasons = plan.BlockedObjects.ToDictionary(b => b.Source, b => b.Reason);
 
             var group = new VisualElement();
             group.AddToClassList("component-group");
@@ -319,38 +321,38 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             arrow.AddToClassList("collapsible-arrow");
             header.Add(arrow);
 
-            // Same rule as the rows: a prefab that comes along with a selected component counts as checked,
+            // Same rule as the rows: an object that comes along with a selected component counts as checked,
             // otherwise the header stays empty above a row that is ticked
             bool AddedByComponents(Transform p) =>
-                plannedRoots.Contains(p) && !selectedPrefabPaths.Contains(PrefabPath(p));
+                plannedRoots.Contains(p) && !selectedObjectPaths.Contains(ObjectPath(p));
 
-            int checkedCount = missingPrefabs.Count(p =>
-                selectedPrefabPaths.Contains(PrefabPath(p)) || AddedByComponents(p));
+            int checkedCount = missingObjects.Count(p =>
+                selectedObjectPaths.Contains(ObjectPath(p)) || AddedByComponents(p));
             var toggle = new Toggle
             {
-                value = checkedCount == missingPrefabs.Count,
-                showMixedValue = checkedCount > 0 && checkedCount < missingPrefabs.Count,
+                value = checkedCount == missingObjects.Count,
+                showMixedValue = checkedCount > 0 && checkedCount < missingObjects.Count,
             };
             toggle.AddToClassList("group-toggle");
-            // Nothing to decide when every prefab is already on its way
-            toggle.SetEnabled(!missingPrefabs.All(AddedByComponents));
+            // Nothing to decide when every object is already on its way
+            toggle.SetEnabled(!missingObjects.All(AddedByComponents));
             toggle.RegisterValueChangedCallback(evt =>
             {
                 evt.StopPropagation();
-                foreach (var prefab in missingPrefabs)
+                foreach (var missing in missingObjects)
                 {
                     // Left to their components; checking them here would keep them after those are deselected
-                    if (AddedByComponents(prefab)) continue;
+                    if (AddedByComponents(missing)) continue;
 
-                    if (evt.newValue) selectedPrefabPaths.Add(PrefabPath(prefab));
-                    else selectedPrefabPaths.Remove(PrefabPath(prefab));
+                    if (evt.newValue) selectedObjectPaths.Add(ObjectPath(missing));
+                    else selectedObjectPaths.Remove(ObjectPath(missing));
                 }
 
                 Recompute();
             });
             header.Add(toggle);
 
-            var icon = new Image { image = EditorGUIUtility.IconContent("Prefab Icon").image };
+            var icon = new Image { image = EditorGUIUtility.IconContent("GameObject Icon").image };
             icon.AddToClassList("group-icon");
             header.Add(icon);
 
@@ -361,7 +363,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             nameLabel.AddToClassList("group-name");
             header.Add(nameLabel);
 
-            var countLabel = new Label(missingPrefabs.Count.ToString());
+            var countLabel = new Label(missingObjects.Count.ToString());
             countLabel.AddToClassList("count-badge");
             header.Add(countLabel);
 
@@ -388,24 +390,24 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 if (evt.target is VisualElement element && (element == toggle || toggle.Contains(element))) return;
 
-                bool expanded = !expandedTypes.Contains(PrefabGroupId);
-                if (expanded) expandedTypes.Add(PrefabGroupId);
-                else expandedTypes.Remove(PrefabGroupId);
+                bool expanded = !expandedTypes.Contains(MissingObjectGroupId);
+                if (expanded) expandedTypes.Add(MissingObjectGroupId);
+                else expandedTypes.Remove(MissingObjectGroupId);
                 ApplyExpanded(expanded);
             });
 
-            foreach (var prefab in missingPrefabs)
-                content.Add(CreatePrefabRow(prefab, plannedRoots.Contains(prefab), blockedReasons));
+            foreach (var missing in missingObjects)
+                content.Add(CreateMissingObjectRow(missing, plannedRoots.Contains(missing), blockedReasons));
 
-            ApplyExpanded(expandedTypes.Contains(PrefabGroupId));
+            ApplyExpanded(expandedTypes.Contains(MissingObjectGroupId));
         }
 
-        private VisualElement CreatePrefabRow(
-            Transform prefab, bool planned, Dictionary<Transform, BlockReason> blockedReasons)
+        private VisualElement CreateMissingObjectRow(
+            Transform missing, bool planned, Dictionary<Transform, BlockReason> blockedReasons)
         {
-            string path = PrefabPath(prefab);
-            bool selected = selectedPrefabPaths.Contains(path);
-            // Already on its way because a selected component lives inside; unchecking would have no effect
+            string path = ObjectPath(missing);
+            bool selected = selectedObjectPaths.Contains(path);
+            // Already on its way because a selected component needs it; unchecking would have no effect
             bool addedByComponents = planned && !selected;
 
             var row = new VisualElement();
@@ -415,21 +417,41 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             toggle.SetEnabled(!addedByComponents);
             toggle.RegisterValueChangedCallback(evt =>
             {
-                if (evt.newValue) selectedPrefabPaths.Add(path);
-                else selectedPrefabPaths.Remove(path);
+                if (evt.newValue) selectedObjectPaths.Add(path);
+                else selectedObjectPaths.Remove(path);
                 Recompute();
             });
             row.Add(toggle);
+
+            // Prefabs and plain objects share the group, so the icon tells them apart
+            var icon = new Image
+            {
+                image = EditorGUIUtility.ObjectContent(missing.gameObject, typeof(GameObject)).image,
+            };
+            icon.AddToClassList("row-icon");
+            row.Add(icon);
 
             var pathLabel = new Label(path) { tooltip = path };
             pathLabel.AddToClassList("row-path");
             pathLabel.RegisterCallback<ClickEvent>(_ =>
             {
-                Reveal(prefab);
+                Reveal(missing);
             });
             row.Add(pathLabel);
 
-            if (blockedReasons.ContainsKey(prefab))
+            bool isPrefab = NestedPrefabs.GetPrefabAsset(missing, sourceRoot.transform) != null;
+            int emptyChildren = isPrefab ? 0 : MissingObjects.CountBelow(missing, map);
+            if (emptyChildren > 0)
+            {
+                var childrenLabel = new Label("+" + emptyChildren)
+                {
+                    tooltip = Localization.S("componentCopier.prefabs.emptyChildren:tooltip", emptyChildren),
+                };
+                childrenLabel.AddToClassList("count-badge");
+                row.Add(childrenLabel);
+            }
+
+            if (blockedReasons.ContainsKey(missing))
             {
                 var chip = new Label(ActionName(ComponentAction.Blocked))
                 {

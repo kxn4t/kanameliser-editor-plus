@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Kanameliser.EditorPlus.ComponentCopier;
 using NUnit.Framework;
@@ -94,6 +95,109 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 
             var diff = CopyVerifier.Verify(plan).Components.Single();
             Assert.AreEqual(DiffKind.UnresolvedReference, diff.Kind);
+        }
+
+        [Test]
+        public void ReferencedEmptyObject_IsCreatedAlongWithTheComponent()
+        {
+            var source = CreateHierarchy("Source", "Item", "Anchors/Anchor");
+            var target = CreateHierarchy("Target", "Item");
+            AddParentConstraint(source.Find("Item"), source.Find("Anchors/Anchor"));
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(ParentConstraint));
+            Assert.AreEqual(ReferenceKind.InternalMapped, plan.Components.Single().References.Single().Kind);
+
+            CopyExecutor.Execute(plan);
+
+            var anchor = target.Find("Anchors/Anchor");
+            Assert.IsNotNull(anchor);
+            Assert.AreSame(anchor, target.Find("Item").GetComponent<ParentConstraint>().GetSource(0).sourceTransform);
+        }
+
+        [Test]
+        public void ReferencedObjectWithComponents_IsNotCreatedBare()
+        {
+            var source = CreateHierarchy("Source", "Item", "Anchor");
+            var target = CreateHierarchy("Target", "Item");
+            source.Find("Anchor").gameObject.AddComponent<SphereCollider>();
+            AddParentConstraint(source.Find("Item"), source.Find("Anchor"));
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(ParentConstraint));
+
+            Assert.AreEqual(ReferenceKind.InternalUnresolved, plan.Components.Single().References.Single().Kind);
+            Assert.IsEmpty(plan.ObjectsToCreate);
+        }
+
+        [Test]
+        public void ReferencedEmptyObject_IsNotCreatedWhenCreatingIsOff()
+        {
+            var source = CreateHierarchy("Source", "Item", "Anchor");
+            var target = CreateHierarchy("Target", "Item");
+            AddParentConstraint(source.Find("Item"), source.Find("Anchor"));
+
+            var settings = new CopySettings { CreateMissingObjects = false };
+            var plan = BuildPlan(source, target, settings, typeof(ParentConstraint));
+
+            Assert.AreEqual(ReferenceKind.InternalUnresolved, plan.Components.Single().References.Single().Kind);
+            Assert.IsEmpty(plan.ObjectsToCreate);
+        }
+
+        [Test]
+        public void ReferencedEmptyObject_IsNotCreatedForASkippedComponent()
+        {
+            var source = CreateHierarchy("Source", "Item", "Anchor");
+            var target = CreateHierarchy("Target", "Item");
+            AddParentConstraint(source.Find("Item"), source.Find("Anchor"));
+            target.Find("Item").gameObject.AddComponent<ParentConstraint>();
+
+            var settings = new CopySettings { ExistingPolicy = ExistingComponentPolicy.Skip };
+            var plan = BuildPlan(source, target, settings, typeof(ParentConstraint));
+
+            Assert.AreEqual(ComponentAction.Skip, plan.Components.Single().Action);
+            Assert.IsEmpty(plan.ObjectsToCreate);
+        }
+
+        [Test]
+        public void MissingEmptyObjects_AreListedByTheirTopmostObject()
+        {
+            var source = CreateHierarchy("Source", "Anchors/A", "Anchors/B/Deep", "Anchors/WithCollider", "Kept");
+            var target = CreateHierarchy("Target", "Kept");
+            source.Find("Anchors/WithCollider").gameObject.AddComponent<SphereCollider>();
+            var map = TransformMapper.Build(source, target);
+
+            var roots = MissingObjects.FindRoots(map);
+
+            Assert.AreEqual(new[] { source.Find("Anchors") }, roots);
+            Assert.AreEqual(3, MissingObjects.CountBelow(source.Find("Anchors"), map));
+        }
+
+        [Test]
+        public void RequestedEmptyObject_BringsTheEmptyObjectsBelowIt()
+        {
+            var source = CreateHierarchy("Source", "Anchors/A", "Anchors/B/Deep", "Anchors/WithCollider");
+            var target = CreateHierarchy("Target");
+            source.Find("Anchors/WithCollider").gameObject.AddComponent<SphereCollider>();
+            var map = TransformMapper.Build(source, target);
+
+            var plan = CopyPlanBuilder.Build(
+                new List<ComponentEntry>(), map, new CopySettings(), new[] { source.Find("Anchors") });
+            CopyExecutor.Execute(plan);
+
+            Assert.IsNotNull(target.Find("Anchors/A"));
+            Assert.IsNotNull(target.Find("Anchors/B/Deep"));
+            Assert.IsNull(target.Find("Anchors/WithCollider"),
+                "Objects with components are left to the component list");
+        }
+
+        [Test]
+        public void MissingEmptyObjects_SkipBonesAndWhatHangsBelowAMissingBone()
+        {
+            var source = CreateHierarchy("Source", "Armature/Hips/Tail/Tail_end", "Mesh");
+            var target = CreateHierarchy("Target", "Armature/Hips", "Mesh");
+            AddSkinnedMesh(source.Find("Mesh"), source.Find("Armature/Hips"), source.Find("Armature/Hips/Tail"));
+            AddSkinnedMesh(target.Find("Mesh"), target.Find("Armature/Hips"));
+
+            Assert.IsEmpty(MissingObjects.FindRoots(TransformMapper.Build(source, target)));
         }
 
         [Test]

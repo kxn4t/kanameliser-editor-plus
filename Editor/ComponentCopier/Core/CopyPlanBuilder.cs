@@ -13,13 +13,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     /// </summary>
     internal static class CopyPlanBuilder
     {
-        /// <param name="prefabsToAdd">
-        /// Nested prefab roots of the source that should be added to the target even though none of the selected
-        /// components lives inside them (e.g. a hat that only consists of meshes).
+        /// <param name="objectsToAdd">
+        /// Objects of the source that should be added to the target even though no selected component needs
+        /// them: nested prefab roots (e.g. a hat that only consists of meshes) and empty objects, which bring
+        /// the empty objects below them along.
         /// </param>
         public static CopyPlan Build(
             IEnumerable<ComponentEntry> selected, TransformMap map, CopySettings settings,
-            IEnumerable<Transform> prefabsToAdd = null)
+            IEnumerable<Transform> objectsToAdd = null)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
             settings ??= new CopySettings();
@@ -35,15 +36,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 plan.Components.Add(planned);
             }
 
-            foreach (var prefabRoot in prefabsToAdd ?? Enumerable.Empty<Transform>())
+            foreach (var source in objectsToAdd ?? Enumerable.Empty<Transform>())
             {
-                var blockReason = context.RequestPrefab(prefabRoot);
+                var blockReason = context.RequestObject(source);
                 if (blockReason != BlockReason.None)
-                    plan.BlockedPrefabs.Add(new BlockedPrefab { Source = prefabRoot, Reason = blockReason });
+                    plan.BlockedObjects.Add(new BlockedObject { Source = source, Reason = blockReason });
             }
 
-            AddImplicitComponents(plan, context);
-            DecideActions(plan);
+            PlanDependencies(plan, context);
             CollectReferences(plan, context);
 
             // Needs the references, so it runs last
@@ -130,16 +130,29 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             /// <summary>
-            /// Plans a nested prefab on request. When it sits inside another missing prefab, the outer one is
-            /// planned, because that is the unit that gets instantiated.
+            /// Plans an object on request. A nested prefab is planned as a whole; when it sits inside another
+            /// missing prefab, the outer one is planned, because that is the unit that gets instantiated.
+            /// Any other object is created together with the empty objects below it.
             /// </summary>
-            public BlockReason RequestPrefab(Transform nestedRoot)
+            public BlockReason RequestObject(Transform source)
             {
-                if (nestedRoot == null || !ReferenceWalker.IsInside(nestedRoot, plan.Map.SourceRoot))
+                if (source == null || !ReferenceWalker.IsInside(source, plan.Map.SourceRoot))
                     return BlockReason.None;
 
-                var missingRoot = FindMissingNestedPrefabRoot(nestedRoot);
-                return missingRoot != null ? PlanNestedPrefab(missingRoot) : BlockReason.None;
+                var missingRoot = FindMissingNestedPrefabRoot(source);
+                if (missingRoot != null) return PlanNestedPrefab(missingRoot);
+
+                Resolve(source, out _, out var toCreate, out var blockReason);
+                if (toCreate == null) return blockReason;
+
+                // Objects with components are left to the component list; they are created once one of
+                // their components is selected
+                foreach (Transform child in source)
+                {
+                    if (MissingObjects.IsMissingEmpty(child, plan.Map)) RequestObject(child);
+                }
+
+                return BlockReason.None;
             }
 
             /// <summary>
@@ -216,6 +229,58 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         }
 
         /// <summary>
+        /// Plans what the selection depends on and decides what happens to each component. The steps feed each
+        /// other: a referenced object can sit in a nested prefab, whose components then come along and hold
+        /// references of their own.
+        /// </summary>
+        private static void PlanDependencies(CopyPlan plan, HostResolver context)
+        {
+            var walked = new HashSet<Component>();
+            int objectCount;
+            do
+            {
+                objectCount = plan.ObjectsToCreate.Count;
+                AddImplicitComponents(plan, context);
+                DecideActions(plan);
+                PlanReferencedObjects(plan, context, walked);
+            } while (plan.ObjectsToCreate.Count != objectCount);
+        }
+
+        /// <summary>
+        /// An empty object that a copied component points at (a constraint source, an anchor, ...) is created
+        /// like the object a component sits on; without it the reference would be cleared and the component
+        /// would not work. Objects with components of their own are not created bare: the reference stays
+        /// unresolved until the user selects those components.
+        /// </summary>
+        private static void PlanReferencedObjects(CopyPlan plan, HostResolver context, HashSet<Component> walked)
+        {
+            foreach (var planned in plan.Components)
+            {
+                // A component that is kept as it is (Skip) needs nothing new
+                if (!planned.WillWrite) continue;
+                if (!walked.Add(planned.Entry.Component)) continue;
+
+                using var serializedObject = new SerializedObject(planned.Entry.Component);
+                foreach (var property in ReferenceWalker.Leaves(serializedObject))
+                {
+                    if (property.propertyType != SerializedPropertyType.ObjectReference) continue;
+
+                    var value = property.objectReferenceValue;
+                    if (!(value is GameObject) && !(value is Transform)) continue;
+
+                    var transform = ReferenceWalker.GetTransform(value);
+                    if (transform == null || transform == plan.Map.SourceRoot) continue;
+                    if (!ReferenceWalker.IsInside(transform, plan.Map.SourceRoot)) continue;
+                    if (!MissingObjects.IsEmpty(transform)) continue;
+
+                    // Does nothing for mapped objects; bones, unconfirmed matches and the "create missing
+                    // objects" setting are respected, in which case the reference stays unresolved
+                    context.Resolve(transform, out _, out _, out _);
+                }
+            }
+        }
+
+        /// <summary>
         /// A nested prefab is brought over as a whole: every component in it is copied, selected or not,
         /// so that overrides made on the source instance (materials, tweaked values, references to the
         /// outfit's bones) carry over.
@@ -236,8 +301,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
         }
 
+        /// <summary>Decides every component from scratch, so it can run again after components were added.</summary>
         private static void DecideActions(CopyPlan plan)
         {
+            plan.ComponentsToRemove.Clear();
             var replacedHosts = new HashSet<(Transform host, Type type)>();
 
             foreach (var planned in plan.Components)
@@ -485,6 +552,74 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Empty objects of the source (anchors, organizing folders, leaf objects) that the target lacks.
+    /// No component ever asks for them, so the component list cannot bring them over.
+    /// </summary>
+    internal static class MissingObjects
+    {
+        /// <summary>True for an object that has nothing but its Transform.</summary>
+        public static bool IsEmpty(Transform transform)
+        {
+            // Missing scripts come back as null entries and still count as something
+            return transform != null && transform.GetComponents<Component>().Length == 1;
+        }
+
+        /// <summary>
+        /// True for an empty object that can be offered for creation. Bones are never created, nested prefabs
+        /// are listed on their own, and an unconfirmed match may well be the counterpart.
+        /// </summary>
+        public static bool IsMissingEmpty(Transform transform, TransformMap map)
+        {
+            if (!IsEmpty(transform) || map.TryResolve(transform, out _)) return false;
+            if (map.SourceSkeleton.IsBone(transform)) return false;
+            if (NestedPrefabs.GetPrefabAsset(transform, map.SourceRoot) != null) return false;
+
+            var mapping = map.Get(transform);
+            return mapping == null || mapping.State != MappingState.NeedsReview;
+        }
+
+        /// <summary>
+        /// Lists the missing empty objects. Only the topmost ones are returned: the empty objects below them
+        /// are created along with them.
+        /// </summary>
+        public static List<Transform> FindRoots(TransformMap map)
+        {
+            var result = new List<Transform>();
+            Visit(map.SourceRoot, false);
+            return result;
+
+            void Visit(Transform parent, bool parentComesAlong)
+            {
+                foreach (Transform child in parent)
+                {
+                    bool resolved = map.TryResolve(child, out _);
+
+                    // A missing prefab arrives as a whole, and nothing can be created below a missing bone
+                    if (!resolved && NestedPrefabs.GetPrefabAsset(child, map.SourceRoot) != null) continue;
+                    if (!resolved && map.SourceSkeleton.IsBone(child)) continue;
+
+                    bool missingEmpty = IsMissingEmpty(child, map);
+                    if (missingEmpty && !parentComesAlong) result.Add(child);
+
+                    Visit(child, missingEmpty);
+                }
+            }
+        }
+
+        /// <summary>Number of empty objects below <paramref name="root"/> that are created along with it.</summary>
+        public static int CountBelow(Transform root, TransformMap map)
+        {
+            int count = 0;
+            foreach (Transform child in root)
+            {
+                if (IsMissingEmpty(child, map)) count += 1 + CountBelow(child, map);
+            }
+
+            return count;
         }
     }
 }

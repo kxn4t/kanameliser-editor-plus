@@ -141,8 +141,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Action == ComponentAction.Add || Action == ComponentAction.Overwrite || Action == ComponentAction.Replace;
     }
 
-    /// <summary>A nested prefab the user asked to add that cannot be added right now.</summary>
-    internal sealed class BlockedPrefab
+    /// <summary>A nested prefab or empty object the user asked to add that cannot be added right now.</summary>
+    internal sealed class BlockedObject
     {
         public Transform Source;
         public BlockReason Reason;
@@ -167,7 +167,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public List<PlannedComponent> Components = new();
         public List<PlannedObject> ObjectsToCreate = new();
-        public List<BlockedPrefab> BlockedPrefabs = new();
+        public List<BlockedObject> BlockedObjects = new();
         public List<Component> ComponentsToRemove = new();
         public List<BrokenReferenceWarning> BrokenReferences = new();
     }

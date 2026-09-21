@@ -106,10 +106,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var manual = mappings.Where(m => m.State == MappingState.Manual && m.IsUsable).ToList();
             var confirmed = mappings.Where(m => m.State == MappingState.Confirmed).ToList();
 
+            // An object that is going to be created is taken care of; only the rest needs the user
+            int unresolved = unmapped.Count(m => !created.ContainsKey(m.Source));
             mappingSummaryLabel.text = Localization.S("componentCopier.mapping.summary",
-                confirmed.Count + manual.Count, mappings.Count, needsReview.Count, unmapped.Count);
+                confirmed.Count + manual.Count, mappings.Count, needsReview.Count, unresolved);
             mappingSummaryLabel.EnableInClassList("section-summary--warning",
-                needsReview.Count + unmapped.Count > 0);
+                needsReview.Count + unresolved > 0);
 
             int affixCount = needsReview.Count(m => m.Reason == MappingReason.AffixStripped);
             if (affixCount > 1)

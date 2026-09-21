@@ -609,10 +609,13 @@ msgid "componentCopier.report.appliedPrefabs"
 msgstr "已添加 {0} 个 Prefab。"
 
 msgid "componentCopier.prefabs.title"
-msgstr "复制目标中缺少的 Prefab"
+msgstr "复制目标中缺少的对象"
 
 msgid "componentCopier.prefabs.title:tooltip"
-msgstr "复制源中包含而复制目标中没有的 Prefab。内部含有已选组件的 Prefab 会自动添加。像只有网格的帽子那样不含此类组件的 Prefab，勾选后也可以添加。"
+msgstr "复制源中有而复制目标中没有的 Prefab 和空对象。已选组件所需要的会自动添加。像只有网格的帽子或未被任何地方引用的锚点那样的对象，勾选后也可以添加。骨骼不在此列。"
+
+msgid "componentCopier.prefabs.emptyChildren:tooltip"
+msgstr "其下的 {0} 个空对象也会一并创建"
 
 #, csharp-format
 msgid "componentCopier.prefabs.summary"
@@ -625,7 +628,7 @@ msgid "componentCopier.prefabs.status.withComponents"
 msgstr "随组件一并添加"
 
 msgid "componentCopier.prefabs.blocked"
-msgstr "放置此 Prefab 的父对象尚未确定。请在对应关系部分确认父对象，或开启「创建缺少的对象」。如果父对象是复制目标中不存在的骨骼，则无法创建。"
+msgstr "放置此对象的父对象尚未确定。请在对应关系部分确认父对象，或开启「创建缺少的对象」。如果父对象是复制目标中不存在的骨骼，则无法创建。"
 
 msgid "componentCopier.groupBy.type"
 msgstr "按类型"

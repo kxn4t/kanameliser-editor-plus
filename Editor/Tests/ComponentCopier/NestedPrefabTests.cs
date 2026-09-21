@@ -244,7 +244,7 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             var plan = CopyPlanBuilder.Build(
                 Enumerable.Empty<ComponentEntry>(), map, new CopySettings(), new[] { sourceHat });
 
-            Assert.AreEqual(BlockReason.BoneMissing, plan.BlockedPrefabs.Single().Reason);
+            Assert.AreEqual(BlockReason.BoneMissing, plan.BlockedObjects.Single().Reason);
             Assert.IsEmpty(plan.ObjectsToCreate);
         }
 

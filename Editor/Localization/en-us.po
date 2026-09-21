@@ -610,10 +610,13 @@ msgid "componentCopier.report.appliedPrefabs"
 msgstr "Added {0} prefab(s)."
 
 msgid "componentCopier.prefabs.title"
-msgstr "Prefabs missing in the target"
+msgstr "Objects missing in the target"
 
 msgid "componentCopier.prefabs.title:tooltip"
-msgstr "Prefabs nested in the source that the target does not have. A prefab is added automatically when a selected component is inside it. Check one to add it even without such a component, e.g. a hat that only has meshes."
+msgstr "Prefabs and empty objects of the source that the target does not have. The ones a selected component needs are added automatically. Check any other to add it as well, e.g. a hat that only has meshes, or an anchor nothing refers to. Bones are not listed."
+
+msgid "componentCopier.prefabs.emptyChildren:tooltip"
+msgstr "The {0} empty object(s) below it are created as well"
 
 #, csharp-format
 msgid "componentCopier.prefabs.summary"
@@ -626,7 +629,7 @@ msgid "componentCopier.prefabs.status.withComponents"
 msgstr "Added with components"
 
 msgid "componentCopier.prefabs.blocked"
-msgstr "The parent object this prefab belongs under is not decided yet. Confirm the parent in the Mapping section, or turn on Create missing objects. A parent bone that does not exist in the target cannot be created."
+msgstr "The parent object this object belongs under is not decided yet. Confirm the parent in the Mapping section, or turn on Create missing objects. A parent bone that does not exist in the target cannot be created."
 
 msgid "componentCopier.groupBy.type"
 msgstr "By type"

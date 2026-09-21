@@ -24,9 +24,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private List<ComponentEntry> entries = new();
         private readonly HashSet<ComponentKey> selectedKeys = new();
         private readonly HashSet<string> expandedTypes = new();
-        // Nested prefabs the user chose to add although no selected component lives inside them
-        private readonly HashSet<string> selectedPrefabPaths = new();
-        private readonly List<Transform> missingPrefabs = new();
+        // Nested prefabs and empty objects the user chose to add although no selected component needs them
+        private readonly HashSet<string> selectedObjectPaths = new();
+        private readonly List<Transform> missingObjects = new();
         private readonly Dictionary<Transform, Transform> manualMappings = new();
 
         private TransformMap map;
@@ -133,7 +133,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (resetSelection)
             {
                 selectedKeys.Clear();
-                selectedPrefabPaths.Clear();
+                selectedObjectPaths.Clear();
                 previousKeys.Clear();
             }
 
@@ -162,12 +162,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             map = null;
             plan = null;
             plannedByKey.Clear();
-            missingPrefabs.Clear();
+            missingObjects.Clear();
 
             if (sourceRoot != null && targetRoot != null && IsTargetUsable())
             {
                 map = TransformMapper.Build(sourceRoot.transform, targetRoot.transform, manualMappings);
-                missingPrefabs.AddRange(NestedPrefabs.FindMissingRoots(map));
+                missingObjects.AddRange(NestedPrefabs.FindMissingRoots(map));
+                missingObjects.AddRange(MissingObjects.FindRoots(map));
                 plan = BuildPlan(settings);
 
                 foreach (var planned in plan.Components)
@@ -181,12 +182,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             return CopyPlanBuilder.Build(
                 entries.Where(e => selectedKeys.Contains(e.Key)), map, planSettings,
-                missingPrefabs.Where(p => selectedPrefabPaths.Contains(PrefabPath(p))));
+                missingObjects.Where(p => selectedObjectPaths.Contains(ObjectPath(p))));
         }
 
-        /// <summary>Prefab choices are kept by path so that they survive a rescan.</summary>
-        private string PrefabPath(Transform prefabRoot) =>
-            ObjectMatcher.GetRelativePathFromRoot(prefabRoot, sourceRoot.transform);
+        /// <summary>The objects chosen for adding are kept by path so that they survive a rescan.</summary>
+        private string ObjectPath(Transform source) =>
+            ObjectMatcher.GetRelativePathFromRoot(source, sourceRoot.transform);
 
         private void RenderAll()
         {
