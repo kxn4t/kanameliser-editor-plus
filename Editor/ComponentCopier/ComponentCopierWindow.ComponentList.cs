@@ -319,18 +319,29 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             arrow.AddToClassList("collapsible-arrow");
             header.Add(arrow);
 
-            int selectedCount = missingPrefabs.Count(p => selectedPrefabPaths.Contains(PrefabPath(p)));
+            // Same rule as the rows: a prefab that comes along with a selected component counts as checked,
+            // otherwise the header stays empty above a row that is ticked
+            bool AddedByComponents(Transform p) =>
+                plannedRoots.Contains(p) && !selectedPrefabPaths.Contains(PrefabPath(p));
+
+            int checkedCount = missingPrefabs.Count(p =>
+                selectedPrefabPaths.Contains(PrefabPath(p)) || AddedByComponents(p));
             var toggle = new Toggle
             {
-                value = selectedCount == missingPrefabs.Count,
-                showMixedValue = selectedCount > 0 && selectedCount < missingPrefabs.Count,
+                value = checkedCount == missingPrefabs.Count,
+                showMixedValue = checkedCount > 0 && checkedCount < missingPrefabs.Count,
             };
             toggle.AddToClassList("group-toggle");
+            // Nothing to decide when every prefab is already on its way
+            toggle.SetEnabled(!missingPrefabs.All(AddedByComponents));
             toggle.RegisterValueChangedCallback(evt =>
             {
                 evt.StopPropagation();
                 foreach (var prefab in missingPrefabs)
                 {
+                    // Left to their components; checking them here would keep them after those are deselected
+                    if (AddedByComponents(prefab)) continue;
+
                     if (evt.newValue) selectedPrefabPaths.Add(PrefabPath(prefab));
                     else selectedPrefabPaths.Remove(PrefabPath(prefab));
                 }
