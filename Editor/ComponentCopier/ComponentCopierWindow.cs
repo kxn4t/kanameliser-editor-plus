@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -23,6 +24,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private List<ComponentEntry> entries = new();
         private readonly HashSet<ComponentKey> selectedKeys = new();
         private readonly HashSet<string> expandedTypes = new();
+        // Nested prefabs the user chose to add although no selected component lives inside them
+        private readonly HashSet<string> selectedPrefabPaths = new();
+        private readonly List<Transform> missingPrefabs = new();
         private readonly Dictionary<Transform, Transform> manualMappings = new();
 
         private TransformMap map;
@@ -129,6 +133,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (resetSelection)
             {
                 selectedKeys.Clear();
+                selectedPrefabPaths.Clear();
                 previousKeys.Clear();
             }
 
@@ -157,11 +162,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             map = null;
             plan = null;
             plannedByKey.Clear();
+            missingPrefabs.Clear();
 
             if (sourceRoot != null && targetRoot != null && IsTargetUsable())
             {
                 map = TransformMapper.Build(sourceRoot.transform, targetRoot.transform, manualMappings);
-                plan = CopyPlanBuilder.Build(entries.Where(e => selectedKeys.Contains(e.Key)), map, settings);
+                missingPrefabs.AddRange(NestedPrefabs.FindMissingRoots(map));
+                plan = BuildPlan(settings);
 
                 foreach (var planned in plan.Components)
                     plannedByKey[planned.Entry.Key] = planned;
@@ -169,6 +176,17 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             RenderAll();
         }
+
+        private CopyPlan BuildPlan(CopySettings planSettings)
+        {
+            return CopyPlanBuilder.Build(
+                entries.Where(e => selectedKeys.Contains(e.Key)), map, planSettings,
+                missingPrefabs.Where(p => selectedPrefabPaths.Contains(PrefabPath(p))));
+        }
+
+        /// <summary>Prefab choices are kept by path so that they survive a rescan.</summary>
+        private string PrefabPath(Transform prefabRoot) =>
+            ObjectMatcher.GetRelativePathFromRoot(prefabRoot, sourceRoot.transform);
 
         private void RenderAll()
         {
@@ -274,9 +292,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             if (applyButton == null) return;
 
-            bool hasWork = plan != null && plan.Components.Any(c => c.WillWrite);
+            // Adding a prefab is work too, even when no component is selected
+            bool hasWork = plan != null &&
+                           (plan.Components.Any(c => c.WillWrite) || plan.ObjectsToCreate.Count > 0);
             applyButton.SetEnabled(hasWork && !IsTargetAsset());
-            diffButton.SetEnabled(plan != null && plan.Components.Count > 0);
+            diffButton.SetEnabled(plan != null && (plan.Components.Count > 0 || plan.ObjectsToCreate.Count > 0));
         }
 
         #endregion

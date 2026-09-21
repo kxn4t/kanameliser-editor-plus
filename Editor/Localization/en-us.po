@@ -596,3 +596,22 @@ msgstr "{0} prefab(s) will be added as prefab instances. The {1} component(s) in
 #, csharp-format
 msgid "componentCopier.report.appliedPrefabs"
 msgstr "Added {0} prefab(s)."
+
+msgid "componentCopier.prefabs.title"
+msgstr "Prefabs missing in the target"
+
+msgid "componentCopier.prefabs.title:tooltip"
+msgstr "Prefabs nested in the source that the target does not have. A prefab is added automatically when a selected component is inside it. Check one to add it even without such a component, e.g. a hat that only has meshes."
+
+#, csharp-format
+msgid "componentCopier.prefabs.summary"
+msgstr "Adding {0}"
+
+msgid "componentCopier.prefabs.status.add"
+msgstr "Add"
+
+msgid "componentCopier.prefabs.status.withComponents"
+msgstr "Added with components"
+
+msgid "componentCopier.prefabs.blocked"
+msgstr "The parent object this prefab belongs under is not decided yet. Confirm the parent in the Mapping section, or turn on Create missing objects. A parent bone that does not exist in the target cannot be created."

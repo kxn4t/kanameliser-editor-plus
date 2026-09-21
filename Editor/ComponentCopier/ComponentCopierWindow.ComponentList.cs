@@ -152,6 +152,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (normal.Count == 0 && (!showExcluded || excluded.Count == 0))
             {
                 listContainer.Add(InfoLabel("componentCopier.info.noComponents"));
+                AddMissingPrefabGroup();
                 return;
             }
 
@@ -165,6 +166,161 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 AddGroups(excluded, true);
             }
+
+            AddMissingPrefabGroup();
+        }
+
+        private const string PrefabGroupId = "__missingPrefabs";
+
+        /// <summary>
+        /// Nested prefabs that the target lacks. A prefab is added automatically when a selected component lives
+        /// inside it; here the user can also add prefabs without one, such as a hat that only has meshes.
+        /// </summary>
+        private void AddMissingPrefabGroup()
+        {
+            if (plan == null || missingPrefabs.Count == 0) return;
+
+            var plannedRoots = new HashSet<Transform>(
+                plan.ObjectsToCreate.Where(o => o.IsPrefabRoot && o.PrefabRoot == null).Select(o => o.Source));
+            var blockedReasons = plan.BlockedPrefabs.ToDictionary(b => b.Source, b => b.Reason);
+
+            var group = new VisualElement();
+            group.AddToClassList("component-group");
+            group.AddToClassList("prefab-group");
+            listContainer.Add(group);
+
+            var header = new VisualElement();
+            header.AddToClassList("group-header");
+            group.Add(header);
+
+            var content = new VisualElement();
+            content.AddToClassList("group-content");
+            group.Add(content);
+
+            var arrow = new Label("▶");
+            arrow.AddToClassList("collapsible-arrow");
+            header.Add(arrow);
+
+            int selectedCount = missingPrefabs.Count(p => selectedPrefabPaths.Contains(PrefabPath(p)));
+            var toggle = new Toggle
+            {
+                value = selectedCount == missingPrefabs.Count,
+                showMixedValue = selectedCount > 0 && selectedCount < missingPrefabs.Count,
+            };
+            toggle.AddToClassList("group-toggle");
+            toggle.RegisterValueChangedCallback(evt =>
+            {
+                evt.StopPropagation();
+                foreach (var prefab in missingPrefabs)
+                {
+                    if (evt.newValue) selectedPrefabPaths.Add(PrefabPath(prefab));
+                    else selectedPrefabPaths.Remove(PrefabPath(prefab));
+                }
+
+                Recompute();
+            });
+            header.Add(toggle);
+
+            var icon = new Image { image = EditorGUIUtility.IconContent("Prefab Icon").image };
+            icon.AddToClassList("group-icon");
+            header.Add(icon);
+
+            var nameLabel = new Label(Localization.S("componentCopier.prefabs.title"))
+            {
+                tooltip = Localization.S("componentCopier.prefabs.title:tooltip"),
+            };
+            nameLabel.AddToClassList("group-name");
+            header.Add(nameLabel);
+
+            var countLabel = new Label(missingPrefabs.Count.ToString());
+            countLabel.AddToClassList("count-badge");
+            header.Add(countLabel);
+
+            var summaryLabel = new Label(plannedRoots.Count > 0
+                ? Localization.S("componentCopier.prefabs.summary", plannedRoots.Count)
+                : "");
+            summaryLabel.AddToClassList("group-summary");
+            header.Add(summaryLabel);
+
+            if (blockedReasons.Count > 0)
+            {
+                var warningLabel = new Label("⚠ " + blockedReasons.Count);
+                warningLabel.AddToClassList("warning-badge");
+                header.Add(warningLabel);
+            }
+
+            void ApplyExpanded(bool expanded)
+            {
+                arrow.EnableInClassList("collapsible-arrow--open", expanded);
+                content.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+
+            header.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.target is VisualElement element && (element == toggle || toggle.Contains(element))) return;
+
+                bool expanded = !expandedTypes.Contains(PrefabGroupId);
+                if (expanded) expandedTypes.Add(PrefabGroupId);
+                else expandedTypes.Remove(PrefabGroupId);
+                ApplyExpanded(expanded);
+            });
+
+            foreach (var prefab in missingPrefabs)
+                content.Add(CreatePrefabRow(prefab, plannedRoots.Contains(prefab), blockedReasons));
+
+            ApplyExpanded(expandedTypes.Contains(PrefabGroupId));
+        }
+
+        private VisualElement CreatePrefabRow(
+            Transform prefab, bool planned, Dictionary<Transform, BlockReason> blockedReasons)
+        {
+            string path = PrefabPath(prefab);
+            bool selected = selectedPrefabPaths.Contains(path);
+            // Already on its way because a selected component lives inside; unchecking would have no effect
+            bool addedByComponents = planned && !selected;
+
+            var row = new VisualElement();
+            row.AddToClassList("component-row");
+
+            var toggle = new Toggle { value = selected || addedByComponents };
+            toggle.SetEnabled(!addedByComponents);
+            toggle.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue) selectedPrefabPaths.Add(path);
+                else selectedPrefabPaths.Remove(path);
+                Recompute();
+            });
+            row.Add(toggle);
+
+            var pathLabel = new Label(path) { tooltip = path };
+            pathLabel.AddToClassList("row-path");
+            pathLabel.RegisterCallback<ClickEvent>(_ =>
+            {
+                if (prefab != null) EditorGUIUtility.PingObject(prefab.gameObject);
+            });
+            row.Add(pathLabel);
+
+            if (blockedReasons.ContainsKey(prefab))
+            {
+                var chip = new Label(ActionName(ComponentAction.Blocked))
+                {
+                    tooltip = Localization.S("componentCopier.prefabs.blocked"),
+                };
+                chip.AddToClassList("status-chip");
+                chip.AddToClassList("status-chip--blocked");
+                row.Add(chip);
+            }
+            else if (planned)
+            {
+                var chip = new Label(Localization.S(addedByComponents
+                    ? "componentCopier.prefabs.status.withComponents"
+                    : "componentCopier.prefabs.status.add"));
+                chip.AddToClassList("status-chip");
+                chip.AddToClassList("status-chip--add");
+                row.Add(chip);
+            }
+
+            return row;
         }
 
         private void AddGroups(List<ComponentEntry> groupEntries, bool excluded)

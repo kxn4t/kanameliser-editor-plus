@@ -79,7 +79,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 ExistingPolicy = ExistingComponentPolicy.Overwrite,
                 CreateMissingObjects = settings.CreateMissingObjects,
             };
-            var diffPlan = CopyPlanBuilder.Build(entries.Where(e => selectedKeys.Contains(e.Key)), map, diffSettings);
+            var diffPlan = BuildPlan(diffSettings);
 
             detailReport = CopyVerifier.Verify(diffPlan);
             detailTitleKey = "componentCopier.report.diffCheck";

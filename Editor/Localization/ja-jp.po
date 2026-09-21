@@ -595,3 +595,22 @@ msgstr "{0} 個の Prefab を、Prefab のまま追加します。コピー元�
 #, csharp-format
 msgid "componentCopier.report.appliedPrefabs"
 msgstr "Prefab を {0} 個追加しました。"
+
+msgid "componentCopier.prefabs.title"
+msgstr "コピー先にない Prefab"
+
+msgid "componentCopier.prefabs.title:tooltip"
+msgstr "コピー元に入っていて、コピー先にはない Prefab です。中に選択したコンポーネントがある Prefab は自動で追加されます。メッシュだけの帽子のように、そうしたコンポーネントがない Prefab も、チェックすれば追加できます。"
+
+#, csharp-format
+msgid "componentCopier.prefabs.summary"
+msgstr "{0} 個を追加"
+
+msgid "componentCopier.prefabs.status.add"
+msgstr "追加"
+
+msgid "componentCopier.prefabs.status.withComponents"
+msgstr "コンポーネントと一緒に追加"
+
+msgid "componentCopier.prefabs.blocked"
+msgstr "この Prefab を置く親オブジェクトが決まっていません。対応付けセクションで親を確定するか、「足りないオブジェクトを作成」をオンにしてください。コピー先にないボーンが親の場合は、作成できません。"

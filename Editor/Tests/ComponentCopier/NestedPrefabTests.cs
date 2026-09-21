@@ -202,6 +202,75 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void RequestedPrefab_IsAddedWithoutAnySelectedComponent()
+        {
+            var hatAsset = SaveHatWithCollider("Hat_Requested");
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            sourceHat.Find("Ribbon").GetComponent<SphereCollider>().radius = 0.4f;
+
+            var map = TransformMapper.Build(source, target);
+            CollectionAssert.AreEqual(new[] { sourceHat }, NestedPrefabs.FindMissingRoots(map));
+
+            var nothingSelected = Enumerable.Empty<ComponentEntry>();
+            Assert.IsEmpty(CopyPlanBuilder.Build(nothingSelected, map, new CopySettings()).ObjectsToCreate,
+                "Without a request or a selected component the prefab is left alone");
+
+            var plan = CopyPlanBuilder.Build(nothingSelected, map, new CopySettings(), new[] { sourceHat });
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(1, result.InstantiatedPrefabs);
+            var targetHat = target.Find("Armature/Head/Hat_Requested");
+            Assert.IsNotNull(targetHat);
+            Assert.AreEqual(0.4f, targetHat.Find("Ribbon").GetComponent<SphereCollider>().radius,
+                "The contents are made to match the source even though nothing was selected");
+
+            Assert.IsEmpty(NestedPrefabs.FindMissingRoots(TransformMapper.Build(source, target)),
+                "Once added, the prefab is no longer missing");
+        }
+
+        [Test]
+        public void RequestedPrefabBelowAMissingBone_IsReportedAsBlocked()
+        {
+            var hatAsset = SaveHatWithCollider("Hat_Blocked");
+            var source = CreateHierarchy("Source", "Body", "Armature/Head/Ear");
+            var target = CreateHierarchy("Target", "Body", "Armature/Head");
+            AddSkinnedMesh(source.Find("Body"), source.Find("Armature/Head/Ear"));
+            AddSkinnedMesh(target.Find("Body"), target.Find("Armature/Head"));
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head/Ear"));
+
+            var map = TransformMapper.Build(source, target);
+            var plan = CopyPlanBuilder.Build(
+                Enumerable.Empty<ComponentEntry>(), map, new CopySettings(), new[] { sourceHat });
+
+            Assert.AreEqual(BlockReason.BoneMissing, plan.BlockedPrefabs.Single().Reason);
+            Assert.IsEmpty(plan.ObjectsToCreate);
+        }
+
+        [Test]
+        public void PrefabInsideAMissingPrefab_IsNotListedOnItsOwn()
+        {
+            var ribbonAsset = SavePrefab("Ribbon_Inner", ribbon => ribbon.gameObject.AddComponent<SphereCollider>());
+            var hatAsset = SavePrefab("Hat_Outer", hat => Instantiate(ribbonAsset, hat));
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+
+            var map = TransformMapper.Build(source, target);
+
+            // The inner prefab arrives with the outer one
+            CollectionAssert.AreEqual(new[] { sourceHat }, NestedPrefabs.FindMissingRoots(map));
+
+            var plan = CopyPlanBuilder.Build(
+                Enumerable.Empty<ComponentEntry>(), map, new CopySettings(), new[] { sourceHat.Find("Ribbon_Inner") });
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(1, result.InstantiatedPrefabs, "Requesting the inner prefab adds the outer one, once");
+            Assert.IsNotNull(target.Find("Armature/Head/Hat_Outer/Ribbon_Inner"));
+        }
+
+        [Test]
         public void InstantiatedPrefab_IsRemovedByASingleUndo()
         {
             var hatAsset = SaveHatWithCollider("Hat_Undo");

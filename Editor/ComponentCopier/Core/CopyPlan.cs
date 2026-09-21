@@ -141,6 +141,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Action == ComponentAction.Add || Action == ComponentAction.Overwrite || Action == ComponentAction.Replace;
     }
 
+    /// <summary>A nested prefab the user asked to add that cannot be added right now.</summary>
+    internal sealed class BlockedPrefab
+    {
+        public Transform Source;
+        public BlockReason Reason;
+    }
+
     /// <summary>Reference held by an untouched target component to a component that Replace will remove.</summary>
     internal sealed class BrokenReferenceWarning
     {
@@ -160,6 +167,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public List<PlannedComponent> Components = new();
         public List<PlannedObject> ObjectsToCreate = new();
+        public List<BlockedPrefab> BlockedPrefabs = new();
         public List<Component> ComponentsToRemove = new();
         public List<BrokenReferenceWarning> BrokenReferences = new();
     }

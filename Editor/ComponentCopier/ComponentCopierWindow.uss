@@ -159,6 +159,10 @@
     opacity: 0.6;
 }
 
+.prefab-group {
+    margin-top: 6px;
+}
+
 .excluded-divider {
     margin-top: 6px;
     margin-bottom: 3px;

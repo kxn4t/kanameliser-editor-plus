@@ -13,7 +13,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     /// </summary>
     internal static class CopyPlanBuilder
     {
-        public static CopyPlan Build(IEnumerable<ComponentEntry> selected, TransformMap map, CopySettings settings)
+        /// <param name="prefabsToAdd">
+        /// Nested prefab roots of the source that should be added to the target even though none of the selected
+        /// components lives inside them (e.g. a hat that only consists of meshes).
+        /// </param>
+        public static CopyPlan Build(
+            IEnumerable<ComponentEntry> selected, TransformMap map, CopySettings settings,
+            IEnumerable<Transform> prefabsToAdd = null)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
             settings ??= new CopySettings();
@@ -27,6 +33,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 context.Resolve(entry.Host, out planned.TargetHost, out planned.HostToCreate,
                     out planned.BlockReason);
                 plan.Components.Add(planned);
+            }
+
+            foreach (var prefabRoot in prefabsToAdd ?? Enumerable.Empty<Transform>())
+            {
+                var blockReason = context.RequestPrefab(prefabRoot);
+                if (blockReason != BlockReason.None)
+                    plan.BlockedPrefabs.Add(new BlockedPrefab { Source = prefabRoot, Reason = blockReason });
             }
 
             AddImplicitComponents(plan, context);
@@ -114,6 +127,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     ExistingParent = parent,
                     ParentToCreate = parentToCreate,
                 });
+            }
+
+            /// <summary>
+            /// Plans a nested prefab on request. When it sits inside another missing prefab, the outer one is
+            /// planned, because that is the unit that gets instantiated.
+            /// </summary>
+            public BlockReason RequestPrefab(Transform nestedRoot)
+            {
+                if (nestedRoot == null || !ReferenceWalker.IsInside(nestedRoot, plan.Map.SourceRoot))
+                    return BlockReason.None;
+
+                var missingRoot = FindMissingNestedPrefabRoot(nestedRoot);
+                return missingRoot != null ? PlanNestedPrefab(missingRoot) : BlockReason.None;
             }
 
             /// <summary>
@@ -406,6 +432,31 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             // prefab, and ...FromOriginalSource skips variants and returns their base.
             string path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(transform.gameObject);
             return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        /// <summary>
+        /// Lists the nested prefabs of the source that have no counterpart in the target.
+        /// Only the outermost ones are returned: a prefab inside a missing prefab arrives with it.
+        /// </summary>
+        public static List<Transform> FindMissingRoots(TransformMap map)
+        {
+            var result = new List<Transform>();
+            Visit(map.SourceRoot);
+            return result;
+
+            void Visit(Transform parent)
+            {
+                foreach (Transform child in parent)
+                {
+                    if (GetPrefabAsset(child, map.SourceRoot) != null && !map.TryResolve(child, out _))
+                    {
+                        result.Add(child);
+                        continue;
+                    }
+
+                    Visit(child);
+                }
+            }
         }
 
         /// <summary>Index of a transform among its same-name siblings.</summary>
