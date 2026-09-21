@@ -664,14 +664,14 @@ msgid "componentCopier.mapping.reason.renamedChild"
 msgstr "Renamed (.1, prefix / suffix)"
 
 msgid "componentCopier.action.withPrefab"
-msgstr "With prefab"
+msgstr "Via prefab"
 
 msgid "componentCopier.mapping.note.prefab"
 msgstr "Prefab will be added"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "{0} of these object(s) are added as prefab instances. The {1} unselected component(s) inside them are copied too, so they match the source."
+msgstr "{0} of these object(s) are added as prefab instances. The {1} component(s) inside them are copied so that they match the source."
 
 msgid "componentCopier.report.prefabsOnly"
 msgstr "{0} of these object(s) are added as prefab instances."

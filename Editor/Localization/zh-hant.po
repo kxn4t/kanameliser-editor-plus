@@ -663,14 +663,14 @@ msgid "componentCopier.mapping.reason.renamedChild"
 msgstr "僅名稱變更（.1、prefix / suffix）"
 
 msgid "componentCopier.action.withPrefab"
-msgstr "隨 Prefab 新增"
+msgstr "透過 Prefab 新增"
 
 msgid "componentCopier.mapping.note.prefab"
 msgstr "新增 Prefab"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "其中 {0} 個以 Prefab 實例的形式新增。為了與複製來源保持一致，其中未選擇的 {1} 個元件也會一併複製。"
+msgstr "其中 {0} 個以 Prefab 實例的形式新增。其中的 {1} 個元件會依複製來源的狀態複製。"
 
 msgid "componentCopier.report.prefabsOnly"
 msgstr "其中 {0} 個以 Prefab 實例的形式新增。"

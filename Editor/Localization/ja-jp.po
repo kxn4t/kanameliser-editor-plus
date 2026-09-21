@@ -663,14 +663,14 @@ msgid "componentCopier.mapping.reason.renamedChild"
 msgstr "名前の変更のみ（.1、prefix / suffix）"
 
 msgid "componentCopier.action.withPrefab"
-msgstr "Prefab と一緒に追加"
+msgstr "Prefab で追加"
 
 msgid "componentCopier.mapping.note.prefab"
 msgstr "Prefab を追加"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "このうち {0} 個は、Prefab のまま追加します。コピー元と同じ状態にするため、中にある未選択のコンポーネント {1} 件も一緒にコピーします。"
+msgstr "このうち {0} 個は、Prefab のまま追加します。中にあるコンポーネント {1} 件は、コピー元と同じ状態になるようにコピーします。"
 
 msgid "componentCopier.report.prefabsOnly"
 msgstr "このうち {0} 個は、Prefab のまま追加します。"

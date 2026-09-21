@@ -664,14 +664,14 @@ msgid "componentCopier.mapping.reason.renamedChild"
 msgstr "이름만 변경됨 (.1, prefix / suffix)"
 
 msgid "componentCopier.action.withPrefab"
-msgstr "Prefab과 함께 추가"
+msgstr "Prefab으로 추가"
 
 msgid "componentCopier.mapping.note.prefab"
 msgstr "Prefab 추가"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "이 중 {0}개는 Prefab 인스턴스로 추가합니다. 복사 원본과 같은 상태가 되도록 안에 있는 선택하지 않은 컴포넌트 {1}개도 함께 복사합니다."
+msgstr "이 중 {0}개는 Prefab 인스턴스로 추가합니다. 안에 있는 컴포넌트 {1}개는 복사 원본과 같은 상태가 되도록 복사합니다."
 
 msgid "componentCopier.report.prefabsOnly"
 msgstr "이 중 {0}개는 Prefab 인스턴스로 추가합니다."

@@ -909,12 +909,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         }
 
         /// <summary>
-        /// Components that were not selected but come along with an instantiated prefab get their own label;
-        /// "New" next to an unchecked row would look like a bug.
+        /// Everything inside a nested prefab that gets added shares one label, selected or not: the prefab
+        /// arrives as a whole either way. "New" on some of its rows would suggest that only those are added.
         /// </summary>
         private static string ActionLabel(PlannedComponent planned)
         {
-            return planned.Implicit && planned.WillWrite
+            return planned.WillWrite && ArrivesWithPrefab(planned)
                 ? Localization.S("componentCopier.action.withPrefab")
                 : ActionName(planned.Action);
         }

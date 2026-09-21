@@ -138,8 +138,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void RenderPreCheck()
         {
-            // Components that merely arrive with a prefab are reported on the prefab line, not as selected work
-            int Count(ComponentAction action) => plan.Components.Count(c => c.Action == action && !c.Implicit);
+            // Components that arrive with a prefab are reported on the prefab line, like their label in the list
+            int Count(ComponentAction action) =>
+                plan.Components.Count(c => c.Action == action && !ArrivesWithPrefab(c));
 
             // Same number as "to be created" in the mapping section: every object that appears in the target,
             // an added prefab counting as one. The prefab line below only says how some of them arrive.
@@ -157,11 +158,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (prefabs > 0)
             {
-                // Only the components that were not selected are news here; when everything inside the prefabs
-                // is selected anyway, "0 components are copied too" would read like nothing is copied
-                int implicitComponents = plan.Components.Count(c => c.Implicit);
-                var prefabLabel = new Label(implicitComponents > 0
-                    ? Localization.S("componentCopier.report.prefabs", prefabs, implicitComponents)
+                // A prefab without components (a mesh-only hat with its renderers left out, ...) gets the short
+                // form; "0 components are copied" would read like something went wrong
+                int prefabComponents = plan.Components.Count(c => c.WillWrite && ArrivesWithPrefab(c));
+                var prefabLabel = new Label(prefabComponents > 0
+                    ? Localization.S("componentCopier.report.prefabs", prefabs, prefabComponents)
                     : Localization.S("componentCopier.report.prefabsOnly", prefabs));
                 prefabLabel.AddToClassList("report-summary");
                 reportContainer.Add(prefabLabel);
