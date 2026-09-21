@@ -36,8 +36,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             sourceField.RegisterValueChangedCallback(evt => OnSourceChanged(evt.newValue as GameObject));
             sourceRow.Add(sourceField);
 
-            refreshButton = new Button(() => Rescan(resetSelection: false)) { text = "↻" };
+            refreshButton = new Button(() => Rescan(resetSelection: false));
             refreshButton.AddToClassList("refresh-button");
+
+            var refreshIcon = EditorGUIUtility.IconContent("Refresh");
+            if (refreshIcon?.image != null)
+            {
+                var icon = new Image { image = refreshIcon.image };
+                icon.AddToClassList("refresh-icon");
+                refreshButton.Add(icon);
+            }
+            else
+            {
+                refreshButton.text = "↻";
+            }
+
             sourceRow.Add(refreshButton);
 
             var arrow = new Label("↓");

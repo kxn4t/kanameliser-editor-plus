@@ -33,9 +33,19 @@
 }
 
 .refresh-button {
-    width: 25px;
-    flex-shrink: 0;
+    width: 24px;
+    height: 20px;
+    padding: 0;
     margin-right: 0;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-icon {
+    width: 14px;
+    height: 14px;
 }
 
 .source-arrow {
