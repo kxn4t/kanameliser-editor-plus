@@ -357,7 +357,10 @@ msgid "componentCopier.info.noComponents"
 msgstr "没有匹配的组件。"
 
 msgid "componentCopier.info.selectTarget"
-msgstr "指定复制目标后将显示对象的对应关系。"
+msgstr "指定复制源和复制目标后将显示对象的对应关系。"
+
+msgid "componentCopier.info.needsSource"
+msgstr "请指定复制源后继续。"
 
 msgid "componentCopier.info.fixTarget"
 msgstr "请修正复制目标后继续。"

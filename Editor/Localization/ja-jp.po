@@ -357,7 +357,10 @@ msgid "componentCopier.info.noComponents"
 msgstr "一致するコンポーネントがありません。"
 
 msgid "componentCopier.info.selectTarget"
-msgstr "コピー先を指定すると、オブジェクトの対応付けを表示します。"
+msgstr "コピー元とコピー先を指定すると、オブジェクトの対応付けを表示します。"
+
+msgid "componentCopier.info.needsSource"
+msgstr "続けるにはコピー元を指定してください。"
 
 msgid "componentCopier.info.fixTarget"
 msgstr "続けるにはコピー先を修正してください。"

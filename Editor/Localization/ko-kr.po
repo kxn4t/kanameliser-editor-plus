@@ -358,7 +358,10 @@ msgid "componentCopier.info.noComponents"
 msgstr "일치하는 컴포넌트가 없습니다."
 
 msgid "componentCopier.info.selectTarget"
-msgstr "복사 대상을 지정하면 오브젝트 대응을 표시합니다."
+msgstr "복사 원본과 복사 대상을 지정하면 오브젝트 대응을 표시합니다."
+
+msgid "componentCopier.info.needsSource"
+msgstr "계속하려면 복사 원본을 지정하세요."
 
 msgid "componentCopier.info.fixTarget"
 msgstr "계속하려면 복사 대상을 수정하세요."

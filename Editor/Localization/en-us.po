@@ -358,7 +358,10 @@ msgid "componentCopier.info.noComponents"
 msgstr "No matching components."
 
 msgid "componentCopier.info.selectTarget"
-msgstr "Select the target to see how objects correspond."
+msgstr "Select the source and the target to see how objects correspond."
+
+msgid "componentCopier.info.needsSource"
+msgstr "Select the source to continue."
 
 msgid "componentCopier.info.fixTarget"
 msgstr "Fix the target to continue."

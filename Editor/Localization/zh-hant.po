@@ -357,7 +357,10 @@ msgid "componentCopier.info.noComponents"
 msgstr "沒有符合的元件。"
 
 msgid "componentCopier.info.selectTarget"
-msgstr "指定複製目標後將顯示物件的對應關係。"
+msgstr "指定複製來源和複製目標後將顯示物件的對應關係。"
+
+msgid "componentCopier.info.needsSource"
+msgstr "請指定複製來源後繼續。"
 
 msgid "componentCopier.info.fixTarget"
 msgstr "請修正複製目標後繼續。"

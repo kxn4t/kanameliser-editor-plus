@@ -90,8 +90,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (map == null || plan == null)
             {
-                mappingContainer.Add(InfoLabel(targetRoot == null
-                    ? "componentCopier.info.selectTarget"
+                mappingContainer.Add(InfoLabel(
+                    targetRoot == null ? "componentCopier.info.selectTarget"
+                    : sourceRoot == null ? "componentCopier.info.needsSource"
                     : "componentCopier.info.fixTarget"));
                 return;
             }
