@@ -407,7 +407,7 @@ msgstr "対応付け"
 
 #, csharp-format
 msgid "componentCopier.mapping.summary"
-msgstr "{0}/{1} 対応済み   ? {2}   ✖ {3}"
+msgstr "{0}/{1} 対応済み   + {4}   ? {2}   ✖ {3}"
 
 #, csharp-format
 msgid "componentCopier.mapping.confirmAffix"
@@ -415,6 +415,16 @@ msgstr "prefix / suffix の一致をまとめて確定（{0}）"
 
 msgid "componentCopier.mapping.confirmAffix:tooltip"
 msgstr "片側の名前に共通の prefix または suffix が付いています。このルールで見つかった候補をすべて確定します。"
+
+#, csharp-format
+msgid "componentCopier.mapping.willCreate"
+msgstr "作成予定（{0}）"
+
+msgid "componentCopier.mapping.menu.pickExisting"
+msgstr "既存のオブジェクトを指定"
+
+msgid "componentCopier.mapping.menu.createInstead"
+msgstr "新規作成に戻す"
 
 #, csharp-format
 msgid "componentCopier.mapping.confirmed"
@@ -638,10 +648,10 @@ msgstr "Prefab を追加"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "{0} 個の Prefab を、Prefab のまま追加します。コピー元と同じ状態にするため、中にある未選択のコンポーネント {1} 件も一緒にコピーします。"
+msgstr "このうち {0} 個は、Prefab のまま追加します。コピー元と同じ状態にするため、中にある未選択のコンポーネント {1} 件も一緒にコピーします。"
 
 msgid "componentCopier.report.prefabsOnly"
-msgstr "{0} 個の Prefab を、Prefab のまま追加します。"
+msgstr "このうち {0} 個は、Prefab のまま追加します。"
 
 #, csharp-format
 msgid "componentCopier.report.appliedPrefabs"

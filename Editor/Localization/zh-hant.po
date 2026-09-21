@@ -407,7 +407,7 @@ msgstr "對應關係"
 
 #, csharp-format
 msgid "componentCopier.mapping.summary"
-msgstr "{0}/{1} 已對應   ? {2}   ✖ {3}"
+msgstr "{0}/{1} 已對應   + {4}   ? {2}   ✖ {3}"
 
 #, csharp-format
 msgid "componentCopier.mapping.confirmAffix"
@@ -415,6 +415,16 @@ msgstr "一併確認 prefix / suffix 相符項目（{0}）"
 
 msgid "componentCopier.mapping.confirmAffix:tooltip"
 msgstr "其中一側的名稱帶有共同的 prefix 或 suffix。確認依此規則找到的所有候選。"
+
+#, csharp-format
+msgid "componentCopier.mapping.willCreate"
+msgstr "將建立（{0}）"
+
+msgid "componentCopier.mapping.menu.pickExisting"
+msgstr "指定現有物件"
+
+msgid "componentCopier.mapping.menu.createInstead"
+msgstr "改回新建"
 
 #, csharp-format
 msgid "componentCopier.mapping.confirmed"
@@ -638,10 +648,10 @@ msgstr "新增 Prefab"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "將以 Prefab 實例的形式新增 {0} 個 Prefab。為了與複製來源保持一致，其中未選擇的 {1} 個元件也會一併複製。"
+msgstr "其中 {0} 個以 Prefab 實例的形式新增。為了與複製來源保持一致，其中未選擇的 {1} 個元件也會一併複製。"
 
 msgid "componentCopier.report.prefabsOnly"
-msgstr "將以 Prefab 實例的形式新增 {0} 個 Prefab。"
+msgstr "其中 {0} 個以 Prefab 實例的形式新增。"
 
 #, csharp-format
 msgid "componentCopier.report.appliedPrefabs"

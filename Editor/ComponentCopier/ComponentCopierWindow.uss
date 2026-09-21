@@ -532,6 +532,20 @@
     border-left-color: rgb(100, 150, 255);
 }
 
+/* Going to be created: the "new" color of the status chips, and no alarming background */
+.mapping-row--willcreate {
+    border-left-color: rgb(100, 200, 100);
+}
+
+/* Where the object will be, in place of the object field */
+.mapping-created-path {
+    margin-left: 3px;
+    opacity: 0.85;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-align: middle-left;
+}
+
 .mapping-row--confirmed {
     opacity: 0.8;
 }

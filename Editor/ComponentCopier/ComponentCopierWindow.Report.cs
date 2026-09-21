@@ -118,14 +118,17 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             // Components that merely arrive with a prefab are reported on the prefab line, not as selected work
             int Count(ComponentAction action) => plan.Components.Count(c => c.Action == action && !c.Implicit);
 
+            // Same number as "to be created" in the mapping section: every object that appears in the target,
+            // an added prefab counting as one. The prefab line below only says how some of them arrive.
+            // "0 objects to create" next to "1 prefab is added" would contradict itself.
+            int objectsToCreate = plan.ObjectsToCreate.Count(o => o.PrefabRoot == null);
             int prefabs = plan.ObjectsToCreate.Count(o => o.IsPrefabRoot && o.PrefabRoot == null);
-            int plainObjects = plan.ObjectsToCreate.Count(o => !o.IsPrefabRoot && o.PrefabRoot == null);
 
             // "Identical" is counted apart from "Skip": lumped together, a target that is already up to date
             // looks as if the Overwrite policy had been ignored
             var summary = new Label(Localization.S("componentCopier.report.summary",
                 Count(ComponentAction.Add), Count(ComponentAction.Overwrite), Count(ComponentAction.Replace),
-                Count(ComponentAction.Skip), Count(ComponentAction.SkipIdentical), plainObjects));
+                Count(ComponentAction.Skip), Count(ComponentAction.SkipIdentical), objectsToCreate));
             summary.AddToClassList("report-summary");
             reportContainer.Add(summary);
 

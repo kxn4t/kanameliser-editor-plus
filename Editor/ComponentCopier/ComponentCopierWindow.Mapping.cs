@@ -11,6 +11,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     public partial class ComponentCopierWindow
     {
         private bool confirmedMappingsExpanded;
+        private bool createdMappingsExpanded;
+        // Objects that would be created, for which the user wants to pick an existing object instead
+        private readonly HashSet<Transform> pickExistingFor = new();
         private Label mappingSummaryLabel;
 
         private void CreateMappingSection(VisualElement parent)
@@ -41,8 +44,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// Only transforms that matter for the current selection are listed: objects that host a selected
         /// component and objects referenced by one. A few dozen rows instead of every bone of the avatar.
         /// </summary>
-        private List<TransformMapping> CollectRelevantMappings()
+        private List<TransformMapping> CollectRelevantMappings(Dictionary<Transform, int> hierarchyOrder = null)
         {
+            hierarchyOrder ??= SourceHierarchyOrder();
+
             var relevant = new List<Transform>();
             var seen = new HashSet<Transform>();
 
@@ -62,16 +67,20 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             // Listed in Hierarchy order. The order of discovery jumps between a component's object and the
             // objects it references, which makes a row hard to find.
-            var hierarchyOrder = new Dictionary<Transform, int>();
-            foreach (var transform in map.SourceRoot.GetComponentsInChildren<Transform>(true))
-                hierarchyOrder[transform] = hierarchyOrder.Count;
-
             // Blocked components have no references collected yet, but their host is what needs attention
             return relevant
                 .OrderBy(t => hierarchyOrder.TryGetValue(t, out int index) ? index : int.MaxValue)
                 .Select(t => map.Get(t))
                 .Where(m => m != null)
                 .ToList();
+        }
+
+        private Dictionary<Transform, int> SourceHierarchyOrder()
+        {
+            var order = new Dictionary<Transform, int>();
+            foreach (var transform in map.SourceRoot.GetComponentsInChildren<Transform>(true))
+                order[transform] = order.Count;
+            return order;
         }
 
         private void RenderMapping()
@@ -87,34 +96,48 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return;
             }
 
-            var mappings = CollectRelevantMappings();
+            var created = plan.ObjectsToCreate.ToDictionary(o => o.Source);
+
+            // An object that is going to be created is taken care of, so it is listed apart from what needs a
+            // counterpart. Every such object is listed, also the parents created on the way (PB, PB/Tops, ...):
+            // the count then agrees with "objects to create" of the pre-check. Objects inside a nested prefab
+            // that gets instantiated are not decisions of their own; only the prefab root is listed.
+            var hierarchyOrder = SourceHierarchyOrder();
+            var planned = plan.ObjectsToCreate
+                .Where(o => o.PrefabRoot == null)
+                .OrderBy(o => hierarchyOrder.TryGetValue(o.Source, out int index) ? index : int.MaxValue)
+                .Select(o => map.Get(o.Source) ?? new TransformMapping { Source = o.Source })
+                .ToList();
+            // ... unless the user asked to pick an existing object instead; those rows need a counterpart again
+            var toCreate = planned.Where(m => !pickExistingFor.Contains(m.Source)).ToList();
+            var pickingExisting = planned.Where(m => pickExistingFor.Contains(m.Source)).ToList();
+
+            var mappings = CollectRelevantMappings(hierarchyOrder)
+                .Where(m => !created.ContainsKey(m.Source))
+                .ToList();
             var external = CollectExternalReferences();
-            if (mappings.Count == 0 && external.Count == 0)
+            if (mappings.Count == 0 && planned.Count == 0 && external.Count == 0)
             {
                 mappingContainer.Add(InfoLabel("componentCopier.info.noMappings"));
                 return;
             }
 
-            var created = plan.ObjectsToCreate.ToDictionary(o => o.Source);
-
-            // Objects inside a nested prefab that gets instantiated are not decisions of their own;
-            // only the prefab root is listed.
-            mappings = mappings
-                .Where(m => !created.TryGetValue(m.Source, out var inPrefab) || inPrefab.PrefabRoot == null)
-                .ToList();
             var needsReview = mappings.Where(m => m.State == MappingState.NeedsReview).ToList();
-            var unmapped = mappings.Where(m => !m.IsUsable && m.State != MappingState.NeedsReview).ToList();
+            var unmapped = mappings
+                .Where(m => !m.IsUsable && m.State != MappingState.NeedsReview)
+                .Concat(pickingExisting)
+                .ToList();
             var manual = mappings.Where(m => m.State == MappingState.Manual && m.IsUsable).ToList();
             var confirmed = mappings.Where(m => m.State == MappingState.Confirmed).ToList();
 
-            // An object that is going to be created is taken care of; only the rest needs the user.
+            // "x/y mapped" is about the objects that need a counterpart; the ones to create are counted apart.
             // References to the outside only count when a suggestion waits for an answer: without a
             // counterpart they are simply kept, which is no problem to solve.
-            int unresolved = unmapped.Count(m => !created.ContainsKey(m.Source));
+            int unresolved = unmapped.Count - pickingExisting.Count;
             int toReview = needsReview.Count +
                            external.Count(e => plan.ExternalMap?.Get(e.Target)?.State == MappingState.NeedsReview);
             mappingSummaryLabel.text = Localization.S("componentCopier.mapping.summary",
-                confirmed.Count + manual.Count, mappings.Count, toReview, unresolved);
+                confirmed.Count + manual.Count, mappings.Count, toReview, unresolved, planned.Count);
             mappingSummaryLabel.EnableInClassList("section-summary--warning", toReview + unresolved > 0);
 
             int affixCount = needsReview.Count(m => m.Reason == MappingReason.AffixStripped);
@@ -139,34 +162,129 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             AddMappingGroup(bones, showGroups ? "componentCopier.mapping.group.bones" : null, created);
             AddMappingGroup(others, showGroups ? "componentCopier.mapping.group.others" : null, created);
 
-            if (confirmed.Count > 0)
-            {
-                var foldout = new Foldout
-                {
-                    text = Localization.S("componentCopier.mapping.confirmed", confirmed.Count),
-                    value = confirmedMappingsExpanded,
-                };
-                foldout.AddToClassList("confirmed-foldout");
-                foldout.RegisterValueChangedCallback(evt =>
-                {
-                    if (evt.target != foldout) return;
-                    confirmedMappingsExpanded = evt.newValue;
-                    if (evt.newValue && foldout.childCount == 0)
-                    {
-                        foreach (var mapping in confirmed)
-                            foldout.Add(CreateMappingRow(mapping, null));
-                    }
-                });
-                if (confirmedMappingsExpanded)
-                {
-                    foreach (var mapping in confirmed)
-                        foldout.Add(CreateMappingRow(mapping, null));
-                }
-
-                mappingContainer.Add(foldout);
-            }
+            AddFoldedGroup(
+                Localization.S("componentCopier.mapping.willCreate", toCreate.Count), toCreate,
+                createdMappingsExpanded, expanded => createdMappingsExpanded = expanded,
+                mapping => CreateWillCreateRow(mapping, created[mapping.Source]));
+            AddFoldedGroup(
+                Localization.S("componentCopier.mapping.confirmed", confirmed.Count), confirmed,
+                confirmedMappingsExpanded, expanded => confirmedMappingsExpanded = expanded,
+                mapping => CreateMappingRow(mapping, null));
 
             AddExternalGroup(external);
+        }
+
+        /// <summary>Rows that need no decision are kept out of the way, folded by default.</summary>
+        private void AddFoldedGroup(
+            string title, List<TransformMapping> rows, bool expanded, System.Action<bool> rememberExpanded,
+            System.Func<TransformMapping, VisualElement> createRow)
+        {
+            if (rows.Count == 0) return;
+
+            var foldout = new Foldout { text = title, value = expanded };
+            foldout.AddToClassList("confirmed-foldout");
+
+            // Rows are only built when first shown
+            void Fill()
+            {
+                if (foldout.childCount > 0) return;
+                foreach (var mapping in rows)
+                    foldout.Add(createRow(mapping));
+            }
+
+            foldout.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.target != foldout) return;
+                rememberExpanded(evt.newValue);
+                if (evt.newValue) Fill();
+            });
+            if (expanded) Fill();
+
+            mappingContainer.Add(foldout);
+        }
+
+        /// <summary>
+        /// An object that does not exist in the target and gets created. Not a problem, so it is not dressed
+        /// like one: the right-hand side says where the object will be, as everywhere in this list it shows the
+        /// state after applying. An empty object field would read as "nothing", and that is not what happens.
+        /// </summary>
+        private VisualElement CreateWillCreateRow(TransformMapping mapping, PlannedObject plannedObject)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("mapping-row");
+            row.AddToClassList("mapping-row--willcreate");
+
+            string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, map.SourceRoot);
+            var sourceLabel = new Label(sourcePath) { tooltip = sourcePath };
+            sourceLabel.AddToClassList("mapping-source");
+            sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(mapping.Source));
+            row.Add(sourceLabel);
+
+            var arrow = new Label("→");
+            arrow.AddToClassList("mapping-arrow");
+            row.Add(arrow);
+
+            string createdPath = PlannedTargetPath(plannedObject);
+            var createdLabel = new Label("+ " + createdPath) { tooltip = createdPath };
+            createdLabel.AddToClassList("mapping-target");
+            createdLabel.AddToClassList("mapping-created-path");
+            row.Add(createdLabel);
+
+            var note = new Label(MappingNote(mapping, plannedObject, false));
+            note.AddToClassList("mapping-note");
+            row.Add(note);
+
+            var menuButton = new Button { text = "▾" };
+            menuButton.clicked += () => ShowWillCreateMenu(mapping);
+            menuButton.AddToClassList("mapping-menu-button");
+            menuButton.tooltip = Localization.S("componentCopier.mapping.menu:tooltip");
+            row.Add(menuButton);
+
+            return row;
+        }
+
+        /// <summary>Where a planned object ends up, as a path below the target root.</summary>
+        private string PlannedTargetPath(PlannedObject plannedObject)
+        {
+            var names = new List<string>();
+            Transform existingParent = null;
+            for (var current = plannedObject; current != null; current = current.ParentToCreate)
+            {
+                names.Insert(0, current.Source.name);
+                existingParent = current.ExistingParent;
+            }
+
+            string parentPath = existingParent != null
+                ? ObjectMatcher.GetRelativePathFromRoot(existingParent, map.TargetRoot)
+                : "";
+            if (!string.IsNullOrEmpty(parentPath)) names.Insert(0, parentPath);
+            return string.Join("/", names);
+        }
+
+        private void ShowWillCreateMenu(TransformMapping mapping)
+        {
+            var menu = new GenericMenu();
+
+            foreach (var candidate in mapping.Candidates)
+            {
+                var target = candidate.Target;
+                if (target == null) continue;
+
+                // GenericMenu turns '/' into submenus
+                string path = ObjectMatcher.GetRelativePathFromRoot(target, map.TargetRoot).Replace("/", " ∕ ");
+                menu.AddItem(new GUIContent(path), false, () => SetManualMapping(mapping.Source, target));
+            }
+
+            if (mapping.Candidates.Count > 0) menu.AddSeparator("");
+
+            // Creating is the default, but the counterpart may exist under a name that could not be matched
+            menu.AddItem(new GUIContent(Localization.S("componentCopier.mapping.menu.pickExisting")), false, () =>
+            {
+                pickExistingFor.Add(mapping.Source);
+                RenderMapping();
+            });
+
+            menu.ShowAsContext();
         }
 
         /// <summary>
@@ -386,7 +504,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             var row = new VisualElement();
             row.AddToClassList("mapping-row");
-            row.AddToClassList("mapping-row--" + mapping.State.ToString().ToLowerInvariant());
+            // Only here while the user picks an existing object for it; still nothing to be alarmed about
+            row.AddToClassList(plannedObject != null
+                ? "mapping-row--willcreate"
+                : "mapping-row--" + mapping.State.ToString().ToLowerInvariant());
 
             // Rows about the outside belong to the map of the surroundings; their paths start at its root
             bool external = owner != null;
@@ -486,11 +607,22 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     : "componentCopier.mapping.menu.none")),
                 isNone, () => SetManualMapping(mapping.Source, null));
 
+            if (pickExistingFor.Contains(mapping.Source))
+            {
+                menu.AddItem(new GUIContent(Localization.S("componentCopier.mapping.menu.createInstead")), false, () =>
+                {
+                    pickExistingFor.Remove(mapping.Source);
+                    RenderMapping();
+                });
+            }
+
             if (manualMappings.ContainsKey(mapping.Source))
             {
                 menu.AddItem(new GUIContent(Localization.S("componentCopier.mapping.menu.reset")), false, () =>
                 {
                     manualMappings.Remove(mapping.Source);
+                    // Back to automatic also means back to being created, if that is what automatic says
+                    pickExistingFor.Remove(mapping.Source);
                     Recompute();
                 });
             }
