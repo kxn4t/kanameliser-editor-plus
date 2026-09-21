@@ -285,5 +285,134 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 
             Assert.AreEqual(0, target.Find("Armature/Head").childCount);
         }
+
+        #region Left-out components
+
+        /// <summary>A hat with a constraint on its root, a collider on "Ribbon" and another on the leaf "Anchor".</summary>
+        private static GameObject SaveHatWithAnchor(string name)
+        {
+            return SavePrefab(name, hat =>
+            {
+                hat.gameObject.AddComponent<ParentConstraint>();
+                AddChild(hat, "Ribbon").gameObject.AddComponent<SphereCollider>();
+                AddChild(hat, "Anchor").gameObject.AddComponent<BoxCollider>();
+            });
+        }
+
+        private static CopyPlan BuildPlanLeavingOut(Transform source, Transform target, Type selected, Type leftOut)
+        {
+            var map = TransformMapper.Build(source, target);
+            return CopyPlanBuilder.Build(Select(source, selected), map, new CopySettings(),
+                leftOut: Select(source, leftOut).Select(e => e.Key));
+        }
+
+        [Test]
+        public void LeftOutComponent_IsRemovedFromTheInstantiatedPrefab()
+        {
+            var hatAsset = SaveHatWithAnchor("Hat_LeftOutComponent");
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            Instantiate(hatAsset, source.Find("Armature/Head"));
+
+            var plan = BuildPlanLeavingOut(source, target, typeof(SphereCollider), typeof(ParentConstraint));
+            var leftOut = plan.Components.Single(c => c.Entry.Type == typeof(ParentConstraint));
+            Assert.AreEqual(ComponentAction.LeftOut, leftOut.Action);
+            Assert.IsFalse(leftOut.Implicit);
+            Assert.IsTrue(plan.Components.Single(c => c.Entry.Type == typeof(BoxCollider)).Implicit);
+
+            var result = CopyExecutor.Execute(plan);
+
+            var targetHat = target.Find("Armature/Head/Hat_LeftOutComponent");
+            Assert.IsNotNull(targetHat, "The root of the prefab stays even when its components are left out");
+            Assert.IsNull(targetHat.GetComponent<ParentConstraint>());
+            Assert.AreEqual(1, PrefabUtility.GetRemovedComponents(targetHat.gameObject).Count,
+                "Leaving out is a prefab override that can be reverted");
+            Assert.IsNotNull(targetHat.Find("Anchor").GetComponent<BoxCollider>());
+            Assert.AreEqual(1, result.LeftOutComponents);
+            Assert.AreEqual(0, result.LeftOutObjects);
+
+            var report = CopyVerifier.Verify(plan);
+            Assert.AreEqual(0, report.Count(DiffKind.ExtraOnTarget));
+            Assert.AreEqual(0, report.Count(DiffKind.MissingOnTarget));
+        }
+
+        [Test]
+        public void LeafObjectWithOnlyLeftOutComponents_IsRemovedAsWell()
+        {
+            var hatAsset = SaveHatWithAnchor("Hat_LeftOutObject");
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            Instantiate(hatAsset, source.Find("Armature/Head"));
+
+            var plan = BuildPlanLeavingOut(source, target, typeof(SphereCollider), typeof(BoxCollider));
+            Assert.IsTrue(plan.ObjectsToCreate.Single(o => o.Source.name == "Anchor").LeftOut);
+            Assert.IsFalse(plan.ObjectsToCreate.Single(o => o.Source.name == "Ribbon").LeftOut);
+
+            var result = CopyExecutor.Execute(plan);
+
+            var targetHat = target.Find("Armature/Head/Hat_LeftOutObject");
+            Assert.IsNull(targetHat.Find("Anchor"), "An empty shell must not stay behind");
+            Assert.IsNotNull(targetHat.Find("Ribbon"));
+            Assert.AreEqual(1, result.LeftOutObjects);
+            Assert.AreEqual(1, result.LeftOutComponents);
+            Assert.AreEqual(0, CopyVerifier.Verify(plan).Count(DiffKind.ExtraOnTarget));
+        }
+
+        [Test]
+        public void ObjectThatACopiedComponentRefersTo_IsKept()
+        {
+            var hatAsset = SaveHatWithAnchor("Hat_LeftOutReferenced");
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            sourceHat.GetComponent<ParentConstraint>().AddSource(
+                new ConstraintSource { sourceTransform = sourceHat.Find("Anchor"), weight = 1f });
+
+            var plan = BuildPlanLeavingOut(source, target, typeof(ParentConstraint), typeof(BoxCollider));
+            Assert.IsFalse(plan.ObjectsToCreate.Single(o => o.Source.name == "Anchor").LeftOut);
+
+            CopyExecutor.Execute(plan);
+
+            var targetHat = target.Find("Armature/Head/Hat_LeftOutReferenced");
+            var anchor = targetHat.Find("Anchor");
+            Assert.IsNotNull(anchor);
+            Assert.IsNull(anchor.GetComponent<BoxCollider>());
+            Assert.AreSame(anchor, targetHat.GetComponent<ParentConstraint>().GetSource(0).sourceTransform);
+        }
+
+        [Test]
+        public void LeftOutComponentThatAnotherOneRequires_IsKeptAndReported()
+        {
+            var hatAsset = SavePrefab("Hat_LeftOutRequired", hat =>
+            {
+                // HingeJoint requires the Rigidbody next to it
+                AddChild(hat, "Ribbon").gameObject.AddComponent<HingeJoint>();
+            });
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            Instantiate(hatAsset, source.Find("Armature/Head"));
+
+            var plan = BuildPlanLeavingOut(source, target, typeof(HingeJoint), typeof(Rigidbody));
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(1, result.FailedRemovals.Count);
+            Assert.IsNotNull(target.Find("Armature/Head/Hat_LeftOutRequired/Ribbon").GetComponent<Rigidbody>());
+            Assert.AreEqual(1, CopyVerifier.Verify(plan).Count(DiffKind.ExtraOnTarget));
+        }
+
+        [Test]
+        public void LeavingOut_OnlyMattersInsideAPrefabThatIsAdded()
+        {
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            source.Find("Armature/Head").gameObject.AddComponent<SphereCollider>();
+            source.Find("Armature/Head").gameObject.AddComponent<BoxCollider>();
+
+            var plan = BuildPlanLeavingOut(source, target, typeof(SphereCollider), typeof(BoxCollider));
+
+            Assert.AreEqual(typeof(SphereCollider), plan.Components.Single().Entry.Type);
+        }
+
+        #endregion
     }
 }

@@ -23,10 +23,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// if there are any. Returns the map that redirects them (see <see cref="ExternalContext"/>), or null
         /// to keep all of them as they are. A callback because the caller may want to cache the map.
         /// </param>
+        /// <param name="leftOut">
+        /// Components the user unchecked on purpose. Only matters inside a nested prefab that gets added:
+        /// anywhere else an unchecked component simply is not copied.
+        /// </param>
         public static CopyPlan Build(
             IEnumerable<ComponentEntry> selected, TransformMap map, CopySettings settings,
             IEnumerable<Transform> objectsToAdd = null,
-            Func<IReadOnlyCollection<Transform>, TransformMap> externalMapProvider = null)
+            Func<IReadOnlyCollection<Transform>, TransformMap> externalMapProvider = null,
+            IEnumerable<ComponentKey> leftOut = null)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
             settings ??= new CopySettings();
@@ -50,11 +55,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             var externalTransforms = new HashSet<Transform>();
-            PlanDependencies(plan, context, externalTransforms);
+            var leftOutKeys = new HashSet<ComponentKey>(leftOut ?? Enumerable.Empty<ComponentKey>());
+            PlanDependencies(plan, context, externalTransforms, leftOutKeys);
             if (externalTransforms.Count > 0 && externalMapProvider != null && settings.RedirectExternalReferences)
                 plan.ExternalMap = externalMapProvider(externalTransforms);
 
             CollectReferences(plan, context);
+            PlanLeftOutObjects(plan);
 
             // Needs the references, so it runs last
             foreach (var planned in plan.Components)
@@ -243,14 +250,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// other: a referenced object can sit in a nested prefab, whose components then come along and hold
         /// references of their own.
         /// </summary>
-        private static void PlanDependencies(CopyPlan plan, HostResolver context, HashSet<Transform> externalTransforms)
+        private static void PlanDependencies(
+            CopyPlan plan, HostResolver context, HashSet<Transform> externalTransforms,
+            HashSet<ComponentKey> leftOutKeys)
         {
             var walked = new HashSet<Component>();
             int objectCount;
             do
             {
                 objectCount = plan.ObjectsToCreate.Count;
-                AddImplicitComponents(plan, context);
+                AddImplicitComponents(plan, context, leftOutKeys);
                 DecideActions(plan);
                 PlanReferencedObjects(plan, context, walked, externalTransforms);
             } while (plan.ObjectsToCreate.Count != objectCount);
@@ -300,9 +309,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>
         /// A nested prefab is brought over as a whole: every component in it is copied, selected or not,
         /// so that overrides made on the source instance (materials, tweaked values, references to the
-        /// outfit's bones) carry over.
+        /// outfit's bones) carry over. The ones the user left out arrive with the prefab all the same, so they
+        /// are planned too, for removal.
         /// </summary>
-        private static void AddImplicitComponents(CopyPlan plan, HostResolver context)
+        private static void AddImplicitComponents(
+            CopyPlan plan, HostResolver context, HashSet<ComponentKey> leftOutKeys)
         {
             if (!plan.ObjectsToCreate.Any(o => o.IsPrefabRoot || o.PrefabRoot != null)) return;
 
@@ -314,7 +325,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (!context.ObjectsBySource.TryGetValue(entry.Host, out var host)) continue;
                 if (!host.IsPrefabRoot && host.PrefabRoot == null) continue;
 
-                plan.Components.Add(new PlannedComponent { Entry = entry, HostToCreate = host, Implicit = true });
+                bool leftOut = leftOutKeys.Contains(entry.Key);
+                plan.Components.Add(new PlannedComponent
+                {
+                    Entry = entry,
+                    HostToCreate = host,
+                    Implicit = !leftOut,
+                    LeftOut = leftOut,
+                });
             }
         }
 
@@ -329,6 +347,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (planned.BlockReason != BlockReason.None)
                 {
                     planned.Action = ComponentAction.Blocked;
+                    continue;
+                }
+
+                if (planned.LeftOut)
+                {
+                    planned.Action = ComponentAction.LeftOut;
                     continue;
                 }
 
@@ -364,16 +388,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private static void CollectReferences(CopyPlan plan, HostResolver context)
         {
+            // A reference to a component that is blocked or left out has nothing to point at
+            static bool HasResult(PlannedComponent planned) =>
+                planned.Action != ComponentAction.Blocked && planned.Action != ComponentAction.LeftOut;
+
             var plannedBySource = new Dictionary<Component, PlannedComponent>();
             foreach (var planned in plan.Components)
             {
-                if (planned.Action != ComponentAction.Blocked)
-                    plannedBySource[planned.Entry.Component] = planned;
+                if (HasResult(planned)) plannedBySource[planned.Entry.Component] = planned;
             }
 
             foreach (var planned in plan.Components)
             {
-                if (planned.Action == ComponentAction.Blocked) continue;
+                if (!HasResult(planned)) continue;
 
                 using var serializedObject = new SerializedObject(planned.Entry.Component);
                 foreach (var property in ReferenceWalker.Leaves(serializedObject))
@@ -390,6 +417,38 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     reference.SourceValue = value;
                     planned.References.Add(reference);
                 }
+            }
+        }
+
+        /// <summary>
+        /// An object inside an arriving prefab whose components were all left out would stay behind as an empty
+        /// shell. It is removed as well, as long as nothing else is lost with it: it has no children, and no
+        /// copied component refers to it.
+        /// </summary>
+        private static void PlanLeftOutObjects(CopyPlan plan)
+        {
+            var leftOutByHost = plan.Components
+                .Where(c => c.LeftOut && c.HostToCreate != null)
+                .GroupBy(c => c.HostToCreate)
+                .ToList();
+            if (leftOutByHost.Count == 0) return;
+
+            var referenced = new HashSet<PlannedObject>(plan.Components
+                .Where(c => c.WillWrite)
+                .SelectMany(c => c.References)
+                .Select(r => r.Expected?.ObjectToCreate)
+                .Where(o => o != null));
+
+            foreach (var group in leftOutByHost)
+            {
+                var host = group.Key;
+                // The prefab root is the prefab itself; it stays
+                if (host.PrefabRoot == null) continue;
+                if (host.Source.childCount > 0 || referenced.Contains(host)) continue;
+                // Missing scripts come back as null entries and still count as something worth keeping
+                if (host.Source.GetComponents<Component>().Length - 1 != group.Count()) continue;
+
+                host.LeftOut = true;
             }
         }
 

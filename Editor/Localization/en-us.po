@@ -680,6 +680,24 @@ msgstr "{0} of these object(s) are added as prefab instances."
 msgid "componentCopier.report.appliedPrefabs"
 msgstr "Added {0} prefab(s)."
 
+msgid "componentCopier.action.leftOut"
+msgstr "Left out"
+
+msgid "componentCopier.action.leftOut:tooltip"
+msgstr "The prefab is added as a whole, so this component is removed from the new instance afterwards. It can be restored from the Overrides of the prefab."
+
+#, csharp-format
+msgid "componentCopier.report.leftOut"
+msgstr "{0} unchecked component(s) are removed after their prefab is added, along with {1} object(s) that would be left empty."
+
+#, csharp-format
+msgid "componentCopier.report.appliedLeftOut"
+msgstr "Removed {0} unchecked component(s) and {1} object(s) from the added prefabs."
+
+#, csharp-format
+msgid "componentCopier.report.removeFailed"
+msgstr "{0} component(s) could not be removed because another component requires them."
+
 msgid "componentCopier.prefabs.title"
 msgstr "Objects missing in the target"
 

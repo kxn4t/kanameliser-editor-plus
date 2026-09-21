@@ -14,6 +14,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>Existing component already equals the expected result.</summary>
         SkipIdentical,
         Blocked,
+        /// <summary>
+        /// Arrives with a nested prefab although the user left it out, and is removed from the new instance.
+        /// </summary>
+        LeftOut,
     }
 
     internal enum BlockReason
@@ -65,6 +69,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         /// <summary>Index among same-name siblings, used to find the object inside an instantiated prefab.</summary>
         public int SiblingOccurrence;
+
+        /// <summary>
+        /// True for an object inside a nested prefab that is removed from the new instance, because every
+        /// component on it was left out. See <see cref="PlannedComponent.LeftOut"/>.
+        /// </summary>
+        public bool LeftOut;
 
         /// <summary>Filled in by <see cref="CopyExecutor"/>.</summary>
         public Transform Created;
@@ -135,6 +145,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// A prefab is brought over as a whole, so everything in it is made to match the source.
         /// </summary>
         public bool Implicit;
+
+        /// <summary>
+        /// True for a component inside a nested prefab that the user unchecked on purpose. The prefab still
+        /// arrives as a whole, so the component is removed from the new instance afterwards.
+        /// </summary>
+        public bool LeftOut;
 
         /// <summary>Component written by <see cref="CopyExecutor"/>.</summary>
         public Component Result;

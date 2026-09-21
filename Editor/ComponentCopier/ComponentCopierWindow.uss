@@ -460,7 +460,8 @@
 }
 
 .status-chip--skip,
-.status-chip--skipidentical {
+.status-chip--skipidentical,
+.status-chip--leftout {
     opacity: 0.6;
 }
 

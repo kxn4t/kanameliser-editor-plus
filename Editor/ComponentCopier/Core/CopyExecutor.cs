@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,8 +13,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public int RemovedComponents;
         public int WrittenComponents;
 
+        /// <summary>Left-out components and objects that were removed from an instantiated prefab.</summary>
+        public int LeftOutComponents;
+        public int LeftOutObjects;
+
         /// <summary>Components that could not be added (e.g. rejected by DisallowMultipleComponent).</summary>
         public List<PlannedComponent> Failed = new();
+
+        /// <summary>Left-out components that had to stay because another component requires them.</summary>
+        public List<PlannedComponent> FailedRemovals = new();
     }
 
     /// <summary>
@@ -32,6 +41,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             CreateObjects(plan, result);
             RemoveReplacedComponents(plan, result);
+
+            // Looked up before anything is added: components are found by their index among the same type,
+            // which shifts as soon as one is added or removed
+            var leftOut = FindLeftOutComponents(plan);
 
             // Pass 1: make every component exist and carry the source values.
             // References still point into the source hierarchy after this pass.
@@ -61,6 +74,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 PrefabUtility.RecordPrefabInstancePropertyModifications(planned.Result);
             }
 
+            RemoveLeftOut(plan, leftOut, result);
+
             Undo.CollapseUndoOperations(undoGroup);
             return result;
         }
@@ -88,6 +103,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         transform = instance.transform;
                         result.InstantiatedPrefabs++;
                     }
+                }
+
+                if (planned.LeftOut)
+                {
+                    // Removed again at the end if it came with the prefab, and not created otherwise
+                    planned.Created = transform;
+                    continue;
                 }
 
                 if (transform == null)
@@ -134,6 +156,92 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 result.RemovedComponents++;
             }
         }
+
+        private static List<(PlannedComponent planned, Component component)> FindLeftOutComponents(CopyPlan plan)
+        {
+            var found = new List<(PlannedComponent, Component)>();
+            foreach (var planned in plan.Components)
+            {
+                if (!planned.LeftOut) continue;
+
+                var host = planned.HostToCreate?.Created;
+                if (host == null) continue;
+
+                // Null when the component was added to the source instance and is not part of the prefab asset
+                var arrived = ComponentScanner.FindByTypeAndIndex(host, planned.Entry.Type, planned.Entry.Key.Index);
+                if (arrived != null) found.Add((planned, arrived));
+            }
+
+            return found;
+        }
+
+        /// <summary>
+        /// Removes what the user left out from the instantiated prefabs. On a prefab instance this becomes a
+        /// "removed component" / "removed GameObject" override, which can be reverted from the Overrides menu.
+        /// </summary>
+        private static void RemoveLeftOut(
+            CopyPlan plan, List<(PlannedComponent planned, Component component)> leftOut, ExecutionResult result)
+        {
+            foreach (var planned in plan.ObjectsToCreate)
+            {
+                if (!planned.LeftOut || planned.Created == null) continue;
+
+                try
+                {
+                    Undo.DestroyObjectImmediate(planned.Created.gameObject);
+                    result.LeftOutObjects++;
+                }
+                catch (InvalidOperationException)
+                {
+                    // Unity versions without removed-GameObject overrides: only the components go
+                }
+            }
+
+            var pending = leftOut.Where(p => p.component != null).ToList();
+            result.LeftOutComponents = leftOut.Count - pending.Count;
+
+            // A component that another one requires cannot be removed, and Unity logs an error for the attempt.
+            // So the ones that are free go first, which may free others (both halves of a pair were left out).
+            bool progress = true;
+            while (progress && pending.Count > 0)
+            {
+                progress = false;
+                foreach (var item in pending.ToList())
+                {
+                    if (IsRequiredByAnother(item.component)) continue;
+
+                    Undo.DestroyObjectImmediate(item.component);
+                    pending.Remove(item);
+                    result.LeftOutComponents++;
+                    progress = true;
+                }
+            }
+
+            result.FailedRemovals.AddRange(pending.Select(p => p.planned));
+        }
+
+        private static bool IsRequiredByAnother(Component component)
+        {
+            var type = component.GetType();
+            foreach (var other in component.GetComponents<Component>())
+            {
+                if (other == null || other == component) continue;
+
+                var attributes = other.GetType().GetCustomAttributes(typeof(RequireComponent), true);
+                foreach (RequireComponent attribute in attributes)
+                {
+                    if (Requires(attribute.m_Type0, type) || Requires(attribute.m_Type1, type) ||
+                        Requires(attribute.m_Type2, type))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool Requires(Type required, Type type) => required != null && required.IsAssignableFrom(type);
 
         private static Component PrepareTargetComponent(PlannedComponent planned)
         {

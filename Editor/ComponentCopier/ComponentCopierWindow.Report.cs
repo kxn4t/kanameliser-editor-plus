@@ -65,8 +65,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     Localization.S("componentCopier.report.appliedPrefabs", result.InstantiatedPrefabs);
             }
 
+            if (result.LeftOutComponents + result.LeftOutObjects > 0)
+            {
+                detailMessage += "\n" + Localization.S("componentCopier.report.appliedLeftOut",
+                    result.LeftOutComponents, result.LeftOutObjects);
+            }
+
             if (result.Failed.Count > 0)
                 detailMessage += "\n" + Localization.S("componentCopier.report.failed", result.Failed.Count);
+            if (result.FailedRemovals.Count > 0)
+            {
+                detailMessage += "\n" +
+                    Localization.S("componentCopier.report.removeFailed", result.FailedRemovals.Count);
+            }
 
             Debug.Log($"[Component Copier] Copied {result.WrittenComponents} component(s) " +
                       $"from '{sourceRoot.name}' to '{targetRoot.name}'.");
@@ -99,7 +110,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private void AddMissingDependencies(List<ComponentKey> keys)
         {
             foreach (var key in keys)
+            {
                 selectedKeys.Add(key);
+                leftOutKeys.Remove(key);
+            }
+
             Recompute();
         }
 
@@ -150,6 +165,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     : Localization.S("componentCopier.report.prefabsOnly", prefabs));
                 prefabLabel.AddToClassList("report-summary");
                 reportContainer.Add(prefabLabel);
+            }
+
+            int leftOutComponents = plan.Components.Count(c => c.LeftOut);
+            if (leftOutComponents > 0)
+            {
+                var leftOutLabel = new Label(Localization.S("componentCopier.report.leftOut",
+                    leftOutComponents, plan.ObjectsToCreate.Count(o => o.LeftOut)));
+                leftOutLabel.AddToClassList("report-summary");
+                reportContainer.Add(leftOutLabel);
             }
 
             var (redirectedObjects, redirectedPlaces) = CountExternalReferences(ReferenceKind.ExternalMapped);

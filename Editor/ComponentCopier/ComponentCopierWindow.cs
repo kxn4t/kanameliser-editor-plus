@@ -23,6 +23,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private CopySettings settings;
         private List<ComponentEntry> entries = new();
         private readonly HashSet<ComponentKey> selectedKeys = new();
+        // Components the user unchecked while they were about to arrive with a nested prefab, see SetChecked
+        private readonly HashSet<ComponentKey> leftOutKeys = new();
         private readonly HashSet<string> expandedTypes = new();
         // Nested prefabs and empty objects the user chose to add although no selected component needs them
         private readonly HashSet<string> selectedObjectPaths = new();
@@ -140,6 +142,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (resetSelection)
             {
                 selectedKeys.Clear();
+                leftOutKeys.Clear();
                 selectedObjectPaths.Clear();
                 expandedIssues.Clear();
                 previousKeys.Clear();
@@ -147,6 +150,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             var currentKeys = new HashSet<ComponentKey>(entries.Select(e => e.Key));
             selectedKeys.IntersectWith(currentKeys);
+            leftOutKeys.IntersectWith(currentKeys);
             foreach (var entry in entries)
             {
                 if (!previousKeys.Contains(entry.Key) && entry.Category != ComponentCategory.ExcludedByDefault)
@@ -191,7 +195,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return CopyPlanBuilder.Build(
                 entries.Where(e => selectedKeys.Contains(e.Key)), map, planSettings,
                 missingObjects.Where(p => selectedObjectPaths.Contains(ObjectPath(p))),
-                GetExternalMap);
+                GetExternalMap, leftOutKeys);
         }
 
         /// <summary>

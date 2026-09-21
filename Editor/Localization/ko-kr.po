@@ -680,6 +680,24 @@ msgstr "이 중 {0}개는 Prefab 인스턴스로 추가합니다."
 msgid "componentCopier.report.appliedPrefabs"
 msgstr "Prefab {0}개를 추가했습니다."
 
+msgid "componentCopier.action.leftOut"
+msgstr "추가 안 함"
+
+msgid "componentCopier.action.leftOut:tooltip"
+msgstr "Prefab은 통째로 추가되므로, 추가한 뒤 이 컴포넌트를 인스턴스에서 삭제합니다. Prefab의 Overrides에서 되돌릴 수 있습니다."
+
+#, csharp-format
+msgid "componentCopier.report.leftOut"
+msgstr "체크를 해제한 컴포넌트 {0}개는 Prefab을 추가한 뒤 삭제합니다. 비게 되는 오브젝트 {1}개도 함께 삭제합니다."
+
+#, csharp-format
+msgid "componentCopier.report.appliedLeftOut"
+msgstr "추가한 Prefab에서 체크를 해제한 컴포넌트 {0}개와 오브젝트 {1}개를 삭제했습니다."
+
+#, csharp-format
+msgid "componentCopier.report.removeFailed"
+msgstr "컴포넌트 {0}개는 다른 컴포넌트가 필요로 하므로 삭제할 수 없었습니다."
+
 msgid "componentCopier.prefabs.title"
 msgstr "복사 대상에 없는 오브젝트"
 

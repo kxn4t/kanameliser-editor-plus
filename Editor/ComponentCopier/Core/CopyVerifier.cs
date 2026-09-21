@@ -29,7 +29,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
     internal sealed class ComponentDiff
     {
-        /// <summary>Null for <see cref="DiffKind.ExtraOnTarget"/>.</summary>
+        /// <summary>
+        /// Null for <see cref="DiffKind.ExtraOnTarget"/>, unless the extra component is one that was left out
+        /// and could not be removed.
+        /// </summary>
         public PlannedComponent Planned;
         /// <summary>The target component that was compared, or the extra component.</summary>
         public Component Actual;
@@ -60,9 +63,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var report = new DiffReport();
 
             foreach (var planned in plan.Components)
-                report.Components.Add(Compare(planned, planned.Actual));
+            {
+                report.Components.Add(planned.LeftOut
+                    ? CompareLeftOut(plan, planned)
+                    : Compare(planned, planned.Actual));
+            }
 
-            foreach (var extra in FindExtraComponents(plan))
+            foreach (var extra in FindExtraComponents(plan, report))
                 report.Components.Add(new ComponentDiff { Actual = extra, Kind = DiffKind.ExtraOnTarget });
 
             return report;
@@ -107,6 +114,38 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 diff.Kind = DiffKind.UnresolvedReference;
 
             return diff;
+        }
+
+        /// <summary>
+        /// A left-out component is expected to be absent. It cannot be looked up by its index, which shifts
+        /// once it is gone, so the number of components of its type on the object is compared instead.
+        /// </summary>
+        private static ComponentDiff CompareLeftOut(CopyPlan plan, PlannedComponent planned)
+        {
+            var diff = new ComponentDiff { Planned = planned, Kind = DiffKind.Match };
+
+            // Null before applying, and again once the whole object was removed
+            var host = planned.HostToCreate?.Created;
+            if (host == null) return diff;
+
+            var type = planned.Entry.Type;
+            int leftOut = plan.Components.Count(
+                c => c.LeftOut && c.HostToCreate == planned.HostToCreate && c.Entry.Type == type);
+            int expected = ExactTypeComponents(planned.Entry.Host, type).Count - leftOut;
+            var actual = ExactTypeComponents(host, type);
+
+            if (actual.Count > expected)
+            {
+                diff.Kind = DiffKind.ExtraOnTarget;
+                diff.Actual = actual[actual.Count - 1];
+            }
+
+            return diff;
+        }
+
+        private static List<Component> ExactTypeComponents(Transform host, Type type)
+        {
+            return host.GetComponents(type).Where(c => c != null && c.GetType() == type).ToList();
         }
 
         /// <summary>
@@ -185,12 +224,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// counterpart, or where the source counterpart has no such component. Components the user merely
         /// left unselected are not reported.
         /// </summary>
-        private static IEnumerable<Component> FindExtraComponents(CopyPlan plan)
+        private static IEnumerable<Component> FindExtraComponents(CopyPlan plan, DiffReport report)
         {
             var types = new HashSet<Type>(plan.Components.Select(c => c.Entry.Type));
             if (types.Count == 0 || plan.Map.TargetRoot == null) yield break;
 
             var accounted = new HashSet<Component>(plan.Components.Select(c => c.Actual).Where(c => c != null));
+            // A left-out component that is still there was reported already
+            accounted.UnionWith(report.Components.Select(c => c.Actual).Where(c => c != null));
             var removed = new HashSet<Component>(plan.ComponentsToRemove.Where(c => c != null));
 
             var sourceByTarget = new Dictionary<Transform, Transform>();

@@ -144,14 +144,55 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var matching = entries.Where(filter).ToList();
             if (matching.Count == 0) return;
 
-            bool allSelected = matching.All(e => selectedKeys.Contains(e.Key));
+            bool allChecked = matching.All(IsChecked);
             foreach (var entry in matching)
-            {
-                if (allSelected) selectedKeys.Remove(entry.Key);
-                else selectedKeys.Add(entry.Key);
-            }
+                SetChecked(entry, !allChecked);
 
             Recompute();
+        }
+
+        /// <summary>
+        /// A checkbox says whether the component ends up in the target. Inside a nested prefab that gets added
+        /// that is true without being selected: the prefab arrives as a whole.
+        /// </summary>
+        private bool IsChecked(ComponentEntry entry)
+        {
+            if (selectedKeys.Contains(entry.Key)) return true;
+            return plannedByKey.TryGetValue(entry.Key, out var planned) && planned.Implicit && planned.WillWrite;
+        }
+
+        /// <summary>
+        /// Unchecking a component that arrives with a nested prefab cannot simply deselect it, it would still
+        /// come along. It is remembered as left out instead, and removed from the new instance.
+        /// Does not recompute; the caller does that once.
+        /// </summary>
+        private void SetChecked(ComponentEntry entry, bool value)
+        {
+            plannedByKey.TryGetValue(entry.Key, out var planned);
+
+            if (!value)
+            {
+                selectedKeys.Remove(entry.Key);
+                if (planned != null && ArrivesWithPrefab(planned)) leftOutKeys.Add(entry.Key);
+                return;
+            }
+
+            bool wasLeftOut = leftOutKeys.Remove(entry.Key);
+            // Back to coming along with the prefab. Selecting it would keep copying a component that is not
+            // copied by default (a renderer of a hat, ...) once the prefab exists in the target.
+            if (wasLeftOut && planned != null && planned.LeftOut &&
+                entry.Category == ComponentCategory.ExcludedByDefault)
+            {
+                return;
+            }
+
+            selectedKeys.Add(entry.Key);
+        }
+
+        private static bool ArrivesWithPrefab(PlannedComponent planned)
+        {
+            var host = planned.HostToCreate;
+            return host != null && (host.IsPrefabRoot || host.PrefabRoot != null);
         }
 
         /// <summary>
@@ -210,8 +251,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             // A chip that can never be pressed for this source is only noise
             button.style.display = hideWhenEmpty && matching.Count == 0 ? DisplayStyle.None : DisplayStyle.Flex;
             button.SetEnabled(matching.Count > 0);
-            button.EnableInClassList("preset-chip--active",
-                matching.Count > 0 && matching.All(e => selectedKeys.Contains(e.Key)));
+            button.EnableInClassList("preset-chip--active", matching.Count > 0 && matching.All(IsChecked));
         }
 
         #endregion
@@ -686,7 +726,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 }
             }
 
-            int selectedCount = groupEntries.Count(e => selectedKeys.Contains(e.Key));
+            int selectedCount = groupEntries.Count(IsChecked);
             var toggle = new Toggle
             {
                 value = selectedCount == groupEntries.Count,
@@ -697,10 +737,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 evt.StopPropagation();
                 foreach (var entry in groupEntries)
-                {
-                    if (evt.newValue) selectedKeys.Add(entry.Key);
-                    else selectedKeys.Remove(entry.Key);
-                }
+                    SetChecked(entry, evt.newValue);
 
                 Recompute();
             });
@@ -779,11 +816,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var row = new VisualElement();
             row.AddToClassList("component-row");
 
-            var toggle = new Toggle { value = selectedKeys.Contains(entry.Key) };
+            var toggle = new Toggle { value = IsChecked(entry) };
             toggle.RegisterValueChangedCallback(evt =>
             {
-                if (evt.newValue) selectedKeys.Add(entry.Key);
-                else selectedKeys.Remove(entry.Key);
+                SetChecked(entry, evt.newValue);
                 Recompute();
             });
             row.Add(toggle);
@@ -893,6 +929,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // unexplained "Identical" reads as if the policy was ignored
                 case ComponentAction.Skip:
                 case ComponentAction.SkipIdentical:
+                case ComponentAction.LeftOut:
                     return Localization.S("componentCopier.action." + Camel(planned.Action) + ":tooltip");
                 default:
                     return "";

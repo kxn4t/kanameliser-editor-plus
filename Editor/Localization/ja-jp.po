@@ -679,6 +679,24 @@ msgstr "このうち {0} 個は、Prefab のまま追加します。"
 msgid "componentCopier.report.appliedPrefabs"
 msgstr "Prefab を {0} 個追加しました。"
 
+msgid "componentCopier.action.leftOut"
+msgstr "追加しない"
+
+msgid "componentCopier.action.leftOut:tooltip"
+msgstr "Prefab はまるごと追加されるため、追加したあとで、このコンポーネントをインスタンスから削除します。Prefab の Overrides から元に戻せます。"
+
+#, csharp-format
+msgid "componentCopier.report.leftOut"
+msgstr "チェックを外したコンポーネント {0} 件は、Prefab を追加したあとで削除します。空になるオブジェクト {1} 個も一緒に削除します。"
+
+#, csharp-format
+msgid "componentCopier.report.appliedLeftOut"
+msgstr "追加した Prefab から、チェックを外したコンポーネント {0} 件とオブジェクト {1} 個を削除しました。"
+
+#, csharp-format
+msgid "componentCopier.report.removeFailed"
+msgstr "{0} 件のコンポーネントは、ほかのコンポーネントに必要とされているため削除できませんでした。"
+
 msgid "componentCopier.prefabs.title"
 msgstr "コピー先にないオブジェクト"
 

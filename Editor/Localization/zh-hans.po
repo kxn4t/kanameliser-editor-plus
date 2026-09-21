@@ -679,6 +679,24 @@ msgstr "其中 {0} 个以 Prefab 实例的形式添加。"
 msgid "componentCopier.report.appliedPrefabs"
 msgstr "已添加 {0} 个 Prefab。"
 
+msgid "componentCopier.action.leftOut"
+msgstr "不添加"
+
+msgid "componentCopier.action.leftOut:tooltip"
+msgstr "Prefab 会整体添加，因此添加后会从实例中删除此组件。可通过 Prefab 的 Overrides 还原。"
+
+#, csharp-format
+msgid "componentCopier.report.leftOut"
+msgstr "取消勾选的 {0} 个组件将在添加 Prefab 后删除，因此变空的 {1} 个对象也会一并删除。"
+
+#, csharp-format
+msgid "componentCopier.report.appliedLeftOut"
+msgstr "已从添加的 Prefab 中删除取消勾选的 {0} 个组件和 {1} 个对象。"
+
+#, csharp-format
+msgid "componentCopier.report.removeFailed"
+msgstr "{0} 个组件被其他组件依赖，无法删除。"
+
 msgid "componentCopier.prefabs.title"
 msgstr "复制目标中缺少的对象"
 
