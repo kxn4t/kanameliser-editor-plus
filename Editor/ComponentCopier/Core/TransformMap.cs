@@ -21,6 +21,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         Root,
         ExactPath,
         ChildOfMappedParent,
+        /// <summary>
+        /// Child of the mapped parent whose name differs only by a rename suffix (".1", ".001", " (1)")
+        /// or by the detected prefix / suffix.
+        /// </summary>
+        RenamedChild,
         HumanoidAnimator,
         HumanoidDictionary,
         UniqueName,
@@ -60,11 +65,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public Transform SourceRoot { get; }
         public Transform TargetRoot { get; }
+        public SkeletonInfo SourceSkeleton { get; }
+        public SkeletonInfo TargetSkeleton { get; }
 
         public TransformMap(Transform sourceRoot, Transform targetRoot)
         {
             SourceRoot = sourceRoot;
             TargetRoot = targetRoot;
+            SourceSkeleton = SkeletonInfo.Analyze(sourceRoot);
+            TargetSkeleton = SkeletonInfo.Analyze(targetRoot);
         }
 
         public IEnumerable<TransformMapping> All => mappings.Values;

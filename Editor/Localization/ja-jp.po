@@ -383,10 +383,10 @@ msgstr "同一"
 msgid "componentCopier.action.blocked"
 msgstr "保留"
 
-msgid "componentCopier.blocked.needsReview"
+msgid "componentCopier.blocked.hostNeedsReview"
 msgstr "このコンポーネントが付くオブジェクトの対応先が未確定です。対応付けセクションで確定してください。"
 
-msgid "componentCopier.blocked.unmapped"
+msgid "componentCopier.blocked.hostUnmapped"
 msgstr "このコンポーネントが付くオブジェクトの対応先がなく、オブジェクトの作成もオフになっています。"
 
 #, csharp-format
@@ -566,3 +566,18 @@ msgstr "何も変更せずに、コピー先と期待される結果を比較し
 
 msgid "componentCopier.apply"
 msgstr "適用"
+
+msgid "componentCopier.blocked.boneMissing"
+msgstr "このコンポーネントが付くボーンがコピー先にありません。ボーンは作成しないため、対応付けセクションで別のボーンを指定してください。"
+
+msgid "componentCopier.mapping.group.bones"
+msgstr "ボーン"
+
+msgid "componentCopier.mapping.group.others"
+msgstr "その他のオブジェクト"
+
+msgid "componentCopier.mapping.note.boneMissing"
+msgstr "ボーンが見つかりません"
+
+msgid "componentCopier.mapping.reason.renamedChild"
+msgstr "名前の変更のみ（.1、prefix / suffix）"

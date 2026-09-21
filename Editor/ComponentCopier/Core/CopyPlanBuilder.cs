@@ -67,6 +67,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return;
             }
 
+            // A bone without skin weights would be an empty object that merely looks like the bone
+            if (plan.Map.SourceSkeleton.IsBone(sourceHost))
+            {
+                blockReason = BlockReason.BoneMissing;
+                return;
+            }
+
             if (!plan.Settings.CreateMissingObjects || sourceHost.parent == null)
             {
                 blockReason = BlockReason.HostUnmapped;

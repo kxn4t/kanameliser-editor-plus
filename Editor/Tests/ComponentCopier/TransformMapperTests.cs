@@ -88,14 +88,15 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
-        public void StructuralSuffixDifference_IsOnlySuggested()
+        public void ChainNumberDifference_IsOnlySuggested()
         {
-            var source = CreateHierarchy("Source", "Armature/Skirt_F.001");
+            // "_01" usually numbers the links of a chain, so it is not treated as a mere rename
+            var source = CreateHierarchy("Source", "Armature/Skirt_F_01");
             var target = CreateHierarchy("Target", "Armature/Skirt_F");
 
             var map = TransformMapper.Build(source, target);
 
-            var mapping = map.Get(source.Find("Armature/Skirt_F.001"));
+            var mapping = map.Get(source.Find("Armature/Skirt_F_01"));
             Assert.AreEqual(MappingState.NeedsReview, mapping.State);
             Assert.AreEqual(MappingReason.NormalizedName, mapping.Reason);
             Assert.AreSame(target.Find("Armature/Skirt_F"), mapping.Target);
@@ -117,17 +118,124 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
-        public void CommonSuffix_IsSuggestedAsAffixRule()
+        public void CommonSuffix_BelowMappedParent_IsConfirmed()
         {
             var source = CreateHierarchy("Source", "Root_Bone/Tail_A/Tail_B/Tail_C");
             var target = CreateHierarchy("Target", "Root_Bone_v2/Tail_A_v2/Tail_B_v2/Tail_C_v2");
 
             var map = TransformMapper.Build(source, target);
 
-            var mapping = map.Get(source.Find("Root_Bone/Tail_A/Tail_B"));
+            // Every level is backed up by its already mapped parent, so the whole chain resolves by itself
+            AssertConfirmed(map, source.Find("Root_Bone"), target.Find("Root_Bone_v2"), MappingReason.RenamedChild);
+            AssertConfirmed(map, source.Find("Root_Bone/Tail_A/Tail_B/Tail_C"),
+                target.Find("Root_Bone_v2/Tail_A_v2/Tail_B_v2/Tail_C_v2"), MappingReason.RenamedChild);
+        }
+
+        [Test]
+        public void CommonSuffix_AwayFromMappedParent_IsOnlySuggested()
+        {
+            var source = CreateHierarchy("Source", "X/Tail_A/Tail_B/Tail_C");
+            var target = CreateHierarchy("Target", "Y/Tail_A_v2/Tail_B_v2/Tail_C_v2");
+
+            var map = TransformMapper.Build(source, target);
+
+            var mapping = map.Get(source.Find("X/Tail_A"));
             Assert.AreEqual(MappingState.NeedsReview, mapping.State);
             Assert.AreEqual(MappingReason.AffixStripped, mapping.Reason);
-            Assert.AreSame(target.Find("Root_Bone_v2/Tail_A_v2/Tail_B_v2"), mapping.Target);
+            Assert.AreSame(target.Find("Y/Tail_A_v2"), mapping.Target);
+        }
+
+        [Test]
+        public void RenamedArmature_IsConfirmedAndItsBonesFollow()
+        {
+            var source = CreateHierarchy("Source", "Armature/Hips/Spine");
+            var target = CreateHierarchy("Target", "Armature.1/Hips/Spine");
+
+            var map = TransformMapper.Build(source, target);
+
+            AssertConfirmed(map, source.Find("Armature"), target.Find("Armature.1"), MappingReason.RenamedChild);
+            AssertConfirmed(map, source.Find("Armature/Hips/Spine"), target.Find("Armature.1/Hips/Spine"),
+                MappingReason.ChildOfMappedParent);
+        }
+
+        [Test]
+        public void RenameSuffixOnEveryBone_IsConfirmed()
+        {
+            var source = CreateHierarchy("Source", "Armature/Hips.001/Spine.001");
+            var target = CreateHierarchy("Target", "Armature/Hips/Spine");
+
+            var map = TransformMapper.Build(source, target);
+
+            AssertConfirmed(map, source.Find("Armature/Hips.001/Spine.001"), target.Find("Armature/Hips/Spine"),
+                MappingReason.RenamedChild);
+        }
+
+        [Test]
+        public void AmbiguousRename_IsNotConfirmed()
+        {
+            var source = CreateHierarchy("Source", "Armature/Skirt.001", "Armature/Skirt.002");
+            var target = CreateHierarchy("Target", "Armature/Skirt");
+
+            var map = TransformMapper.Build(source, target);
+
+            Assert.IsFalse(map.TryResolve(source.Find("Armature/Skirt.001"), out _));
+            Assert.IsFalse(map.TryResolve(source.Find("Armature/Skirt.002"), out _));
+        }
+
+        [TestCase("Armature.1", "Armature")]
+        [TestCase("Hips.001", "Hips")]
+        [TestCase("Collider (1)", "Collider")]
+        [TestCase("Skirt_F_01", "Skirt_F_01")]
+        [TestCase(".001", ".001")]
+        public void StripRenameSuffix_RemovesOnlyRenameMarkers(string name, string expected)
+        {
+            Assert.AreEqual(expected, TransformMapper.StripRenameSuffix(name));
+        }
+
+        [Test]
+        public void MeshAndBoneSharingAName_AreMatchedWithinTheirOwnRegion()
+        {
+            var source = CreateHierarchy("Source", "Meshes/Skirt", "Armature/Hips/Skirt");
+            var target = CreateHierarchy("Target", "Models/Skirt", "Armature/Hips/Skirt");
+            AddSkinnedMesh(source.Find("Meshes/Skirt"), source.Find("Armature/Hips/Skirt"));
+            AddSkinnedMesh(target.Find("Models/Skirt"), target.Find("Armature/Hips/Skirt"));
+
+            var map = TransformMapper.Build(source, target);
+
+            // Without regions "Skirt" exists twice on both sides and could not be confirmed
+            AssertConfirmed(map, source.Find("Meshes/Skirt"), target.Find("Models/Skirt"), MappingReason.UniqueName);
+            AssertConfirmed(map, source.Find("Armature/Hips/Skirt"), target.Find("Armature/Hips/Skirt"),
+                MappingReason.ExactPath);
+        }
+
+        [Test]
+        public void Bone_NeverMatchesAnObjectOutsideOfTheArmature()
+        {
+            var source = CreateHierarchy("Source", "Body", "Armature/Hips/Tail");
+            var target = CreateHierarchy("Target", "Tail", "Armature/Hips");
+            AddSkinnedMesh(source.Find("Body"), source.Find("Armature/Hips/Tail"));
+            AddSkinnedMesh(target.Find("Tail"), target.Find("Armature/Hips"));
+
+            var map = TransformMapper.Build(source, target);
+
+            var mapping = map.Get(source.Find("Armature/Hips/Tail"));
+            Assert.AreEqual(MappingState.Unmapped, mapping.State);
+            Assert.IsEmpty(mapping.Candidates);
+        }
+
+        [Test]
+        public void SkeletonInfo_TreatsSkinningBonesAndTheirAncestorsAsBones()
+        {
+            var root = CreateHierarchy("Root", "Body", "Armature/Hips/Collider", "Armature/Hips/Leaf_end");
+            AddSkinnedMesh(root.Find("Body"), root.Find("Armature/Hips"));
+
+            var skeleton = SkeletonInfo.Analyze(root);
+
+            Assert.IsTrue(skeleton.IsBone(root.Find("Armature")), "Ancestors of bones count as bones");
+            Assert.IsTrue(skeleton.IsBone(root.Find("Armature/Hips")));
+            Assert.IsFalse(skeleton.IsBone(root.Find("Armature/Hips/Collider")));
+            Assert.IsTrue(skeleton.IsInArmature(root.Find("Armature/Hips/Collider")));
+            Assert.IsFalse(skeleton.IsInArmature(root.Find("Body")));
         }
 
         [Test]

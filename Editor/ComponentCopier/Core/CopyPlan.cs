@@ -23,6 +23,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         HostNeedsReview,
         /// <summary>The host object has no counterpart and object creation is disabled.</summary>
         HostUnmapped,
+        /// <summary>The host is a skinning bone that does not exist in the target. Bones are never created.</summary>
+        BoneMissing,
     }
 
     internal enum ReferenceKind

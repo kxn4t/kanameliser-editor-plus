@@ -384,10 +384,10 @@ msgstr "Identical"
 msgid "componentCopier.action.blocked"
 msgstr "Blocked"
 
-msgid "componentCopier.blocked.needsReview"
+msgid "componentCopier.blocked.hostNeedsReview"
 msgstr "The object this component belongs to only has an unconfirmed suggestion. Confirm it in the Mapping section."
 
-msgid "componentCopier.blocked.unmapped"
+msgid "componentCopier.blocked.hostUnmapped"
 msgstr "The object this component belongs to has no counterpart, and object creation is turned off."
 
 #, csharp-format
@@ -567,3 +567,18 @@ msgstr "Compare the target with the expected result without changing anything"
 
 msgid "componentCopier.apply"
 msgstr "Apply"
+
+msgid "componentCopier.blocked.boneMissing"
+msgstr "This component sits on a bone that does not exist in the target. Bones are never created; map it to another bone in the Mapping section."
+
+msgid "componentCopier.mapping.group.bones"
+msgstr "Bones"
+
+msgid "componentCopier.mapping.group.others"
+msgstr "Other objects"
+
+msgid "componentCopier.mapping.note.boneMissing"
+msgstr "Bone not found"
+
+msgid "componentCopier.mapping.reason.renamedChild"
+msgstr "Renamed (.1, prefix / suffix)"

@@ -107,8 +107,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 mappingContainer.Add(bulkButton);
             }
 
-            foreach (var mapping in needsReview.Concat(unmapped).Concat(manual))
-                mappingContainer.Add(CreateMappingRow(mapping, created.Contains(mapping.Source)));
+            // Bones and other objects are matched by different rules and differ in what can be done about a
+            // missing one (a bone is never created), so they are listed apart.
+            var attention = needsReview.Concat(unmapped).Concat(manual).ToList();
+            var bones = attention.Where(m => map.SourceSkeleton.IsBone(m.Source)).ToList();
+            var others = attention.Where(m => !map.SourceSkeleton.IsBone(m.Source)).ToList();
+            bool showGroups = bones.Count > 0 && others.Count > 0;
+
+            AddMappingGroup(bones, showGroups ? "componentCopier.mapping.group.bones" : null, created);
+            AddMappingGroup(others, showGroups ? "componentCopier.mapping.group.others" : null, created);
 
             if (confirmed.Count > 0)
             {
@@ -136,6 +143,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 mappingContainer.Add(foldout);
             }
+        }
+
+        private void AddMappingGroup(List<TransformMapping> mappings, string titleKey, HashSet<Transform> created)
+        {
+            if (mappings.Count == 0) return;
+
+            if (titleKey != null)
+            {
+                var title = new Label(Localization.S(titleKey));
+                title.AddToClassList("mapping-group-title");
+                mappingContainer.Add(title);
+            }
+
+            foreach (var mapping in mappings)
+                mappingContainer.Add(CreateMappingRow(mapping, created.Contains(mapping.Source)));
         }
 
         private VisualElement CreateMappingRow(TransformMapping mapping, bool willBeCreated)
@@ -249,7 +271,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Recompute();
         }
 
-        private static string MappingNote(TransformMapping mapping, bool willBeCreated)
+        private string MappingNote(TransformMapping mapping, bool willBeCreated)
         {
             if (willBeCreated) return Localization.S("componentCopier.mapping.note.willCreate");
 
@@ -260,7 +282,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         ? "componentCopier.mapping.note.manual"
                         : "componentCopier.mapping.note.manualNone");
                 case MappingState.Unmapped:
-                    return Localization.S("componentCopier.mapping.note.unmapped");
+                    return Localization.S(map.SourceSkeleton.IsBone(mapping.Source)
+                        ? "componentCopier.mapping.note.boneMissing"
+                        : "componentCopier.mapping.note.unmapped");
                 default:
                     return Localization.S("componentCopier.mapping.reason." + Camel(mapping.Reason));
             }

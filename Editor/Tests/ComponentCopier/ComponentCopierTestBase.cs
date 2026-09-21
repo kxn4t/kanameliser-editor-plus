@@ -73,6 +73,15 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             return root.transform;
         }
 
+        /// <summary>Marks transforms as skinning bones. No mesh is needed for that.</summary>
+        protected static SkinnedMeshRenderer AddSkinnedMesh(Transform meshObject, params Transform[] bones)
+        {
+            var renderer = meshObject.gameObject.AddComponent<SkinnedMeshRenderer>();
+            renderer.bones = bones;
+            renderer.rootBone = bones[0];
+            return renderer;
+        }
+
         internal static List<ComponentEntry> Select(Transform root, params System.Type[] types)
         {
             return ComponentScanner.Scan(root).Where(e => types.Contains(e.Type)).ToList();

@@ -359,9 +359,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private static string ActionTooltip(PlannedComponent planned)
         {
             if (planned.Action != ComponentAction.Blocked) return "";
-            return Localization.S(planned.BlockReason == BlockReason.HostNeedsReview
-                ? "componentCopier.blocked.needsReview"
-                : "componentCopier.blocked.unmapped");
+            return Localization.S("componentCopier.blocked." + Camel(planned.BlockReason));
         }
 
         private Func<ComponentEntry, bool> BuildSearchFilter()

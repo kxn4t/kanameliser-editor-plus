@@ -134,14 +134,46 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         [Test]
         public void HostWithUnconfirmedSuggestion_IsBlockedInsteadOfCreated()
         {
-            var source = CreateHierarchy("Source", "Armature/Skirt.001");
+            var source = CreateHierarchy("Source", "Armature/Skirt_01");
             var target = CreateHierarchy("Target", "Armature/Skirt");
-            source.Find("Armature/Skirt.001").gameObject.AddComponent<SphereCollider>();
+            source.Find("Armature/Skirt_01").gameObject.AddComponent<SphereCollider>();
 
             var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
 
             Assert.AreEqual(BlockReason.HostNeedsReview, plan.Components.Single().BlockReason);
             Assert.AreEqual(0, plan.ObjectsToCreate.Count);
+        }
+
+        [Test]
+        public void MissingBone_IsNeverCreated()
+        {
+            var source = CreateHierarchy("Source", "Body", "Armature/Hips/Tail");
+            var target = CreateHierarchy("Target", "Body", "Armature/Hips");
+            AddSkinnedMesh(source.Find("Body"), source.Find("Armature/Hips/Tail"));
+            AddSkinnedMesh(target.Find("Body"), target.Find("Armature/Hips"));
+            source.Find("Armature/Hips/Tail").gameObject.AddComponent<SphereCollider>();
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+
+            Assert.AreEqual(ComponentAction.Blocked, plan.Components.Single().Action);
+            Assert.AreEqual(BlockReason.BoneMissing, plan.Components.Single().BlockReason);
+            Assert.AreEqual(0, plan.ObjectsToCreate.Count);
+        }
+
+        [Test]
+        public void MissingObjectBelowABone_IsStillCreated()
+        {
+            var source = CreateHierarchy("Source", "Body", "Armature/Hips/Collider");
+            var target = CreateHierarchy("Target", "Body", "Armature/Hips");
+            AddSkinnedMesh(source.Find("Body"), source.Find("Armature/Hips"));
+            AddSkinnedMesh(target.Find("Body"), target.Find("Armature/Hips"));
+            source.Find("Armature/Hips/Collider").gameObject.AddComponent<SphereCollider>();
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            CopyExecutor.Execute(plan);
+
+            Assert.IsNotNull(target.Find("Armature/Hips/Collider"));
+            Assert.IsNotNull(target.Find("Armature/Hips/Collider").GetComponent<SphereCollider>());
         }
 
         [Test]

@@ -384,10 +384,10 @@ msgstr "동일"
 msgid "componentCopier.action.blocked"
 msgstr "보류"
 
-msgid "componentCopier.blocked.needsReview"
+msgid "componentCopier.blocked.hostNeedsReview"
 msgstr "이 컴포넌트가 붙을 오브젝트의 대응이 확정되지 않았습니다. 대응 섹션에서 확정하세요."
 
-msgid "componentCopier.blocked.unmapped"
+msgid "componentCopier.blocked.hostUnmapped"
 msgstr "이 컴포넌트가 붙을 오브젝트의 대응이 없고, 오브젝트 생성도 꺼져 있습니다."
 
 #, csharp-format
@@ -567,3 +567,18 @@ msgstr "아무것도 변경하지 않고 복사 대상과 예상 결과를 비�
 
 msgid "componentCopier.apply"
 msgstr "적용"
+
+msgid "componentCopier.blocked.boneMissing"
+msgstr "이 컴포넌트가 붙을 본이 복사 대상에 없습니다. 본은 생성하지 않으므로 대응 섹션에서 다른 본을 지정하세요."
+
+msgid "componentCopier.mapping.group.bones"
+msgstr "본"
+
+msgid "componentCopier.mapping.group.others"
+msgstr "기타 오브젝트"
+
+msgid "componentCopier.mapping.note.boneMissing"
+msgstr "본을 찾을 수 없음"
+
+msgid "componentCopier.mapping.reason.renamedChild"
+msgstr "이름만 변경됨 (.1, prefix / suffix)"

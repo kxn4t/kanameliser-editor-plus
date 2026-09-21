@@ -383,10 +383,10 @@ msgstr "相同"
 msgid "componentCopier.action.blocked"
 msgstr "待定"
 
-msgid "componentCopier.blocked.needsReview"
+msgid "componentCopier.blocked.hostNeedsReview"
 msgstr "此组件所属对象的对应关系尚未确认。请在对应关系部分确认。"
 
-msgid "componentCopier.blocked.unmapped"
+msgid "componentCopier.blocked.hostUnmapped"
 msgstr "此组件所属对象没有对应对象，且已关闭对象创建。"
 
 #, csharp-format
@@ -566,3 +566,18 @@ msgstr "不做任何更改，比较复制目标与预期结果"
 
 msgid "componentCopier.apply"
 msgstr "应用"
+
+msgid "componentCopier.blocked.boneMissing"
+msgstr "此组件所在的骨骼在复制目标中不存在。不会创建骨骼，请在对应关系部分指定其他骨骼。"
+
+msgid "componentCopier.mapping.group.bones"
+msgstr "骨骼"
+
+msgid "componentCopier.mapping.group.others"
+msgstr "其他对象"
+
+msgid "componentCopier.mapping.note.boneMissing"
+msgstr "未找到骨骼"
+
+msgid "componentCopier.mapping.reason.renamedChild"
+msgstr "仅名称变更（.1、prefix / suffix）"
