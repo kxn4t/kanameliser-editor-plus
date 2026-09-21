@@ -31,6 +31,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private Button groupByObjectButton;
         private ToolbarSearchField searchField;
         private readonly Dictionary<ComponentCategory, Button> presetButtons = new();
+        // Chips of the tools found in the source, keyed by ToolInfo.Id and kept in display order
+        private readonly List<(string id, Button button)> toolPresetButtons = new();
+        private VisualElement presetRow;
         private Button presetAllButton;
 
         private void CreateComponentListSection(VisualElement parent)
@@ -87,14 +90,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             });
             filterRow.Add(regexToggle);
 
-            var presetRow = new VisualElement();
+            presetRow = new VisualElement();
             presetRow.AddToClassList("preset-row");
             section.Add(presetRow);
 
             // Category names are product terms and stay in English
             AddPresetButton(presetRow, ComponentCategory.PhysBone, "PhysBone");
+            AddPresetButton(presetRow, ComponentCategory.Contact, "Contact");
             AddPresetButton(presetRow, ComponentCategory.Constraint, "Constraint");
             AddPresetButton(presetRow, ComponentCategory.ModularAvatar, "MA");
+            // Chips of other tools are inserted here by SyncToolPresetButtons
 
             presetAllButton = new Button(ToggleAllPreset) { text = "componentCopier.preset.all" };
             presetAllButton.AddToClassList("preset-chip");
@@ -147,20 +152,64 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Recompute();
         }
 
+        /// <summary>
+        /// Tools other than MA are too many to list up front, so their chips are created from what the source
+        /// has. The fixed chips are hidden in the same situation, see <see cref="UpdatePresetButton"/>.
+        /// </summary>
+        private void SyncToolPresetButtons()
+        {
+            var tools = entries
+                .Where(e => e.Tool != null)
+                .GroupBy(e => e.Tool.Id)
+                .Select(g => g.First().Tool)
+                .OrderBy(t => t.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            // Rebuilding on every render would replace a chip in the middle of its own click
+            if (tools.Select(t => t.Id).SequenceEqual(toolPresetButtons.Select(p => p.id))) return;
+
+            foreach (var (_, button) in toolPresetButtons)
+                button.RemoveFromHierarchy();
+            toolPresetButtons.Clear();
+
+            int index = presetRow.IndexOf(presetAllButton);
+            foreach (var tool in tools)
+            {
+                string id = tool.Id;
+                var button = new Button(() => TogglePreset(e => e.Tool != null && e.Tool.Id == id))
+                {
+                    text = tool.ShortName,
+                    tooltip = tool.DisplayName,
+                };
+                button.AddToClassList("preset-chip");
+                presetRow.Insert(index++, button);
+                toolPresetButtons.Add((id, button));
+            }
+        }
+
         private void UpdatePresetButtons()
         {
-            foreach (var pair in presetButtons)
-            {
-                var matching = entries.Where(e => e.Category == pair.Key).ToList();
-                pair.Value.SetEnabled(matching.Count > 0);
-                pair.Value.EnableInClassList("preset-chip--active",
-                    matching.Count > 0 && matching.All(e => selectedKeys.Contains(e.Key)));
-            }
+            SyncToolPresetButtons();
 
-            var all = entries.Where(e => e.Category != ComponentCategory.ExcludedByDefault).ToList();
-            presetAllButton.SetEnabled(all.Count > 0);
-            presetAllButton.EnableInClassList("preset-chip--active",
-                all.Count > 0 && all.All(e => selectedKeys.Contains(e.Key)));
+            foreach (var pair in presetButtons)
+                UpdatePresetButton(pair.Value, e => e.Category == pair.Key, hideWhenEmpty: true);
+
+            foreach (var (id, button) in toolPresetButtons)
+                UpdatePresetButton(button, e => e.Tool != null && e.Tool.Id == id, hideWhenEmpty: true);
+
+            // "All" stays as the anchor of the row and is only disabled
+            UpdatePresetButton(presetAllButton, e => e.Category != ComponentCategory.ExcludedByDefault,
+                hideWhenEmpty: false);
+        }
+
+        private void UpdatePresetButton(Button button, Func<ComponentEntry, bool> filter, bool hideWhenEmpty)
+        {
+            var matching = entries.Where(filter).ToList();
+            // A chip that can never be pressed for this source is only noise
+            button.style.display = hideWhenEmpty && matching.Count == 0 ? DisplayStyle.None : DisplayStyle.Flex;
+            button.SetEnabled(matching.Count > 0);
+            button.EnableInClassList("preset-chip--active",
+                matching.Count > 0 && matching.All(e => selectedKeys.Contains(e.Key)));
         }
 
         #endregion
@@ -432,23 +481,55 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return;
             }
 
-            var groups = groupEntries
-                .GroupBy(e => e.Type)
-                .OrderBy(g => g.First().Category)
-                .ThenBy(g => g.Key.Name, StringComparer.OrdinalIgnoreCase);
+            // Types are listed under a heading per category, in the same order as the preset chips
+            var sections = groupEntries
+                .GroupBy(CategorySectionId)
+                .OrderBy(s => s.First().Category)
+                .ThenBy(s => s.First().Tool?.DisplayName, StringComparer.OrdinalIgnoreCase);
 
-            foreach (var group in groups)
+            foreach (var section in sections)
             {
-                var first = group.First();
-                listContainer.Add(CreateGroup(new GroupInfo
+                // The excluded types already sit under a divider of their own
+                if (!excluded)
                 {
-                    Id = GroupId(first),
-                    Title = group.Key.Name,
-                    Tooltip = group.Key.FullName,
-                    Icon = EditorGUIUtility.ObjectContent(first.Component, group.Key).image,
-                    Entries = group.ToList(),
-                    Excluded = excluded,
-                }));
+                    var heading = new Label(CategoryTitle(section.First()));
+                    heading.AddToClassList("category-heading");
+                    listContainer.Add(heading);
+                }
+
+                foreach (var group in section.GroupBy(e => e.Type)
+                             .OrderBy(g => g.Key.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    var first = group.First();
+                    listContainer.Add(CreateGroup(new GroupInfo
+                    {
+                        Id = GroupId(first),
+                        Title = group.Key.Name,
+                        Tooltip = group.Key.FullName,
+                        Icon = EditorGUIUtility.ObjectContent(first.Component, group.Key).image,
+                        Entries = group.ToList(),
+                        Excluded = excluded,
+                    }));
+                }
+            }
+        }
+
+        private static string CategorySectionId(ComponentEntry entry)
+        {
+            return entry.Tool != null ? "tool:" + entry.Tool.Id : entry.Category.ToString();
+        }
+
+        private static string CategoryTitle(ComponentEntry entry)
+        {
+            switch (entry.Category)
+            {
+                // Product terms stay in English, like the preset chips
+                case ComponentCategory.PhysBone: return "PhysBone";
+                case ComponentCategory.Contact: return "Contact";
+                case ComponentCategory.Constraint: return "Constraint";
+                case ComponentCategory.ModularAvatar: return "Modular Avatar";
+                case ComponentCategory.Tool: return entry.Tool.DisplayName;
+                default: return Localization.S("componentCopier.category.other");
             }
         }
 

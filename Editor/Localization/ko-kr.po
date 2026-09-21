@@ -345,6 +345,9 @@ msgstr "기타도 표시"
 msgid "componentCopier.showExcluded:tooltip"
 msgstr "기본적으로 복사하지 않는 타입(Renderer, Animator, Avatar Descriptor 등)도 목록에 표시합니다"
 
+msgid "componentCopier.category.other"
+msgstr "기타"
+
 msgid "componentCopier.excludedByDefault"
 msgstr "기본적으로 제외"
 

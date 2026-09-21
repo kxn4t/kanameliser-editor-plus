@@ -71,11 +71,17 @@
 - グループのヘッダーには、3 状態チェックボックス、型アイコン、件数、状態の要約（新規、上書きなど）、警告バッジを置く
 - ヘッダーは CVG Creator の `CreateCollapsibleGroup` と同じ自前実装にする（Alt+クリックで全開閉）
 - 行は、チェック、相対パス、状態チップの構成。パスをクリックするとそのオブジェクトを Ping する
-- プリセットは複数選択できるチップ
+- 種類別では、型のグループをカテゴリーの見出しの下に並べる。順序はプリセットと同じで、PhysBone、Contact、Constraint、Modular Avatar、その他のツール（表示名順）、その他。オブジェクト別には見出しを付けない
+- プリセットは複数選択できるチップ。コピー元に該当するコンポーネントがないチップは表示しない（押せないチップはノイズになるため）。「すべて」だけは行の基点として常に表示し、該当がなければ無効にする
   - PhysBone: VRCPhysBone と VRCPhysBoneCollider
+  - Contact: VRCContactSender と VRCContactReceiver
   - Constraint: VRC Constraint と Unity Constraint
   - MA: `nadena.dev.modular_avatar` 名前空間のコンポーネント
+  - その他のツール（AAO、VRCFury、TexTransTool など）: コピー元にそのツールのコンポーネントがあるときだけ、ツールごとのチップを出す
   - すべて: 既定の除外以外すべて
+- その他のツールは、固定の対応表を持たずに検出する。`VRC.SDKBase.IEditorOnly` を実装した型（VRC SDK 自身の型は除く）をツールのコンポーネントとみなし、型のアセンブリが属するパッケージの `displayName` をツール名にする。未知のツールもそのまま拾える。チップの表記だけは、通称のあるもの（AAO、NDMF）を短縮名にする。パッケージに属さないアセンブリはアセンブリ名で代用し、`Assembly-CSharp` はツールとして扱わない
+  - 却下した案: 名前空間とツール名の対応表。ツールが増えるたびに更新が必要になり、載っていないツールが「その他」に埋もれる
+  - HeadChop や Station などの残りの VRC コンポーネントは、まとめて選びたい場面が少ないので専用のチップを設けず、「その他」に入れる
 - 「その他も表示」は、既定で対象外の型も一覧に並べるトグル。オンにすると淡色のセクションに並び、選べるようになる
 - 既定で対象外の型: Transform、Renderer 系、MeshFilter、Animator、VRCAvatarDescriptor、PipelineManager
 - PipelineManager を選んだときは、Blueprint ID まで複製される旨を警告する
@@ -275,7 +281,7 @@ Blender の `BLI_string_flip_side_name` に合わせる。
 - 固定ラベルは `ndmf-tr` クラス + キー。ルートで `LocalizeUIElements(root)` を必ず呼ぶ（フォントの適用を兼ねる）
 - 動的な文言は `S(key, args)` で作り、`RegisterLanguageChangeCallback` でモデルから描き直す
 - Core 層は文字列を返さず、enum と引数で返す。UI 層でローカライズする
-- 英語のままにするもの: MenuItem のパス、Undo グループ名、コンソールログ、コンポーネントの型名、プリセット名の `PhysBone` / `Constraint` / `MA`
+- 英語のままにするもの: MenuItem のパス、Undo グループ名、コンソールログ、コンポーネントの型名、プリセット名とカテゴリーの見出しの `PhysBone` / `Contact` / `Constraint` / `MA`、ツール名
 - ラベルに固定幅を指定しない
 
 ## 構成

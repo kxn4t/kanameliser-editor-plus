@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEngine;
 using UnityEngine.Animations;
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace Kanameliser.EditorPlus.ComponentCopier
 {
@@ -34,14 +37,31 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public override string ToString() => $"{RelativePath}|{TypeFullName}|{Index}";
     }
 
+    /// <summary>Declared in the order the categories are listed in the window.</summary>
     internal enum ComponentCategory
     {
-        Other,
         PhysBone,
+        Contact,
         Constraint,
         ModularAvatar,
+        /// <summary>Component of another non-destructive tool; <see cref="ComponentEntry.Tool"/> says which one.</summary>
+        Tool,
+        Other,
         /// <summary>Not a copy target by default (renderers, Animator, avatar descriptor, ...).</summary>
         ExcludedByDefault,
+    }
+
+    /// <summary>
+    /// A non-destructive tool (AAO, VRCFury, TexTransTool, ...) that components of the source belong to.
+    /// Found at scan time from the package that owns the component, so unknown tools are covered as well.
+    /// </summary>
+    internal sealed class ToolInfo
+    {
+        /// <summary>Package name, or the assembly name for tools that are not installed as a package.</summary>
+        public string Id;
+        public string DisplayName;
+        /// <summary>Label of the preset chip; differs from the display name only for common abbreviations.</summary>
+        public string ShortName;
     }
 
     internal sealed class ComponentEntry
@@ -51,6 +71,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public Type Type;
         public Transform Host;
         public ComponentCategory Category;
+        /// <summary>Set only when <see cref="Category"/> is <see cref="ComponentCategory.Tool"/>.</summary>
+        public ToolInfo Tool;
     }
 
     /// <summary>
@@ -73,7 +95,22 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         };
 
         private const string VrcConstraintNamespace = "VRC.SDK3.Dynamics.Constraint.Components";
+        private const string VrcContactNamespace = "VRC.SDK3.Dynamics.Contact.Components";
+        private const string VrcNamespacePrefix = "VRC.";
         private const string ModularAvatarNamespace = "nadena.dev.modular_avatar";
+
+        // Non-destructive tools mark their components with this interface so that the VRChat SDK ignores them.
+        // Compared by name because the SDK is not referenced from this assembly.
+        private const string EditorOnlyInterfaceName = "VRC.SDKBase.IEditorOnly";
+
+        private static readonly Dictionary<string, string> ToolShortNames = new()
+        {
+            { "com.anatawa12.avatar-optimizer", "AAO" },
+            { "nadena.dev.ndmf", "NDMF" },
+        };
+
+        private static readonly Dictionary<Type, (ComponentCategory category, ToolInfo tool)> CategoryCache = new();
+        private static readonly Dictionary<Assembly, ToolInfo> ToolCache = new();
 
         public static List<ComponentEntry> Scan(Transform root)
         {
@@ -96,13 +133,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     indexByType.TryGetValue(type, out var index);
                     indexByType[type] = index + 1;
 
+                    var category = Categorize(type, out var tool);
                     entries.Add(new ComponentEntry
                     {
                         Key = new ComponentKey(path, type.FullName, index),
                         Component = component,
                         Type = type,
                         Host = transform,
-                        Category = Categorize(type),
+                        Category = category,
+                        Tool = tool,
                     });
                 }
             }
@@ -110,12 +149,29 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return entries;
         }
 
-        public static ComponentCategory Categorize(Type type)
+        public static ComponentCategory Categorize(Type type) => Categorize(type, out _);
+
+        public static ComponentCategory Categorize(Type type, out ToolInfo tool)
         {
+            if (!CategoryCache.TryGetValue(type, out var cached))
+            {
+                var category = CategorizeUncached(type, out var found);
+                cached = (category, found);
+                CategoryCache[type] = cached;
+            }
+
+            tool = cached.tool;
+            return cached.category;
+        }
+
+        private static ComponentCategory CategorizeUncached(Type type, out ToolInfo tool)
+        {
+            tool = null;
             string fullName = type.FullName ?? "";
             string ns = type.Namespace ?? "";
 
             if (PhysBoneTypeNames.Contains(fullName)) return ComponentCategory.PhysBone;
+            if (ns == VrcContactNamespace) return ComponentCategory.Contact;
             if (typeof(IConstraint).IsAssignableFrom(type) || ns == VrcConstraintNamespace)
                 return ComponentCategory.Constraint;
             if (ns.StartsWith(ModularAvatarNamespace, StringComparison.Ordinal))
@@ -125,7 +181,49 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 ExcludedTypeNames.Contains(fullName))
                 return ComponentCategory.ExcludedByDefault;
 
+            // The SDK's own editor-only components are not a tool of their own
+            if (!ns.StartsWith(VrcNamespacePrefix, StringComparison.Ordinal) && IsEditorOnly(type))
+            {
+                tool = FindTool(type.Assembly);
+                if (tool != null) return ComponentCategory.Tool;
+            }
+
             return ComponentCategory.Other;
+        }
+
+        private static bool IsEditorOnly(Type type)
+        {
+            return type.GetInterfaces().Any(i => i.FullName == EditorOnlyInterfaceName);
+        }
+
+        /// <summary>
+        /// Names the tool after the package that owns the assembly. Scripts imported into Assets fall back to
+        /// the assembly name; the predefined assemblies say nothing about the tool and yield none.
+        /// </summary>
+        private static ToolInfo FindTool(Assembly assembly)
+        {
+            if (ToolCache.TryGetValue(assembly, out var tool)) return tool;
+
+            var package = PackageInfo.FindForAssembly(assembly);
+            if (package != null)
+            {
+                string displayName = string.IsNullOrEmpty(package.displayName) ? package.name : package.displayName;
+                tool = new ToolInfo
+                {
+                    Id = package.name,
+                    DisplayName = displayName,
+                    ShortName = ToolShortNames.TryGetValue(package.name, out var shortName) ? shortName : displayName,
+                };
+            }
+            else
+            {
+                string assemblyName = assembly.GetName().Name;
+                if (!assemblyName.StartsWith("Assembly-CSharp", StringComparison.Ordinal))
+                    tool = new ToolInfo { Id = assemblyName, DisplayName = assemblyName, ShortName = assemblyName };
+            }
+
+            ToolCache[assembly] = tool;
+            return tool;
         }
 
         /// <summary>

@@ -344,6 +344,9 @@ msgstr "その他も表示"
 msgid "componentCopier.showExcluded:tooltip"
 msgstr "既定ではコピーしない型（Renderer、Animator、Avatar Descriptor など）も一覧に表示します"
 
+msgid "componentCopier.category.other"
+msgstr "その他"
+
 msgid "componentCopier.excludedByDefault"
 msgstr "既定で対象外"
 

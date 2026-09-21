@@ -344,6 +344,9 @@ msgstr "顯示其他"
 msgid "componentCopier.showExcluded:tooltip"
 msgstr "同時列出預設不複製的類型（Renderer、Animator、Avatar Descriptor 等）"
 
+msgid "componentCopier.category.other"
+msgstr "其他"
+
 msgid "componentCopier.excludedByDefault"
 msgstr "預設不複製"
 

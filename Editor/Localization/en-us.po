@@ -345,6 +345,9 @@ msgstr "Show others"
 msgid "componentCopier.showExcluded:tooltip"
 msgstr "Also list types that are not copied by default (renderers, Animator, Avatar Descriptor, ...)"
 
+msgid "componentCopier.category.other"
+msgstr "Other"
+
 msgid "componentCopier.excludedByDefault"
 msgstr "Not copied by default"
 

@@ -317,6 +317,36 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
                 entries.Single(e => e.Type == typeof(ParentConstraint)).Category);
             Assert.AreEqual(ComponentCategory.ExcludedByDefault,
                 entries.Single(e => e.Type == typeof(MeshRenderer)).Category);
+            Assert.IsTrue(entries.All(e => e.Tool == null));
         }
+
+#if MODULAR_AVATAR_INSTALLED
+        [Test]
+        public void Scanner_KeepsModularAvatarAsItsOwnCategory()
+        {
+            var source = CreateHierarchy("Source", "Bone");
+            source.Find("Bone").gameObject.AddComponent<nadena.dev.modular_avatar.core.ModularAvatarVisibleHeadAccessory>();
+
+            var entry = ComponentScanner.Scan(source).Single();
+
+            Assert.AreEqual(ComponentCategory.ModularAvatar, entry.Category);
+            Assert.IsNull(entry.Tool);
+        }
+#endif
+
+#if AVATAR_OPTIMIZER_INSTALLED
+        [Test]
+        public void Scanner_NamesOtherToolsAfterTheirPackage()
+        {
+            var source = CreateHierarchy("Source", "Bone");
+            source.gameObject.AddComponent<Anatawa12.AvatarOptimizer.TraceAndOptimize>();
+
+            var entry = ComponentScanner.Scan(source).Single();
+
+            Assert.AreEqual(ComponentCategory.Tool, entry.Category);
+            Assert.AreEqual("com.anatawa12.avatar-optimizer", entry.Tool.Id);
+            Assert.AreEqual("AAO", entry.Tool.ShortName);
+        }
+#endif
     }
 }
