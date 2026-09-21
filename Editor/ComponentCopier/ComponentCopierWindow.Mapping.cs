@@ -122,15 +122,22 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return;
             }
 
+            // "No counterpart" picked by hand is a decision, not something left to do. The consequences are the
+            // business of the pre-check; here it must not keep counting as unmapped once the user has dealt with it.
+            static bool IsManualNone(TransformMapping m) => m.State == MappingState.Manual && m.Target == null;
+
             var needsReview = mappings.Where(m => m.State == MappingState.NeedsReview).ToList();
             var unmapped = mappings
-                .Where(m => !m.IsUsable && m.State != MappingState.NeedsReview)
+                .Where(m => !m.IsUsable && m.State != MappingState.NeedsReview && !IsManualNone(m))
                 .Concat(pickingExisting)
                 .ToList();
-            var manual = mappings.Where(m => m.State == MappingState.Manual && m.IsUsable).ToList();
+            // Both kinds stay in view so that they can be changed again
+            var manual = mappings.Where(m => m.State == MappingState.Manual && (m.IsUsable || IsManualNone(m))).ToList();
+            int manualNone = manual.Count(IsManualNone);
             var confirmed = mappings.Where(m => m.State == MappingState.Confirmed).ToList();
 
-            // "x/y mapped" is about the objects that need a counterpart; the ones to create are counted apart.
+            // "x/y mapped" is about the objects that need a counterpart; the ones to create are counted apart,
+            // and the ones the user gave none on purpose are not counted at all.
             // References to the outside count as "to review", never as unmapped: without a counterpart they
             // are kept, so nothing breaks, but the user should decide whether that is what they want.
             int unresolved = unmapped.Count - pickingExisting.Count;
@@ -140,7 +147,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return externalMapping?.State == MappingState.NeedsReview || NeedsDecision(externalMapping, true);
             });
             mappingSummaryLabel.text = Localization.S("componentCopier.mapping.summary",
-                confirmed.Count + manual.Count, mappings.Count, toReview, unresolved, planned.Count);
+                confirmed.Count + manual.Count - manualNone, mappings.Count - manualNone, toReview, unresolved,
+                planned.Count);
             mappingSummaryLabel.EnableInClassList("section-summary--warning", toReview + unresolved > 0);
 
             int affixCount = needsReview.Count(m => m.Reason == MappingReason.AffixStripped);
