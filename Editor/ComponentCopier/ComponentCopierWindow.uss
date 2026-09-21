@@ -654,9 +654,19 @@
     align-items: center;
 }
 
+/* A fixed basis instead of the content width: otherwise a longer option ("Replace (delete, then copy)")
+ * makes the row overflow, the toggle wraps, and the popup suddenly spans the whole row. */
 .settings-policy {
     flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 280px;
     min-width: 220px;
+}
+
+.settings-policy > .unity-base-field__input {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .settings-create {
