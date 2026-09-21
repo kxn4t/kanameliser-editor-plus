@@ -12,6 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Component Copier** (`Tools > Kanameliser Editor Plus > Component Copier`) — Copies components from one outfit or avatar to another, and redirects the references inside them (bones, colliders, constraint sources, ...) to the corresponding objects of the target.
+  - The source can be a Hierarchy object, a Prefab instance, or a Prefab asset. Copying is applied to scene objects only, so it can always be undone in a single step
+  - Components are listed by type and can be selected per type or individually, with PhysBone / Constraint / MA presets and a search box that also accepts regular expressions
+  - Objects are matched by path and name, and humanoid bones are also matched across naming conventions. Similar-name matches are only suggested and must be confirmed; every match can be corrected by hand
+  - Existing components can be overwritten, duplicated, skipped, or replaced. Objects missing in the target can be created
+  - References that cannot be redirected are listed before applying, and a diff check verifies the result after copying (or compares two hierarchies without copying)
+
+---
+
+### 追加
+
+- **Component Copier**（`Tools > Kanameliser Editor Plus > Component Copier`）— 衣装やアバターのコンポーネントを別の衣装やアバターへコピーします。コンポーネント内の参照（ボーン、コライダー、Constraint のソースなど）も、コピー先の対応するオブジェクトへ置き換えます。
+  - コピー元には、Hierarchy のオブジェクト、Prefab インスタンス、Prefab アセットを指定できます。コピーの適用先はシーン上のオブジェクトに限定しており、1 回の Undo で元に戻せます
+  - コンポーネントは種類ごとに一覧表示され、種類単位でも個別でも選択できます。PhysBone / Constraint / MA のプリセットと、正規表現も使える検索ボックスがあります
+  - オブジェクトはパスと名前で対応付け、Humanoid ボーンは命名規則が違っても対応付けます。類似名による対応は候補として表示するだけで、確定操作が必要です。すべての対応は手動で補正できます
+  - 既存のコンポーネントは、上書き、追加、スキップ、置き換えから選べます。コピー先に足りないオブジェクトは作成できます
+  - 置き換えられない参照を適用前に一覧表示します。コピー後は差分チェックで結果を検証できます（コピーせずに 2 つの階層を比較するだけの使い方もできます）
+
 ## [1.0.1] - 2026-08-14
 
 ### Fixed
