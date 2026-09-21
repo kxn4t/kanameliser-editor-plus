@@ -130,8 +130,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (prefabs > 0)
             {
-                var prefabLabel = new Label(Localization.S("componentCopier.report.prefabs",
-                    prefabs, plan.Components.Count(c => c.Implicit)));
+                // Only the components that were not selected are news here; when everything inside the prefabs
+                // is selected anyway, "0 components are copied too" would read like nothing is copied
+                int implicitComponents = plan.Components.Count(c => c.Implicit);
+                var prefabLabel = new Label(implicitComponents > 0
+                    ? Localization.S("componentCopier.report.prefabs", prefabs, implicitComponents)
+                    : Localization.S("componentCopier.report.prefabsOnly", prefabs));
                 prefabLabel.AddToClassList("report-summary");
                 reportContainer.Add(prefabLabel);
             }

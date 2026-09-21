@@ -599,7 +599,10 @@ msgstr "Prefab を追加"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "{0} 個の Prefab を、Prefab のまま追加します。コピー元と同じ状態にするため、中のコンポーネント {1} 件も一緒にコピーします。"
+msgstr "{0} 個の Prefab を、Prefab のまま追加します。コピー元と同じ状態にするため、中にある未選択のコンポーネント {1} 件も一緒にコピーします。"
+
+msgid "componentCopier.report.prefabsOnly"
+msgstr "{0} 個の Prefab を、Prefab のまま追加します。"
 
 #, csharp-format
 msgid "componentCopier.report.appliedPrefabs"

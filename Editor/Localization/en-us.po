@@ -600,7 +600,10 @@ msgstr "Prefab will be added"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "{0} prefab(s) will be added as prefab instances. The {1} component(s) inside them are copied too, so they match the source."
+msgstr "{0} prefab(s) will be added as prefab instances. The {1} unselected component(s) inside them are copied too, so they match the source."
+
+msgid "componentCopier.report.prefabsOnly"
+msgstr "{0} prefab(s) will be added as prefab instances."
 
 #, csharp-format
 msgid "componentCopier.report.appliedPrefabs"

@@ -599,7 +599,10 @@ msgstr "添加 Prefab"
 
 #, csharp-format
 msgid "componentCopier.report.prefabs"
-msgstr "将以 Prefab 实例的形式添加 {0} 个 Prefab。为了与复制源保持一致，其中的 {1} 个组件也会一并复制。"
+msgstr "将以 Prefab 实例的形式添加 {0} 个 Prefab。为了与复制源保持一致，其中未选择的 {1} 个组件也会一并复制。"
+
+msgid "componentCopier.report.prefabsOnly"
+msgstr "将以 Prefab 实例的形式添加 {0} 个 Prefab。"
 
 #, csharp-format
 msgid "componentCopier.report.appliedPrefabs"
