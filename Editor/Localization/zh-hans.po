@@ -308,3 +308,261 @@ msgstr "部分项目未能删除"
 #, csharp-format
 msgid "componentManager.deletionPartiallyCompleted.message"
 msgstr "以下项目未能删除：\n\n{0}"
+
+# ── Component Copier ──
+
+msgid "componentCopier.source"
+msgstr "复制源"
+
+msgid "componentCopier.target"
+msgstr "复制目标"
+
+msgid "componentCopier.refresh:tooltip"
+msgstr "重新扫描复制源和复制目标"
+
+msgid "componentCopier.warning.sameObject"
+msgstr "复制源和复制目标是同一个对象。"
+
+msgid "componentCopier.warning.nested"
+msgstr "复制源和复制目标不能互相包含。"
+
+msgid "componentCopier.warning.targetIsAsset"
+msgstr "复制目标是资源。对资源的应用无法 Undo，因此只能执行差异检查。要复制请先放置到场景中。"
+
+msgid "componentCopier.warning.pipelineManager"
+msgstr "已选择 Pipeline Manager。Blueprint ID 也会被复制，上传复制目标将覆盖复制源的 Avatar。"
+
+msgid "componentCopier.components"
+msgstr "组件"
+
+msgid "componentCopier.preset.all"
+msgstr "全部"
+
+msgid "componentCopier.showExcluded"
+msgstr "显示其他"
+
+msgid "componentCopier.showExcluded:tooltip"
+msgstr "同时列出默认不复制的类型（Renderer、Animator、Avatar Descriptor 等）"
+
+msgid "componentCopier.excludedByDefault"
+msgstr "默认不复制"
+
+msgid "componentCopier.info.selectSource"
+msgstr "请指定要从中复制组件的对象。"
+
+msgid "componentCopier.info.noComponents"
+msgstr "没有匹配的组件。"
+
+msgid "componentCopier.info.selectTarget"
+msgstr "指定复制目标后将显示对象的对应关系。"
+
+msgid "componentCopier.info.fixTarget"
+msgstr "请修正复制目标后继续。"
+
+msgid "componentCopier.info.noMappings"
+msgstr "未选择任何组件。"
+
+msgid "componentCopier.info.noPlan"
+msgstr "指定复制源和复制目标后将显示复制内容。"
+
+msgid "componentCopier.action.add"
+msgstr "新建"
+
+msgid "componentCopier.action.overwrite"
+msgstr "覆盖"
+
+msgid "componentCopier.action.replace"
+msgstr "替换"
+
+msgid "componentCopier.action.skip"
+msgstr "跳过"
+
+msgid "componentCopier.action.skipIdentical"
+msgstr "相同"
+
+msgid "componentCopier.action.blocked"
+msgstr "待定"
+
+msgid "componentCopier.blocked.needsReview"
+msgstr "此组件所属对象的对应关系尚未确认。请在对应关系部分确认。"
+
+msgid "componentCopier.blocked.unmapped"
+msgstr "此组件所属对象没有对应对象，且已关闭对象创建。"
+
+#, csharp-format
+msgid "componentCopier.row.unresolved:tooltip"
+msgstr "{0} 个引用在复制目标中没有对应对象，将被清空。"
+
+msgid "componentCopier.mapping"
+msgstr "对应关系"
+
+#, csharp-format
+msgid "componentCopier.mapping.summary"
+msgstr "{0}/{1} 已对应   ? {2}   ✖ {3}"
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmAffix"
+msgstr "一并确认 prefix / suffix 匹配（{0}）"
+
+msgid "componentCopier.mapping.confirmAffix:tooltip"
+msgstr "其中一侧的名称带有共同的 prefix 或 suffix。确认按此规则找到的所有候选。"
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmed"
+msgstr "已对应（{0}）"
+
+msgid "componentCopier.mapping.confirm"
+msgstr "确认"
+
+msgid "componentCopier.mapping.menu:tooltip"
+msgstr "候选及其他操作"
+
+msgid "componentCopier.mapping.menu.none"
+msgstr "设为无对应"
+
+msgid "componentCopier.mapping.menu.reset"
+msgstr "恢复自动"
+
+msgid "componentCopier.mapping.note.willCreate"
+msgstr "将创建"
+
+msgid "componentCopier.mapping.note.manual"
+msgstr "手动"
+
+msgid "componentCopier.mapping.note.manualNone"
+msgstr "无对应（手动）"
+
+msgid "componentCopier.mapping.note.unmapped"
+msgstr "未找到"
+
+msgid "componentCopier.mapping.reason.exactPath"
+msgstr "路径相同"
+
+msgid "componentCopier.mapping.reason.childOfMappedParent"
+msgstr "已对应父对象下的同名对象"
+
+msgid "componentCopier.mapping.reason.humanoidAnimator"
+msgstr "Humanoid 骨骼"
+
+msgid "componentCopier.mapping.reason.humanoidDictionary"
+msgstr "Humanoid 骨骼名称"
+
+msgid "componentCopier.mapping.reason.uniqueName"
+msgstr "同名对象唯一"
+
+msgid "componentCopier.mapping.reason.ambiguousName"
+msgstr "存在多个同名对象"
+
+msgid "componentCopier.mapping.reason.affixStripped"
+msgstr "prefix / suffix 匹配"
+
+msgid "componentCopier.mapping.reason.upperChestFallback"
+msgstr "没有 UpperChest，建议使用 Chest"
+
+msgid "componentCopier.mapping.reason.normalizedName"
+msgstr "名称相似"
+
+msgid "componentCopier.report"
+msgstr "应用前检查"
+
+#, csharp-format
+msgid "componentCopier.report.summary"
+msgstr "新建 {0} · 覆盖 {1} · 替换 {2} · 跳过 {3} · 要创建的对象 {4}"
+
+#, csharp-format
+msgid "componentCopier.report.blocked"
+msgstr "{0} 个组件在所属对象确定之前无法复制。请查看对应关系部分。"
+
+#, csharp-format
+msgid "componentCopier.report.unresolved"
+msgstr "{0} 个引用在复制目标中没有对应对象，将被清空。"
+
+#, csharp-format
+msgid "componentCopier.report.addDependencies"
+msgstr "同时复制被引用的组件（{0}）"
+
+#, csharp-format
+msgid "componentCopier.report.external"
+msgstr "{0} 个引用指向复制源之外，将保持不变。"
+
+#, csharp-format
+msgid "componentCopier.report.brokenReference"
+msgstr "{0}（{1}）引用了将被替换删除的组件：{2}"
+
+msgid "componentCopier.report.afterApply"
+msgstr "复制后的验证结果"
+
+msgid "componentCopier.report.diffCheck"
+msgstr "差异检查结果"
+
+#, csharp-format
+msgid "componentCopier.report.applied"
+msgstr "已复制 {0} 个组件。创建了 {1} 个对象，删除了 {2} 个组件。可以通过 Undo 撤销。"
+
+#, csharp-format
+msgid "componentCopier.report.failed"
+msgstr "{0} 个组件无法添加。"
+
+#, csharp-format
+msgid "componentCopier.report.diffSummary"
+msgstr "一致 {0} · 有差异 {1} · 引用未解决 {2} · 复制目标中缺少 {3} · 仅存在于复制目标 {4}"
+
+msgid "componentCopier.diff.match"
+msgstr "一致"
+
+msgid "componentCopier.diff.valueMismatch"
+msgstr "值不同"
+
+msgid "componentCopier.diff.referenceMismatch"
+msgstr "引用不同"
+
+msgid "componentCopier.diff.unresolvedReference"
+msgstr "引用未解决"
+
+msgid "componentCopier.diff.missingOnTarget"
+msgstr "复制目标中缺少"
+
+msgid "componentCopier.diff.extraOnTarget"
+msgstr "仅存在于复制目标"
+
+msgid "componentCopier.diff.truncated"
+msgstr "其余差异已省略。"
+
+msgid "componentCopier.diff.select"
+msgstr "选择"
+
+msgid "componentCopier.diff.remove"
+msgstr "删除"
+
+msgid "componentCopier.settings.existing"
+msgstr "已有组件"
+
+msgid "componentCopier.settings.existing:tooltip"
+msgstr "复制目标的同一对象上已有相同类型组件时的处理方式"
+
+msgid "componentCopier.policy.overwrite"
+msgstr "覆盖"
+
+msgid "componentCopier.policy.add"
+msgstr "添加（允许重复）"
+
+msgid "componentCopier.policy.skip"
+msgstr "跳过"
+
+msgid "componentCopier.policy.replace"
+msgstr "替换（删除后复制）"
+
+msgid "componentCopier.settings.createObjects"
+msgstr "创建缺少的对象"
+
+msgid "componentCopier.settings.createObjects:tooltip"
+msgstr "当复制目标中没有组件所属的对象时创建该对象"
+
+msgid "componentCopier.diffOnly"
+msgstr "仅检查差异"
+
+msgid "componentCopier.diffOnly:tooltip"
+msgstr "不做任何更改，比较复制目标与预期结果"
+
+msgid "componentCopier.apply"
+msgstr "应用"

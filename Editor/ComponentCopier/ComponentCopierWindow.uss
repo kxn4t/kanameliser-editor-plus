@@ -1,0 +1,489 @@
+/* Component Copier Window Styles
+ *
+ * Base colors come from Unity's theme variables so the window works in both the dark and light skin.
+ * Only the state colors are fixed:
+ *   warning  #e5c463
+ *   new      rgb(100, 200, 100)
+ *   accent   rgb(100, 150, 255)
+ */
+
+.component-copier {
+    padding: 8px;
+}
+
+.language-switcher {
+    margin-bottom: 6px;
+}
+
+/* ── Source / target ── */
+
+.source-section {
+    margin-bottom: 8px;
+}
+
+.source-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.source-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.refresh-button {
+    width: 25px;
+    flex-shrink: 0;
+    margin-right: 0;
+}
+
+.source-arrow {
+    -unity-text-align: middle-center;
+    opacity: 0.6;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+.inline-warning {
+    margin-top: 3px;
+    margin-left: 4px;
+    white-space: normal;
+    color: #e5c463;
+}
+
+.inline-warning--error {
+    color: rgb(230, 110, 110);
+}
+
+/* ── Sections ── */
+
+.main-scroll {
+    flex-grow: 1;
+}
+
+.section {
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: rgba(127, 127, 127, 0.1);
+}
+
+.section-title-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.section-title {
+    -unity-font-style: bold;
+    margin-bottom: 5px;
+}
+
+.section-summary {
+    margin-left: 8px;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+
+.section-summary--warning {
+    color: #e5c463;
+    opacity: 1;
+}
+
+.info-label {
+    opacity: 0.6;
+    white-space: normal;
+    margin: 4px 2px;
+}
+
+/* ── Filters ── */
+
+.filter-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.search-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    width: auto;
+}
+
+.search-field--invalid {
+    border-width: 1px;
+    border-color: rgb(230, 110, 110);
+    border-radius: 3px;
+}
+
+.regex-toggle {
+    flex-shrink: 0;
+    border-width: 1px;
+    border-radius: 3px;
+}
+
+.preset-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.preset-chip {
+    border-radius: 10px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-left: 0;
+    margin-right: 4px;
+}
+
+.preset-chip--active {
+    background-color: rgba(100, 150, 255, 0.35);
+    border-color: rgba(100, 150, 255, 0.8);
+}
+
+.show-excluded-toggle {
+    margin-left: 8px;
+}
+
+/* ── Component list ── */
+
+.component-group {
+    margin-bottom: 2px;
+    border-radius: 3px;
+    background-color: rgba(127, 127, 127, 0.08);
+}
+
+.component-group--excluded {
+    opacity: 0.6;
+}
+
+.excluded-divider {
+    margin-top: 6px;
+    margin-bottom: 3px;
+    padding-top: 4px;
+    border-top-width: 1px;
+    border-top-color: rgba(127, 127, 127, 0.4);
+    opacity: 0.7;
+    font-size: 11px;
+}
+
+.group-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 3px 4px;
+}
+
+.group-header:hover {
+    background-color: rgba(127, 127, 127, 0.15);
+}
+
+.collapsible-arrow {
+    width: 12px;
+    font-size: 9px;
+    opacity: 0.7;
+    -unity-text-align: middle-center;
+}
+
+.collapsible-arrow--open {
+    rotate: 90deg;
+}
+
+.group-toggle {
+    margin: 0 4px 0 2px;
+}
+
+.group-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+.group-name {
+    -unity-font-style: bold;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.count-badge {
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    background-color: rgba(127, 127, 127, 0.3);
+    flex-shrink: 0;
+}
+
+.group-summary {
+    flex-grow: 1;
+    margin-left: 8px;
+    opacity: 0.7;
+    font-size: 11px;
+    -unity-text-align: middle-right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.warning-badge {
+    margin-left: 6px;
+    color: #e5c463;
+    flex-shrink: 0;
+}
+
+.group-content {
+    padding: 2px 4px 4px 22px;
+}
+
+.component-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 20px;
+}
+
+.component-row:hover {
+    background-color: rgba(127, 127, 127, 0.12);
+}
+
+.row-path {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-chip {
+    flex-shrink: 0;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    background-color: rgba(127, 127, 127, 0.25);
+}
+
+.status-chip--add {
+    background-color: rgba(100, 200, 100, 0.3);
+}
+
+.status-chip--overwrite,
+.status-chip--replace {
+    background-color: rgba(100, 150, 255, 0.3);
+}
+
+.status-chip--skip,
+.status-chip--skipidentical {
+    opacity: 0.6;
+}
+
+.status-chip--blocked {
+    background-color: rgba(229, 196, 99, 0.3);
+    color: #e5c463;
+}
+
+/* ── Mapping ── */
+
+.bulk-confirm-button {
+    align-self: flex-start;
+    margin-left: 0;
+    margin-bottom: 4px;
+}
+
+.mapping-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 22px;
+    padding-left: 4px;
+    border-left-width: 2px;
+    border-left-color: rgba(0, 0, 0, 0);
+    margin-bottom: 1px;
+}
+
+.mapping-row--needsreview {
+    border-left-color: #e5c463;
+    background-color: rgba(229, 196, 99, 0.08);
+}
+
+.mapping-row--unmapped {
+    border-left-color: rgb(230, 110, 110);
+    background-color: rgba(230, 110, 110, 0.08);
+}
+
+.mapping-row--manual {
+    border-left-color: rgb(100, 150, 255);
+}
+
+.mapping-row--confirmed {
+    opacity: 0.8;
+}
+
+.mapping-source {
+    width: 35%;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mapping-arrow {
+    flex-shrink: 0;
+    opacity: 0.6;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.mapping-target {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 60px;
+}
+
+.mapping-note {
+    flex-shrink: 0;
+    margin-left: 4px;
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.mapping-button {
+    flex-shrink: 0;
+}
+
+.mapping-menu-button {
+    flex-shrink: 0;
+    width: 20px;
+    padding: 0;
+    margin-left: 0;
+}
+
+.confirmed-foldout {
+    margin-top: 4px;
+    opacity: 0.9;
+}
+
+/* ── Report ── */
+
+.report-summary {
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.warning-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    background-color: rgba(229, 196, 99, 0.12);
+}
+
+.warning-text {
+    flex-shrink: 1;
+    white-space: normal;
+    color: #e5c463;
+}
+
+.warning-action {
+    flex-shrink: 0;
+}
+
+.detail-report {
+    margin-top: 6px;
+    padding: 6px;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: rgba(127, 127, 127, 0.4);
+}
+
+.detail-header {
+    flex-direction: row;
+    align-items: center;
+}
+
+.detail-title {
+    flex-grow: 1;
+    -unity-font-style: bold;
+}
+
+.detail-close {
+    width: 20px;
+    padding: 0;
+    margin-right: 0;
+}
+
+.detail-message {
+    white-space: normal;
+    margin-top: 2px;
+    color: rgb(100, 200, 100);
+}
+
+.detail-counts {
+    white-space: normal;
+    margin-top: 2px;
+    margin-bottom: 4px;
+    opacity: 0.85;
+}
+
+.diff-row--valuemismatch > .unity-foldout__toggle .unity-foldout__text,
+.diff-row--referencemismatch > .unity-foldout__toggle .unity-foldout__text,
+.diff-row--unresolvedreference > .unity-foldout__toggle .unity-foldout__text {
+    color: #e5c463;
+}
+
+.diff-row--missingontarget > .unity-foldout__toggle .unity-foldout__text,
+.diff-row--extraontarget > .unity-foldout__toggle .unity-foldout__text {
+    color: rgb(230, 110, 110);
+}
+
+.diff-property {
+    white-space: normal;
+    font-size: 11px;
+    margin-left: 4px;
+}
+
+.diff-property--unresolvedreference {
+    opacity: 0.8;
+}
+
+.diff-actions {
+    flex-direction: row;
+    margin-top: 2px;
+}
+
+/* ── Footer ── */
+
+.footer {
+    flex-shrink: 0;
+    padding-top: 6px;
+    border-top-width: 1px;
+    border-top-color: rgba(127, 127, 127, 0.4);
+}
+
+.settings-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.settings-policy {
+    flex-grow: 1;
+    min-width: 220px;
+}
+
+.settings-create {
+    margin-left: 8px;
+}
+
+.button-row {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.apply-button {
+    min-width: 100px;
+    -unity-font-style: bold;
+}

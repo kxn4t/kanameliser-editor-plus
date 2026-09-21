@@ -309,3 +309,261 @@ msgstr "일부 항목을 삭제하지 못했습니다"
 #, csharp-format
 msgid "componentManager.deletionPartiallyCompleted.message"
 msgstr "다음 항목을 삭제할 수 없었습니다:\n\n{0}"
+
+# ── Component Copier ──
+
+msgid "componentCopier.source"
+msgstr "복사 원본"
+
+msgid "componentCopier.target"
+msgstr "복사 대상"
+
+msgid "componentCopier.refresh:tooltip"
+msgstr "복사 원본과 복사 대상을 다시 스캔"
+
+msgid "componentCopier.warning.sameObject"
+msgstr "복사 원본과 복사 대상이 같은 오브젝트입니다."
+
+msgid "componentCopier.warning.nested"
+msgstr "복사 원본과 복사 대상은 서로의 하위에 있는 오브젝트일 수 없습니다."
+
+msgid "componentCopier.warning.targetIsAsset"
+msgstr "복사 대상이 에셋입니다. 에셋에 적용하면 Undo할 수 없으므로 차이 확인만 실행할 수 있습니다. 복사하려면 씬에 배치하세요."
+
+msgid "componentCopier.warning.pipelineManager"
+msgstr "Pipeline Manager가 선택되어 있습니다. Blueprint ID도 복사되므로 복사 대상을 업로드하면 복사 원본 아바타를 덮어씁니다."
+
+msgid "componentCopier.components"
+msgstr "컴포넌트"
+
+msgid "componentCopier.preset.all"
+msgstr "전체"
+
+msgid "componentCopier.showExcluded"
+msgstr "기타도 표시"
+
+msgid "componentCopier.showExcluded:tooltip"
+msgstr "기본적으로 복사하지 않는 타입(Renderer, Animator, Avatar Descriptor 등)도 목록에 표시합니다"
+
+msgid "componentCopier.excludedByDefault"
+msgstr "기본적으로 제외"
+
+msgid "componentCopier.info.selectSource"
+msgstr "컴포넌트를 복사해 올 오브젝트를 지정하세요."
+
+msgid "componentCopier.info.noComponents"
+msgstr "일치하는 컴포넌트가 없습니다."
+
+msgid "componentCopier.info.selectTarget"
+msgstr "복사 대상을 지정하면 오브젝트 대응을 표시합니다."
+
+msgid "componentCopier.info.fixTarget"
+msgstr "계속하려면 복사 대상을 수정하세요."
+
+msgid "componentCopier.info.noMappings"
+msgstr "선택된 컴포넌트가 없습니다."
+
+msgid "componentCopier.info.noPlan"
+msgstr "복사 원본과 복사 대상을 지정하면 복사 내용을 표시합니다."
+
+msgid "componentCopier.action.add"
+msgstr "신규"
+
+msgid "componentCopier.action.overwrite"
+msgstr "덮어쓰기"
+
+msgid "componentCopier.action.replace"
+msgstr "교체"
+
+msgid "componentCopier.action.skip"
+msgstr "건너뛰기"
+
+msgid "componentCopier.action.skipIdentical"
+msgstr "동일"
+
+msgid "componentCopier.action.blocked"
+msgstr "보류"
+
+msgid "componentCopier.blocked.needsReview"
+msgstr "이 컴포넌트가 붙을 오브젝트의 대응이 확정되지 않았습니다. 대응 섹션에서 확정하세요."
+
+msgid "componentCopier.blocked.unmapped"
+msgstr "이 컴포넌트가 붙을 오브젝트의 대응이 없고, 오브젝트 생성도 꺼져 있습니다."
+
+#, csharp-format
+msgid "componentCopier.row.unresolved:tooltip"
+msgstr "참조 {0}개는 복사 대상에 대응이 없어 비워집니다."
+
+msgid "componentCopier.mapping"
+msgstr "대응"
+
+#, csharp-format
+msgid "componentCopier.mapping.summary"
+msgstr "{0}/{1} 대응됨   ? {2}   ✖ {3}"
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmAffix"
+msgstr "prefix / suffix 일치를 모두 확정 ({0})"
+
+msgid "componentCopier.mapping.confirmAffix:tooltip"
+msgstr "한쪽 이름에 공통 prefix 또는 suffix가 붙어 있습니다. 이 규칙으로 찾은 후보를 모두 확정합니다."
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmed"
+msgstr "대응됨 ({0})"
+
+msgid "componentCopier.mapping.confirm"
+msgstr "확정"
+
+msgid "componentCopier.mapping.menu:tooltip"
+msgstr "후보 및 기타 작업"
+
+msgid "componentCopier.mapping.menu.none"
+msgstr "대응 없음으로 설정"
+
+msgid "componentCopier.mapping.menu.reset"
+msgstr "자동으로 되돌리기"
+
+msgid "componentCopier.mapping.note.willCreate"
+msgstr "생성 예정"
+
+msgid "componentCopier.mapping.note.manual"
+msgstr "수동"
+
+msgid "componentCopier.mapping.note.manualNone"
+msgstr "대응 없음 (수동)"
+
+msgid "componentCopier.mapping.note.unmapped"
+msgstr "찾을 수 없음"
+
+msgid "componentCopier.mapping.reason.exactPath"
+msgstr "같은 경로"
+
+msgid "componentCopier.mapping.reason.childOfMappedParent"
+msgstr "대응된 부모 아래의 같은 이름"
+
+msgid "componentCopier.mapping.reason.humanoidAnimator"
+msgstr "Humanoid 본"
+
+msgid "componentCopier.mapping.reason.humanoidDictionary"
+msgstr "Humanoid 본 이름"
+
+msgid "componentCopier.mapping.reason.uniqueName"
+msgstr "같은 이름이 하나뿐"
+
+msgid "componentCopier.mapping.reason.ambiguousName"
+msgstr "같은 이름이 여러 개 있습니다"
+
+msgid "componentCopier.mapping.reason.affixStripped"
+msgstr "prefix / suffix 일치"
+
+msgid "componentCopier.mapping.reason.upperChestFallback"
+msgstr "UpperChest가 없어 Chest를 제안"
+
+msgid "componentCopier.mapping.reason.normalizedName"
+msgstr "유사한 이름"
+
+msgid "componentCopier.report"
+msgstr "적용 전 확인"
+
+#, csharp-format
+msgid "componentCopier.report.summary"
+msgstr "신규 {0} · 덮어쓰기 {1} · 교체 {2} · 건너뛰기 {3} · 생성할 오브젝트 {4}"
+
+#, csharp-format
+msgid "componentCopier.report.blocked"
+msgstr "컴포넌트 {0}개는 붙을 오브젝트가 정해질 때까지 복사할 수 없습니다. 대응 섹션을 확인하세요."
+
+#, csharp-format
+msgid "componentCopier.report.unresolved"
+msgstr "참조 {0}개는 복사 대상에 대응이 없어 비워집니다."
+
+#, csharp-format
+msgid "componentCopier.report.addDependencies"
+msgstr "참조 대상 컴포넌트도 복사 ({0})"
+
+#, csharp-format
+msgid "componentCopier.report.external"
+msgstr "참조 {0}개는 복사 원본 바깥을 가리키므로 그대로 유지합니다."
+
+#, csharp-format
+msgid "componentCopier.report.brokenReference"
+msgstr "{0} ({1})이(가) 교체로 삭제될 컴포넌트를 참조하고 있습니다: {2}"
+
+msgid "componentCopier.report.afterApply"
+msgstr "복사 후 검증 결과"
+
+msgid "componentCopier.report.diffCheck"
+msgstr "차이 확인 결과"
+
+#, csharp-format
+msgid "componentCopier.report.applied"
+msgstr "컴포넌트 {0}개를 복사했습니다. 오브젝트 {1}개를 생성하고 컴포넌트 {2}개를 삭제했습니다. Undo로 되돌릴 수 있습니다."
+
+#, csharp-format
+msgid "componentCopier.report.failed"
+msgstr "컴포넌트 {0}개를 추가하지 못했습니다."
+
+#, csharp-format
+msgid "componentCopier.report.diffSummary"
+msgstr "일치 {0} · 차이 있음 {1} · 미해결 참조 {2} · 복사 대상에 없음 {3} · 복사 대상에만 있음 {4}"
+
+msgid "componentCopier.diff.match"
+msgstr "일치"
+
+msgid "componentCopier.diff.valueMismatch"
+msgstr "값이 다름"
+
+msgid "componentCopier.diff.referenceMismatch"
+msgstr "참조가 다름"
+
+msgid "componentCopier.diff.unresolvedReference"
+msgstr "미해결 참조"
+
+msgid "componentCopier.diff.missingOnTarget"
+msgstr "복사 대상에 없음"
+
+msgid "componentCopier.diff.extraOnTarget"
+msgstr "복사 대상에만 있음"
+
+msgid "componentCopier.diff.truncated"
+msgstr "나머지 차이는 생략했습니다."
+
+msgid "componentCopier.diff.select"
+msgstr "선택"
+
+msgid "componentCopier.diff.remove"
+msgstr "삭제"
+
+msgid "componentCopier.settings.existing"
+msgstr "기존 컴포넌트"
+
+msgid "componentCopier.settings.existing:tooltip"
+msgstr "복사 대상의 같은 오브젝트에 같은 타입의 컴포넌트가 이미 있을 때의 처리"
+
+msgid "componentCopier.policy.overwrite"
+msgstr "덮어쓰기"
+
+msgid "componentCopier.policy.add"
+msgstr "추가 (중복 허용)"
+
+msgid "componentCopier.policy.skip"
+msgstr "건너뛰기"
+
+msgid "componentCopier.policy.replace"
+msgstr "교체 (삭제 후 복사)"
+
+msgid "componentCopier.settings.createObjects"
+msgstr "없는 오브젝트 생성"
+
+msgid "componentCopier.settings.createObjects:tooltip"
+msgstr "컴포넌트가 붙을 오브젝트가 복사 대상에 없으면 생성합니다"
+
+msgid "componentCopier.diffOnly"
+msgstr "차이 확인만"
+
+msgid "componentCopier.diffOnly:tooltip"
+msgstr "아무것도 변경하지 않고 복사 대상과 예상 결과를 비교합니다"
+
+msgid "componentCopier.apply"
+msgstr "적용"

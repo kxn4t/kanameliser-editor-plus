@@ -309,3 +309,261 @@ msgstr "Deletion Partially Completed"
 #, csharp-format
 msgid "componentManager.deletionPartiallyCompleted.message"
 msgstr "Some selected items could not be deleted:\n\n{0}"
+
+# ── Component Copier ──
+
+msgid "componentCopier.source"
+msgstr "Source"
+
+msgid "componentCopier.target"
+msgstr "Target"
+
+msgid "componentCopier.refresh:tooltip"
+msgstr "Rescan the source and target"
+
+msgid "componentCopier.warning.sameObject"
+msgstr "Source and target are the same object."
+
+msgid "componentCopier.warning.nested"
+msgstr "Source and target must not contain each other."
+
+msgid "componentCopier.warning.targetIsAsset"
+msgstr "The target is an asset. Only the diff check is available, because applying to an asset cannot be undone. Place it in the scene to copy."
+
+msgid "componentCopier.warning.pipelineManager"
+msgstr "Pipeline Manager is selected. Its Blueprint ID is copied too, so uploading the target would overwrite the source avatar."
+
+msgid "componentCopier.components"
+msgstr "Components"
+
+msgid "componentCopier.preset.all"
+msgstr "All"
+
+msgid "componentCopier.showExcluded"
+msgstr "Show others"
+
+msgid "componentCopier.showExcluded:tooltip"
+msgstr "Also list types that are not copied by default (renderers, Animator, Avatar Descriptor, ...)"
+
+msgid "componentCopier.excludedByDefault"
+msgstr "Not copied by default"
+
+msgid "componentCopier.info.selectSource"
+msgstr "Select the object to copy components from."
+
+msgid "componentCopier.info.noComponents"
+msgstr "No matching components."
+
+msgid "componentCopier.info.selectTarget"
+msgstr "Select the target to see how objects correspond."
+
+msgid "componentCopier.info.fixTarget"
+msgstr "Fix the target to continue."
+
+msgid "componentCopier.info.noMappings"
+msgstr "No components are selected."
+
+msgid "componentCopier.info.noPlan"
+msgstr "Select the source and target to see what will be copied."
+
+msgid "componentCopier.action.add"
+msgstr "New"
+
+msgid "componentCopier.action.overwrite"
+msgstr "Overwrite"
+
+msgid "componentCopier.action.replace"
+msgstr "Replace"
+
+msgid "componentCopier.action.skip"
+msgstr "Skip"
+
+msgid "componentCopier.action.skipIdentical"
+msgstr "Identical"
+
+msgid "componentCopier.action.blocked"
+msgstr "Blocked"
+
+msgid "componentCopier.blocked.needsReview"
+msgstr "The object this component belongs to only has an unconfirmed suggestion. Confirm it in the Mapping section."
+
+msgid "componentCopier.blocked.unmapped"
+msgstr "The object this component belongs to has no counterpart, and object creation is turned off."
+
+#, csharp-format
+msgid "componentCopier.row.unresolved:tooltip"
+msgstr "{0} reference(s) have no counterpart in the target and will be cleared."
+
+msgid "componentCopier.mapping"
+msgstr "Mapping"
+
+#, csharp-format
+msgid "componentCopier.mapping.summary"
+msgstr "{0}/{1} mapped   ? {2}   ✖ {3}"
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmAffix"
+msgstr "Confirm all prefix / suffix matches ({0})"
+
+msgid "componentCopier.mapping.confirmAffix:tooltip"
+msgstr "Names on one side share a common prefix or suffix. Confirms every suggestion found by that rule."
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmed"
+msgstr "Mapped ({0})"
+
+msgid "componentCopier.mapping.confirm"
+msgstr "Confirm"
+
+msgid "componentCopier.mapping.menu:tooltip"
+msgstr "Candidates and other options"
+
+msgid "componentCopier.mapping.menu.none"
+msgstr "No counterpart"
+
+msgid "componentCopier.mapping.menu.reset"
+msgstr "Back to automatic"
+
+msgid "componentCopier.mapping.note.willCreate"
+msgstr "Will be created"
+
+msgid "componentCopier.mapping.note.manual"
+msgstr "Manual"
+
+msgid "componentCopier.mapping.note.manualNone"
+msgstr "No counterpart (manual)"
+
+msgid "componentCopier.mapping.note.unmapped"
+msgstr "Not found"
+
+msgid "componentCopier.mapping.reason.exactPath"
+msgstr "Same path"
+
+msgid "componentCopier.mapping.reason.childOfMappedParent"
+msgstr "Same name under mapped parent"
+
+msgid "componentCopier.mapping.reason.humanoidAnimator"
+msgstr "Humanoid bone"
+
+msgid "componentCopier.mapping.reason.humanoidDictionary"
+msgstr "Humanoid bone name"
+
+msgid "componentCopier.mapping.reason.uniqueName"
+msgstr "Unique name"
+
+msgid "componentCopier.mapping.reason.ambiguousName"
+msgstr "Several objects share this name"
+
+msgid "componentCopier.mapping.reason.affixStripped"
+msgstr "Prefix / suffix match"
+
+msgid "componentCopier.mapping.reason.upperChestFallback"
+msgstr "No UpperChest; Chest instead?"
+
+msgid "componentCopier.mapping.reason.normalizedName"
+msgstr "Similar name"
+
+msgid "componentCopier.report"
+msgstr "Pre-check"
+
+#, csharp-format
+msgid "componentCopier.report.summary"
+msgstr "New {0} · Overwrite {1} · Replace {2} · Skip {3} · Objects to create {4}"
+
+#, csharp-format
+msgid "componentCopier.report.blocked"
+msgstr "{0} component(s) cannot be copied until their object is mapped. See the Mapping section."
+
+#, csharp-format
+msgid "componentCopier.report.unresolved"
+msgstr "{0} reference(s) have no counterpart in the target and will be cleared."
+
+#, csharp-format
+msgid "componentCopier.report.addDependencies"
+msgstr "Also copy the referenced components ({0})"
+
+#, csharp-format
+msgid "componentCopier.report.external"
+msgstr "{0} reference(s) point outside of the source and are kept as they are."
+
+#, csharp-format
+msgid "componentCopier.report.brokenReference"
+msgstr "{0} ({1}) references a component that Replace will remove: {2}"
+
+msgid "componentCopier.report.afterApply"
+msgstr "Verification after copying"
+
+msgid "componentCopier.report.diffCheck"
+msgstr "Diff check result"
+
+#, csharp-format
+msgid "componentCopier.report.applied"
+msgstr "Copied {0} component(s). Created {1} object(s), removed {2} component(s). Undo is available."
+
+#, csharp-format
+msgid "componentCopier.report.failed"
+msgstr "{0} component(s) could not be added."
+
+#, csharp-format
+msgid "componentCopier.report.diffSummary"
+msgstr "Match {0} · Different {1} · Unresolved reference {2} · Missing on target {3} · Only on target {4}"
+
+msgid "componentCopier.diff.match"
+msgstr "Match"
+
+msgid "componentCopier.diff.valueMismatch"
+msgstr "Different value"
+
+msgid "componentCopier.diff.referenceMismatch"
+msgstr "Different reference"
+
+msgid "componentCopier.diff.unresolvedReference"
+msgstr "Unresolved reference"
+
+msgid "componentCopier.diff.missingOnTarget"
+msgstr "Missing on target"
+
+msgid "componentCopier.diff.extraOnTarget"
+msgstr "Only on target"
+
+msgid "componentCopier.diff.truncated"
+msgstr "More differences are not shown."
+
+msgid "componentCopier.diff.select"
+msgstr "Select"
+
+msgid "componentCopier.diff.remove"
+msgstr "Remove"
+
+msgid "componentCopier.settings.existing"
+msgstr "Existing components"
+
+msgid "componentCopier.settings.existing:tooltip"
+msgstr "What to do when the target already has a component of the same type on the same object"
+
+msgid "componentCopier.policy.overwrite"
+msgstr "Overwrite"
+
+msgid "componentCopier.policy.add"
+msgstr "Add (duplicate)"
+
+msgid "componentCopier.policy.skip"
+msgstr "Skip"
+
+msgid "componentCopier.policy.replace"
+msgstr "Replace (remove, then copy)"
+
+msgid "componentCopier.settings.createObjects"
+msgstr "Create missing objects"
+
+msgid "componentCopier.settings.createObjects:tooltip"
+msgstr "Create the object a component belongs to when the target has no counterpart"
+
+msgid "componentCopier.diffOnly"
+msgstr "Diff check only"
+
+msgid "componentCopier.diffOnly:tooltip"
+msgstr "Compare the target with the expected result without changing anything"
+
+msgid "componentCopier.apply"
+msgstr "Apply"
