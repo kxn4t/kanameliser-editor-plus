@@ -614,3 +614,15 @@ msgstr "隨元件一併新增"
 
 msgid "componentCopier.prefabs.blocked"
 msgstr "放置此 Prefab 的父物件尚未確定。請在對應關係區段確認父物件，或開啟「建立缺少的物件」。如果父物件是複製目標中不存在的骨骼，則無法建立。"
+
+msgid "componentCopier.groupBy.type"
+msgstr "依類型"
+
+msgid "componentCopier.groupBy.type:tooltip"
+msgstr "依元件類型將清單分組。每一列是一個物件。"
+
+msgid "componentCopier.groupBy.object"
+msgstr "依物件"
+
+msgid "componentCopier.groupBy.object:tooltip"
+msgstr "依物件將清單分組。每一列是該物件上的一個元件。"

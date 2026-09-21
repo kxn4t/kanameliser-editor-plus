@@ -614,3 +614,15 @@ msgstr "随组件一并添加"
 
 msgid "componentCopier.prefabs.blocked"
 msgstr "放置此 Prefab 的父对象尚未确定。请在对应关系部分确认父对象，或开启「创建缺少的对象」。如果父对象是复制目标中不存在的骨骼，则无法创建。"
+
+msgid "componentCopier.groupBy.type"
+msgstr "按类型"
+
+msgid "componentCopier.groupBy.type:tooltip"
+msgstr "按组件类型对列表分组。每一行是一个对象。"
+
+msgid "componentCopier.groupBy.object"
+msgstr "按对象"
+
+msgid "componentCopier.groupBy.object:tooltip"
+msgstr "按对象对列表分组。每一行是该对象上的一个组件。"

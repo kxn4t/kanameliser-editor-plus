@@ -614,3 +614,15 @@ msgstr "コンポーネントと一緒に追加"
 
 msgid "componentCopier.prefabs.blocked"
 msgstr "この Prefab を置く親オブジェクトが決まっていません。対応付けセクションで親を確定するか、「足りないオブジェクトを作成」をオンにしてください。コピー先にないボーンが親の場合は、作成できません。"
+
+msgid "componentCopier.groupBy.type"
+msgstr "種類別"
+
+msgid "componentCopier.groupBy.type:tooltip"
+msgstr "一覧をコンポーネントの種類ごとにまとめます。各行はオブジェクトです。"
+
+msgid "componentCopier.groupBy.object"
+msgstr "オブジェクト別"
+
+msgid "componentCopier.groupBy.object:tooltip"
+msgstr "一覧をオブジェクトごとにまとめます。各行はそのオブジェクトに付いているコンポーネントです。"

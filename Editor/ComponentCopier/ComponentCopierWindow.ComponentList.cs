@@ -11,10 +11,24 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 {
     public partial class ComponentCopierWindow
     {
+        private enum GroupMode
+        {
+            /// <summary>One group per component type; rows are the objects. Good for "copy all PhysBones".</summary>
+            ByType,
+            /// <summary>One group per object; rows are its components. Good for "what sits on this bone?".</summary>
+            ByObject,
+        }
+
+        private const string GroupModePrefsKey = "Kanameliser.EditorPlus.ComponentCopier.GroupMode";
+        private const string ObjectGroupPrefix = "object:";
+
         private string searchText = "";
         private bool searchUsesRegex;
         private bool showExcluded;
+        private GroupMode groupMode;
 
+        private Button groupByTypeButton;
+        private Button groupByObjectButton;
         private ToolbarSearchField searchField;
         private readonly Dictionary<ComponentCategory, Button> presetButtons = new();
         private Button presetAllButton;
@@ -25,10 +39,31 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             section.AddToClassList("section");
             parent.Add(section);
 
+            // Header row: title on the left, grouping mode as a pill toggle on the right
+            // (same layout as the mode toggle of Color Variant Generator's Creator window)
+            var headerRow = new VisualElement();
+            headerRow.AddToClassList("section-title-row");
+            headerRow.AddToClassList("section-title-row--spread");
+            section.Add(headerRow);
+
             var title = new Label("componentCopier.components");
             title.AddToClassList("section-title");
             title.AddToClassList("ndmf-tr");
-            section.Add(title);
+            headerRow.Add(title);
+
+            groupMode = (GroupMode)EditorPrefs.GetInt(GroupModePrefsKey, (int)GroupMode.ByType);
+
+            var groupModeToggle = new VisualElement();
+            groupModeToggle.AddToClassList("mode-toggle-group");
+            headerRow.Add(groupModeToggle);
+
+            groupByTypeButton = new Button(() => SetGroupMode(GroupMode.ByType));
+            groupByTypeButton.AddToClassList("mode-toggle-button");
+            groupModeToggle.Add(groupByTypeButton);
+
+            groupByObjectButton = new Button(() => SetGroupMode(GroupMode.ByObject));
+            groupByObjectButton.AddToClassList("mode-toggle-button");
+            groupModeToggle.Add(groupByObjectButton);
 
             var filterRow = new VisualElement();
             filterRow.AddToClassList("filter-row");
@@ -132,10 +167,32 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         #region Rendering
 
+        private void SetGroupMode(GroupMode mode)
+        {
+            if (groupMode == mode) return;
+
+            groupMode = mode;
+            EditorPrefs.SetInt(GroupModePrefsKey, (int)mode);
+            // Only the presentation changes, so the plan is left alone
+            RenderComponentList();
+        }
+
+        private void UpdateGroupModeButtons()
+        {
+            groupByTypeButton.text = Localization.S("componentCopier.groupBy.type");
+            groupByTypeButton.tooltip = Localization.S("componentCopier.groupBy.type:tooltip");
+            groupByObjectButton.text = Localization.S("componentCopier.groupBy.object");
+            groupByObjectButton.tooltip = Localization.S("componentCopier.groupBy.object:tooltip");
+
+            groupByTypeButton.EnableInClassList("mode-toggle-button--active", groupMode == GroupMode.ByType);
+            groupByObjectButton.EnableInClassList("mode-toggle-button--active", groupMode == GroupMode.ByObject);
+        }
+
         private void RenderComponentList()
         {
             listContainer.Clear();
             UpdatePresetButtons();
+            UpdateGroupModeButtons();
 
             if (sourceRoot == null)
             {
@@ -152,6 +209,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (normal.Count == 0 && (!showExcluded || excluded.Count == 0))
             {
                 listContainer.Add(InfoLabel("componentCopier.info.noComponents"));
+                AddMissingPrefabGroup();
+                return;
+            }
+
+            if (groupMode == GroupMode.ByObject)
+            {
+                // An object keeps all of its components together; the ones that are not copied by default
+                // are dimmed per row instead of being moved to a section of their own.
+                AddGroups(visible, false);
                 AddMissingPrefabGroup();
                 return;
             }
@@ -323,24 +389,76 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return row;
         }
 
+        /// <summary>What a group of the list stands for: a component type, or an object of the source.</summary>
+        private sealed class GroupInfo
+        {
+            public string Id;
+            public string Title;
+            public string Tooltip;
+            public Texture Icon;
+            public List<ComponentEntry> Entries;
+            public bool Excluded;
+            /// <summary>Object to ping when the title is clicked (object grouping only).</summary>
+            public GameObject PingTarget;
+        }
+
+        private string GroupId(ComponentEntry entry)
+        {
+            return groupMode == GroupMode.ByType ? entry.Type.FullName : ObjectGroupPrefix + entry.Key.RelativePath;
+        }
+
         private void AddGroups(List<ComponentEntry> groupEntries, bool excluded)
         {
+            if (groupMode == GroupMode.ByObject)
+            {
+                // Scan order is hierarchy order, so the groups read like the Hierarchy window
+                foreach (var group in groupEntries.GroupBy(e => e.Host))
+                {
+                    var first = group.First();
+                    string path = DisplayPath(first);
+                    listContainer.Add(CreateGroup(new GroupInfo
+                    {
+                        Id = GroupId(first),
+                        Title = path,
+                        Tooltip = path,
+                        Icon = EditorGUIUtility.ObjectContent(first.Host.gameObject, typeof(GameObject)).image,
+                        Entries = group.ToList(),
+                        // Dimmed only when nothing in the group is copied by default
+                        Excluded = group.All(e => e.Category == ComponentCategory.ExcludedByDefault),
+                        PingTarget = first.Host.gameObject,
+                    }));
+                }
+
+                return;
+            }
+
             var groups = groupEntries
                 .GroupBy(e => e.Type)
                 .OrderBy(g => g.First().Category)
                 .ThenBy(g => g.Key.Name, StringComparer.OrdinalIgnoreCase);
 
             foreach (var group in groups)
-                listContainer.Add(CreateGroup(group.Key, group.ToList(), excluded));
+            {
+                var first = group.First();
+                listContainer.Add(CreateGroup(new GroupInfo
+                {
+                    Id = GroupId(first),
+                    Title = group.Key.Name,
+                    Tooltip = group.Key.FullName,
+                    Icon = EditorGUIUtility.ObjectContent(first.Component, group.Key).image,
+                    Entries = group.ToList(),
+                    Excluded = excluded,
+                }));
+            }
         }
 
-        private VisualElement CreateGroup(Type type, List<ComponentEntry> groupEntries, bool excluded)
+        private VisualElement CreateGroup(GroupInfo info)
         {
-            string typeId = type.FullName;
+            var groupEntries = info.Entries;
 
             var group = new VisualElement();
             group.AddToClassList("component-group");
-            group.EnableInClassList("component-group--excluded", excluded);
+            group.EnableInClassList("component-group--excluded", info.Excluded);
 
             var header = new VisualElement();
             header.AddToClassList("group-header");
@@ -386,12 +504,23 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             });
             header.Add(toggle);
 
-            var icon = new Image { image = EditorGUIUtility.ObjectContent(groupEntries[0].Component, type).image };
+            var icon = new Image { image = info.Icon };
             icon.AddToClassList("group-icon");
             header.Add(icon);
 
-            var nameLabel = new Label(type.Name) { tooltip = typeId };
+            var nameLabel = new Label(info.Title) { tooltip = info.Tooltip };
             nameLabel.AddToClassList("group-name");
+            if (info.PingTarget != null)
+            {
+                var pingTarget = info.PingTarget;
+                nameLabel.AddToClassList("group-name--clickable");
+                nameLabel.RegisterCallback<ClickEvent>(evt =>
+                {
+                    evt.StopPropagation();
+                    if (pingTarget != null) EditorGUIUtility.PingObject(pingTarget);
+                });
+            }
+
             header.Add(nameLabel);
 
             var countLabel = new Label(groupEntries.Count.ToString());
@@ -414,23 +543,23 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 if (evt.target is VisualElement element && (element == toggle || toggle.Contains(element))) return;
 
-                bool expanded = !expandedTypes.Contains(typeId);
+                bool expanded = !expandedTypes.Contains(info.Id);
 
                 // Alt+click expands or collapses every group at once
                 if (evt.altKey)
                 {
-                    if (expanded) expandedTypes.UnionWith(entries.Select(e => e.Type.FullName));
+                    if (expanded) expandedTypes.UnionWith(entries.Select(GroupId));
                     else expandedTypes.Clear();
                     RenderComponentList();
                     return;
                 }
 
-                if (expanded) expandedTypes.Add(typeId);
-                else expandedTypes.Remove(typeId);
+                if (expanded) expandedTypes.Add(info.Id);
+                else expandedTypes.Remove(info.Id);
                 ApplyExpanded(expanded);
             });
 
-            ApplyExpanded(expandedTypes.Contains(typeId));
+            ApplyExpanded(expandedTypes.Contains(info.Id));
             return group;
         }
 
@@ -448,14 +577,32 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             });
             row.Add(toggle);
 
-            string path = string.IsNullOrEmpty(entry.Key.RelativePath) ? sourceRoot.name : entry.Key.RelativePath;
-            var pathLabel = new Label(path) { tooltip = path };
-            pathLabel.AddToClassList("row-path");
-            pathLabel.RegisterCallback<ClickEvent>(_ =>
+            // The group already says what the rows have in common, so a row shows the other half:
+            // the object when grouped by type, the component when grouped by object.
+            Label rowLabel;
+            if (groupMode == GroupMode.ByObject)
+            {
+                var icon = new Image { image = EditorGUIUtility.ObjectContent(entry.Component, entry.Type).image };
+                icon.AddToClassList("row-icon");
+                row.Add(icon);
+
+                string typeName = entry.Key.Index > 0 ? $"{entry.Type.Name} ({entry.Key.Index + 1})" : entry.Type.Name;
+                rowLabel = new Label(typeName) { tooltip = entry.Type.FullName };
+                row.EnableInClassList("component-row--excluded",
+                    entry.Category == ComponentCategory.ExcludedByDefault);
+            }
+            else
+            {
+                string path = DisplayPath(entry);
+                rowLabel = new Label(path) { tooltip = path };
+            }
+
+            rowLabel.AddToClassList("row-path");
+            rowLabel.RegisterCallback<ClickEvent>(_ =>
             {
                 if (entry.Host != null) EditorGUIUtility.PingObject(entry.Host.gameObject);
             });
-            row.Add(pathLabel);
+            row.Add(rowLabel);
 
             if (plannedByKey.TryGetValue(entry.Key, out var planned))
             {
@@ -477,6 +624,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             return row;
+        }
+
+        private string DisplayPath(ComponentEntry entry)
+        {
+            return string.IsNullOrEmpty(entry.Key.RelativePath) ? sourceRoot.name : entry.Key.RelativePath;
         }
 
         #endregion

@@ -615,3 +615,15 @@ msgstr "Added with components"
 
 msgid "componentCopier.prefabs.blocked"
 msgstr "The parent object this prefab belongs under is not decided yet. Confirm the parent in the Mapping section, or turn on Create missing objects. A parent bone that does not exist in the target cannot be created."
+
+msgid "componentCopier.groupBy.type"
+msgstr "By type"
+
+msgid "componentCopier.groupBy.type:tooltip"
+msgstr "Group the list by component type. Each row is an object."
+
+msgid "componentCopier.groupBy.object"
+msgstr "By object"
+
+msgid "componentCopier.groupBy.object:tooltip"
+msgstr "Group the list by object. Each row is a component on that object."

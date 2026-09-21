@@ -74,6 +74,10 @@
     align-items: center;
 }
 
+.section-title-row--spread {
+    justify-content: space-between;
+}
+
 .section-title {
     -unity-font-style: bold;
     margin-bottom: 5px;
@@ -121,6 +125,49 @@
     flex-shrink: 0;
     border-width: 1px;
     border-radius: 3px;
+}
+
+/* Grouping mode — pill toggle, same look as the mode toggle of Color Variant Generator.
+ * Inactive text is dimmed with opacity instead of a fixed color so it stays readable in the light skin. */
+.mode-toggle-group {
+    flex-direction: row;
+    flex-shrink: 0;
+    border-width: 1px;
+    border-color: rgba(127, 127, 127, 0.35);
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.15);
+    padding: 1px;
+    margin-bottom: 5px;
+}
+
+.mode-toggle-button {
+    height: 18px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 11px;
+    margin: 0;
+    border-radius: 9px;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    opacity: 0.55;
+    transition-property: background-color, opacity;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-in-out;
+}
+
+.mode-toggle-button:hover {
+    background-color: rgba(127, 127, 127, 0.15);
+    opacity: 0.8;
+}
+
+.mode-toggle-button--active {
+    background-color: rgba(100, 150, 255, 0.35);
+    opacity: 1;
+}
+
+.mode-toggle-button--active:hover {
+    background-color: rgba(100, 150, 255, 0.45);
+    opacity: 1;
 }
 
 .preset-row {
@@ -249,6 +296,21 @@
 
 .component-row:hover {
     background-color: rgba(127, 127, 127, 0.12);
+}
+
+.group-name--clickable:hover {
+    color: rgb(100, 150, 255);
+}
+
+.row-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+.component-row--excluded {
+    opacity: 0.6;
 }
 
 .row-path {
