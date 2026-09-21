@@ -553,6 +553,22 @@ msgstr "对复制源之外 {0} 个对象的引用（{1} 处）将保持不变。
 msgid "componentCopier.report.brokenReference"
 msgstr "{0}（{1}）引用了将被替换删除的组件：{2}"
 
+msgid "componentCopier.report.kind.externalKept"
+msgstr "保持不变"
+
+#, csharp-format
+msgid "componentCopier.report.more"
+msgstr "其余 {0} 项"
+
+msgid "componentCopier.report.cause.notSelected"
+msgstr "被引用的组件未选择"
+
+msgid "componentCopier.report.cause.needsReview"
+msgstr "对应关系尚未确认"
+
+msgid "componentCopier.report.cause.noCounterpart"
+msgstr "没有对应对象"
+
 msgid "componentCopier.report.afterApply"
 msgstr "复制后的验证结果"
 

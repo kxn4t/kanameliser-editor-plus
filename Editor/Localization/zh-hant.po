@@ -553,6 +553,22 @@ msgstr "對複製來源之外 {0} 個物件的參照（{1} 處）將保持不變
 msgid "componentCopier.report.brokenReference"
 msgstr "{0}（{1}）參照了將因取代而刪除的元件：{2}"
 
+msgid "componentCopier.report.kind.externalKept"
+msgstr "保持不變"
+
+#, csharp-format
+msgid "componentCopier.report.more"
+msgstr "其餘 {0} 項"
+
+msgid "componentCopier.report.cause.notSelected"
+msgstr "被參照的元件未選擇"
+
+msgid "componentCopier.report.cause.needsReview"
+msgstr "對應關係尚未確認"
+
+msgid "componentCopier.report.cause.noCounterpart"
+msgstr "沒有對應物件"
+
 msgid "componentCopier.report.afterApply"
 msgstr "複製後的驗證結果"
 

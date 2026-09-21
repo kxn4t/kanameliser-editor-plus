@@ -553,6 +553,22 @@ msgstr "コピー元の外にあるオブジェクト {0} 個への参照（{1} 
 msgid "componentCopier.report.brokenReference"
 msgstr "{0}（{1}）が、置き換えで削除されるコンポーネントを参照しています: {2}"
 
+msgid "componentCopier.report.kind.externalKept"
+msgstr "そのまま残す"
+
+#, csharp-format
+msgid "componentCopier.report.more"
+msgstr "ほか {0} 件"
+
+msgid "componentCopier.report.cause.notSelected"
+msgstr "参照先のコンポーネントが未選択"
+
+msgid "componentCopier.report.cause.needsReview"
+msgstr "対応先が未確定"
+
+msgid "componentCopier.report.cause.noCounterpart"
+msgstr "対応先なし"
+
 msgid "componentCopier.report.afterApply"
 msgstr "コピー後の検証結果"
 

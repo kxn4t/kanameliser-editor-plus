@@ -119,7 +119,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return diff.Properties.All(p => p.Kind == DiffKind.UnresolvedReference && p.Actual == NoneText);
         }
 
-        private const string NoneText = "None";
+        internal const string NoneText = "None";
 
         private static PropertyDiff CompareProperty(
             SerializedProperty sourceProperty, SerializedObject actualObject,

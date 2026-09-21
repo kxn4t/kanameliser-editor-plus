@@ -554,6 +554,22 @@ msgstr "복사 원본 바깥의 오브젝트 {0}개에 대한 참조({1}곳)는 
 msgid "componentCopier.report.brokenReference"
 msgstr "{0} ({1})이(가) 교체로 삭제될 컴포넌트를 참조하고 있습니다: {2}"
 
+msgid "componentCopier.report.kind.externalKept"
+msgstr "그대로 유지"
+
+#, csharp-format
+msgid "componentCopier.report.more"
+msgstr "외 {0}개"
+
+msgid "componentCopier.report.cause.notSelected"
+msgstr "참조 대상 컴포넌트가 선택되지 않음"
+
+msgid "componentCopier.report.cause.needsReview"
+msgstr "대응이 확정되지 않음"
+
+msgid "componentCopier.report.cause.noCounterpart"
+msgstr "대응 없음"
+
 msgid "componentCopier.report.afterApply"
 msgstr "복사 후 검증 결과"
 

@@ -632,6 +632,12 @@
     flex-shrink: 0;
 }
 
+/* The components a warning is about, hanging below it */
+.warning-details {
+    margin-left: 8px;
+    margin-bottom: 4px;
+}
+
 .detail-report {
     margin-top: 6px;
     padding: 6px;
@@ -669,6 +675,7 @@
     opacity: 0.85;
 }
 
+.diff-row--warning > .unity-foldout__toggle .unity-foldout__text,
 .diff-row--valuemismatch > .unity-foldout__toggle .unity-foldout__text,
 .diff-row--referencemismatch > .unity-foldout__toggle .unity-foldout__text,
 .diff-row--unresolvedreference > .unity-foldout__toggle .unity-foldout__text {
@@ -688,6 +695,15 @@
 
 .diff-property--unresolvedreference {
     opacity: 0.8;
+}
+
+/* Reveals the referenced object; not stretched, so only the text reacts */
+.diff-property--link {
+    align-self: flex-start;
+}
+
+.diff-property--link:hover {
+    color: rgb(100, 150, 255);
 }
 
 .diff-actions {

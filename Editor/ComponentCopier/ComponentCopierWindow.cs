@@ -141,6 +141,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 selectedKeys.Clear();
                 selectedObjectPaths.Clear();
+                expandedIssues.Clear();
                 previousKeys.Clear();
             }
 

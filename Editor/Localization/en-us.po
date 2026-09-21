@@ -554,6 +554,22 @@ msgstr "References to {0} object(s) outside of the source ({1} place(s)) are kep
 msgid "componentCopier.report.brokenReference"
 msgstr "{0} ({1}) references a component that Replace will remove: {2}"
 
+msgid "componentCopier.report.kind.externalKept"
+msgstr "Kept as is"
+
+#, csharp-format
+msgid "componentCopier.report.more"
+msgstr "{0} more"
+
+msgid "componentCopier.report.cause.notSelected"
+msgstr "referenced component is not selected"
+
+msgid "componentCopier.report.cause.needsReview"
+msgstr "counterpart not confirmed"
+
+msgid "componentCopier.report.cause.noCounterpart"
+msgstr "no counterpart"
+
 msgid "componentCopier.report.afterApply"
 msgstr "Verification after copying"
 

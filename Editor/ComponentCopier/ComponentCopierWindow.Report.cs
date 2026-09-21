@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kanameliser.Editor.MAMaterialHelper.Common;
@@ -14,6 +15,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private DiffReport detailReport;
         private string detailTitleKey;
         private string detailMessage;
+
+        private const int MaxIssueRows = 20;
+        private const int MaxIssueLines = 50;
+
+        // Pre-check rows the user opened. The report is rebuilt on every scene edit, and fixing a mapping
+        // is such an edit; without this the rows would close while they are being worked on.
+        private readonly HashSet<(string kind, ComponentKey key)> expandedIssues = new();
 
         private void CreateReportSection(VisualElement parent)
         {
@@ -159,9 +167,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (IsTargetAsset()) AddWarning("componentCopier.warning.targetIsAsset");
 
-            int blocked = Count(ComponentAction.Blocked);
-            if (blocked > 0) AddWarning("componentCopier.report.blocked", blocked);
+            var blocked = plan.Components.Where(c => c.Action == ComponentAction.Blocked && !c.Implicit).ToList();
+            if (blocked.Count > 0)
+            {
+                AddWarning("componentCopier.report.blocked", blocked.Count);
+                AddIssueRows(blocked, CreateBlockedRow);
+            }
 
+            var available = new HashSet<ComponentKey>(entries.Select(e => e.Key));
             var unresolved = plan.Components
                 .SelectMany(c => c.References)
                 .Where(r => r.Kind == ReferenceKind.InternalUnresolved)
@@ -171,7 +184,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var warning = AddWarning("componentCopier.report.unresolved", unresolved.Count);
 
                 // References that only fail because the referenced component was left unselected
-                var available = new HashSet<ComponentKey>(entries.Select(e => e.Key));
                 var addable = unresolved
                     .Where(r => r.MissingDependency.HasValue && available.Contains(r.MissingDependency.Value))
                     .Select(r => r.MissingDependency.Value)
@@ -186,10 +198,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     addButton.AddToClassList("warning-action");
                     warning.Add(addButton);
                 }
+
+                AddIssueRows(WithReferences(ReferenceKind.InternalUnresolved), planned => CreateReferenceIssueRow(
+                    planned, ReferenceKind.InternalUnresolved, "componentCopier.diff.unresolvedReference",
+                    reference => $"{DescribeReference(reference.SourceValue)} → {CopyVerifier.NoneText}" +
+                                 $" · {UnresolvedCause(reference, available)}"));
             }
 
             var (keptObjects, keptPlaces) = CountExternalReferences(ReferenceKind.ExternalScene);
-            if (keptPlaces > 0) AddWarning("componentCopier.report.external", keptObjects, keptPlaces);
+            if (keptPlaces > 0)
+            {
+                AddWarning("componentCopier.report.external", keptObjects, keptPlaces);
+                AddIssueRows(WithReferences(ReferenceKind.ExternalScene), planned => CreateReferenceIssueRow(
+                    planned, ReferenceKind.ExternalScene, "componentCopier.report.kind.externalKept",
+                    reference => DescribeReference(reference.SourceValue)));
+            }
 
             foreach (var broken in plan.BrokenReferences.Take(10))
             {
@@ -221,6 +244,140 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 .Distinct()
                 .Count();
             return (objects, references.Count);
+        }
+
+        private List<PlannedComponent> WithReferences(ReferenceKind kind)
+        {
+            return plan.Components.Where(c => c.References.Any(r => r.Kind == kind)).ToList();
+        }
+
+        /// <summary>
+        /// Lists the components a warning is about, in the same form as the rows of the detail report:
+        /// a count alone does not tell where to look.
+        /// </summary>
+        private void AddIssueRows(List<PlannedComponent> components, Func<PlannedComponent, VisualElement> createRow)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("warning-details");
+            reportContainer.Add(container);
+
+            foreach (var planned in components.Take(MaxIssueRows))
+                container.Add(createRow(planned));
+
+            if (components.Count > MaxIssueRows)
+                container.Add(MoreLabel(components.Count - MaxIssueRows));
+        }
+
+        private VisualElement CreateBlockedRow(PlannedComponent planned)
+        {
+            var foldout = CreateIssueFoldout(planned, "blocked", "componentCopier.action.blocked");
+
+            var reason = new Label(Localization.S("componentCopier.blocked." + Camel(planned.BlockReason)));
+            reason.AddToClassList("diff-property");
+            foldout.Add(reason);
+
+            AddSelectSourceButton(foldout, planned);
+            return foldout;
+        }
+
+        private VisualElement CreateReferenceIssueRow(
+            PlannedComponent planned, ReferenceKind kind, string kindKey, Func<PlannedReference, string> describe)
+        {
+            var foldout = CreateIssueFoldout(planned, kind.ToString().ToLowerInvariant(), kindKey);
+
+            var references = planned.References.Where(r => r.Kind == kind).ToList();
+            foreach (var reference in references.Take(MaxIssueLines))
+            {
+                string name = reference.PropertyPath.Replace(".Array.data[", "[");
+                var line = new Label($"{name}: {describe(reference)}");
+                line.AddToClassList("diff-property");
+                line.AddToClassList("diff-property--link");
+                var referenced = reference.SourceValue;
+                line.RegisterCallback<ClickEvent>(_ => Reveal(referenced));
+                foldout.Add(line);
+            }
+
+            if (references.Count > MaxIssueLines)
+                foldout.Add(MoreLabel(references.Count - MaxIssueLines));
+
+            AddSelectSourceButton(foldout, planned);
+            return foldout;
+        }
+
+        private Foldout CreateIssueFoldout(PlannedComponent planned, string kind, string kindKey)
+        {
+            var id = (kind, planned.Entry.Key);
+            var foldout = CreateReportFoldout(
+                Localization.S(kindKey), planned.Entry.Key.RelativePath, planned.Entry.Type.Name, "warning");
+            foldout.value = expandedIssues.Contains(id);
+            foldout.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.target != foldout) return;
+                if (evt.newValue) expandedIssues.Add(id);
+                else expandedIssues.Remove(id);
+            });
+            return foldout;
+        }
+
+        private static Foldout CreateReportFoldout(string kindText, string path, string typeName, string kindClass)
+        {
+            if (string.IsNullOrEmpty(path)) path = "/";
+
+            var foldout = new Foldout { text = $"[{kindText}] {path} — {typeName}", value = false };
+            foldout.AddToClassList("diff-row");
+            foldout.AddToClassList("diff-row--" + kindClass);
+            return foldout;
+        }
+
+        /// <summary>Nothing exists in the target before applying, so the pre-check points at the source.</summary>
+        private static void AddSelectSourceButton(Foldout foldout, PlannedComponent planned)
+        {
+            var actions = new VisualElement();
+            actions.AddToClassList("diff-actions");
+            foldout.Add(actions);
+
+            var source = planned.Entry.Component;
+            actions.Add(new Button(() => Reveal(source)) { text = Localization.S("componentCopier.diff.select") });
+        }
+
+        private static Label MoreLabel(int count)
+        {
+            var label = new Label(Localization.S("componentCopier.report.more", count));
+            label.AddToClassList("diff-property");
+            return label;
+        }
+
+        /// <summary>
+        /// Objects of the source are shown by path, like the rows of the mapping section where the missing
+        /// counterpart gets fixed.
+        /// </summary>
+        private string DescribeReference(UnityEngine.Object value)
+        {
+            if (value == null) return CopyVerifier.NoneText;
+
+            string name = value.name;
+            var transform = ReferenceWalker.GetTransform(value);
+            if (sourceRoot != null && transform != sourceRoot.transform &&
+                ReferenceWalker.IsInside(transform, sourceRoot.transform))
+            {
+                name = ObjectMatcher.GetRelativePathFromRoot(transform, sourceRoot.transform);
+            }
+
+            return value is GameObject || value is Transform ? name : $"{name} ({value.GetType().Name})";
+        }
+
+        private string UnresolvedCause(PlannedReference reference, HashSet<ComponentKey> available)
+        {
+            if (reference.MissingDependency is { } dependency &&
+                available.Contains(dependency) && !selectedKeys.Contains(dependency))
+            {
+                return Localization.S("componentCopier.report.cause.notSelected");
+            }
+
+            var mapping = map?.Get(ReferenceWalker.GetTransform(reference.SourceValue));
+            return mapping != null && mapping.State == MappingState.NeedsReview
+                ? Localization.S("componentCopier.report.cause.needsReview")
+                : Localization.S("componentCopier.report.cause.noCounterpart");
         }
 
         private VisualElement AddWarning(string key, params object[] args)
@@ -288,12 +445,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 : diff.Actual != null && targetRoot != null
                     ? ObjectMatcher.GetRelativePathFromRoot(diff.Actual.transform, targetRoot.transform)
                     : "";
-            if (string.IsNullOrEmpty(path)) path = "/";
 
-            string kindText = Localization.S("componentCopier.diff." + Camel(diff.Kind));
-            var foldout = new Foldout { text = $"[{kindText}] {path} — {typeName}", value = false };
-            foldout.AddToClassList("diff-row");
-            foldout.AddToClassList("diff-row--" + diff.Kind.ToString().ToLowerInvariant());
+            var foldout = CreateReportFoldout(Localization.S("componentCopier.diff." + Camel(diff.Kind)),
+                path, typeName, diff.Kind.ToString().ToLowerInvariant());
 
             foreach (var property in diff.Properties)
             {
