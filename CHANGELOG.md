@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-22
+
 ### Added
 
 - **Component Copier** (`Tools > Kanameliser Editor Plus > Component Copier`) — Copies components (PhysBone, Contact, Constraint, Modular Avatar, ...) from one outfit or avatar to another, and redirects the references inside them (bones, colliders, constraint sources, ...) to the corresponding objects of the target. Also opens from the right-click menu of a Hierarchy object, a Prefab asset, or a component header.
