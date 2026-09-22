@@ -29,6 +29,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         HostUnmapped,
         /// <summary>The host is a skinning bone that does not exist in the target. Bones are never created.</summary>
         BoneMissing,
+        /// <summary>
+        /// A reference has no counterpart and <see cref="UnresolvedReferencePolicy.SkipComponent"/> is on.
+        /// Unlike the other reasons, the host may well exist.
+        /// </summary>
+        UnresolvedReference,
     }
 
     internal enum ReferenceKind
@@ -169,6 +174,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public ComponentAction Action;
         public BlockReason BlockReason;
         public List<PlannedReference> References = new();
+
+        /// <summary>
+        /// The references that hold the component back when <see cref="BlockReason"/> is
+        /// <see cref="BlockReason.UnresolvedReference"/>. Kept apart from <see cref="References"/>, which
+        /// describe what gets written: nothing does.
+        /// </summary>
+        public List<PlannedReference> UnresolvedReferences = new();
 
         /// <summary>
         /// True for components that were not selected but belong to a nested prefab that gets instantiated.

@@ -98,6 +98,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 ExistingPolicy = ExistingComponentPolicy.Overwrite,
                 CreateMissingObjects = settings.CreateMissingObjects,
                 RedirectExternalReferences = settings.RedirectExternalReferences,
+                UnresolvedPolicy = settings.UnresolvedPolicy,
             };
             var diffPlan = BuildPlan(diffSettings);
 
@@ -150,9 +151,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             // "Identical" is counted apart from "Skip": lumped together, a target that is already up to date
             // looks as if the Overwrite policy had been ignored
+            // Components held back by the unresolved-reference setting are skips too, as far as the user is concerned
+            int skipped = Count(ComponentAction.Skip) +
+                          plan.Components.Count(c => c.BlockReason == BlockReason.UnresolvedReference);
             var summary = new Label(Localization.S("componentCopier.report.summary",
                 Count(ComponentAction.Add), Count(ComponentAction.Overwrite), Count(ComponentAction.Replace),
-                Count(ComponentAction.Skip), Count(ComponentAction.SkipIdentical), objectsToCreate));
+                skipped, Count(ComponentAction.SkipIdentical), objectsToCreate));
             summary.AddToClassList("report-summary");
             reportContainer.Add(summary);
 
@@ -192,7 +196,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (IsTargetAsset()) AddWarning("componentCopier.warning.targetIsAsset");
 
-            var blocked = plan.Components.Where(c => c.Action == ComponentAction.Blocked && !c.Implicit).ToList();
+            var blocked = plan.Components
+                .Where(c => c.Action == ComponentAction.Blocked && !c.Implicit &&
+                            c.BlockReason != BlockReason.UnresolvedReference)
+                .ToList();
             if (blocked.Count > 0)
             {
                 AddWarning("componentCopier.report.blocked", blocked.Count);
@@ -200,34 +207,36 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             var available = new HashSet<ComponentKey>(entries.Select(e => e.Key));
+            string DescribeUnresolved(PlannedReference reference) =>
+                $"{DescribeReference(reference.SourceValue)} → {CopyVerifier.NoneText}" +
+                $" · {UnresolvedCause(reference, available)}";
+            // Nothing is written for a held-back component, so there is no "cleared" value to show
+            string DescribeHeldBack(PlannedReference reference) =>
+                DescribeReference(reference.SourceValue) + $" · {UnresolvedCause(reference, available)}";
+
+            // Held back as the setting says. Nothing of them is written, so their references are not cleared
+            // and are listed apart from the ones below.
+            var heldBack = plan.Components.Where(c => c.BlockReason == BlockReason.UnresolvedReference).ToList();
+            if (heldBack.Count > 0)
+            {
+                var warning = AddWarning("componentCopier.report.heldBack", heldBack.Count);
+                AddDependencyButton(warning, heldBack.SelectMany(c => c.UnresolvedReferences), available);
+                AddIssueRows(heldBack, planned => CreateHeldBackRow(planned, DescribeHeldBack));
+            }
+
+            // Only what gets written: a component that is skipped or already identical clears nothing
             var unresolved = plan.Components
+                .Where(c => c.WillWrite)
                 .SelectMany(c => c.References)
                 .Where(r => r.Kind == ReferenceKind.InternalUnresolved)
                 .ToList();
             if (unresolved.Count > 0)
             {
                 var warning = AddWarning("componentCopier.report.unresolved", unresolved.Count);
-
-                // References that only fail because the referenced component was left unselected
-                var addable = unresolved
-                    .Where(r => r.MissingDependency.HasValue && available.Contains(r.MissingDependency.Value))
-                    .Select(r => r.MissingDependency.Value)
-                    .Distinct()
-                    .ToList();
-                if (addable.Count > 0)
-                {
-                    var addButton = new Button(() => AddMissingDependencies(addable))
-                    {
-                        text = Localization.S("componentCopier.report.addDependencies", addable.Count),
-                    };
-                    addButton.AddToClassList("warning-action");
-                    warning.Add(addButton);
-                }
-
+                AddDependencyButton(warning, unresolved, available);
                 AddIssueRows(WithReferences(ReferenceKind.InternalUnresolved), planned => CreateReferenceIssueRow(
                     planned, ReferenceKind.InternalUnresolved, "componentCopier.diff.unresolvedReference",
-                    reference => $"{DescribeReference(reference.SourceValue)} → {CopyVerifier.NoneText}" +
-                                 $" · {UnresolvedCause(reference, available)}"));
+                    DescribeUnresolved));
             }
 
             var (keptObjects, keptPlaces) = CountExternalReferences(ReferenceKind.ExternalScene);
@@ -260,6 +269,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private (int objects, int places) CountExternalReferences(ReferenceKind kind)
         {
             var references = plan.Components
+                .Where(c => c.WillWrite)
                 .SelectMany(c => c.References)
                 .Where(r => r.Kind == kind)
                 .ToList();
@@ -273,7 +283,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private List<PlannedComponent> WithReferences(ReferenceKind kind)
         {
-            return plan.Components.Where(c => c.References.Any(r => r.Kind == kind)).ToList();
+            return plan.Components.Where(c => c.WillWrite && c.References.Any(r => r.Kind == kind)).ToList();
         }
 
         /// <summary>
@@ -305,12 +315,58 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return foldout;
         }
 
+        /// <summary>
+        /// Offers to select the components that references fail on only because they are left unselected.
+        /// </summary>
+        private void AddDependencyButton(
+            VisualElement warning, IEnumerable<PlannedReference> references, HashSet<ComponentKey> available)
+        {
+            var addable = references
+                .Where(r => r.MissingDependency.HasValue && available.Contains(r.MissingDependency.Value))
+                .Select(r => r.MissingDependency.Value)
+                // A selected one that is held back or blocked cannot be fixed by selecting it
+                .Where(key => !selectedKeys.Contains(key))
+                .Distinct()
+                .ToList();
+            if (addable.Count == 0) return;
+
+            var addButton = new Button(() => AddMissingDependencies(addable))
+            {
+                text = Localization.S("componentCopier.report.addDependencies", addable.Count),
+            };
+            addButton.AddToClassList("warning-action");
+            warning.Add(addButton);
+        }
+
+        /// <summary>
+        /// Shown as an unresolved-reference row, like it would be without the setting, so that switching the
+        /// setting does not make the problem disappear; the reason line says that the component is skipped.
+        /// </summary>
+        private VisualElement CreateHeldBackRow(PlannedComponent planned, Func<PlannedReference, string> describe)
+        {
+            var foldout = CreateIssueFoldout(planned, "heldBack", "componentCopier.diff.unresolvedReference");
+
+            var reason = new Label(Localization.S("componentCopier.blocked." + Camel(planned.BlockReason)));
+            reason.AddToClassList("diff-property");
+            foldout.Add(reason);
+
+            AddReferenceLines(foldout, planned.UnresolvedReferences, describe);
+            AddSelectSourceButton(foldout, planned);
+            return foldout;
+        }
+
         private VisualElement CreateReferenceIssueRow(
             PlannedComponent planned, ReferenceKind kind, string kindKey, Func<PlannedReference, string> describe)
         {
             var foldout = CreateIssueFoldout(planned, kind.ToString().ToLowerInvariant(), kindKey);
+            AddReferenceLines(foldout, planned.References.Where(r => r.Kind == kind).ToList(), describe);
+            AddSelectSourceButton(foldout, planned);
+            return foldout;
+        }
 
-            var references = planned.References.Where(r => r.Kind == kind).ToList();
+        private static void AddReferenceLines(
+            Foldout foldout, List<PlannedReference> references, Func<PlannedReference, string> describe)
+        {
             foreach (var reference in references.Take(MaxIssueLines))
             {
                 string name = reference.DisplayPath.Replace(".Array.data[", "[");
@@ -324,9 +380,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (references.Count > MaxIssueLines)
                 foldout.Add(MoreLabel(references.Count - MaxIssueLines));
-
-            AddSelectSourceButton(foldout, planned);
-            return foldout;
         }
 
         private Foldout CreateIssueFoldout(PlannedComponent planned, string kind, string kindKey)
@@ -393,10 +446,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private string UnresolvedCause(PlannedReference reference, HashSet<ComponentKey> available)
         {
-            if (reference.MissingDependency is { } dependency &&
-                available.Contains(dependency) && !selectedKeys.Contains(dependency))
+            if (reference.MissingDependency is { } dependency)
             {
-                return Localization.S("componentCopier.report.cause.notSelected");
+                if (plannedByKey.TryGetValue(dependency, out var referenced) &&
+                    referenced.BlockReason == BlockReason.UnresolvedReference)
+                {
+                    return Localization.S("componentCopier.report.cause.heldBack");
+                }
+
+                if (available.Contains(dependency) && !selectedKeys.Contains(dependency))
+                    return Localization.S("componentCopier.report.cause.notSelected");
             }
 
             var mapping = map?.Get(ReferenceWalker.GetTransform(reference.SourceValue));

@@ -737,3 +737,32 @@ msgstr "Treat the search text as a regular expression (case-insensitive). It is 
 
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "Group the list by object. Each row is a component on that object."
+
+msgid "componentCopier.settings.unresolved"
+msgstr "Unresolved references"
+
+msgid "componentCopier.settings.unresolved:tooltip"
+msgstr "What to do when a reference inside a component has no counterpart in the target. Mapping the object in the Mapping section resolves it"
+
+msgid "componentCopier.unresolvedPolicy.clear"
+msgstr "Copy with None"
+
+msgid "componentCopier.unresolvedPolicy.skipComponent"
+msgstr "Skip the component"
+
+msgid "componentCopier.blocked.unresolvedReference"
+msgstr "A reference has no counterpart in the target, so this component is skipped as the setting says. Map the object in the Mapping section and it will be copied."
+
+#, csharp-format
+msgid "componentCopier.report.heldBack"
+msgstr "{0} component(s) are skipped as the setting says, because a reference is unresolved."
+
+msgid "componentCopier.report.cause.heldBack"
+msgstr "referenced component is skipped"
+
+msgid "componentCopier.action.skipUnresolved"
+msgstr "Skipped (unresolved)"
+
+#, csharp-format
+msgid "componentCopier.row.heldBack:tooltip"
+msgstr "{0} reference(s) have no counterpart in the target, so this component is skipped as the setting says."

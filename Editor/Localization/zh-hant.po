@@ -736,3 +736,32 @@ msgstr "將搜尋文字視為正規表示式（不區分大小寫）。比對對
 
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "依物件將清單分組。每一列是該物件上的一個元件。"
+
+msgid "componentCopier.settings.unresolved"
+msgstr "未解析的參照"
+
+msgid "componentCopier.settings.unresolved:tooltip"
+msgstr "元件內的參照在複製目標中沒有對應物件時的處理方式。在對應關係區段指定對應物件即可解決"
+
+msgid "componentCopier.unresolvedPolicy.clear"
+msgstr "以 None 複製"
+
+msgid "componentCopier.unresolvedPolicy.skipComponent"
+msgstr "略過整個元件"
+
+msgid "componentCopier.blocked.unresolvedReference"
+msgstr "參照在複製目標中沒有對應物件，依設定略過此元件。在對應關係區段指定對應物件後即會複製。"
+
+#, csharp-format
+msgid "componentCopier.report.heldBack"
+msgstr "{0} 個元件因參照未解析而依設定略過。"
+
+msgid "componentCopier.report.cause.heldBack"
+msgstr "被參照的元件被略過"
+
+msgid "componentCopier.action.skipUnresolved"
+msgstr "未解析，略過"
+
+#, csharp-format
+msgid "componentCopier.row.heldBack:tooltip"
+msgstr "{0} 個參照在複製目標中沒有對應物件，因此依設定略過此元件。"

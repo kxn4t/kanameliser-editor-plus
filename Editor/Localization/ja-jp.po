@@ -736,3 +736,32 @@ msgstr "検索文字列を正規表現として扱います（大文字と小文
 
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "一覧をオブジェクトごとにまとめます。各行はそのオブジェクトに付いているコンポーネントです。"
+
+msgid "componentCopier.settings.unresolved"
+msgstr "未解決の参照"
+
+msgid "componentCopier.settings.unresolved:tooltip"
+msgstr "コンポーネント内の参照にコピー先の対応先がない場合の扱い。対応付けセクションで対応先を指定すれば解決します"
+
+msgid "componentCopier.unresolvedPolicy.clear"
+msgstr "None でコピー"
+
+msgid "componentCopier.unresolvedPolicy.skipComponent"
+msgstr "コンポーネントごとスキップ"
+
+msgid "componentCopier.blocked.unresolvedReference"
+msgstr "参照にコピー先の対応先がないため、設定に従ってこのコンポーネントをスキップします。対応付けセクションで対応先を指定すると、コピーされます。"
+
+#, csharp-format
+msgid "componentCopier.report.heldBack"
+msgstr "{0} 件のコンポーネントは、参照が未解決のため設定に従ってスキップします。"
+
+msgid "componentCopier.report.cause.heldBack"
+msgstr "参照先のコンポーネントがスキップ"
+
+msgid "componentCopier.action.skipUnresolved"
+msgstr "未解決のためスキップ"
+
+#, csharp-format
+msgid "componentCopier.row.heldBack:tooltip"
+msgstr "{0} 件の参照にコピー先の対応先がないため、設定に従ってこのコンポーネントをスキップします。"

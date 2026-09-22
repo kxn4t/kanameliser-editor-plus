@@ -36,6 +36,49 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (map == null) throw new ArgumentNullException(nameof(map));
             settings ??= new CopySettings();
 
+            var selectedList = selected.ToList();
+            var objectsToAddList = (objectsToAdd ?? Enumerable.Empty<Transform>()).ToList();
+            var leftOutKeys = new HashSet<ComponentKey>(leftOut ?? Enumerable.Empty<ComponentKey>());
+            var heldBack = new Dictionary<Component, List<PlannedReference>>();
+
+            while (true)
+            {
+                var plan = BuildOnce(
+                    selectedList, map, settings, objectsToAddList, externalMapProvider, leftOutKeys, heldBack);
+                if (settings.UnresolvedPolicy != UnresolvedReferencePolicy.SkipComponent) return plan;
+
+                // Whether a reference is resolved is only known once the plan is complete, and holding a
+                // component back leaves the ones that refer to it without their counterpart. So the plan is
+                // rebuilt, with the held-back components taken out of the way, until nothing new comes up.
+                bool changed = false;
+                foreach (var planned in plan.Components)
+                {
+                    // Components that arrive with a prefab are not the user's pick, and the prefab comes as a whole
+                    if (!planned.WillWrite || planned.Implicit) continue;
+
+                    var unresolved = planned.References
+                        .Where(r => r.Kind == ReferenceKind.InternalUnresolved)
+                        .ToList();
+                    if (unresolved.Count == 0) continue;
+
+                    heldBack[planned.Entry.Component] = unresolved;
+                    changed = true;
+                }
+
+                if (!changed) return plan;
+            }
+        }
+
+        /// <param name="heldBack">
+        /// Components that are left out because of their unresolved references, with those references. They
+        /// are planned as blocked without touching the target: no object is created for them, and references
+        /// to them count as unresolved.
+        /// </param>
+        private static CopyPlan BuildOnce(
+            List<ComponentEntry> selected, TransformMap map, CopySettings settings,
+            List<Transform> objectsToAdd, Func<IReadOnlyCollection<Transform>, TransformMap> externalMapProvider,
+            HashSet<ComponentKey> leftOutKeys, Dictionary<Component, List<PlannedReference>> heldBack)
+        {
             var plan = new CopyPlan
             {
                 Map = map,
@@ -47,13 +90,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             foreach (var entry in selected)
             {
+                if (heldBack.TryGetValue(entry.Component, out var unresolved))
+                {
+                    plan.Components.Add(HoldBack(plan, entry, unresolved));
+                    continue;
+                }
+
                 var planned = new PlannedComponent { Entry = entry };
                 context.Resolve(entry.Host, out planned.TargetHost, out planned.HostToCreate,
                     out planned.BlockReason);
                 plan.Components.Add(planned);
             }
 
-            foreach (var source in objectsToAdd ?? Enumerable.Empty<Transform>())
+            foreach (var source in objectsToAdd)
             {
                 var blockReason = context.RequestObject(source);
                 if (blockReason != BlockReason.None)
@@ -61,7 +110,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             var externalTransforms = new HashSet<Transform>();
-            var leftOutKeys = new HashSet<ComponentKey>(leftOut ?? Enumerable.Empty<ComponentKey>());
             PlanDependencies(plan, context, externalTransforms, leftOutKeys);
             if (externalTransforms.Count > 0 && externalMapProvider != null && settings.RedirectExternalReferences)
                 plan.ExternalMap = externalMapProvider(externalTransforms);
@@ -82,6 +130,26 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (plan.ComponentsToRemove.Count > 0) CollectBrokenReferences(plan);
 
             return plan;
+        }
+
+        /// <summary>
+        /// A held-back component is not placed, so its host is looked up but never created. The existing
+        /// counterpart is noted all the same: the diff check then compares against it instead of reporting the
+        /// component as missing.
+        /// </summary>
+        private static PlannedComponent HoldBack(CopyPlan plan, ComponentEntry entry, List<PlannedReference> unresolved)
+        {
+            var planned = new PlannedComponent
+            {
+                Entry = entry,
+                BlockReason = BlockReason.UnresolvedReference,
+                UnresolvedReferences = unresolved,
+            };
+
+            if (plan.Map.TryResolve(entry.Host, out planned.TargetHost))
+                planned.Existing = ComponentScanner.FindByTypeAndIndex(planned.TargetHost, entry.Type, entry.Key.Index);
+
+            return planned;
         }
 
         /// <summary>

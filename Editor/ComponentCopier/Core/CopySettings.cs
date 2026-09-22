@@ -14,6 +14,17 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         Replace,
     }
 
+    internal enum UnresolvedReferencePolicy
+    {
+        /// <summary>Copy the component and clear every reference that has no counterpart.</summary>
+        Clear,
+        /// <summary>
+        /// Leave the component out as long as one of its references has no counterpart. A constraint
+        /// without its source or a PhysBone without its colliders is only half of a component.
+        /// </summary>
+        SkipComponent,
+    }
+
     /// <summary>
     /// Global copy options. Deliberately not per-component: per-item choices get tedious quickly.
     /// </summary>
@@ -23,6 +34,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public ExistingComponentPolicy ExistingPolicy = ExistingComponentPolicy.Overwrite;
         public bool CreateMissingObjects = true;
+        public UnresolvedReferencePolicy UnresolvedPolicy = UnresolvedReferencePolicy.Clear;
 
         /// <summary>
         /// Redirect references to the avatar around the source to the avatar around the target.
@@ -37,6 +49,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 ExistingPolicy = (ExistingComponentPolicy)EditorPrefs.GetInt(
                     PrefsPrefix + nameof(ExistingPolicy), (int)ExistingComponentPolicy.Overwrite),
                 CreateMissingObjects = EditorPrefs.GetBool(PrefsPrefix + nameof(CreateMissingObjects), true),
+                UnresolvedPolicy = (UnresolvedReferencePolicy)EditorPrefs.GetInt(
+                    PrefsPrefix + nameof(UnresolvedPolicy), (int)UnresolvedReferencePolicy.Clear),
                 RedirectExternalReferences = EditorPrefs.GetBool(
                     PrefsPrefix + nameof(RedirectExternalReferences), true),
             };
@@ -46,6 +60,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             EditorPrefs.SetInt(PrefsPrefix + nameof(ExistingPolicy), (int)ExistingPolicy);
             EditorPrefs.SetBool(PrefsPrefix + nameof(CreateMissingObjects), CreateMissingObjects);
+            EditorPrefs.SetInt(PrefsPrefix + nameof(UnresolvedPolicy), (int)UnresolvedPolicy);
             EditorPrefs.SetBool(PrefsPrefix + nameof(RedirectExternalReferences), RedirectExternalReferences);
         }
     }

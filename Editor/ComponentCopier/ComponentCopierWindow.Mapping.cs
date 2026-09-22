@@ -63,6 +63,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 Add(planned.Entry.Host);
                 foreach (var reference in planned.References)
                     Add(ReferenceWalker.GetTransform(reference.SourceValue));
+                // A held-back component writes nothing, but the references that hold it back are exactly
+                // what the user has to map to get it copied
+                foreach (var reference in planned.UnresolvedReferences)
+                    Add(ReferenceWalker.GetTransform(reference.SourceValue));
             }
 
             // Listed in Hierarchy order. The order of discovery jumps between a component's object and the

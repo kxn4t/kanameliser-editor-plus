@@ -157,6 +157,62 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             Assert.IsEmpty(plan.ObjectsToCreate);
         }
 
+        [Test]
+        public void UnresolvedReference_HoldsTheComponentBackWhenTheSettingSaysSo()
+        {
+            var source = CreateHierarchy("Source", "Body");
+            var target = CreateHierarchy("Target", "Body");
+            AddLodGroup(source, source.Find("Body").gameObject.AddComponent<MeshRenderer>());
+
+            var settings = new CopySettings { UnresolvedPolicy = UnresolvedReferencePolicy.SkipComponent };
+            var plan = BuildPlan(source, target, settings, typeof(LODGroup));
+            var planned = plan.Components.Single();
+            Assert.AreEqual(ComponentAction.Blocked, planned.Action);
+            Assert.AreEqual(BlockReason.UnresolvedReference, planned.BlockReason);
+            Assert.AreEqual(1, planned.UnresolvedReferences.Count);
+            Assert.IsEmpty(planned.References);
+
+            CopyExecutor.Execute(plan);
+
+            Assert.IsNull(target.GetComponent<LODGroup>(), "A held-back component must not be written at all");
+        }
+
+        [Test]
+        public void HoldingAComponentBack_HoldsBackTheOnesThatReferToIt()
+        {
+            // Anchor carries a component, so it is not created bare and the renderer's anchor stays unresolved
+            var source = CreateHierarchy("Source", "Body", "Anchor");
+            var target = CreateHierarchy("Target", "Body");
+            source.Find("Anchor").gameObject.AddComponent<BoxCollider>();
+            var renderer = source.Find("Body").gameObject.AddComponent<MeshRenderer>();
+            renderer.probeAnchor = source.Find("Anchor");
+            AddLodGroup(source, renderer);
+
+            var settings = new CopySettings { UnresolvedPolicy = UnresolvedReferencePolicy.SkipComponent };
+            var plan = BuildPlan(source, target, settings, typeof(LODGroup), typeof(MeshRenderer));
+
+            Assert.AreEqual(2, plan.Components.Count);
+            Assert.That(plan.Components.Select(c => c.BlockReason),
+                Is.All.EqualTo(BlockReason.UnresolvedReference),
+                "The LODGroup loses its renderer once the renderer is held back");
+            Assert.IsEmpty(plan.ObjectsToCreate);
+
+            var lodGroup = plan.Components.Single(c => c.Entry.Type == typeof(LODGroup));
+            Assert.AreEqual(new ComponentKey("Body", typeof(MeshRenderer).FullName, 0),
+                lodGroup.UnresolvedReferences.Single().MissingDependency);
+        }
+
+        [Test]
+        public void UnresolvedReference_IsClearedByDefault()
+        {
+            var source = CreateHierarchy("Source", "Body");
+            var target = CreateHierarchy("Target", "Body");
+            AddLodGroup(source, source.Find("Body").gameObject.AddComponent<MeshRenderer>());
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(LODGroup));
+            Assert.AreEqual(ComponentAction.Add, plan.Components.Single().Action);
+        }
+
         private static CopyPlan BuildPlanWithSurroundings(Transform source, Transform target, params System.Type[] types)
         {
             var map = TransformMapper.Build(source, target);

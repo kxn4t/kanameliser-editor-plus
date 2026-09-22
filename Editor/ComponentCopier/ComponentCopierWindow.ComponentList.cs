@@ -891,12 +891,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (plannedByKey.TryGetValue(entry.Key, out var planned))
             {
-                int unresolved = planned.References.Count(r => r.Kind == ReferenceKind.InternalUnresolved);
+                int unresolved = planned.References.Count(r => r.Kind == ReferenceKind.InternalUnresolved) +
+                                 planned.UnresolvedReferences.Count;
                 if (unresolved > 0)
                 {
                     var unresolvedLabel = new Label("⚠ " + unresolved)
                     {
-                        tooltip = Localization.S("componentCopier.row.unresolved:tooltip", unresolved),
+                        tooltip = Localization.S(planned.BlockReason == BlockReason.UnresolvedReference
+                            ? "componentCopier.row.heldBack:tooltip"
+                            : "componentCopier.row.unresolved:tooltip", unresolved),
                     };
                     unresolvedLabel.AddToClassList("warning-badge");
                     row.Add(unresolvedLabel);
@@ -955,6 +958,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private static string ActionLabel(PlannedComponent planned)
         {
+            // Held back by the unresolved-reference setting: "Blocked" alone would hide that it is a skip
+            if (planned.BlockReason == BlockReason.UnresolvedReference)
+                return Localization.S("componentCopier.action.skipUnresolved");
+
             return planned.WillWrite && ArrivesWithPrefab(planned)
                 ? Localization.S("componentCopier.action.withPrefab")
                 : ActionName(planned.Action);

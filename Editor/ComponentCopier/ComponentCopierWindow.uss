@@ -746,17 +746,27 @@
 
 .settings-row {
     flex-direction: row;
-    flex-wrap: wrap;
     align-items: center;
 }
 
-/* A fixed basis instead of the content width: otherwise a longer option ("Replace (delete, then copy)")
- * makes the row overflow, the toggle wraps, and the popup suddenly spans the whole row. */
-.settings-policy {
+/* The popups stack here, so they get the same width whatever their labels and options measure */
+.settings-fields {
     flex-grow: 1;
     flex-shrink: 1;
-    flex-basis: 280px;
-    min-width: 220px;
+    min-width: 0;
+}
+
+.settings-policy {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+/* One label column for both popups. Unity sizes a label to its text once it exceeds the 150px minimum,
+ * which puts the popups at different offsets when the labels differ in length. */
+.settings-policy > .unity-base-field__label {
+    min-width: 150px;
+    width: 150px;
+    flex-shrink: 0;
 }
 
 .settings-policy > .unity-base-field__input {

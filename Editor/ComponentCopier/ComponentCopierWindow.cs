@@ -297,6 +297,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         #region Footer
 
         private PopupField<ExistingComponentPolicy> policyField;
+        private PopupField<UnresolvedReferencePolicy> unresolvedPolicyField;
         private Toggle createObjectsToggle;
 
         private void CreateFooter(VisualElement root)
@@ -305,9 +306,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             footer.AddToClassList("footer");
             root.Add(footer);
 
+            // The two popups stack in a column of their own so that they share one width and one label
+            // column, with the toggle centered beside them
             var settingsRow = new VisualElement();
             settingsRow.AddToClassList("settings-row");
             footer.Add(settingsRow);
+
+            var settingsFields = new VisualElement();
+            settingsFields.AddToClassList("settings-fields");
+            settingsRow.Add(settingsFields);
 
             var policies = new List<ExistingComponentPolicy>
             {
@@ -326,7 +333,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 settings.Save();
                 Recompute();
             });
-            settingsRow.Add(policyField);
+            settingsFields.Add(policyField);
 
             createObjectsToggle = new Toggle("componentCopier.settings.createObjects")
             {
@@ -340,6 +347,24 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 settings.Save();
                 Recompute();
             });
+            var unresolvedPolicies = new List<UnresolvedReferencePolicy>
+            {
+                UnresolvedReferencePolicy.Clear,
+                UnresolvedReferencePolicy.SkipComponent,
+            };
+            unresolvedPolicyField = new PopupField<UnresolvedReferencePolicy>(
+                "componentCopier.settings.unresolved", unresolvedPolicies, settings.UnresolvedPolicy,
+                UnresolvedPolicyLabel, UnresolvedPolicyLabel);
+            unresolvedPolicyField.AddToClassList("settings-policy");
+            unresolvedPolicyField.AddToClassList("ndmf-tr");
+            unresolvedPolicyField.RegisterValueChangedCallback(evt =>
+            {
+                settings.UnresolvedPolicy = evt.newValue;
+                settings.Save();
+                Recompute();
+            });
+            settingsFields.Add(unresolvedPolicyField);
+
             settingsRow.Add(createObjectsToggle);
 
             var buttonRow = new VisualElement();
@@ -360,6 +385,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private static string PolicyLabel(ExistingComponentPolicy policy)
         {
             return Localization.S("componentCopier.policy." + Camel(policy));
+        }
+
+        private static string UnresolvedPolicyLabel(UnresolvedReferencePolicy policy)
+        {
+            return Localization.S("componentCopier.unresolvedPolicy." + Camel(policy));
         }
 
         /// <summary>Enum value as a localization key segment ("SkipIdentical" becomes "skipIdentical").</summary>
@@ -419,8 +449,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             applyButton.text = Localization.S("componentCopier.apply");
             policyField.tooltip = Localization.S("componentCopier.settings.existing:tooltip");
             createObjectsToggle.tooltip = Localization.S("componentCopier.settings.createObjects:tooltip");
+            unresolvedPolicyField.tooltip = Localization.S("componentCopier.settings.unresolved:tooltip");
             // PopupField caches its formatted text
             policyField.SetValueWithoutNotify(policyField.value);
+            unresolvedPolicyField.SetValueWithoutNotify(unresolvedPolicyField.value);
         }
 
         private void UpdateFooterState()

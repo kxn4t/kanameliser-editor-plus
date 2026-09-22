@@ -736,3 +736,32 @@ msgstr "将搜索文本视为正则表达式（不区分大小写）。匹配对
 
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "按对象对列表分组。每一行是该对象上的一个组件。"
+
+msgid "componentCopier.settings.unresolved"
+msgstr "未解析的引用"
+
+msgid "componentCopier.settings.unresolved:tooltip"
+msgstr "组件内的引用在复制目标中没有对应对象时的处理方式。在对应关系部分指定对应对象即可解决"
+
+msgid "componentCopier.unresolvedPolicy.clear"
+msgstr "以 None 复制"
+
+msgid "componentCopier.unresolvedPolicy.skipComponent"
+msgstr "跳过整个组件"
+
+msgid "componentCopier.blocked.unresolvedReference"
+msgstr "引用在复制目标中没有对应对象，按设置跳过此组件。在对应关系部分指定对应对象后即会复制。"
+
+#, csharp-format
+msgid "componentCopier.report.heldBack"
+msgstr "{0} 个组件因引用未解析而按设置跳过。"
+
+msgid "componentCopier.report.cause.heldBack"
+msgstr "被引用的组件被跳过"
+
+msgid "componentCopier.action.skipUnresolved"
+msgstr "未解析，跳过"
+
+#, csharp-format
+msgid "componentCopier.row.heldBack:tooltip"
+msgstr "{0} 个引用在复制目标中没有对应对象，因此按设置跳过此组件。"
