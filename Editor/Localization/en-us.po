@@ -324,6 +324,43 @@ msgstr "Rescan the source and target"
 msgid "componentCopier.swap:tooltip"
 msgstr "Swap the source and target"
 
+msgid "componentCopier.mirror"
+msgstr "Copy to the other side"
+
+msgid "componentCopier.mirror:tooltip"
+msgstr "Copies the components of one side of the source to the other side of the same hierarchy. Objects are paired by the side marker of their name (_L / _R, Left / Right, 左 / 右) or by their humanoid bone, and positions and rotations are mirrored across the middle of the avatar."
+
+msgid "componentCopier.mirror.leftToRight"
+msgstr "L → R"
+
+msgid "componentCopier.mirror.rightToLeft"
+msgstr "R → L"
+
+#, csharp-format
+msgid "componentCopier.mirror.otherSide"
+msgstr "Other side ({0})"
+
+msgid "componentCopier.side.left"
+msgstr "left"
+
+msgid "componentCopier.side.right"
+msgstr "right"
+
+#, csharp-format
+msgid "componentCopier.info.noSideComponents"
+msgstr "No components on the {0} side. Sides are determined by the side marker in the name of the object or one of its parents (_L / _R, Left / Right, 左 / 右), or by its humanoid bone. Components on the middle line (Hips, Head, ...) have no other side and are not listed."
+
+#, csharp-format
+msgid "componentCopier.report.mirror"
+msgstr "{0} value(s) are adapted to the other side: positions and rotations are mirrored across the middle of {1}, and the side of tags, parameter names, ... is flipped."
+
+#, csharp-format
+msgid "componentCopier.report.axisDependent"
+msgstr "{0} component(s) hold values that depend on the axes of the bone (PhysBone Limit Rotation, constraint offsets and frozen axes, ...). They are copied as is; check them on the other side after copying."
+
+msgid "componentCopier.report.kind.axisDependent"
+msgstr "Check axes"
+
 msgid "componentCopier.warning.sameObject"
 msgstr "Source and target are the same object."
 
@@ -332,6 +369,9 @@ msgstr "Source and target must not contain each other."
 
 msgid "componentCopier.warning.targetIsAsset"
 msgstr "The target is an asset. Only the diff check is available, because applying to an asset cannot be undone. Place it in the scene to copy."
+
+msgid "componentCopier.warning.mirrorSourceIsAsset"
+msgstr "The source is an asset. A copy to the other side is written into the source itself, and applying to an asset cannot be undone, so only the diff check is available. Place it in the scene to copy."
 
 msgid "componentCopier.warning.pipelineManager"
 msgstr "Pipeline Manager is selected. Its Blueprint ID is copied too, so uploading the target would overwrite the source avatar."
@@ -526,6 +566,9 @@ msgstr "When on, references with a counterpart on the target side are redirected
 msgid "componentCopier.mapping.external.noSurroundings"
 msgstr "No other avatar was found around the target, so nothing is redirected automatically (the target is not inside an avatar, or sits in the same avatar as the source). To redirect a reference, pick its replacement in the row."
 
+msgid "componentCopier.mapping.external.mirrorKept"
+msgstr "A copy to the other side stays inside the avatar, so references to objects outside of it are kept as they are."
+
 msgid "componentCopier.mapping.external.holders"
 msgstr "Referenced by: {0}"
 
@@ -549,6 +592,9 @@ msgstr "References to the outside"
 
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "References to scene objects outside of the source. They are kept as they are, because the source and the target sit in the same avatar, or one of them has no parent to look at."
+
+msgid "componentCopier.mapping.group.externalKept.mirror"
+msgstr "References to the outside of the avatar"
 
 msgid "componentCopier.mapping.note.externalNoCounterpart"
 msgstr "No counterpart (kept as is)"

@@ -80,7 +80,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             Debug.Log($"[Component Copier] Copied {result.WrittenComponents} component(s) " +
-                      $"from '{sourceRoot.name}' to '{targetRoot.name}'.");
+                      $"from '{sourceRoot.name}' to '{(mirrorMode ? "the other side" : targetRoot.name)}'.");
 
             Rescan(resetSelection: false);
         }
@@ -129,7 +129,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (plan == null)
             {
-                reportContainer.Add(InfoLabel("componentCopier.info.noPlan"));
+                // A mirror copy needs nothing but the source
+                reportContainer.Add(InfoLabel(mirrorMode ? "componentCopier.info.selectSource" : "componentCopier.info.noPlan"));
                 return;
             }
 
@@ -159,6 +160,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 skipped, Count(ComponentAction.SkipIdentical), objectsToCreate));
             summary.AddToClassList("report-summary");
             reportContainer.Add(summary);
+
+            int mirroredValues = plan.Mirror != null ? plan.Components.Where(c => c.WillWrite).Sum(c => c.Values.Count) : 0;
+            if (mirroredValues > 0)
+            {
+                var mirrorLabel = new Label(Localization.S("componentCopier.report.mirror",
+                    mirroredValues, plan.Mirror.Root.name));
+                mirrorLabel.AddToClassList("report-summary");
+                reportContainer.Add(mirrorLabel);
+            }
 
             if (prefabs > 0)
             {
@@ -194,7 +204,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 reportContainer.Add(redirectedLabel);
             }
 
-            if (IsTargetAsset()) AddWarning("componentCopier.warning.targetIsAsset");
+            if (IsTargetAsset())
+                AddWarning(mirrorMode ? "componentCopier.warning.mirrorSourceIsAsset" : "componentCopier.warning.targetIsAsset");
 
             var blocked = plan.Components
                 .Where(c => c.Action == ComponentAction.Blocked && !c.Implicit &&
@@ -237,6 +248,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 AddIssueRows(WithReferences(ReferenceKind.InternalUnresolved), planned => CreateReferenceIssueRow(
                     planned, ReferenceKind.InternalUnresolved, "componentCopier.diff.unresolvedReference",
                     DescribeUnresolved));
+            }
+
+            // Mirrored as far as the rules go; the rest depends on the rig and is left to the user
+            var axisDependent = plan.Components
+                .Where(c => c.WillWrite && c.AxisDependentProperties.Count > 0)
+                .ToList();
+            if (axisDependent.Count > 0)
+            {
+                AddWarning("componentCopier.report.axisDependent", axisDependent.Count);
+                AddIssueRows(axisDependent, CreateAxisDependentRow);
             }
 
             var (keptObjects, keptPlaces) = CountExternalReferences(ReferenceKind.ExternalScene);
@@ -351,6 +372,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             foldout.Add(reason);
 
             AddReferenceLines(foldout, planned.UnresolvedReferences, describe);
+            AddSelectSourceButton(foldout, planned);
+            return foldout;
+        }
+
+        /// <summary>Lists the values a mirror copy left as they are, for the user to check on the other side.</summary>
+        private VisualElement CreateAxisDependentRow(PlannedComponent planned)
+        {
+            var foldout = CreateIssueFoldout(planned, "axisDependent", "componentCopier.report.kind.axisDependent");
+
+            foreach (var propertyPath in planned.AxisDependentProperties.Take(MaxIssueLines))
+            {
+                var line = new Label(propertyPath.Replace(".Array.data[", "["));
+                line.AddToClassList("diff-property");
+                foldout.Add(line);
+            }
+
+            if (planned.AxisDependentProperties.Count > MaxIssueLines)
+                foldout.Add(MoreLabel(planned.AxisDependentProperties.Count - MaxIssueLines));
+
             AddSelectSourceButton(foldout, planned);
             return foldout;
         }
@@ -519,6 +559,22 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 box.Add(CreateDiffRow(diff));
         }
 
+        /// <summary>
+        /// The path of a target object, read like the source paths of the other rows: from the counterpart of the
+        /// source. The other side of a mirror copy can lie outside of it, and is read from the avatar then.
+        /// </summary>
+        private string TargetPath(Transform transform)
+        {
+            if (map == null) return "";
+
+            var from = sourceRoot != null && map.TryResolve(sourceRoot.transform, out var counterpart) &&
+                       ReferenceWalker.IsInside(transform, counterpart)
+                ? counterpart
+                : map.TargetRoot;
+            string path = ObjectMatcher.GetRelativePathFromRoot(transform, from);
+            return path.Length > 0 ? path : transform.name;
+        }
+
         private VisualElement CreateDiffRow(ComponentDiff diff)
         {
             string typeName = diff.Planned != null
@@ -526,9 +582,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 : diff.Actual != null ? diff.Actual.GetType().Name : "?";
             string path = diff.Planned != null
                 ? diff.Planned.Entry.Key.RelativePath
-                : diff.Actual != null && targetRoot != null
-                    ? ObjectMatcher.GetRelativePathFromRoot(diff.Actual.transform, targetRoot.transform)
-                    : "";
+                : diff.Actual != null ? TargetPath(diff.Actual.transform) : "";
 
             var foldout = CreateReportFoldout(Localization.S("componentCopier.diff." + Camel(diff.Kind)),
                 path, typeName, diff.Kind.ToString().ToLowerInvariant());

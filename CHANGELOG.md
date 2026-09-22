@@ -14,13 +14,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Component Copier**: Added a `⇅` button that swaps the source and the target
+- **Component Copier** — Added a `⇅` button that swaps the source and the target
+- **Component Copier** — Added **Copy to the other side**, which copies the components of one side of an outfit or avatar to the other side of the same hierarchy.
+  - Objects are paired by the side marker of their name (`_L` / `_R`, `Left` / `Right`, `左` / `右`) or by their humanoid bone, and missing objects are created under the flipped name
+  - Positions and rotations are mirrored across the middle of the avatar, and the side of Contact tags, the Parameter of PhysBones and Contact Receivers, the Collider to Remap of MA Global Colliders, and the bone of MA Bone Proxies is flipped
+  - Values that depend on the bone axes (PhysBone Limit Rotation, some constraint offsets, frozen axes) are copied as is and listed in the pre-check
 
 ---
 
 ### 追加
 
-- **Component Copier**: コピー元とコピー先を入れ替える `⇅` ボタンを追加
+- **Component Copier** — コピー元とコピー先を入れ替える `⇅` ボタンを追加
+- **Component Copier** — **反対側へコピー** を追加。衣装やアバターの片側のコンポーネントを、同じ階層の反対側へコピーします。
+  - オブジェクトは名前の左右表記（`_L` / `_R`、`Left` / `Right`、`左` / `右`）または Humanoid ボーンで対応付け、足りないオブジェクトは反転した名前で作成します
+  - 位置と回転はアバターの中心を基準に左右反転し、Contact のタグ、PhysBone と Contact Receiver の Parameter、MA Global Collider の上書き対象のコライダー、MA Bone Proxy の追従先は左右を入れ替えます
+  - ボーンの軸に依存する値（PhysBone の Limit Rotation、一部の Constraint のオフセット、固定する軸）はそのままコピーし、適用前チェックに一覧表示します
 
 ## [1.1.0] - 2026-09-22
 

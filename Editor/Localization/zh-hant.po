@@ -323,6 +323,43 @@ msgstr "重新掃描複製來源和複製目標"
 msgid "componentCopier.swap:tooltip"
 msgstr "交換複製來源和複製目標"
 
+msgid "componentCopier.mirror"
+msgstr "複製到另一側"
+
+msgid "componentCopier.mirror:tooltip"
+msgstr "將複製來源一側的元件複製到同一階層的另一側。物件依名稱中的左右標記（_L / _R、Left / Right、左 / 右）或 Humanoid 骨骼對應，位置與旋轉以 Avatar 的中心為基準左右翻轉。"
+
+msgid "componentCopier.mirror.leftToRight"
+msgstr "L → R"
+
+msgid "componentCopier.mirror.rightToLeft"
+msgstr "R → L"
+
+#, csharp-format
+msgid "componentCopier.mirror.otherSide"
+msgstr "另一側（{0}）"
+
+msgid "componentCopier.side.left"
+msgstr "左"
+
+msgid "componentCopier.side.right"
+msgstr "右"
+
+#, csharp-format
+msgid "componentCopier.info.noSideComponents"
+msgstr "{0}側沒有元件。左右依物件或其父物件名稱中的左右標記（_L / _R、Left / Right、左 / 右）或 Humanoid 骨骼判定。中線上（Hips、Head 等）的元件沒有另一側，因此不會列出。"
+
+#, csharp-format
+msgid "componentCopier.report.mirror"
+msgstr "{0} 個值將調整為另一側的值（位置與旋轉以 {1} 的中心為基準左右翻轉，標籤與參數名稱等則互換左右）。"
+
+#, csharp-format
+msgid "componentCopier.report.axisDependent"
+msgstr "{0} 個元件包含依賴骨骼軸向的值（PhysBone 的 Limit Rotation、Constraint 的偏移與凍結的軸等）。這些值按原樣複製，請在複製後於另一側確認。"
+
+msgid "componentCopier.report.kind.axisDependent"
+msgstr "檢查軸向"
+
 msgid "componentCopier.warning.sameObject"
 msgstr "複製來源和複製目標是同一個物件。"
 
@@ -331,6 +368,9 @@ msgstr "複製來源和複製目標不能互相包含。"
 
 msgid "componentCopier.warning.targetIsAsset"
 msgstr "複製目標是資源。套用到資源後無法 Undo，因此只能執行差異檢查。要複製請先放置到場景中。"
+
+msgid "componentCopier.warning.mirrorSourceIsAsset"
+msgstr "複製來源是資源。「複製到另一側」會寫入複製來源本身，而套用到資源後無法 Undo，因此只能執行差異檢查。要複製請先放置到場景中。"
 
 msgid "componentCopier.warning.pipelineManager"
 msgstr "已選取 Pipeline Manager。Blueprint ID 也會被複製，上傳複製目標將覆蓋複製來源的 Avatar。"
@@ -525,6 +565,9 @@ msgstr "開啟時，複製目標一側有對應物件的參照會取代為該物
 msgid "componentCopier.mapping.external.noSurroundings"
 msgstr "在複製目標之外找不到其他 Avatar，因此不會自動取代（複製目標不在 Avatar 中，或與複製來源位於同一個 Avatar 中）。如需取代，請在該列中指定取代物件。"
 
+msgid "componentCopier.mapping.external.mirrorKept"
+msgstr "「複製到另一側」只在 Avatar 內進行，因此指向 Avatar 之外物件的參照會保持原樣。"
+
 msgid "componentCopier.mapping.external.holders"
 msgstr "參照來源：{0}"
 
@@ -548,6 +591,9 @@ msgstr "指向複製來源之外的參照"
 
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "指向複製來源之外的場景物件的參照。由於複製來源和複製目標位於同一個 Avatar 中，或其中一方沒有外層父物件，因此不取代，保持不變。"
+
+msgid "componentCopier.mapping.group.externalKept.mirror"
+msgstr "指向 Avatar 之外的參照"
 
 msgid "componentCopier.mapping.note.externalNoCounterpart"
 msgstr "無對應（保持不變）"

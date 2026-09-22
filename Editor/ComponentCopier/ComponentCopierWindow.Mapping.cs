@@ -95,7 +95,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (map == null || plan == null)
             {
                 mappingContainer.Add(InfoLabel(
-                    targetRoot == null ? "componentCopier.info.selectTarget"
+                    mirrorMode ? "componentCopier.info.selectSource"
+                    : targetRoot == null ? "componentCopier.info.selectTarget"
                     : sourceRoot == null ? "componentCopier.info.needsSource"
                     : "componentCopier.info.fixTarget"));
                 return;
@@ -266,7 +267,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Transform existingParent = null;
             for (var current = plannedObject; current != null; current = current.ParentToCreate)
             {
-                names.Insert(0, current.Source.name);
+                names.Insert(0, current.Name);
                 existingParent = current.ExistingParent;
             }
 
@@ -346,7 +347,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (external.Count == 0) return;
 
             var owner = plan.ExternalMap;
-            bool canRedirect = ExternalContext.CanRedirect(sourceRoot.transform, targetRoot.transform);
+            // A mirror copy spans the avatar, so the outside is outside of the avatar and stays as it is
+            bool canRedirect = !mirrorMode && targetRoot != null &&
+                               ExternalContext.CanRedirect(sourceRoot.transform, targetRoot.transform);
 
             var titleRow = new VisualElement();
             titleRow.AddToClassList("mapping-group-title-row");
@@ -354,10 +357,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             var title = new Label(owner != null
                 ? Localization.S("componentCopier.mapping.group.external", owner.SourceRoot.name, owner.TargetRoot.name)
-                : Localization.S("componentCopier.mapping.group.externalKept"))
+                : Localization.S(mirrorMode
+                    ? "componentCopier.mapping.group.externalKept.mirror"
+                    : "componentCopier.mapping.group.externalKept"))
             {
-                tooltip = Localization.S(canRedirect
-                    ? "componentCopier.mapping.group.external:tooltip"
+                tooltip = Localization.S(canRedirect ? "componentCopier.mapping.group.external:tooltip"
+                    : mirrorMode ? "componentCopier.mapping.external.mirrorKept"
                     : "componentCopier.mapping.group.externalKept:tooltip"),
             };
             title.AddToClassList("mapping-group-title");
@@ -384,7 +389,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             else
             {
                 // Said in the open rather than in a tooltip: rows that only say "kept" look like a failure
-                mappingContainer.Add(InfoLabel("componentCopier.mapping.external.noSurroundings"));
+                mappingContainer.Add(InfoLabel(mirrorMode
+                    ? "componentCopier.mapping.external.mirrorKept"
+                    : "componentCopier.mapping.external.noSurroundings"));
             }
 
             foreach (var reference in external)
