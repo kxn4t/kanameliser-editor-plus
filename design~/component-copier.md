@@ -3,6 +3,11 @@
 衣装やアバターに付いているコンポーネントを、別の衣装やアバターへコピーするツール。設定値だけでなく、コンポーネント内のオブジェクト参照（ボーン、コライダー、Constraint のソースなど）もコピー先の対応するオブジェクトへ置き換える。
 
 - メニュー: `Tools/Kanameliser Editor Plus/Component Copier`
+- 右クリックからの起動（メニュー文言は Unity 側のため英語固定）。どれもウィンドウを開いて該当のフィールドを埋めるだけで、コピーの設定と確認はウィンドウで行う
+  - Hierarchy: `Kanameliser Editor Plus/Component Copier/Use as Source` と `Use as Target`（1 つ選択のときだけ有効。GameObject メニューは選択数ぶん呼ばれるため）
+  - Project の Prefab アセット: `Kanameliser Editor Plus/Component Copier/Use as Source`（アセットはコピー先にできないので Target はない）
+  - コンポーネントヘッダー: `Kanameliser Editor Plus/Copy with Component Copier`。その GameObject をコピー元にし、そのコンポーネントだけをチェックした状態で開く（Transform は対象外）
+  - ウィンドウが開いていればコピー元 / コピー先を差し替える。コピー元の差し替えは手動補正を消す（フィールドから変えたときと同じ）
 - 名前空間: `Kanameliser.EditorPlus.ComponentCopier`
 - UI: UI Toolkit + USS
 - このディレクトリ（`design~/`）は `~` 末尾のため、Unity と vpm-packager の両方から無視される

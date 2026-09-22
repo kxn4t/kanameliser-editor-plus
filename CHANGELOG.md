@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Existing components can be overwritten, duplicated, skipped, or replaced. Objects missing in the target can be created, except bones: the objects the components sit on, and the empty objects they refer to (constraint sources, anchors, ...)
   - Prefabs nested in the source (a prefab bundling PhysBone settings, a hat below the Head bone, ...) are added to the target as prefab instances instead of being rebuilt object by object. Prefabs and empty objects the target lacks are listed, so ones no selected component needs, such as a mesh-only hat or an unused anchor, can be added too. Components inside an added prefab that are not wanted can be unchecked; they are removed from the new instance as a prefab override
   - References that cannot be redirected are listed before applying together with the components and properties they belong to, and a diff check verifies the result after copying (or compares two hierarchies without copying)
+  - The window can also be opened from the context menus: `Use as Source` / `Use as Target` on a Hierarchy object, `Use as Source` on a Prefab asset, and `Copy with Component Copier` on a component header, which checks just that component
 
 ---
 

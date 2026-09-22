@@ -47,13 +47,46 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private Button applyButton;
         private Button diffButton;
         private bool refreshScheduled;
+        // A component the next rescan narrows the selection down to, see Open
+        private Component pendingOnlyComponent;
 
         [MenuItem("Tools/Kanameliser Editor Plus/Component Copier")]
-        public static void ShowWindow()
+        public static void ShowWindow() => Open();
+
+        /// <summary>
+        /// Opens the window and fills in what the caller already knows. With <paramref name="only"/>, just
+        /// that component is checked after the scan, so a single component can be brought over from its
+        /// context menu without searching the list for it.
+        /// </summary>
+        internal static ComponentCopierWindow Open(
+            GameObject source = null, GameObject target = null, Component only = null)
         {
             var window = GetWindow<ComponentCopierWindow>();
             window.titleContent = new GUIContent("Component Copier");
             window.minSize = new Vector2(480, 520);
+
+            if (source != null) window.SetSource(source, only);
+            if (target != null) window.SetTarget(target);
+            return window;
+        }
+
+        /// <summary>
+        /// The fields may not exist yet when the window was just created: CreateGUI then picks the roots up
+        /// through its own rescan, so only the callbacks of an existing field are run here.
+        /// </summary>
+        private void SetSource(GameObject source, Component only)
+        {
+            pendingOnlyComponent = only;
+            sourceField?.SetValueWithoutNotify(source);
+            if (sourceField != null) OnSourceChanged(source);
+            else sourceRoot = source;
+        }
+
+        private void SetTarget(GameObject target)
+        {
+            targetField?.SetValueWithoutNotify(target);
+            if (targetField != null) OnTargetChanged(target);
+            else targetRoot = target;
         }
 
         private void OnEnable()
@@ -155,6 +188,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 if (!previousKeys.Contains(entry.Key) && entry.Category != ComponentCategory.ExcludedByDefault)
                     selectedKeys.Add(entry.Key);
+            }
+
+            if (pendingOnlyComponent != null)
+            {
+                var only = entries.FirstOrDefault(e => e.Component == pendingOnlyComponent);
+                pendingOnlyComponent = null;
+                if (only != null)
+                {
+                    selectedKeys.Clear();
+                    selectedKeys.Add(only.Key);
+                    expandedTypes.Add(GroupId(only));
+                }
             }
 
             // Drop manual mappings whose objects were deleted. A genuinely null value is kept: it means
