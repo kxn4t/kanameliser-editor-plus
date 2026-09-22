@@ -279,6 +279,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // Unresolved references are cleared: a reference left pointing into the source hierarchy
                 // looks fine in the Inspector but breaks as soon as the source is removed.
                 property.objectReferenceValue = reference.Expected?.Resolve();
+
+                // MA falls back to the path half when the object half is empty, so a stale path would
+                // silently pick up whatever sits at that path on the new avatar
+                if (reference.RewritesPath)
+                {
+                    var pathProperty = serializedObject.FindProperty(reference.PathPropertyPath);
+                    if (pathProperty != null) pathProperty.stringValue = reference.ExpectedPath() ?? "";
+                }
             }
 
             // The component was already registered for Undo in pass 1

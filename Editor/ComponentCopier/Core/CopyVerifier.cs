@@ -86,15 +86,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             var references = new Dictionary<string, PlannedReference>();
+            var pathReferences = new Dictionary<string, PlannedReference>();
             foreach (var reference in planned.References)
+            {
                 references[reference.PropertyPath] = reference;
+                if (reference.RewritesPath) pathReferences[reference.PathPropertyPath] = reference;
+            }
 
             using var sourceObject = new SerializedObject(planned.Entry.Component);
             using var actualObject = new SerializedObject(actual);
 
             foreach (var sourceProperty in ReferenceWalker.Leaves(sourceObject))
             {
-                var propertyDiff = CompareProperty(sourceProperty, actualObject, references);
+                var propertyDiff = CompareProperty(sourceProperty, actualObject, references, pathReferences);
                 if (propertyDiff == null) continue;
 
                 if (diff.Properties.Count >= MaxPropertyDiffs)
@@ -162,7 +166,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private static PropertyDiff CompareProperty(
             SerializedProperty sourceProperty, SerializedObject actualObject,
-            Dictionary<string, PlannedReference> references)
+            Dictionary<string, PlannedReference> references, Dictionary<string, PlannedReference> pathReferences)
         {
             string path = sourceProperty.propertyPath;
             var actualProperty = actualObject.FindProperty(path);
@@ -172,6 +176,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // Elements beyond the target's array length. The array size leaf already reports the cause.
                 if (path.Contains(".Array.data[")) return null;
                 return Diff(sourceProperty, DiffKind.ValueMismatch, ValueToString(sourceProperty), "-");
+            }
+
+            // The path half of an AvatarObjectReference follows its object half, not the source string
+            if (pathReferences.TryGetValue(path, out var pathReference))
+            {
+                string expectedPath = pathReference.ExpectedPath();
+                // Not created yet (preview before applying): the object half reports the mismatch
+                if (expectedPath == null || expectedPath == actualProperty.stringValue) return null;
+
+                var kind = pathReference.Kind == ReferenceKind.InternalUnresolved
+                    ? DiffKind.UnresolvedReference
+                    : DiffKind.ReferenceMismatch;
+                return Diff(sourceProperty, kind, StringToString(expectedPath), ValueToString(actualProperty));
             }
 
             if (sourceProperty.propertyType == SerializedPropertyType.ObjectReference)
@@ -313,7 +330,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 case SerializedPropertyType.Float:
                     return property.doubleValue.ToString("G6");
                 case SerializedPropertyType.String:
-                    return "\"" + property.stringValue + "\"";
+                    return StringToString(property.stringValue);
                 case SerializedPropertyType.Enum:
                     int index = property.enumValueIndex;
                     var names = property.enumDisplayNames;
@@ -334,6 +351,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     return property.propertyType.ToString();
             }
         }
+
+        private static string StringToString(string value) => "\"" + value + "\"";
 
         private static string ExpectedToString(PlannedReference reference, Object resolved)
         {

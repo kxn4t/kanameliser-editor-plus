@@ -207,8 +207,21 @@ Merge Armatures Tool の `core/bone_mappings.py` と `core/armature.py` から�
   - 「スキップ」などで書き込まないコンポーネントのためには作成しない。そのため、アクションの決定を先に行う
   - 参照先がコピー先にないネスト Prefab の中にあるときは、その Prefab を追加する。Prefab と一緒に届くコンポーネントも参照を持つので、増えなくなるまで繰り返す
   - 対応付けセクションでは「作成されます」と表示し、要約の未対応（✖）の件数には数えない
-- MA の `AvatarObjectReference` は `referencePath` 文字列を持つので、専用ハンドラーを用意する（フェーズ 2）
+- MA の `AvatarObjectReference` は、オブジェクト参照と文字列のパスの 2 つで 1 つの参照なので、両方をそろえて扱う（下の「MA の AvatarObjectReference」）
 - 適用は 1 つの Undo グループにまとめる
+
+### MA の AvatarObjectReference
+
+MA のコンポーネント（Merge Armature の mergeTarget、Object Toggle や Shape Changer の対象、Blendshape Sync の参照メッシュなど）は、参照先を `AvatarObjectReference`（`referencePath` 文字列 + `targetObject` オブジェクト参照）で持つ。MA は `targetObject` がアバター内にあればそれを使い、なければ `referencePath` をアバタールートからの相対パスとして解決する。古い Prefab はパスしか持っていないことがある。
+
+- 判定はシリアライズの形（型名 `AvatarObjectReference` の下の `targetObject` と `referencePath`）で行い、MA のアセンブリには依存しない（`AvatarObjectReferences`）
+- 「参照している先」は、`targetObject` があればそれ、なければ `referencePath` をコピー元側のアバタールートで解決したオブジェクト（`ReferenceWalker.References`）。パスしかない参照も、通常の参照と同じ分類（コピー元の中 / 外、対応あり / なし）を受ける。どちらもなければ、その参照には何もしない（文字列はそのままコピーされる）
+- アバタールートの基準は MA と同じで、VRCAvatarDescriptor（または NDMFAvatarRoot）を持つもっとも外側の祖先（自身を含む）。`ExternalContext.FindRoot` の「なければ最上位の親」という代替はしない。MA もそこではパスを解決できないためである
+- 書き込みでは `targetObject` を置き換えたうえで、`referencePath` もコピー先側のアバタールートからのパスに書き換える（`PlannedReference.ExpectedPath`）。参照先がアバタールート自身なら `$$$AVATAR_ROOT$$$`。参照が未解決なら両方とも空にする。コピー先がアバターの下にない、または参照先がアバターの外なら、パスは空にする（MA も同じで、アバターに入れたときに `ObjectReferenceFixer` が `targetObject` から埋め直す）
+- そのまま残す参照（`ExternalScene`）は、パスもそのまま残す
+- 差分チェックでは、`referencePath` をコピー元の文字列ではなく期待するパスと比べる。そうしないと、正しく書き換えた直後や、MA が自動修復した後に「値が違う」と出てしまう。参照先がまだ作られていない適用前は、`targetObject` 側が差分を報告するのでパスは比べない
+- 表示では `targetObject` の親、つまり `AvatarObjectReference` のフィールド自体のパスを出す（`PlannedReference.DisplayPath`。`m_shapes[3].Object.targetObject` ではなく `m_shapes[3].Object`）
+- パスを書き換えなくても MA の `ObjectReferenceFixer` が `targetObject` からパスを修復するが、それは `targetObject` があってコピー先がアバターの下にあるときだけ。未解決で `targetObject` を空にした参照はパスだけが残り、コピー先のアバターでそのパスにあるものを黙って拾ってしまう。専用の扱いが要るのは主にこのためである
 
 ### コピー元の外への参照
 
@@ -232,7 +245,7 @@ Merge Armatures Tool の `core/bone_mappings.py` と `core/armature.py` から�
   - 対応表がない場合（同じアバター内、または外側がない）の行は黄色にしない。同じアバター内ならそのままが正しく、全行が黄色になるだけだからである
 - 適用前チェックの件数は、対応付けセクションの行と同じく参照先のオブジェクト単位で数え、参照している箇所の数をかっこ書きで添える（「オブジェクト 1 個への参照（25 か所）」）。Blendshape Sync はバインディングごとに体のメッシュを参照するので、箇所だけを数えると、1 行しかないのに「25 件」となって数え間違いに見える
 - 置き換える旨の行には、対応表があるときはコピー先側のアバター名を出す。対応表がないとき（手動指定だけで置き換えるとき）は名前を出さない。このとき `plan.ExternalMap` は null なので、表示側で前提にしてはいけない
-- MA の `AvatarObjectReference` は `referencePath` 文字列も持つ。アバター相対のパスなので、別アバターへコピーしてもたいていそのまま有効。専用ハンドラーはフェーズ 2 のまま
+- MA の `AvatarObjectReference` は、パスしか持っていなくてもコピー元側のアバターで解決して同じ扱いをする。置き換えたときはパスもコピー先側のアバター基準に書き換える（「MA の AvatarObjectReference」）
 
 ## ネスト Prefab
 
@@ -400,6 +413,7 @@ Editor/ComponentCopier/
     TransformMapper.cs         top-down resolver chain → TransformMap
     TransformMap.cs            auto results + manual overrides (separate layers)
     ReferenceWalker.cs         SerializedProperty walk, reference classification
+    AvatarObjectReferences.cs  MA's path + object reference pair, avatar-relative paths
     CopyPlan.cs / CopyPlanBuilder.cs
     CopyExecutor.cs            single Undo group, two-pass
     CopyVerifier.cs            plan vs actual → DiffReport
@@ -411,6 +425,6 @@ UI は partial class で分割し、Core は UI に依存しない。
 
 ## フェーズ
 
-1. MVP: コピー元とコピー先、一覧（プリセット、検索、正規表現）、リフレッシュ、辞書を含む対応付けと手動補正、グローバル設定、汎用の参照置換、オブジェクトの作成、差分チェック、Undo、多言語化
-2. `SpatialPropertyTable`、軸の自動補正、左右ミラー、MA 用ハンドラー、カスタムの名前変換ルール
+1. MVP: コピー元とコピー先、一覧（プリセット、検索、正規表現）、リフレッシュ、辞書を含む対応付けと手動補正、グローバル設定、汎用の参照置換（MA の `AvatarObjectReference` を含む）、オブジェクトの作成、差分チェック、Undo、多言語化
+2. `SpatialPropertyTable`、軸の自動補正、左右ミラー、カスタムの名前変換ルール
 3. Transform 値（ボーン調整）の引き継ぎ、対応表の保存と再利用

@@ -319,7 +319,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                     if (!byTarget.TryGetValue(target, out var external))
                         byTarget[target] = external = new ExternalReference { Target = target };
-                    external.Holders.Add((planned, reference.PropertyPath));
+                    external.Holders.Add((planned, reference.DisplayPath));
                 }
             }
 

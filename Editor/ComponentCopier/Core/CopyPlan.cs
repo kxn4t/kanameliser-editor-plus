@@ -124,6 +124,36 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// The UI can offer to add it.
         /// </summary>
         public ComponentKey? MissingDependency;
+
+        /// <summary>
+        /// For the object half of an MA AvatarObjectReference: the property path of the path half, and the
+        /// avatar the target-side path is relative to. Null for ordinary references.
+        /// </summary>
+        public string PathPropertyPath;
+        public Transform TargetAvatarRoot;
+
+        /// <summary>
+        /// True when the path half is written along with the object half. A reference that is kept as it is
+        /// keeps its path too.
+        /// </summary>
+        public bool RewritesPath => PathPropertyPath != null && Kind != ReferenceKind.ExternalScene;
+
+        /// <summary>
+        /// The path half once the copy is applied: empty when the reference is cleared, and null while the
+        /// referenced object does not exist yet.
+        /// </summary>
+        public string ExpectedPath()
+        {
+            if (Kind == ReferenceKind.InternalUnresolved) return "";
+
+            var resolved = Expected?.Resolve();
+            if (resolved == null) return null;
+            return AvatarObjectReferences.PathFor(resolved, TargetAvatarRoot) ?? "";
+        }
+
+        /// <summary>Property path for display: an AvatarObjectReference is shown as one field.</summary>
+        public string DisplayPath =>
+            PathPropertyPath != null ? PropertyPath.Substring(0, PropertyPath.LastIndexOf('.')) : PropertyPath;
     }
 
     internal sealed class PlannedComponent
@@ -191,6 +221,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// Null when no reference points outside, or when both sides share the same surroundings.
         /// </summary>
         public TransformMap ExternalMap;
+
+        /// <summary>
+        /// The avatars the source and the target sit on, as MA sees them (see
+        /// <see cref="AvatarObjectReferences.FindAvatarRoot"/>). Null when a side is not on an avatar.
+        /// </summary>
+        public Transform SourceAvatarRoot;
+        public Transform TargetAvatarRoot;
 
         public List<PlannedComponent> Components = new();
         public List<PlannedObject> ObjectsToCreate = new();

@@ -5,6 +5,7 @@
         "Kanameliser.EditorPlus.Editor",
         "Kanameliser.EditorPlus.Runtime",
         "nadena.dev.modular-avatar.core",
+        "nadena.dev.ndmf.runtime",
         "com.anatawa12.avatar-optimizer.runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

@@ -4,6 +4,26 @@ using UnityEngine;
 
 namespace Kanameliser.EditorPlus.ComponentCopier
 {
+    /// <summary>An object reference property of a component and what it points at.</summary>
+    internal readonly struct ReferenceSlot
+    {
+        public readonly string PropertyPath;
+        public readonly Object Value;
+
+        /// <summary>
+        /// For the object half of an MA AvatarObjectReference: the property path of the path half.
+        /// Null for ordinary references.
+        /// </summary>
+        public readonly string PathPropertyPath;
+
+        public ReferenceSlot(string propertyPath, Object value, string pathPropertyPath)
+        {
+            PropertyPath = propertyPath;
+            Value = value;
+            PathPropertyPath = pathPropertyPath;
+        }
+    }
+
     /// <summary>
     /// Generic SerializedProperty traversal shared by reference remapping and diffing.
     /// Walking serialized data instead of typed fields keeps the tool free of hard SDK dependencies.
@@ -46,6 +66,32 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 enterChildren = isContainer;
 
                 if (!isContainer) yield return iterator;
+            }
+        }
+
+        /// <summary>
+        /// Enumerates the object references a component holds, with the object each one effectively points at.
+        /// An MA AvatarObjectReference whose object half is empty still points somewhere through its path,
+        /// which is resolved against <paramref name="avatarRoot"/>. Empty references are left out.
+        /// </summary>
+        public static IEnumerable<ReferenceSlot> References(SerializedObject serializedObject, Transform avatarRoot)
+        {
+            foreach (var property in Leaves(serializedObject))
+            {
+                if (property.propertyType != SerializedPropertyType.ObjectReference) continue;
+
+                var value = property.objectReferenceValue;
+                string pathPropertyPath = null;
+
+                if (AvatarObjectReferences.TryGetPathProperty(property, out var pathProperty))
+                {
+                    pathPropertyPath = pathProperty.propertyPath;
+                    if (value == null)
+                        value = AvatarObjectReferences.ResolvePath(pathProperty.stringValue, avatarRoot);
+                }
+
+                if (value == null) continue;
+                yield return new ReferenceSlot(property.propertyPath, value, pathPropertyPath);
             }
         }
 

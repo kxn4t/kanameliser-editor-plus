@@ -313,7 +313,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var references = planned.References.Where(r => r.Kind == kind).ToList();
             foreach (var reference in references.Take(MaxIssueLines))
             {
-                string name = reference.PropertyPath.Replace(".Array.data[", "[");
+                string name = reference.DisplayPath.Replace(".Array.data[", "[");
                 var line = new Label($"{name}: {describe(reference)}");
                 line.AddToClassList("diff-property");
                 line.AddToClassList("diff-property--link");

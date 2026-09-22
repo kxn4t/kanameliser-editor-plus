@@ -636,7 +636,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     /// </summary>
     internal static class ExternalContext
     {
-        private const string AvatarDescriptorTypeName = "VRC.SDK3.Avatars.Components.VRCAvatarDescriptor";
+        // Compared by name because the SDK is not referenced from this assembly
+        private static readonly string[] AvatarRootTypeNames =
+        {
+            "VRC.SDK3.Avatars.Components.VRCAvatarDescriptor",
+            "nadena.dev.ndmf.runtime.components.NDMFAvatarRoot",
+        };
+
+        /// <summary>True for an object that carries an avatar root marker (the VRChat avatar descriptor).</summary>
+        public static bool IsAvatarRoot(Transform transform)
+        {
+            return transform != null && transform.GetComponents<Component>()
+                .Any(c => c != null && Array.IndexOf(AvatarRootTypeNames, c.GetType().FullName) >= 0);
+        }
 
         /// <summary>
         /// Returns the avatar root above <paramref name="root"/>, or else its topmost ancestor.
@@ -648,9 +660,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             for (var current = root.parent; current != null; current = current.parent)
             {
-                // Compared by name because the SDK is not referenced from this assembly
-                if (current.GetComponents<Component>().Any(c => c != null && c.GetType().FullName == AvatarDescriptorTypeName))
-                    return current;
+                if (IsAvatarRoot(current)) return current;
             }
 
             return root.root;

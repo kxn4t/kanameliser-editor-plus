@@ -36,7 +36,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (map == null) throw new ArgumentNullException(nameof(map));
             settings ??= new CopySettings();
 
-            var plan = new CopyPlan { Map = map, Settings = settings };
+            var plan = new CopyPlan
+            {
+                Map = map,
+                Settings = settings,
+                SourceAvatarRoot = AvatarObjectReferences.FindAvatarRoot(map.SourceRoot),
+                TargetAvatarRoot = AvatarObjectReferences.FindAvatarRoot(map.TargetRoot),
+            };
             var context = new HostResolver(plan);
 
             foreach (var entry in selected)
@@ -282,11 +288,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (!walked.Add(planned.Entry.Component)) continue;
 
                 using var serializedObject = new SerializedObject(planned.Entry.Component);
-                foreach (var property in ReferenceWalker.Leaves(serializedObject))
+                foreach (var slot in ReferenceWalker.References(serializedObject, plan.SourceAvatarRoot))
                 {
-                    if (property.propertyType != SerializedPropertyType.ObjectReference) continue;
-
-                    var value = property.objectReferenceValue;
+                    var value = slot.Value;
                     var transform = ReferenceWalker.GetTransform(value);
                     if (transform == null || transform == plan.Map.SourceRoot) continue;
 
@@ -403,18 +407,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (!HasResult(planned)) continue;
 
                 using var serializedObject = new SerializedObject(planned.Entry.Component);
-                foreach (var property in ReferenceWalker.Leaves(serializedObject))
+                foreach (var slot in ReferenceWalker.References(serializedObject, plan.SourceAvatarRoot))
                 {
-                    if (property.propertyType != SerializedPropertyType.ObjectReference) continue;
-
-                    var value = property.objectReferenceValue;
-                    if (value == null) continue;
-
-                    var reference = ClassifyReference(plan, context.ObjectsBySource, plannedBySource, value);
+                    var reference = ClassifyReference(plan, context.ObjectsBySource, plannedBySource, slot.Value);
                     if (reference == null) continue;
 
-                    reference.PropertyPath = property.propertyPath;
-                    reference.SourceValue = value;
+                    reference.PropertyPath = slot.PropertyPath;
+                    reference.SourceValue = slot.Value;
+                    reference.PathPropertyPath = slot.PathPropertyPath;
+                    reference.TargetAvatarRoot = plan.TargetAvatarRoot;
                     planned.References.Add(reference);
                 }
             }
