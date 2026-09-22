@@ -487,6 +487,15 @@ msgstr "沒有 UpperChest，建議使用 Chest"
 msgid "componentCopier.mapping.reason.normalizedName"
 msgstr "名稱相似"
 
+msgid "componentCopier.mapping.reason.mirroredBone"
+msgstr "另一側的骨骼"
+
+msgid "componentCopier.mapping.reason.mirroredName"
+msgstr "另一側的名稱"
+
+msgid "componentCopier.mapping.reason.selfCenter"
+msgstr "中線（自身）"
+
 msgid "componentCopier.report"
 msgstr "套用前檢查"
 

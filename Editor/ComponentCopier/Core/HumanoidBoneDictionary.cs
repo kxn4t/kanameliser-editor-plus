@@ -16,6 +16,7 @@
 //    Copyright (c) 2023 Azukimochi
 //    Licensed under the MIT License
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -190,6 +191,28 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (ExactIndex.TryGetValue(boneName, out bone)) return true;
             return NormalizedIndex.TryGetValue(NormalizeName(boneName), out bone);
+        }
+
+        /// <summary>The same bone on the other side, e.g. LeftHand → RightHand. False on the middle line.</summary>
+        internal static bool TryMirror(HumanBodyBones bone, out HumanBodyBones mirrored)
+        {
+            string name = bone.ToString();
+            string other = name.StartsWith("Left", StringComparison.Ordinal) ? "Right" + name.Substring(4)
+                : name.StartsWith("Right", StringComparison.Ordinal) ? "Left" + name.Substring(5)
+                : null;
+
+            if (other != null && Enum.TryParse(other, out mirrored)) return true;
+
+            mirrored = bone;
+            return false;
+        }
+
+        internal static Side SideOf(HumanBodyBones bone)
+        {
+            string name = bone.ToString();
+            if (name.StartsWith("Left", StringComparison.Ordinal)) return Side.Left;
+            if (name.StartsWith("Right", StringComparison.Ordinal)) return Side.Right;
+            return Side.None;
         }
 
         private static string[] Finger(

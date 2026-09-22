@@ -56,6 +56,53 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return stripped.Length > 0 ? stripped : name;
         }
 
+        internal static List<Transform> Descendants(Transform root)
+        {
+            return root.GetComponentsInChildren<Transform>(true).Where(t => t != root).ToList();
+        }
+
+        /// <summary>
+        /// Reads humanoid bones from the Animator. Animator.GetBoneTransform knows the bones by their path, but
+        /// returns null for prefab assets (and inactive avatars); the bone names of the Avatar asset stand in
+        /// then. By name, the first transform wins, which can be the bone of an outfit placed above the
+        /// Armature: an outfit repeats the bone names of the avatar.
+        /// </summary>
+        internal static Dictionary<HumanBodyBones, Transform> CollectAnimatorBones(Transform root)
+        {
+            var result = new Dictionary<HumanBodyBones, Transform>();
+
+            var animator = root.GetComponent<Animator>();
+            if (animator == null || animator.avatar == null || !animator.avatar.isHuman) return result;
+
+            Dictionary<string, Transform> byName = null;
+            foreach (var humanBone in animator.avatar.humanDescription.human)
+            {
+                int index = Array.IndexOf(HumanTrait.BoneName, humanBone.humanName);
+                if (index < 0 || index >= (int)HumanBodyBones.LastBone) continue;
+
+                var bone = (HumanBodyBones)index;
+                var bound = animator.GetBoneTransform(bone);
+                if (bound != null && bound != root && bound.IsChildOf(root))
+                {
+                    result[bone] = bound;
+                    continue;
+                }
+
+                if (byName == null)
+                {
+                    byName = new Dictionary<string, Transform>();
+                    foreach (var transform in Descendants(root))
+                    {
+                        if (!byName.ContainsKey(transform.name)) byName[transform.name] = transform;
+                    }
+                }
+
+                if (byName.TryGetValue(humanBone.boneName, out var named)) result[bone] = named;
+            }
+
+            return result;
+        }
+
         private sealed class Context
         {
             public readonly TransformMap Map;
@@ -556,39 +603,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 }
 
                 return null;
-            }
-
-            private static List<Transform> Descendants(Transform root)
-            {
-                return root.GetComponentsInChildren<Transform>(true).Where(t => t != root).ToList();
-            }
-
-            /// <summary>
-            /// Reads humanoid bones from the Avatar asset instead of Animator.GetBoneTransform,
-            /// which returns null for prefab assets.
-            /// </summary>
-            private static Dictionary<HumanBodyBones, Transform> CollectAnimatorBones(Transform root)
-            {
-                var result = new Dictionary<HumanBodyBones, Transform>();
-
-                var animator = root.GetComponent<Animator>();
-                if (animator == null || animator.avatar == null || !animator.avatar.isHuman) return result;
-
-                var byName = new Dictionary<string, Transform>();
-                foreach (var transform in Descendants(root))
-                {
-                    if (!byName.ContainsKey(transform.name)) byName[transform.name] = transform;
-                }
-
-                foreach (var humanBone in animator.avatar.humanDescription.human)
-                {
-                    int index = Array.IndexOf(HumanTrait.BoneName, humanBone.humanName);
-                    if (index < 0) continue;
-                    if (byName.TryGetValue(humanBone.boneName, out var transform))
-                        result[(HumanBodyBones)index] = transform;
-                }
-
-                return result;
             }
 
             #endregion

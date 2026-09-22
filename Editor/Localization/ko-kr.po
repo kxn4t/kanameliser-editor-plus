@@ -488,6 +488,15 @@ msgstr "UpperChest가 없어 Chest를 제안"
 msgid "componentCopier.mapping.reason.normalizedName"
 msgstr "유사한 이름"
 
+msgid "componentCopier.mapping.reason.mirroredBone"
+msgstr "반대쪽 본"
+
+msgid "componentCopier.mapping.reason.mirroredName"
+msgstr "반대쪽 이름"
+
+msgid "componentCopier.mapping.reason.selfCenter"
+msgstr "중앙 (자기 자신)"
+
 msgid "componentCopier.report"
 msgstr "적용 전 확인"
 

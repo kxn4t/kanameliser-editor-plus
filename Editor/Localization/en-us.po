@@ -488,6 +488,15 @@ msgstr "No UpperChest; Chest instead?"
 msgid "componentCopier.mapping.reason.normalizedName"
 msgstr "Similar name"
 
+msgid "componentCopier.mapping.reason.mirroredBone"
+msgstr "Bone on the other side"
+
+msgid "componentCopier.mapping.reason.mirroredName"
+msgstr "Flipped name"
+
+msgid "componentCopier.mapping.reason.selfCenter"
+msgstr "On the middle line (itself)"
+
 msgid "componentCopier.report"
 msgstr "Pre-check"
 

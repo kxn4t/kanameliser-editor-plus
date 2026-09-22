@@ -487,6 +487,15 @@ msgstr "UpperChest がないため Chest を提案"
 msgid "componentCopier.mapping.reason.normalizedName"
 msgstr "類似名"
 
+msgid "componentCopier.mapping.reason.mirroredBone"
+msgstr "反対側のボーン"
+
+msgid "componentCopier.mapping.reason.mirroredName"
+msgstr "反対側の名前"
+
+msgid "componentCopier.mapping.reason.selfCenter"
+msgstr "中央（自分自身）"
+
 msgid "componentCopier.report"
 msgstr "適用前チェック"
 
