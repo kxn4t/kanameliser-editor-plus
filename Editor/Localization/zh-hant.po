@@ -308,3 +308,460 @@ msgstr "部分項目未能刪除"
 #, csharp-format
 msgid "componentManager.deletionPartiallyCompleted.message"
 msgstr "以下項目未能刪除：\n\n{0}"
+
+# ── Component Copier ──
+
+msgid "componentCopier.source"
+msgstr "複製來源"
+
+msgid "componentCopier.target"
+msgstr "複製目標"
+
+msgid "componentCopier.refresh:tooltip"
+msgstr "重新掃描複製來源和複製目標"
+
+msgid "componentCopier.warning.sameObject"
+msgstr "複製來源和複製目標是同一個物件。"
+
+msgid "componentCopier.warning.nested"
+msgstr "複製來源和複製目標不能互相包含。"
+
+msgid "componentCopier.warning.targetIsAsset"
+msgstr "複製目標是資源。套用到資源後無法 Undo，因此只能執行差異檢查。要複製請先放置到場景中。"
+
+msgid "componentCopier.warning.pipelineManager"
+msgstr "已選取 Pipeline Manager。Blueprint ID 也會被複製，上傳複製目標將覆蓋複製來源的 Avatar。"
+
+msgid "componentCopier.components"
+msgstr "元件"
+
+msgid "componentCopier.preset.all"
+msgstr "全部"
+
+msgid "componentCopier.showExcluded"
+msgstr "顯示其他"
+
+msgid "componentCopier.showExcluded:tooltip"
+msgstr "同時列出預設不複製的類型（Renderer、Animator、Avatar Descriptor 等）"
+
+msgid "componentCopier.category.other"
+msgstr "其他"
+
+msgid "componentCopier.excludedByDefault"
+msgstr "預設不複製"
+
+msgid "componentCopier.info.selectSource"
+msgstr "請指定要從中複製元件的物件。"
+
+msgid "componentCopier.info.noComponents"
+msgstr "沒有符合的元件。"
+
+msgid "componentCopier.info.selectTarget"
+msgstr "指定複製來源和複製目標後將顯示物件的對應關係。"
+
+msgid "componentCopier.info.needsSource"
+msgstr "請指定複製來源後繼續。"
+
+msgid "componentCopier.info.fixTarget"
+msgstr "請修正複製目標後繼續。"
+
+msgid "componentCopier.info.noMappings"
+msgstr "未選取任何元件。"
+
+msgid "componentCopier.info.noPlan"
+msgstr "指定複製來源和複製目標後將顯示複製內容。"
+
+msgid "componentCopier.action.add"
+msgstr "新增"
+
+msgid "componentCopier.action.overwrite"
+msgstr "覆蓋"
+
+msgid "componentCopier.action.replace"
+msgstr "取代"
+
+msgid "componentCopier.action.skip"
+msgstr "略過"
+
+msgid "componentCopier.action.skipIdentical"
+msgstr "相同"
+
+msgid "componentCopier.action.skip:tooltip"
+msgstr "目標上已有此元件，依設定保留不變"
+
+msgid "componentCopier.action.skipIdentical:tooltip"
+msgstr "目標的內容已相同，因此不寫入"
+
+msgid "componentCopier.action.blocked"
+msgstr "待定"
+
+msgid "componentCopier.blocked.hostNeedsReview"
+msgstr "此元件所屬物件的對應關係尚未確認。請在對應關係區段確認。"
+
+msgid "componentCopier.blocked.hostUnmapped"
+msgstr "此元件所屬物件沒有對應物件，且已關閉物件建立。"
+
+#, csharp-format
+msgid "componentCopier.row.unresolved:tooltip"
+msgstr "{0} 個參照在複製目標中沒有對應物件，將被清空。"
+
+msgid "componentCopier.mapping"
+msgstr "對應關係"
+
+#, csharp-format
+msgid "componentCopier.mapping.summary"
+msgstr "{0}/{1} 已對應   + {4}   ? {2}   ✖ {3}"
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmAffix"
+msgstr "一併確認 prefix / suffix 相符項目（{0}）"
+
+msgid "componentCopier.mapping.confirmAffix:tooltip"
+msgstr "其中一側的名稱帶有共同的 prefix 或 suffix。確認依此規則找到的所有候選。"
+
+#, csharp-format
+msgid "componentCopier.mapping.willCreate"
+msgstr "將建立（{0}）"
+
+msgid "componentCopier.mapping.menu.pickExisting"
+msgstr "指定現有物件"
+
+msgid "componentCopier.mapping.menu.createInstead"
+msgstr "改回新建"
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmed"
+msgstr "已對應（{0}）"
+
+msgid "componentCopier.mapping.confirm"
+msgstr "確認"
+
+msgid "componentCopier.mapping.menu:tooltip"
+msgstr "候選及其他操作"
+
+msgid "componentCopier.mapping.menu.none"
+msgstr "設為無對應"
+
+msgid "componentCopier.mapping.menu.reset"
+msgstr "恢復自動"
+
+msgid "componentCopier.mapping.note.willCreate"
+msgstr "將建立"
+
+msgid "componentCopier.mapping.note.manual"
+msgstr "手動"
+
+msgid "componentCopier.mapping.note.manualNone"
+msgstr "無對應（手動）"
+
+msgid "componentCopier.mapping.note.unmapped"
+msgstr "找不到"
+
+msgid "componentCopier.mapping.reason.exactPath"
+msgstr "路徑相同"
+
+msgid "componentCopier.mapping.reason.childOfMappedParent"
+msgstr "已對應父物件下的同名物件"
+
+msgid "componentCopier.mapping.reason.humanoidAnimator"
+msgstr "Humanoid 骨骼"
+
+msgid "componentCopier.mapping.reason.humanoidDictionary"
+msgstr "Humanoid 骨骼名稱"
+
+msgid "componentCopier.mapping.reason.uniqueName"
+msgstr "同名物件唯一"
+
+msgid "componentCopier.mapping.reason.ambiguousName"
+msgstr "存在多個同名物件"
+
+msgid "componentCopier.mapping.reason.affixStripped"
+msgstr "prefix / suffix 相符"
+
+msgid "componentCopier.mapping.reason.upperChestFallback"
+msgstr "沒有 UpperChest，建議使用 Chest"
+
+msgid "componentCopier.mapping.reason.normalizedName"
+msgstr "名稱相似"
+
+msgid "componentCopier.report"
+msgstr "套用前檢查"
+
+#, csharp-format
+msgid "componentCopier.report.summary"
+msgstr "新增 {0} · 覆蓋 {1} · 取代 {2} · 略過 {3} · 相同 {4} · 要建立的物件 {5}"
+
+#, csharp-format
+msgid "componentCopier.report.blocked"
+msgstr "{0} 個元件在所屬物件確定之前無法複製。請查看對應關係區段。"
+
+#, csharp-format
+msgid "componentCopier.report.unresolved"
+msgstr "{0} 個參照在複製目標中沒有對應物件，將被清空。"
+
+#, csharp-format
+msgid "componentCopier.report.addDependencies"
+msgstr "同時複製被參照的元件（{0}）"
+
+#, csharp-format
+msgid "componentCopier.mapping.external.redirect"
+msgstr "取代為複製目標一側"
+
+msgid "componentCopier.mapping.external.redirect:tooltip"
+msgstr "開啟時，複製目標一側有對應物件的參照會取代為該物件。關閉時，全部保持不變。如果只想保留其中一部分，請在該列的 ▾ 選單中選擇「保持不變」。"
+
+msgid "componentCopier.mapping.external.noSurroundings"
+msgstr "在複製目標之外找不到其他 Avatar，因此不會自動取代（複製目標不在 Avatar 中，或與複製來源位於同一個 Avatar 中）。如需取代，請在該列中指定取代物件。"
+
+msgid "componentCopier.mapping.external.holders"
+msgstr "參照來源：{0}"
+
+msgid "componentCopier.mapping.external.more"
+msgstr "另有 {0} 個"
+
+msgid "componentCopier.mapping.menu.keep"
+msgstr "保持不變"
+
+msgid "componentCopier.mapping.note.externalKeptManual"
+msgstr "保持不變（手動）"
+
+msgid "componentCopier.mapping.group.external"
+msgstr "指向複製來源之外的參照（{0} → {1}）"
+
+msgid "componentCopier.mapping.group.external:tooltip"
+msgstr "指向複製來源之外（例如穿著該服裝的 Avatar）的參照。如果複製目標一側有對應的物件，則取代為該物件；沒有則保持不變。"
+
+msgid "componentCopier.mapping.group.externalKept"
+msgstr "指向複製來源之外的參照"
+
+msgid "componentCopier.mapping.group.externalKept:tooltip"
+msgstr "指向複製來源之外的場景物件的參照。由於複製來源和複製目標位於同一個 Avatar 中，或其中一方沒有外層父物件，因此不取代，保持不變。"
+
+msgid "componentCopier.mapping.note.externalNoCounterpart"
+msgstr "無對應（保持不變）"
+
+msgid "componentCopier.mapping.note.externalKept"
+msgstr "保持不變"
+
+msgid "componentCopier.report.externalMappedTo"
+msgstr "對複製來源之外 {0} 個物件的參照（{1} 處）將取代為 {2} 中對應的物件。"
+
+msgid "componentCopier.report.externalMapped"
+msgstr "對複製來源之外 {0} 個物件的參照（{1} 處）將取代為對應關係區段中顯示的物件。"
+
+msgid "componentCopier.report.external"
+msgstr "對複製來源之外 {0} 個物件的參照（{1} 處）將保持不變。"
+
+#, csharp-format
+msgid "componentCopier.report.brokenReference"
+msgstr "{0}（{1}）參照了將因取代而刪除的元件：{2}"
+
+msgid "componentCopier.report.kind.externalKept"
+msgstr "保持不變"
+
+#, csharp-format
+msgid "componentCopier.report.more"
+msgstr "其餘 {0} 項"
+
+msgid "componentCopier.report.cause.notSelected"
+msgstr "被參照的元件未選擇"
+
+msgid "componentCopier.report.cause.needsReview"
+msgstr "對應關係尚未確認"
+
+msgid "componentCopier.report.cause.noCounterpart"
+msgstr "沒有對應物件"
+
+msgid "componentCopier.report.afterApply"
+msgstr "複製後的驗證結果"
+
+msgid "componentCopier.report.diffCheck"
+msgstr "差異檢查結果"
+
+#, csharp-format
+msgid "componentCopier.report.applied"
+msgstr "已複製 {0} 個元件。建立了 {1} 個物件，刪除了 {2} 個元件。可以透過 Undo 復原。"
+
+#, csharp-format
+msgid "componentCopier.report.failed"
+msgstr "{0} 個元件無法新增。"
+
+#, csharp-format
+msgid "componentCopier.report.diffSummary"
+msgstr "一致 {0} · 有差異 {1} · 參照未解決 {2} · 複製目標中缺少 {3} · 僅存在於複製目標 {4}"
+
+msgid "componentCopier.diff.match"
+msgstr "一致"
+
+msgid "componentCopier.diff.valueMismatch"
+msgstr "值不同"
+
+msgid "componentCopier.diff.referenceMismatch"
+msgstr "參照不同"
+
+msgid "componentCopier.diff.unresolvedReference"
+msgstr "參照未解決"
+
+msgid "componentCopier.diff.missingOnTarget"
+msgstr "複製目標中缺少"
+
+msgid "componentCopier.diff.extraOnTarget"
+msgstr "僅存在於複製目標"
+
+msgid "componentCopier.diff.truncated"
+msgstr "其餘差異已省略。"
+
+msgid "componentCopier.diff.select"
+msgstr "選取"
+
+msgid "componentCopier.diff.remove"
+msgstr "刪除"
+
+msgid "componentCopier.settings.existing"
+msgstr "既有元件"
+
+msgid "componentCopier.settings.existing:tooltip"
+msgstr "複製目標的同一物件上已有相同類型元件時的處理方式"
+
+msgid "componentCopier.policy.overwrite"
+msgstr "覆蓋"
+
+msgid "componentCopier.policy.add"
+msgstr "新增（允許重複）"
+
+msgid "componentCopier.policy.skip"
+msgstr "略過"
+
+msgid "componentCopier.policy.replace"
+msgstr "取代（刪除後複製）"
+
+msgid "componentCopier.settings.createObjects"
+msgstr "建立缺少的物件"
+
+msgid "componentCopier.settings.createObjects:tooltip"
+msgstr "當複製目標中沒有元件所屬的物件時建立該物件"
+
+msgid "componentCopier.diffOnly"
+msgstr "僅檢查差異"
+
+msgid "componentCopier.diffOnly:tooltip"
+msgstr "不做任何變更，比較複製目標與預期結果"
+
+msgid "componentCopier.apply"
+msgstr "套用"
+
+msgid "componentCopier.blocked.boneMissing"
+msgstr "此元件所在的骨骼在複製目標中不存在。不會建立骨骼，請在對應關係區段指定其他骨骼。"
+
+msgid "componentCopier.mapping.group.bones"
+msgstr "骨骼"
+
+msgid "componentCopier.mapping.group.others"
+msgstr "其他物件"
+
+msgid "componentCopier.mapping.note.boneMissing"
+msgstr "找不到骨骼"
+
+msgid "componentCopier.mapping.reason.renamedChild"
+msgstr "僅名稱變更（.1、prefix / suffix）"
+
+msgid "componentCopier.action.withPrefab"
+msgstr "透過 Prefab 新增"
+
+msgid "componentCopier.mapping.note.prefab"
+msgstr "新增 Prefab"
+
+#, csharp-format
+msgid "componentCopier.report.prefabs"
+msgstr "其中 {0} 個以 Prefab 實例的形式新增。其中的 {1} 個元件會依複製來源的狀態複製。"
+
+msgid "componentCopier.report.prefabsOnly"
+msgstr "其中 {0} 個以 Prefab 實例的形式新增。"
+
+#, csharp-format
+msgid "componentCopier.report.appliedPrefabs"
+msgstr "已新增 {0} 個 Prefab。"
+
+msgid "componentCopier.action.leftOut"
+msgstr "不新增"
+
+msgid "componentCopier.action.leftOut:tooltip"
+msgstr "Prefab 會整體新增，因此新增後會從實例中刪除此元件。可透過 Prefab 的 Overrides 還原。"
+
+#, csharp-format
+msgid "componentCopier.report.leftOut"
+msgstr "取消勾選的 {0} 個元件將在新增 Prefab 後刪除，因此變空的 {1} 個物件也會一併刪除。"
+
+#, csharp-format
+msgid "componentCopier.report.appliedLeftOut"
+msgstr "已從新增的 Prefab 中刪除取消勾選的 {0} 個元件和 {1} 個物件。"
+
+#, csharp-format
+msgid "componentCopier.report.removeFailed"
+msgstr "{0} 個元件被其他元件依賴，無法刪除。"
+
+msgid "componentCopier.prefabs.title"
+msgstr "複製目標中缺少的物件"
+
+msgid "componentCopier.prefabs.title:tooltip"
+msgstr "複製來源中有而複製目標中沒有的 Prefab 和空物件。已選元件所需要的會自動新增。像只有網格的帽子或未被任何地方參照的錨點那樣的物件，勾選後也可以新增。骨骼不在此列。"
+
+msgid "componentCopier.prefabs.emptyChildren:tooltip"
+msgstr "其下的 {0} 個空物件也會一併建立"
+
+#, csharp-format
+msgid "componentCopier.prefabs.summary"
+msgstr "新增 {0} 個"
+
+msgid "componentCopier.prefabs.status.add"
+msgstr "新增"
+
+msgid "componentCopier.prefabs.status.withComponents"
+msgstr "隨元件一併新增"
+
+msgid "componentCopier.prefabs.blocked"
+msgstr "放置此物件的父物件尚未確定。請在對應關係區段確認父物件，或開啟「建立缺少的物件」。如果父物件是複製目標中不存在的骨骼，則無法建立。"
+
+msgid "componentCopier.groupBy.type"
+msgstr "依類型"
+
+msgid "componentCopier.groupBy.type:tooltip"
+msgstr "依元件類型將清單分組。每一列是一個物件。"
+
+msgid "componentCopier.groupBy.object"
+msgstr "依物件"
+
+msgid "componentCopier.search.regex:tooltip"
+msgstr "將搜尋文字視為正規表示式（不區分大小寫）。比對對象為物件路徑和元件類型名稱。例：Skirt|Hair"
+
+msgid "componentCopier.groupBy.object:tooltip"
+msgstr "依物件將清單分組。每一列是該物件上的一個元件。"
+
+msgid "componentCopier.settings.unresolved"
+msgstr "未解析的參照"
+
+msgid "componentCopier.settings.unresolved:tooltip"
+msgstr "元件內的參照在複製目標中沒有對應物件時的處理方式。在對應關係區段指定對應物件即可解決"
+
+msgid "componentCopier.unresolvedPolicy.clear"
+msgstr "以 None 複製"
+
+msgid "componentCopier.unresolvedPolicy.skipComponent"
+msgstr "略過整個元件"
+
+msgid "componentCopier.blocked.unresolvedReference"
+msgstr "參照在複製目標中沒有對應物件，依設定略過此元件。在對應關係區段指定對應物件後即會複製。"
+
+#, csharp-format
+msgid "componentCopier.report.heldBack"
+msgstr "{0} 個元件因參照未解析而依設定略過。"
+
+msgid "componentCopier.report.cause.heldBack"
+msgstr "被參照的元件被略過"
+
+msgid "componentCopier.action.skipUnresolved"
+msgstr "未解析，略過"
+
+#, csharp-format
+msgid "componentCopier.row.heldBack:tooltip"
+msgstr "{0} 個參照在複製目標中沒有對應物件，因此依設定略過此元件。"

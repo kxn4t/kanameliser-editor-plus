@@ -10,7 +10,7 @@
 
 ## Language
 
-The tool UI (Component Manager, MA Material Helper, AO Bounds Setter, Material Slot Remapping) is available in English and Japanese. With NDMF 1.11.0 or higher installed, you can switch languages from the language selector at the top of each window (the setting is shared with other NDMF-based tools). Without NDMF, the UI stays in English.
+The tool UI (Component Manager, Component Copier, MA Material Helper, AO Bounds Setter, Material Slot Remapping) is available in English and Japanese. With NDMF 1.11.0 or higher installed, you can switch languages from the language selector at the top of each window (the setting is shared with other NDMF-based tools). Without NDMF, the UI stays in English.
 
 ## Installation
 

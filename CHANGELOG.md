@@ -12,6 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Component Copier** (`Tools > Kanameliser Editor Plus > Component Copier`) — Copies components (PhysBone, Contact, Constraint, Modular Avatar, ...) from one outfit or avatar to another, and redirects the references inside them (bones, colliders, constraint sources, ...) to the corresponding objects of the target. Also opens from the right-click menu of a Hierarchy object, a Prefab asset, or a component header.
+  - Objects are matched by path, name, and a humanoid bone dictionary. Similar-name matches are only suggested, and every match can be corrected by hand
+  - Components are listed by type or by object, with presets (PhysBone / Contact / Constraint / MA / other tools), a search box that accepts regular expressions, and per-component selection
+  - Prefabs and empty objects missing in the target are added. References to the avatar around the source are redirected to the avatar around the target, and Modular Avatar's path-based references are rewritten along with the object
+  - Existing components can be overwritten, duplicated, skipped, or replaced. Components with a reference that cannot be redirected are copied with it cleared, or skipped as a whole until the object is mapped
+  - A pre-check lists what will happen, a diff check verifies the result (or compares two hierarchies without copying), and everything reverts with a single Undo
+
+---
+
+### 追加
+
+- **Component Copier**（`Tools > Kanameliser Editor Plus > Component Copier`）— 衣装やアバターのコンポーネント（PhysBone、Contact、Constraint、Modular Avatar など）を別の衣装やアバターへコピーし、コンポーネント内の参照（ボーン、コライダー、Constraint のソースなど）をコピー先の対応するオブジェクトへ置き換えます。Hierarchy のオブジェクト、Prefab アセット、コンポーネントヘッダーの右クリックからも開けます。
+  - オブジェクトはパス、名前、Humanoid ボーン辞書で対応付けます。類似名による対応は候補として表示するだけで、すべての対応は手動で補正できます
+  - コンポーネントは種類別またはオブジェクト別に一覧表示され、プリセット（PhysBone / Contact / Constraint / MA / その他のツール）、正規表現も使える検索、個別選択で絞り込めます
+  - コピー先にない Prefab や空のオブジェクトは追加します。コピー元のアバターへの参照はコピー先のアバターの対応するオブジェクトへ置き換え、Modular Avatar のパスによる参照もオブジェクトと一緒に書き換えます
+  - 既存のコンポーネントは、上書き、追加、スキップ、置き換えから選べます。置き換えられない参照を持つコンポーネントは、参照を None にしてコピーするか、対応先を指定するまでコンポーネントごとスキップするかを選べます
+  - 適用前チェックで何が起きるかを一覧表示し、差分チェックで結果を検証できます（コピーせずに 2 つの階層を比較するだけの使い方もできます）。1 回の Undo ですべて元に戻せます
+
 ## [1.0.1] - 2026-08-14
 
 ### Fixed

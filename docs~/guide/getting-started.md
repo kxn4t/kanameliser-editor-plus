@@ -10,7 +10,7 @@
 
 ## 言語設定
 
-各ツールのUI（Component Manager、MA Material Helper、AO Bounds Setter、Material Slot Remapping）は英語と日本語に対応しています。NDMF 1.11.0以上がインストールされている場合、各ウィンドウ上部の言語セレクターから切り替えできます（言語設定は他のNDMF系ツールと共通です）。NDMFがない環境では英語表示になります。
+各ツールのUI（Component Manager、Component Copier、MA Material Helper、AO Bounds Setter、Material Slot Remapping）は英語と日本語に対応しています。NDMF 1.11.0以上がインストールされている場合、各ウィンドウ上部の言語セレクターから切り替えできます（言語設定は他のNDMF系ツールと共通です）。NDMFがない環境では英語表示になります。
 
 ## インストール
 

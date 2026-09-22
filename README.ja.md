@@ -53,6 +53,18 @@ GameObjectのアクティブ状態とEditorOnlyタグをすばやく切り替え
 
 アクセス: `Tools > Kanameliser Editor Plus > Component Manager`
 
+### Component Copier
+
+衣装やアバターのコンポーネント（PhysBone、Contact、Constraint、Modular Avatar など）を別の衣装やアバターへコピーし、中のオブジェクト参照（ボーン、コライダー、Constraint のソースなど）をコピー先の対応するオブジェクトへ置き換えます。
+
+- 同じ衣装の更新版や別アバター対応版への設定の引き継ぎに
+- パス・名前・Humanoid ボーン辞書でオブジェクトを自動対応付け。類似名は候補として表示し、手動で補正可能
+- プリセット（PhysBone / Contact / Constraint / MA / すべて）、正規表現検索、個別選択
+- コピー先にない Prefab や空オブジェクトの追加、アバターへの参照のコピー先アバターへの置き換えに対応
+- 適用前チェックで内容を確認、差分チェックで結果を検証、Undo 1 回で元に戻せる
+
+アクセス: `Tools > Kanameliser Editor Plus > Component Copier`、または Hierarchy のオブジェクト・Prefab アセット・コンポーネントヘッダーの右クリック → `Kanameliser Editor Plus`
+
 ### Material Copier
 
 複数選択したGameObjectから同名のGameObjectへマテリアルをコピー&ペーストできます。

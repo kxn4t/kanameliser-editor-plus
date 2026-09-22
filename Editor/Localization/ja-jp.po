@@ -308,3 +308,460 @@ msgstr "削除を完了できませんでした"
 #, csharp-format
 msgid "componentManager.deletionPartiallyCompleted.message"
 msgstr "以下の項目は削除できませんでした:\n\n{0}"
+
+# ── Component Copier ──
+
+msgid "componentCopier.source"
+msgstr "コピー元"
+
+msgid "componentCopier.target"
+msgstr "コピー先"
+
+msgid "componentCopier.refresh:tooltip"
+msgstr "コピー元とコピー先を再スキャン"
+
+msgid "componentCopier.warning.sameObject"
+msgstr "コピー元とコピー先が同じオブジェクトです。"
+
+msgid "componentCopier.warning.nested"
+msgstr "コピー元とコピー先は、互いの内側にあるオブジェクトにできません。"
+
+msgid "componentCopier.warning.targetIsAsset"
+msgstr "コピー先がアセットです。アセットへの適用は Undo できないため、差分チェックのみ実行できます。コピーするにはシーンに配置してください。"
+
+msgid "componentCopier.warning.pipelineManager"
+msgstr "Pipeline Manager が選択されています。Blueprint ID もコピーされるため、コピー先をアップロードするとコピー元のアバターを上書きします。"
+
+msgid "componentCopier.components"
+msgstr "コンポーネント"
+
+msgid "componentCopier.preset.all"
+msgstr "すべて"
+
+msgid "componentCopier.showExcluded"
+msgstr "その他も表示"
+
+msgid "componentCopier.showExcluded:tooltip"
+msgstr "既定ではコピーしない型（Renderer、Animator、Avatar Descriptor など）も一覧に表示します"
+
+msgid "componentCopier.category.other"
+msgstr "その他"
+
+msgid "componentCopier.excludedByDefault"
+msgstr "既定で対象外"
+
+msgid "componentCopier.info.selectSource"
+msgstr "コンポーネントのコピー元になるオブジェクトを指定してください。"
+
+msgid "componentCopier.info.noComponents"
+msgstr "一致するコンポーネントがありません。"
+
+msgid "componentCopier.info.selectTarget"
+msgstr "コピー元とコピー先を指定すると、オブジェクトの対応付けを表示します。"
+
+msgid "componentCopier.info.needsSource"
+msgstr "続けるにはコピー元を指定してください。"
+
+msgid "componentCopier.info.fixTarget"
+msgstr "続けるにはコピー先を修正してください。"
+
+msgid "componentCopier.info.noMappings"
+msgstr "コンポーネントが選択されていません。"
+
+msgid "componentCopier.info.noPlan"
+msgstr "コピー元とコピー先を指定すると、コピー内容を表示します。"
+
+msgid "componentCopier.action.add"
+msgstr "新規"
+
+msgid "componentCopier.action.overwrite"
+msgstr "上書き"
+
+msgid "componentCopier.action.replace"
+msgstr "置き換え"
+
+msgid "componentCopier.action.skip"
+msgstr "スキップ"
+
+msgid "componentCopier.action.skipIdentical"
+msgstr "同一"
+
+msgid "componentCopier.action.skip:tooltip"
+msgstr "コピー先にすでにこのコンポーネントがあるので、設定に従ってそのまま残します"
+
+msgid "componentCopier.action.skipIdentical:tooltip"
+msgstr "コピー先がすでに同じ内容なので、書き込みません"
+
+msgid "componentCopier.action.blocked"
+msgstr "保留"
+
+msgid "componentCopier.blocked.hostNeedsReview"
+msgstr "このコンポーネントが付くオブジェクトの対応先が未確定です。対応付けセクションで確定してください。"
+
+msgid "componentCopier.blocked.hostUnmapped"
+msgstr "このコンポーネントが付くオブジェクトの対応先がなく、オブジェクトの作成もオフになっています。"
+
+#, csharp-format
+msgid "componentCopier.row.unresolved:tooltip"
+msgstr "{0} 件の参照はコピー先に対応先がないため、空になります。"
+
+msgid "componentCopier.mapping"
+msgstr "対応付け"
+
+#, csharp-format
+msgid "componentCopier.mapping.summary"
+msgstr "{0}/{1} 対応済み   + {4}   ? {2}   ✖ {3}"
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmAffix"
+msgstr "prefix / suffix の一致をまとめて確定（{0}）"
+
+msgid "componentCopier.mapping.confirmAffix:tooltip"
+msgstr "片側の名前に共通の prefix または suffix が付いています。このルールで見つかった候補をすべて確定します。"
+
+#, csharp-format
+msgid "componentCopier.mapping.willCreate"
+msgstr "作成予定（{0}）"
+
+msgid "componentCopier.mapping.menu.pickExisting"
+msgstr "既存のオブジェクトを指定"
+
+msgid "componentCopier.mapping.menu.createInstead"
+msgstr "新規作成に戻す"
+
+#, csharp-format
+msgid "componentCopier.mapping.confirmed"
+msgstr "対応済み（{0}）"
+
+msgid "componentCopier.mapping.confirm"
+msgstr "確定"
+
+msgid "componentCopier.mapping.menu:tooltip"
+msgstr "候補とその他の操作"
+
+msgid "componentCopier.mapping.menu.none"
+msgstr "対応先なしにする"
+
+msgid "componentCopier.mapping.menu.reset"
+msgstr "自動に戻す"
+
+msgid "componentCopier.mapping.note.willCreate"
+msgstr "作成予定"
+
+msgid "componentCopier.mapping.note.manual"
+msgstr "手動"
+
+msgid "componentCopier.mapping.note.manualNone"
+msgstr "対応先なし（手動）"
+
+msgid "componentCopier.mapping.note.unmapped"
+msgstr "見つかりません"
+
+msgid "componentCopier.mapping.reason.exactPath"
+msgstr "同じパス"
+
+msgid "componentCopier.mapping.reason.childOfMappedParent"
+msgstr "対応済みの親の下で同名"
+
+msgid "componentCopier.mapping.reason.humanoidAnimator"
+msgstr "Humanoid ボーン"
+
+msgid "componentCopier.mapping.reason.humanoidDictionary"
+msgstr "Humanoid ボーン名"
+
+msgid "componentCopier.mapping.reason.uniqueName"
+msgstr "同名が 1 つだけ"
+
+msgid "componentCopier.mapping.reason.ambiguousName"
+msgstr "同名が複数あります"
+
+msgid "componentCopier.mapping.reason.affixStripped"
+msgstr "prefix / suffix の一致"
+
+msgid "componentCopier.mapping.reason.upperChestFallback"
+msgstr "UpperChest がないため Chest を提案"
+
+msgid "componentCopier.mapping.reason.normalizedName"
+msgstr "類似名"
+
+msgid "componentCopier.report"
+msgstr "適用前チェック"
+
+#, csharp-format
+msgid "componentCopier.report.summary"
+msgstr "新規 {0} · 上書き {1} · 置き換え {2} · スキップ {3} · 同一 {4} · 作成するオブジェクト {5}"
+
+#, csharp-format
+msgid "componentCopier.report.blocked"
+msgstr "{0} 件のコンポーネントは、付ける先のオブジェクトが決まるまでコピーできません。対応付けセクションを確認してください。"
+
+#, csharp-format
+msgid "componentCopier.report.unresolved"
+msgstr "{0} 件の参照はコピー先に対応先がないため、空になります。"
+
+#, csharp-format
+msgid "componentCopier.report.addDependencies"
+msgstr "参照先のコンポーネントもコピーする（{0}）"
+
+#, csharp-format
+msgid "componentCopier.mapping.external.redirect"
+msgstr "コピー先側へ置き換える"
+
+msgid "componentCopier.mapping.external.redirect:tooltip"
+msgstr "オンにすると、コピー先側に対応するオブジェクトがある参照を、そちらへ置き換えます。オフにすると、すべてそのまま残します。一部だけ残したいときは、その行の ▾ メニューから「そのまま残す」を選んでください。"
+
+msgid "componentCopier.mapping.external.noSurroundings"
+msgstr "コピー先の外側に別のアバターが見つからないため、自動では置き換えません（コピー先がアバターの中にない、またはコピー元と同じアバターの中にあります）。置き換えたいものは、行で置き換え先を指定してください。"
+
+msgid "componentCopier.mapping.external.holders"
+msgstr "参照元: {0}"
+
+msgid "componentCopier.mapping.external.more"
+msgstr "ほか {0} 件"
+
+msgid "componentCopier.mapping.menu.keep"
+msgstr "そのまま残す"
+
+msgid "componentCopier.mapping.note.externalKeptManual"
+msgstr "そのまま残す（手動）"
+
+msgid "componentCopier.mapping.group.external"
+msgstr "コピー元の外への参照（{0} → {1}）"
+
+msgid "componentCopier.mapping.group.external:tooltip"
+msgstr "コピー元の外（衣装を着せているアバターなど）を指している参照です。コピー先側に対応するオブジェクトがあれば、そちらへ置き換えます。対応するものがなければ、そのまま残します。"
+
+msgid "componentCopier.mapping.group.externalKept"
+msgstr "コピー元の外への参照"
+
+msgid "componentCopier.mapping.group.externalKept:tooltip"
+msgstr "コピー元の外のシーンオブジェクトを指している参照です。コピー元とコピー先が同じアバターの中にあるか、どちらかの外側に親がないため、置き換えずにそのまま残します。"
+
+msgid "componentCopier.mapping.note.externalNoCounterpart"
+msgstr "対応なし（そのまま残す）"
+
+msgid "componentCopier.mapping.note.externalKept"
+msgstr "そのまま残す"
+
+msgid "componentCopier.report.externalMappedTo"
+msgstr "コピー元の外にあるオブジェクト {0} 個への参照（{1} か所）を、{2} の対応するオブジェクトへ向け直します。"
+
+msgid "componentCopier.report.externalMapped"
+msgstr "コピー元の外にあるオブジェクト {0} 個への参照（{1} か所）を、対応付けセクションに表示している置き換え先へ向け直します。"
+
+msgid "componentCopier.report.external"
+msgstr "コピー元の外にあるオブジェクト {0} 個への参照（{1} か所）は、そのまま残します。"
+
+#, csharp-format
+msgid "componentCopier.report.brokenReference"
+msgstr "{0}（{1}）が、置き換えで削除されるコンポーネントを参照しています: {2}"
+
+msgid "componentCopier.report.kind.externalKept"
+msgstr "そのまま残す"
+
+#, csharp-format
+msgid "componentCopier.report.more"
+msgstr "ほか {0} 件"
+
+msgid "componentCopier.report.cause.notSelected"
+msgstr "参照先のコンポーネントが未選択"
+
+msgid "componentCopier.report.cause.needsReview"
+msgstr "対応先が未確定"
+
+msgid "componentCopier.report.cause.noCounterpart"
+msgstr "対応先なし"
+
+msgid "componentCopier.report.afterApply"
+msgstr "コピー後の検証結果"
+
+msgid "componentCopier.report.diffCheck"
+msgstr "差分チェックの結果"
+
+#, csharp-format
+msgid "componentCopier.report.applied"
+msgstr "{0} 件のコンポーネントをコピーしました。オブジェクトを {1} 件作成し、コンポーネントを {2} 件削除しました。Undo で元に戻せます。"
+
+#, csharp-format
+msgid "componentCopier.report.failed"
+msgstr "{0} 件のコンポーネントは追加できませんでした。"
+
+#, csharp-format
+msgid "componentCopier.report.diffSummary"
+msgstr "一致 {0} · 差分あり {1} · 参照が未解決 {2} · コピー先にない {3} · コピー先にだけある {4}"
+
+msgid "componentCopier.diff.match"
+msgstr "一致"
+
+msgid "componentCopier.diff.valueMismatch"
+msgstr "値が違う"
+
+msgid "componentCopier.diff.referenceMismatch"
+msgstr "参照が違う"
+
+msgid "componentCopier.diff.unresolvedReference"
+msgstr "参照が未解決"
+
+msgid "componentCopier.diff.missingOnTarget"
+msgstr "コピー先にない"
+
+msgid "componentCopier.diff.extraOnTarget"
+msgstr "コピー先にだけある"
+
+msgid "componentCopier.diff.truncated"
+msgstr "これ以上の差分は省略しています。"
+
+msgid "componentCopier.diff.select"
+msgstr "選択"
+
+msgid "componentCopier.diff.remove"
+msgstr "削除"
+
+msgid "componentCopier.settings.existing"
+msgstr "既存のコンポーネント"
+
+msgid "componentCopier.settings.existing:tooltip"
+msgstr "コピー先の同じオブジェクトに同じ型のコンポーネントがすでにある場合の扱い"
+
+msgid "componentCopier.policy.overwrite"
+msgstr "上書き"
+
+msgid "componentCopier.policy.add"
+msgstr "追加（重複させる）"
+
+msgid "componentCopier.policy.skip"
+msgstr "スキップ"
+
+msgid "componentCopier.policy.replace"
+msgstr "置き換え（削除してからコピー）"
+
+msgid "componentCopier.settings.createObjects"
+msgstr "足りないオブジェクトを作成"
+
+msgid "componentCopier.settings.createObjects:tooltip"
+msgstr "コンポーネントが付くオブジェクトがコピー先にない場合に作成します"
+
+msgid "componentCopier.diffOnly"
+msgstr "差分チェックのみ"
+
+msgid "componentCopier.diffOnly:tooltip"
+msgstr "何も変更せずに、コピー先と期待される結果を比較します"
+
+msgid "componentCopier.apply"
+msgstr "適用"
+
+msgid "componentCopier.blocked.boneMissing"
+msgstr "このコンポーネントが付くボーンがコピー先にありません。ボーンは作成しないため、対応付けセクションで別のボーンを指定してください。"
+
+msgid "componentCopier.mapping.group.bones"
+msgstr "ボーン"
+
+msgid "componentCopier.mapping.group.others"
+msgstr "その他のオブジェクト"
+
+msgid "componentCopier.mapping.note.boneMissing"
+msgstr "ボーンが見つかりません"
+
+msgid "componentCopier.mapping.reason.renamedChild"
+msgstr "名前の変更のみ（.1、prefix / suffix）"
+
+msgid "componentCopier.action.withPrefab"
+msgstr "Prefab で追加"
+
+msgid "componentCopier.mapping.note.prefab"
+msgstr "Prefab を追加"
+
+#, csharp-format
+msgid "componentCopier.report.prefabs"
+msgstr "このうち {0} 個は、Prefab のまま追加します。中にあるコンポーネント {1} 件は、コピー元と同じ状態になるようにコピーします。"
+
+msgid "componentCopier.report.prefabsOnly"
+msgstr "このうち {0} 個は、Prefab のまま追加します。"
+
+#, csharp-format
+msgid "componentCopier.report.appliedPrefabs"
+msgstr "Prefab を {0} 個追加しました。"
+
+msgid "componentCopier.action.leftOut"
+msgstr "追加しない"
+
+msgid "componentCopier.action.leftOut:tooltip"
+msgstr "Prefab はまるごと追加されるため、追加したあとで、このコンポーネントをインスタンスから削除します。Prefab の Overrides から元に戻せます。"
+
+#, csharp-format
+msgid "componentCopier.report.leftOut"
+msgstr "チェックを外したコンポーネント {0} 件は、Prefab を追加したあとで削除します。空になるオブジェクト {1} 個も一緒に削除します。"
+
+#, csharp-format
+msgid "componentCopier.report.appliedLeftOut"
+msgstr "追加した Prefab から、チェックを外したコンポーネント {0} 件とオブジェクト {1} 個を削除しました。"
+
+#, csharp-format
+msgid "componentCopier.report.removeFailed"
+msgstr "{0} 件のコンポーネントは、ほかのコンポーネントに必要とされているため削除できませんでした。"
+
+msgid "componentCopier.prefabs.title"
+msgstr "コピー先にないオブジェクト"
+
+msgid "componentCopier.prefabs.title:tooltip"
+msgstr "コピー元にあって、コピー先にはない Prefab と空のオブジェクトです。選択したコンポーネントが必要とするものは自動で追加されます。メッシュだけの帽子や、どこからも参照されていないアンカーのように、そうでないものも、チェックすれば追加できます。ボーンは対象外です。"
+
+msgid "componentCopier.prefabs.emptyChildren:tooltip"
+msgstr "配下にある空のオブジェクト {0} 個も一緒に作成します"
+
+#, csharp-format
+msgid "componentCopier.prefabs.summary"
+msgstr "{0} 個を追加"
+
+msgid "componentCopier.prefabs.status.add"
+msgstr "追加"
+
+msgid "componentCopier.prefabs.status.withComponents"
+msgstr "コンポーネントと一緒に追加"
+
+msgid "componentCopier.prefabs.blocked"
+msgstr "このオブジェクトを置く親オブジェクトが決まっていません。対応付けセクションで親を確定するか、「足りないオブジェクトを作成」をオンにしてください。コピー先にないボーンが親の場合は、作成できません。"
+
+msgid "componentCopier.groupBy.type"
+msgstr "種類別"
+
+msgid "componentCopier.groupBy.type:tooltip"
+msgstr "一覧をコンポーネントの種類ごとにまとめます。各行はオブジェクトです。"
+
+msgid "componentCopier.groupBy.object"
+msgstr "オブジェクト別"
+
+msgid "componentCopier.search.regex:tooltip"
+msgstr "検索文字列を正規表現として扱います（大文字と小文字は区別しません）。オブジェクトのパスとコンポーネントの型名が対象です。例: Skirt|Hair"
+
+msgid "componentCopier.groupBy.object:tooltip"
+msgstr "一覧をオブジェクトごとにまとめます。各行はそのオブジェクトに付いているコンポーネントです。"
+
+msgid "componentCopier.settings.unresolved"
+msgstr "未解決の参照"
+
+msgid "componentCopier.settings.unresolved:tooltip"
+msgstr "コンポーネント内の参照にコピー先の対応先がない場合の扱い。対応付けセクションで対応先を指定すれば解決します"
+
+msgid "componentCopier.unresolvedPolicy.clear"
+msgstr "None でコピー"
+
+msgid "componentCopier.unresolvedPolicy.skipComponent"
+msgstr "コンポーネントごとスキップ"
+
+msgid "componentCopier.blocked.unresolvedReference"
+msgstr "参照にコピー先の対応先がないため、設定に従ってこのコンポーネントをスキップします。対応付けセクションで対応先を指定すると、コピーされます。"
+
+#, csharp-format
+msgid "componentCopier.report.heldBack"
+msgstr "{0} 件のコンポーネントは、参照が未解決のため設定に従ってスキップします。"
+
+msgid "componentCopier.report.cause.heldBack"
+msgstr "参照先のコンポーネントがスキップ"
+
+msgid "componentCopier.action.skipUnresolved"
+msgstr "未解決のためスキップ"
+
+#, csharp-format
+msgid "componentCopier.row.heldBack:tooltip"
+msgstr "{0} 件の参照にコピー先の対応先がないため、設定に従ってこのコンポーネントをスキップします。"

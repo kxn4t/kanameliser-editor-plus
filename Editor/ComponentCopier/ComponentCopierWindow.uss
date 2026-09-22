@@ -1,0 +1,791 @@
+/* Component Copier Window Styles
+ *
+ * Base colors come from Unity's theme variables so the window works in both the dark and light skin.
+ * Only the state colors are fixed:
+ *   warning  #e5c463
+ *   new      rgb(100, 200, 100)
+ *   accent   rgb(100, 150, 255)
+ */
+
+.component-copier {
+    padding: 8px;
+}
+
+.language-switcher {
+    margin-bottom: 6px;
+}
+
+/* ── Source / target ── */
+
+.source-section {
+    margin-bottom: 8px;
+}
+
+.source-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.source-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.refresh-button {
+    width: 24px;
+    height: 20px;
+    padding: 0;
+    margin-right: 0;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.source-arrow {
+    -unity-text-align: middle-center;
+    opacity: 0.6;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+.inline-warning {
+    margin-top: 3px;
+    margin-left: 4px;
+    white-space: normal;
+    color: #e5c463;
+}
+
+.inline-warning--error {
+    color: rgb(230, 110, 110);
+}
+
+/* ── Sections ── */
+
+.main-scroll {
+    flex-grow: 1;
+}
+
+.section {
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: rgba(127, 127, 127, 0.1);
+}
+
+.section-title-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.section-title-row--spread {
+    justify-content: space-between;
+}
+
+.section-title {
+    -unity-font-style: bold;
+    margin-bottom: 5px;
+}
+
+.section-summary {
+    margin-left: 8px;
+    margin-bottom: 5px;
+    opacity: 0.8;
+}
+
+.section-summary--warning {
+    color: #e5c463;
+    opacity: 1;
+}
+
+.info-label {
+    opacity: 0.6;
+    white-space: normal;
+    margin: 4px 2px;
+}
+
+/* ── Filters ── */
+
+.filter-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.search-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    width: auto;
+}
+
+.search-field--invalid {
+    border-width: 1px;
+    border-color: rgb(230, 110, 110);
+    border-radius: 3px;
+}
+
+.regex-toggle {
+    flex-shrink: 0;
+    border-width: 1px;
+    border-radius: 3px;
+}
+
+/* Same "on" color as the preset chips and the grouping toggle.
+ * The second selector outranks Unity's own :checked rule for toolbar toggles. */
+.regex-toggle:checked,
+.regex-toggle.unity-toolbar-toggle:checked {
+    background-color: rgba(100, 150, 255, 0.35);
+    border-color: rgba(100, 150, 255, 0.8);
+}
+
+.regex-toggle:checked:hover,
+.regex-toggle.unity-toolbar-toggle:checked:hover {
+    background-color: rgba(100, 150, 255, 0.45);
+}
+
+/* Grouping mode — pill toggle, same look as the mode toggle of Color Variant Generator.
+ * Inactive text is dimmed with opacity instead of a fixed color so it stays readable in the light skin. */
+.mode-toggle-group {
+    flex-direction: row;
+    flex-shrink: 0;
+    border-width: 1px;
+    border-color: rgba(127, 127, 127, 0.35);
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.15);
+    padding: 1px;
+    margin-bottom: 5px;
+}
+
+.mode-toggle-button {
+    height: 18px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 11px;
+    margin: 0;
+    border-radius: 9px;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    opacity: 0.55;
+    transition-property: background-color, opacity;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-in-out;
+}
+
+.mode-toggle-button:hover {
+    background-color: rgba(127, 127, 127, 0.15);
+    opacity: 0.8;
+}
+
+.mode-toggle-button--active {
+    background-color: rgba(100, 150, 255, 0.35);
+    opacity: 1;
+}
+
+.mode-toggle-button--active:hover {
+    background-color: rgba(100, 150, 255, 0.45);
+    opacity: 1;
+}
+
+.preset-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+/* Unity's buttons have a larger bottom margin than top margin while toggles are symmetric, so centering the
+ * row leaves them a pixel apart. Both get the same symmetric margins instead. */
+.preset-chip {
+    border-radius: 10px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin-left: 0;
+    margin-right: 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.preset-chip--active {
+    background-color: rgba(100, 150, 255, 0.35);
+    border-color: rgba(100, 150, 255, 0.8);
+}
+
+.show-excluded-toggle {
+    margin-left: 8px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+/* Unity top-aligns a field label and nudges it down with padding, which only lines up with its own font and
+ * row height. Text and checkbox are centered on each other instead. */
+.show-excluded-toggle.unity-toggle,
+.mapping-group-toggle.unity-toggle,
+.settings-create.unity-toggle {
+    align-items: center;
+}
+
+/* Unity also reserves 150px for the label, which leaves the checkbox far away from a short text */
+.show-excluded-toggle.unity-toggle > .unity-toggle__label,
+.mapping-group-toggle.unity-toggle > .unity-toggle__label,
+.settings-create.unity-toggle > .unity-toggle__label {
+    min-width: auto;
+    margin-right: 4px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    -unity-text-align: middle-left;
+}
+
+.show-excluded-toggle.unity-toggle > .unity-toggle__input,
+.mapping-group-toggle.unity-toggle > .unity-toggle__input,
+.settings-create.unity-toggle > .unity-toggle__input {
+    align-items: center;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Measured on a screenshot: centered boxes still leave the checkbox a physical pixel above the optical
+ * center of the text, because the glyphs sit low in their line box. Inside a centered container a top
+ * margin of 1px moves the box down by half of it. */
+.show-excluded-toggle.unity-toggle .unity-toggle__checkmark,
+.mapping-group-toggle.unity-toggle .unity-toggle__checkmark,
+.settings-create.unity-toggle .unity-toggle__checkmark {
+    margin-top: 1px;
+    margin-bottom: 0;
+}
+
+/* ── Component list ── */
+
+.component-group {
+    margin-bottom: 2px;
+    border-radius: 3px;
+    background-color: rgba(127, 127, 127, 0.08);
+}
+
+.component-group--excluded {
+    opacity: 0.6;
+}
+
+.prefab-group {
+    margin-top: 6px;
+}
+
+.category-heading {
+    margin-top: 6px;
+    margin-bottom: 2px;
+    margin-left: 2px;
+    opacity: 0.7;
+    font-size: 11px;
+}
+
+/* Object tree — children hang from a guide line, like the Hierarchy window */
+.object-tree-children {
+    margin-left: 9px;
+    padding-left: 5px;
+    border-left-width: 1px;
+    border-left-color: rgba(127, 127, 127, 0.3);
+}
+
+.object-tree-heading {
+    align-self: flex-start;
+    margin-top: 3px;
+    margin-bottom: 2px;
+    margin-left: 2px;
+    opacity: 0.7;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.object-tree-heading:hover {
+    color: rgb(100, 150, 255);
+}
+
+/* A nested prefab with everything below it */
+.object-tree-prefab {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+/* A heading that carries a badge */
+.object-tree-heading-row {
+    flex-direction: row;
+    align-items: center;
+    align-self: flex-start;
+}
+
+/* Root of a nested prefab, on a tree heading or a group header. Accent color: it is a fact, not a state */
+.prefab-badge {
+    flex-shrink: 0;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    background-color: rgba(100, 150, 255, 0.3);
+}
+
+.excluded-divider {
+    margin-top: 6px;
+    margin-bottom: 3px;
+    padding-top: 4px;
+    border-top-width: 1px;
+    border-top-color: rgba(127, 127, 127, 0.4);
+    opacity: 0.7;
+    font-size: 11px;
+}
+
+.group-header {
+    flex-direction: row;
+    align-items: center;
+    padding: 3px 4px;
+}
+
+.group-header:hover {
+    background-color: rgba(127, 127, 127, 0.15);
+}
+
+.collapsible-arrow {
+    width: 12px;
+    font-size: 9px;
+    opacity: 0.7;
+    -unity-text-align: middle-center;
+}
+
+.collapsible-arrow--open {
+    rotate: 90deg;
+}
+
+.group-toggle {
+    margin: 0 4px 0 2px;
+}
+
+.group-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+.group-name {
+    -unity-font-style: bold;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Shrinks long before the name does, so the object name stays readable */
+.group-name-prefix {
+    opacity: 0.6;
+    flex-shrink: 1000;
+    min-width: 0;
+    margin-right: 0;
+    padding-right: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.group-name--prefixed {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.count-badge {
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    background-color: rgba(127, 127, 127, 0.3);
+    flex-shrink: 0;
+}
+
+.group-summary {
+    flex-grow: 1;
+    margin-left: 8px;
+    opacity: 0.7;
+    font-size: 11px;
+    -unity-text-align: middle-right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.warning-badge {
+    margin-left: 6px;
+    color: #e5c463;
+    flex-shrink: 0;
+}
+
+.group-content {
+    padding: 2px 4px 4px 22px;
+}
+
+.component-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 20px;
+}
+
+.component-row:hover {
+    background-color: rgba(127, 127, 127, 0.12);
+}
+
+.group-name--clickable:hover {
+    color: rgb(100, 150, 255);
+}
+
+.row-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+.component-row--excluded {
+    opacity: 0.6;
+}
+
+.row-path {
+    /* Sized by its text: a tooltip is centered on the element, see WithOverflowTooltip.
+     * The auto margin pushes the chips to the right instead. */
+    flex-grow: 0;
+    margin-right: auto;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-chip {
+    flex-shrink: 0;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    background-color: rgba(127, 127, 127, 0.25);
+}
+
+.status-chip--add {
+    background-color: rgba(100, 200, 100, 0.3);
+}
+
+.status-chip--overwrite,
+.status-chip--replace {
+    background-color: rgba(100, 150, 255, 0.3);
+}
+
+.status-chip--skip,
+.status-chip--skipidentical,
+.status-chip--leftout {
+    opacity: 0.6;
+}
+
+.status-chip--blocked {
+    background-color: rgba(229, 196, 99, 0.3);
+    color: #e5c463;
+}
+
+/* ── Mapping ── */
+
+.bulk-confirm-button {
+    align-self: flex-start;
+    margin-left: 0;
+    margin-bottom: 4px;
+}
+
+.mapping-group-title {
+    margin-top: 4px;
+    margin-bottom: 2px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    opacity: 0.7;
+}
+
+/* Title on the left, the option of the group on the right */
+.mapping-group-title-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+.mapping-group-toggle {
+    flex-shrink: 0;
+    font-size: 11px;
+}
+
+/* Components that hold a reference to the outside, below the row of the object they point at */
+.mapping-holders {
+    /* Not stretched to the full width, so its tooltip stays near the text */
+    align-self: flex-start;
+    margin-left: 8px;
+    margin-bottom: 3px;
+    font-size: 10px;
+    opacity: 0.6;
+    white-space: normal;
+}
+
+.mapping-holders:hover {
+    color: rgb(100, 150, 255);
+    opacity: 1;
+}
+
+.mapping-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 22px;
+    padding-left: 4px;
+    border-left-width: 2px;
+    border-left-color: rgba(0, 0, 0, 0);
+    margin-bottom: 1px;
+}
+
+.mapping-row--needsreview {
+    border-left-color: #e5c463;
+    background-color: rgba(229, 196, 99, 0.08);
+}
+
+.mapping-row--unmapped {
+    border-left-color: rgb(230, 110, 110);
+    background-color: rgba(230, 110, 110, 0.08);
+}
+
+.mapping-row--manual {
+    border-left-color: rgb(100, 150, 255);
+}
+
+/* Going to be created: the "new" color of the status chips, and no alarming background */
+.mapping-row--willcreate {
+    border-left-color: rgb(100, 200, 100);
+}
+
+/* Where the object will be, in place of the object field */
+.mapping-created-path {
+    margin-left: 3px;
+    opacity: 0.85;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-align: middle-left;
+}
+
+.mapping-row--confirmed {
+    opacity: 0.8;
+}
+
+.mapping-source {
+    width: 35%;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mapping-arrow {
+    flex-shrink: 0;
+    opacity: 0.6;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.mapping-target {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 60px;
+}
+
+/* Shows the object a kept reference keeps pointing at; dimmed because nothing was chosen or changed */
+.mapping-target--kept {
+    opacity: 0.6;
+}
+
+.mapping-note {
+    flex-shrink: 0;
+    margin-left: 4px;
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+.mapping-button {
+    flex-shrink: 0;
+}
+
+.mapping-menu-button {
+    flex-shrink: 0;
+    width: 20px;
+    padding: 0;
+    margin-left: 0;
+}
+
+.confirmed-foldout {
+    margin-top: 4px;
+    opacity: 0.9;
+}
+
+/* ── Report ── */
+
+.report-summary {
+    white-space: normal;
+    margin-bottom: 4px;
+}
+
+.warning-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    background-color: rgba(229, 196, 99, 0.12);
+}
+
+.warning-text {
+    flex-shrink: 1;
+    white-space: normal;
+    color: #e5c463;
+}
+
+.warning-action {
+    flex-shrink: 0;
+}
+
+/* The components a warning is about, hanging below it */
+.warning-details {
+    margin-left: 8px;
+    margin-bottom: 4px;
+}
+
+.detail-report {
+    margin-top: 6px;
+    padding: 6px;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: rgba(127, 127, 127, 0.4);
+}
+
+.detail-header {
+    flex-direction: row;
+    align-items: center;
+}
+
+.detail-title {
+    flex-grow: 1;
+    -unity-font-style: bold;
+}
+
+.detail-close {
+    width: 20px;
+    padding: 0;
+    margin-right: 0;
+}
+
+.detail-message {
+    white-space: normal;
+    margin-top: 2px;
+    color: rgb(100, 200, 100);
+}
+
+.detail-counts {
+    white-space: normal;
+    margin-top: 2px;
+    margin-bottom: 4px;
+    opacity: 0.85;
+}
+
+.diff-row--warning > .unity-foldout__toggle .unity-foldout__text,
+.diff-row--valuemismatch > .unity-foldout__toggle .unity-foldout__text,
+.diff-row--referencemismatch > .unity-foldout__toggle .unity-foldout__text,
+.diff-row--unresolvedreference > .unity-foldout__toggle .unity-foldout__text {
+    color: #e5c463;
+}
+
+.diff-row--missingontarget > .unity-foldout__toggle .unity-foldout__text,
+.diff-row--extraontarget > .unity-foldout__toggle .unity-foldout__text {
+    color: rgb(230, 110, 110);
+}
+
+.diff-property {
+    white-space: normal;
+    font-size: 11px;
+    margin-left: 4px;
+}
+
+.diff-property--unresolvedreference {
+    opacity: 0.8;
+}
+
+/* Reveals the referenced object; not stretched, so only the text reacts */
+.diff-property--link {
+    align-self: flex-start;
+}
+
+.diff-property--link:hover {
+    color: rgb(100, 150, 255);
+}
+
+.diff-actions {
+    flex-direction: row;
+    margin-top: 2px;
+}
+
+/* ── Footer ── */
+
+.footer {
+    flex-shrink: 0;
+    padding-top: 6px;
+    border-top-width: 1px;
+    border-top-color: rgba(127, 127, 127, 0.4);
+}
+
+.settings-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* The popups stack here, so they get the same width whatever their labels and options measure */
+.settings-fields {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.settings-policy {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+/* One label column for both popups. Unity sizes a label to its text once it exceeds the 150px minimum,
+ * which puts the popups at different offsets when the labels differ in length. */
+.settings-policy > .unity-base-field__label {
+    min-width: 150px;
+    width: 150px;
+    flex-shrink: 0;
+}
+
+.settings-policy > .unity-base-field__input {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.settings-create {
+    margin-left: 8px;
+}
+
+.button-row {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.apply-button {
+    min-width: 100px;
+    -unity-font-style: bold;
+}
