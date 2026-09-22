@@ -14,30 +14,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Component Copier** (`Tools > Kanameliser Editor Plus > Component Copier`) — Copies components from one outfit or avatar to another, and redirects the references inside them (bones, colliders, constraint sources, ...) to the corresponding objects of the target.
-  - The source can be a Hierarchy object, a Prefab instance, or a Prefab asset. Copying is applied to scene objects only, so it can always be undone in a single step
-  - Components are listed by type or by object, and can be selected per group or individually, with PhysBone / Contact / Constraint / MA presets and a search box that also accepts regular expressions. Other non-destructive tools found in the source (AAO, VRCFury, ...) get a preset of their own, the type list is arranged under a heading per category, and the object list is laid out as a tree that follows the Hierarchy
-  - Objects are matched by path and name, and humanoid bones are also matched across naming conventions. Bones and other objects are matched separately, and renames such as `Armature.1` or a common prefix / suffix are recognized. Similar-name matches are only suggested and must be confirmed; every match can be corrected by hand
-  - References that point outside of the source, such as to the avatar an outfit sits on, are listed too. When the target sits on another avatar, they are redirected to the corresponding objects of that avatar; without a counterpart they are kept as they are
-  - Modular Avatar's object references (Merge Armature target, Object Toggle / Shape Changer targets, ...) are redirected as a whole: the avatar-relative path is rewritten along with the object, and a reference that only carries a path is resolved and redirected too
-  - Existing components can be overwritten, duplicated, skipped, or replaced. Components with a reference that cannot be redirected are copied with that reference cleared, or, by a second setting, skipped as a whole until the object is mapped Objects missing in the target can be created, except bones: the objects the components sit on, and the empty objects they refer to (constraint sources, anchors, ...)
-  - Prefabs nested in the source (a prefab bundling PhysBone settings, a hat below the Head bone, ...) are added to the target as prefab instances instead of being rebuilt object by object. Prefabs and empty objects the target lacks are listed, so ones no selected component needs, such as a mesh-only hat or an unused anchor, can be added too. Components inside an added prefab that are not wanted can be unchecked; they are removed from the new instance as a prefab override
-  - References that cannot be redirected are listed before applying together with the components and properties they belong to, and a diff check verifies the result after copying (or compares two hierarchies without copying)
-  - The window can also be opened from the context menus: `Use as Source` / `Use as Target` on a Hierarchy object, `Use as Source` on a Prefab asset, and `Copy with Component Copier` on a component header, which checks just that component
+- **Component Copier** (`Tools > Kanameliser Editor Plus > Component Copier`) — Copies components (PhysBone, Contact, Constraint, Modular Avatar, ...) from one outfit or avatar to another, and redirects the references inside them (bones, colliders, constraint sources, ...) to the corresponding objects of the target. Also opens from the right-click menu of a Hierarchy object, a Prefab asset, or a component header.
+  - Objects are matched by path, name, and a humanoid bone dictionary. Similar-name matches are only suggested, and every match can be corrected by hand
+  - Components are listed by type or by object, with presets (PhysBone / Contact / Constraint / MA / other tools), a search box that accepts regular expressions, and per-component selection
+  - Prefabs and empty objects missing in the target are added. References to the avatar around the source are redirected to the avatar around the target, and Modular Avatar's path-based references are rewritten along with the object
+  - Existing components can be overwritten, duplicated, skipped, or replaced. Components with a reference that cannot be redirected are copied with it cleared, or skipped as a whole until the object is mapped
+  - A pre-check lists what will happen, a diff check verifies the result (or compares two hierarchies without copying), and everything reverts with a single Undo
 
 ---
 
 ### 追加
 
-- **Component Copier**（`Tools > Kanameliser Editor Plus > Component Copier`）— 衣装やアバターのコンポーネントを別の衣装やアバターへコピーします。コンポーネント内の参照（ボーン、コライダー、Constraint のソースなど）も、コピー先の対応するオブジェクトへ置き換えます。
-  - コピー元には、Hierarchy のオブジェクト、Prefab インスタンス、Prefab アセットを指定できます。コピーの適用先はシーン上のオブジェクトに限定しており、1 回の Undo で元に戻せます
-  - コンポーネントは種類別またはオブジェクト別に一覧表示され、グループ単位でも個別でも選択できます。PhysBone / Contact / Constraint / MA のプリセットと、正規表現も使える検索ボックスがあります。コピー元に含まれるその他の非破壊ツール（AAO、VRCFury など）にもツールごとのプリセットが表示され、種類別の一覧はカテゴリーごとの見出しで、オブジェクト別の一覧は Hierarchy に沿ったツリーで整理されます
-  - オブジェクトはパスと名前で対応付け、Humanoid ボーンは命名規則が違っても対応付けます。ボーンとそれ以外のオブジェクトは別々に対応付け、`Armature.1` のような改名や共通の prefix / suffix も認識します。類似名による対応は候補として表示するだけで、確定操作が必要です。すべての対応は手動で補正できます
-  - 衣装を着せているアバターなど、コピー元の外を指している参照も一覧に表示します。コピー先が別のアバターにある場合は、そのアバターの対応するオブジェクトへ置き換えます。対応するものがなければ、そのまま残します
-  - Modular Avatar のオブジェクト参照（Merge Armature の対象、Object Toggle / Shape Changer の対象など）は、オブジェクトと一緒にアバター相対のパスも書き換えます。パスしか持っていない参照も解決して置き換えます
-  - 既存のコンポーネントは、上書き、追加、スキップ、置き換えから選べます。コピー先に足りないオブジェクトは作成できます（ボーンは作成しません）。対象は、コンポーネントを付けるオブジェクトと、コンポーネントが参照している空のオブジェクト（Constraint のソースやアンカーなど）です
-  - コピー元に入っている Prefab（PB の設定をまとめた Prefab や、Head ボーンの下の帽子など）は、オブジェクトを作り直さず、Prefab のままコピー先に追加します。コピー先にない Prefab と空のオブジェクトは一覧に表示されるので、メッシュだけの帽子や使われていないアンカーのように、選択したコンポーネントが必要としないものも追加できます。追加する Prefab の中の不要なコンポーネントはチェックを外せます（追加したインスタンスから、Prefab のオーバーライドとして削除します）
-  - 置き換えられない参照を、どのコンポーネントのどのプロパティかとあわせて適用前に一覧表示します。コピー後は差分チェックで結果を検証できます（コピーせずに 2 つの階層を比較するだけの使い方もできます）
+- **Component Copier**（`Tools > Kanameliser Editor Plus > Component Copier`）— 衣装やアバターのコンポーネント（PhysBone、Contact、Constraint、Modular Avatar など）を別の衣装やアバターへコピーし、コンポーネント内の参照（ボーン、コライダー、Constraint のソースなど）をコピー先の対応するオブジェクトへ置き換えます。Hierarchy のオブジェクト、Prefab アセット、コンポーネントヘッダーの右クリックからも開けます。
+  - オブジェクトはパス、名前、Humanoid ボーン辞書で対応付けます。類似名による対応は候補として表示するだけで、すべての対応は手動で補正できます
+  - コンポーネントは種類別またはオブジェクト別に一覧表示され、プリセット（PhysBone / Contact / Constraint / MA / その他のツール）、正規表現も使える検索、個別選択で絞り込めます
+  - コピー先にない Prefab や空のオブジェクトは追加します。コピー元のアバターへの参照はコピー先のアバターの対応するオブジェクトへ置き換え、Modular Avatar のパスによる参照もオブジェクトと一緒に書き換えます
+  - 既存のコンポーネントは、上書き、追加、スキップ、置き換えから選べます。置き換えられない参照を持つコンポーネントは、参照を None にしてコピーするか、対応先を指定するまでコンポーネントごとスキップするかを選べます
+  - 適用前チェックで何が起きるかを一覧表示し、差分チェックで結果を検証できます（コピーせずに 2 つの階層を比較するだけの使い方もできます）。1 回の Undo ですべて元に戻せます
 
 ## [1.0.1] - 2026-08-14
 
