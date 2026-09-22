@@ -764,6 +764,9 @@ msgstr "跳过整个组件"
 msgid "componentCopier.blocked.unresolvedReference"
 msgstr "引用在复制目标中没有对应对象，按设置跳过此组件。在对应关系部分指定对应对象后即会复制。"
 
+msgid "componentCopier.blocked.sameSide"
+msgstr "此组件所属对象的对应对象与复制源位于同一侧。直接复制会覆盖复制源，请在对应关系部分指定另一侧的对象。"
+
 #, csharp-format
 msgid "componentCopier.report.heldBack"
 msgstr "{0} 个组件因引用未解析而按设置跳过。"

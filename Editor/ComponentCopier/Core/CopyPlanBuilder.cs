@@ -23,15 +23,26 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// if there are any. Returns the map that redirects them (see <see cref="ExternalContext"/>), or null
         /// to keep all of them as they are. A callback because the caller may want to cache the map.
         /// </param>
+        /// <param name="mirrorRoot">
+        /// Set for a mirror copy: the transform whose YZ plane is the mirror (the avatar). Positions, rotations
+        /// and side tags are then mirrored, and created objects get the name of the other side.
+        /// </param>
         /// <param name="leftOut">
         /// Components the user unchecked on purpose. Only matters inside a nested prefab that gets added:
         /// anywhere else an unchecked component simply is not copied.
+        /// </param>
+        /// <param name="keyRoot">
+        /// The root that the keys of <paramref name="selected"/> and <paramref name="leftOut"/> are relative to,
+        /// i.e. the one that was scanned. Defaults to the source root of the map. A mirror copy scans the source
+        /// while its map spans the whole avatar.
         /// </param>
         public static CopyPlan Build(
             IEnumerable<ComponentEntry> selected, TransformMap map, CopySettings settings,
             IEnumerable<Transform> objectsToAdd = null,
             Func<IReadOnlyCollection<Transform>, TransformMap> externalMapProvider = null,
-            IEnumerable<ComponentKey> leftOut = null)
+            IEnumerable<ComponentKey> leftOut = null,
+            Transform mirrorRoot = null,
+            Transform keyRoot = null)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
             settings ??= new CopySettings();
@@ -44,7 +55,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             while (true)
             {
                 var plan = BuildOnce(
-                    selectedList, map, settings, objectsToAddList, externalMapProvider, leftOutKeys, heldBack);
+                    selectedList, map, settings, objectsToAddList, externalMapProvider, leftOutKeys, heldBack,
+                    mirrorRoot, keyRoot != null ? keyRoot : map.SourceRoot);
                 if (settings.UnresolvedPolicy != UnresolvedReferencePolicy.SkipComponent) return plan;
 
                 // Whether a reference is resolved is only known once the plan is complete, and holding a
@@ -77,7 +89,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private static CopyPlan BuildOnce(
             List<ComponentEntry> selected, TransformMap map, CopySettings settings,
             List<Transform> objectsToAdd, Func<IReadOnlyCollection<Transform>, TransformMap> externalMapProvider,
-            HashSet<ComponentKey> leftOutKeys, Dictionary<Component, List<PlannedReference>> heldBack)
+            HashSet<ComponentKey> leftOutKeys, Dictionary<Component, List<PlannedReference>> heldBack,
+            Transform mirrorRoot, Transform keyRoot)
         {
             var plan = new CopyPlan
             {
@@ -85,6 +98,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 Settings = settings,
                 SourceAvatarRoot = AvatarObjectReferences.FindAvatarRoot(map.SourceRoot),
                 TargetAvatarRoot = AvatarObjectReferences.FindAvatarRoot(map.TargetRoot),
+                Mirror = mirrorRoot != null ? new MirrorContext(mirrorRoot) : null,
+                KeyRoot = keyRoot,
             };
             var context = new HostResolver(plan);
 
@@ -99,6 +114,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var planned = new PlannedComponent { Entry = entry };
                 context.Resolve(entry.Host, out planned.TargetHost, out planned.HostToCreate,
                     out planned.BlockReason);
+                if (IsOnCopiedSide(plan, entry, planned.TargetHost))
+                {
+                    // The "existing" component would be the source itself or another one being copied,
+                    // overwritten or even replaced before it is read
+                    planned.TargetHost = null;
+                    planned.BlockReason = BlockReason.SameSide;
+                }
+
                 plan.Components.Add(planned);
             }
 
@@ -116,6 +139,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             CollectReferences(plan, context);
             PlanLeftOutObjects(plan);
+            MirrorValuePlanner.Plan(plan, context.ObjectsBySource);
 
             // Needs the references, so it runs last
             foreach (var planned in plan.Components)
@@ -146,10 +170,26 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 UnresolvedReferences = unresolved,
             };
 
-            if (plan.Map.TryResolve(entry.Host, out planned.TargetHost))
+            if (plan.Map.TryResolve(entry.Host, out planned.TargetHost) &&
+                !IsOnCopiedSide(plan, entry, planned.TargetHost))
+            {
                 planned.Existing = ComponentScanner.FindByTypeAndIndex(planned.TargetHost, entry.Type, entry.Key.Index);
+            }
 
             return planned;
+        }
+
+        /// <summary>
+        /// A mirror copy has to land on the other side. The objects on the middle line map to themselves, so a
+        /// component there has nowhere to go: its counterpart would be the component itself. An object mapped to
+        /// one on its own side (a manual mapping, ...) would take the copy onto the side being copied from.
+        /// </summary>
+        private static bool IsOnCopiedSide(CopyPlan plan, ComponentEntry entry, Transform targetHost)
+        {
+            if (plan.Mirror == null || targetHost == null) return false;
+            if (targetHost == entry.Host) return true;
+
+            return plan.Map.Sides.Of(targetHost) == plan.Map.Sides.Of(entry.Host);
         }
 
         /// <summary>
@@ -312,6 +352,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             private PlannedObject Register(PlannedObject planned)
             {
                 planned.SiblingOccurrence = NestedPrefabs.SiblingOccurrence(planned.Source);
+                // A mirror copy creates "Skirt_L" as "Skirt_R"
+                planned.Name = plan.Mirror != null && SideName.TryFlip(planned.Source.name, out var flipped)
+                    ? flipped
+                    : planned.Source.name;
                 ObjectsBySource[planned.Source] = planned;
                 // Parents are always registered before their children, so this list is in creation order
                 plan.ObjectsToCreate.Add(planned);
@@ -333,7 +377,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             do
             {
                 objectCount = plan.ObjectsToCreate.Count;
-                AddImplicitComponents(plan, context, leftOutKeys);
+                AddImplicitComponents(plan, leftOutKeys);
                 DecideActions(plan);
                 PlanReferencedObjects(plan, context, walked, externalTransforms);
             } while (plan.ObjectsToCreate.Count != objectCount);
@@ -384,27 +428,33 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// outfit's bones) carry over. The ones the user left out arrive with the prefab all the same, so they
         /// are planned too, for removal.
         /// </summary>
-        private static void AddImplicitComponents(
-            CopyPlan plan, HostResolver context, HashSet<ComponentKey> leftOutKeys)
+        private static void AddImplicitComponents(CopyPlan plan, HashSet<ComponentKey> leftOutKeys)
         {
-            if (!plan.ObjectsToCreate.Any(o => o.IsPrefabRoot || o.PrefabRoot != null)) return;
+            var prefabObjects = plan.ObjectsToCreate.Where(o => o.IsPrefabRoot || o.PrefabRoot != null).ToList();
+            if (prefabObjects.Count == 0) return;
 
             var alreadyPlanned = new HashSet<Component>(plan.Components.Select(c => c.Entry.Component));
 
-            foreach (var entry in ComponentScanner.Scan(plan.Map.SourceRoot))
+            foreach (var host in prefabObjects)
             {
-                if (alreadyPlanned.Contains(entry.Component)) continue;
-                if (!context.ObjectsBySource.TryGetValue(entry.Host, out var host)) continue;
-                if (!host.IsPrefabRoot && host.PrefabRoot == null) continue;
-
-                bool leftOut = leftOutKeys.Contains(entry.Key);
-                plan.Components.Add(new PlannedComponent
+                // Keyed like the selection, so that the caller recognizes them. A mirror copy can also bring a
+                // prefab from elsewhere in the avatar (the counterpart of a referenced object), keyed from the
+                // map. Such a key can read like one of the source, so the user's choices do not apply to it.
+                bool inKeyRoot = ReferenceWalker.IsInside(host.Source, plan.KeyRoot);
+                foreach (var entry in ComponentScanner.ScanObject(
+                             host.Source, inKeyRoot ? plan.KeyRoot : plan.Map.SourceRoot))
                 {
-                    Entry = entry,
-                    HostToCreate = host,
-                    Implicit = !leftOut,
-                    LeftOut = leftOut,
-                });
+                    if (alreadyPlanned.Contains(entry.Component)) continue;
+
+                    bool leftOut = inKeyRoot && leftOutKeys.Contains(entry.Key);
+                    plan.Components.Add(new PlannedComponent
+                    {
+                        Entry = entry,
+                        HostToCreate = host,
+                        Implicit = !leftOut,
+                        LeftOut = leftOut,
+                    });
+                }
             }
         }
 
@@ -575,12 +625,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 }
             }
 
+            // Only a component of the scanned source can be offered for selection
             return new PlannedReference
             {
                 Kind = ReferenceKind.InternalUnresolved,
-                MissingDependency = new ComponentKey(
-                    ObjectMatcher.GetRelativePathFromRoot(transform, plan.Map.SourceRoot),
-                    component.GetType().FullName, index),
+                MissingDependency = ReferenceWalker.IsInside(transform, plan.KeyRoot)
+                    ? new ComponentKey(
+                        ObjectMatcher.GetRelativePathFromRoot(transform, plan.KeyRoot),
+                        component.GetType().FullName, index)
+                    : (ComponentKey?)null,
             };
         }
 
@@ -688,25 +741,43 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// Lists the nested prefabs of the source that have no counterpart in the target.
         /// Only the outermost ones are returned: a prefab inside a missing prefab arrives with it.
         /// </summary>
-        public static List<Transform> FindMissingRoots(TransformMap map)
+        /// <param name="scope">
+        /// Limits the search to this part of the source (itself included), such as the source of a mirror copy
+        /// within the avatar that the map spans.
+        /// </param>
+        public static List<Transform> FindMissingRoots(TransformMap map, Transform scope = null)
         {
             var result = new List<Transform>();
-            Visit(map.SourceRoot);
+            if (scope == null || scope == map.SourceRoot) Visit(map.SourceRoot);
+            // Inside a missing prefab, the outer prefab is what arrives
+            else if (!AnyAncestorBelow(scope, map.SourceRoot, IsMissing)) VisitChild(scope);
             return result;
+
+            bool IsMissing(Transform transform) =>
+                GetPrefabAsset(transform, map.SourceRoot) != null && !map.TryResolve(transform, out _);
 
             void Visit(Transform parent)
             {
                 foreach (Transform child in parent)
-                {
-                    if (GetPrefabAsset(child, map.SourceRoot) != null && !map.TryResolve(child, out _))
-                    {
-                        result.Add(child);
-                        continue;
-                    }
-
-                    Visit(child);
-                }
+                    VisitChild(child);
             }
+
+            void VisitChild(Transform child)
+            {
+                if (IsMissing(child)) result.Add(child);
+                else Visit(child);
+            }
+        }
+
+        /// <summary>True when an object between <paramref name="transform"/> and <paramref name="root"/> matches.</summary>
+        public static bool AnyAncestorBelow(Transform transform, Transform root, Func<Transform, bool> predicate)
+        {
+            for (var ancestor = transform.parent; ancestor != null && ancestor != root; ancestor = ancestor.parent)
+            {
+                if (predicate(ancestor)) return true;
+            }
+
+            return false;
         }
 
         /// <summary>Index of a transform among its same-name siblings.</summary>
@@ -724,12 +795,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return occurrence;
         }
 
-        public static Transform FindChild(Transform parent, string name, int occurrence)
+        /// <param name="skip">Children that do not count, such as the ones a copy has just created.</param>
+        public static Transform FindChild(Transform parent, string name, int occurrence, HashSet<Transform> skip = null)
         {
             int seen = 0;
             foreach (Transform child in parent)
             {
-                if (child.name != name) continue;
+                if (child.name != name || (skip != null && skip.Contains(child))) continue;
                 if (seen == occurrence) return child;
                 seen++;
             }
@@ -769,27 +841,38 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// Lists the missing empty objects. Only the topmost ones are returned: the empty objects below them
         /// are created along with them.
         /// </summary>
-        public static List<Transform> FindRoots(TransformMap map)
+        /// <param name="scope">
+        /// Limits the search to this part of the source (itself included), such as the source of a mirror copy
+        /// within the avatar that the map spans. The topmost missing objects within it are returned, even when
+        /// the objects above it are missing too: those are created on the way.
+        /// </param>
+        public static List<Transform> FindRoots(TransformMap map, Transform scope = null)
         {
             var result = new List<Transform>();
-            Visit(map.SourceRoot, false);
+            if (scope == null || scope == map.SourceRoot) Visit(map.SourceRoot, false);
+            else if (!NestedPrefabs.AnyAncestorBelow(scope, map.SourceRoot, IsOutOfReach)) VisitChild(scope, false);
             return result;
+
+            // A missing prefab arrives as a whole, and nothing can be created below a missing bone
+            bool IsOutOfReach(Transform transform) =>
+                !map.TryResolve(transform, out _) &&
+                (NestedPrefabs.GetPrefabAsset(transform, map.SourceRoot) != null ||
+                 map.SourceSkeleton.IsBone(transform));
 
             void Visit(Transform parent, bool parentComesAlong)
             {
                 foreach (Transform child in parent)
-                {
-                    bool resolved = map.TryResolve(child, out _);
+                    VisitChild(child, parentComesAlong);
+            }
 
-                    // A missing prefab arrives as a whole, and nothing can be created below a missing bone
-                    if (!resolved && NestedPrefabs.GetPrefabAsset(child, map.SourceRoot) != null) continue;
-                    if (!resolved && map.SourceSkeleton.IsBone(child)) continue;
+            void VisitChild(Transform child, bool parentComesAlong)
+            {
+                if (IsOutOfReach(child)) return;
 
-                    bool missingEmpty = IsMissingEmpty(child, map);
-                    if (missingEmpty && !parentComesAlong) result.Add(child);
+                bool missingEmpty = IsMissingEmpty(child, map);
+                if (missingEmpty && !parentComesAlong) result.Add(child);
 
-                    Visit(child, missingEmpty);
-                }
+                Visit(child, missingEmpty);
             }
         }
 

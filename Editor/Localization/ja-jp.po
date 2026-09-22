@@ -764,6 +764,9 @@ msgstr "コンポーネントごとスキップ"
 msgid "componentCopier.blocked.unresolvedReference"
 msgstr "参照にコピー先の対応先がないため、設定に従ってこのコンポーネントをスキップします。対応付けセクションで対応先を指定すると、コピーされます。"
 
+msgid "componentCopier.blocked.sameSide"
+msgstr "このコンポーネントが付くオブジェクトの対応先が、コピー元と同じ側にあります。このままではコピー元を上書きしてしまうため、対応付けセクションで反対側のオブジェクトを指定してください。"
+
 #, csharp-format
 msgid "componentCopier.report.heldBack"
 msgstr "{0} 件のコンポーネントは、参照が未解決のため設定に従ってスキップします。"

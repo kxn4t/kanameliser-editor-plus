@@ -764,6 +764,9 @@ msgstr "略過整個元件"
 msgid "componentCopier.blocked.unresolvedReference"
 msgstr "參照在複製目標中沒有對應物件，依設定略過此元件。在對應關係區段指定對應物件後即會複製。"
 
+msgid "componentCopier.blocked.sameSide"
+msgstr "此元件所屬物件的對應物件與複製來源位於同一側。直接複製會覆寫複製來源，請在對應關係區段指定另一側的物件。"
+
 #, csharp-format
 msgid "componentCopier.report.heldBack"
 msgstr "{0} 個元件因參照未解析而依設定略過。"

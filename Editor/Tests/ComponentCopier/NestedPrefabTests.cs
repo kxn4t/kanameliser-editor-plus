@@ -414,5 +414,81 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         #endregion
+
+        #region Mirror copy
+
+        /// <summary>An earring with a chain on each of its own sides, on the left hand of an outfit.</summary>
+        private Transform CreateOutfitWithEarring(string assetName, out Transform outfit, out Transform earringL)
+        {
+            var asset = SavePrefab(assetName, earring =>
+            {
+                AddChild(earring, "Chain_L").localPosition = new Vector3(0.1f, 0f, 0f);
+                AddChild(earring, "Chain_R").localPosition = new Vector3(-0.1f, 0f, 0f);
+                foreach (Transform chain in earring) chain.gameObject.AddComponent<SphereCollider>();
+            });
+            var avatar = CreateHierarchy("Avatar", "Outfit/Hips/Hand_L", "Outfit/Hips/Hand_R");
+            outfit = avatar.Find("Outfit");
+            outfit.Find("Hips/Hand_L").localPosition = new Vector3(0.5f, 1f, 0f);
+            outfit.Find("Hips/Hand_R").localPosition = new Vector3(-0.5f, 1f, 0f);
+            earringL = Instantiate(asset, outfit.Find("Hips/Hand_L"));
+            earringL.name = "Earring_L";
+            earringL.localPosition = new Vector3(0f, 0.05f, 0.02f);
+            return avatar;
+        }
+
+        [Test]
+        public void MirrorCopy_OfAPrefabWithBothSidesInside_KeepsItsChildrenApart()
+        {
+            var avatar = CreateOutfitWithEarring("Earring_Mirror", out var outfit, out var earringL);
+
+            var plan = CopyPlanBuilder.Build(Select(outfit, typeof(SphereCollider)), MirrorMapper.Build(avatar),
+                new CopySettings(), mirrorRoot: avatar, keyRoot: outfit);
+            CopyExecutor.Execute(plan);
+
+            var earringR = outfit.Find("Hips/Hand_R/Earring_R");
+            Assert.IsNotNull(earringR);
+            Assert.AreEqual(2, earringR.childCount);
+            // Each chain lands at the mirror image of its source, under the flipped name: a chain renamed early
+            // must not be found again as its sibling
+            var mirror = new MirrorContext(avatar);
+            Assert.That((mirror.ReflectPoint(earringL.Find("Chain_L").position) - earringR.Find("Chain_R").position).magnitude,
+                Is.LessThan(1e-4f));
+            Assert.That((mirror.ReflectPoint(earringL.Find("Chain_R").position) - earringR.Find("Chain_L").position).magnitude,
+                Is.LessThan(1e-4f));
+            // The new names are overrides of the instance, or they would be gone once the scene is reloaded
+            foreach (Transform chain in earringR)
+            {
+                using var chainObject = new SerializedObject(chain.gameObject);
+                Assert.IsTrue(chainObject.FindProperty("m_Name").prefabOverride, chain.name);
+            }
+        }
+
+        [Test]
+        public void MirrorCopy_KeysTheComponentsOfAnAddedPrefabLikeTheScannedSource()
+        {
+            var avatar = CreateOutfitWithEarring("Earring_MirrorKeys", out var outfit, out var earringL);
+            var chainL = Select(outfit, typeof(SphereCollider)).Where(e => e.Host == earringL.Find("Chain_L"));
+
+            var plan = CopyPlanBuilder.Build(chainL, MirrorMapper.Build(avatar), new CopySettings(),
+                mirrorRoot: avatar, keyRoot: outfit);
+
+            // The chain on the other side comes with the prefab, keyed from the outfit the window scanned
+            var implicitChain = plan.Components.Single(c => c.Implicit);
+            Assert.AreEqual("Hips/Hand_L/Earring_L/Chain_R", implicitChain.Entry.Key.RelativePath);
+        }
+
+        [Test]
+        public void MissingPrefabs_WithinAScope_AreTheOnesAtOrBelowIt()
+        {
+            var avatar = CreateOutfitWithEarring("Earring_MirrorScope", out var outfit, out var earringL);
+            var map = MirrorMapper.Build(avatar);
+
+            CollectionAssert.AreEqual(new[] { earringL }, NestedPrefabs.FindMissingRoots(map, outfit));
+            CollectionAssert.AreEqual(new[] { earringL }, NestedPrefabs.FindMissingRoots(map, earringL));
+            // Inside a missing prefab, the prefab is what arrives, and it lies outside the scope
+            CollectionAssert.IsEmpty(NestedPrefabs.FindMissingRoots(map, earringL.Find("Chain_L")));
+        }
+
+        #endregion
     }
 }

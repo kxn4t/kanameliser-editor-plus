@@ -765,6 +765,9 @@ msgstr "Skip the component"
 msgid "componentCopier.blocked.unresolvedReference"
 msgstr "A reference has no counterpart in the target, so this component is skipped as the setting says. Map the object in the Mapping section and it will be copied."
 
+msgid "componentCopier.blocked.sameSide"
+msgstr "The object this component belongs to is mapped to an object on the same side as the source. Copying would overwrite the source, so map it to an object on the other side in the Mapping section."
+
 #, csharp-format
 msgid "componentCopier.report.heldBack"
 msgstr "{0} component(s) are skipped as the setting says, because a reference is unresolved."
