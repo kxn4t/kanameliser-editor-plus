@@ -33,6 +33,10 @@ Once a source is set, the components below it are listed grouped by type or by o
 
 Clicking a row or a heading in the list selects the object and highlights it in the Hierarchy.
 
+::: warning Recreate MA Mesh Settings after copying
+MA Mesh Settings can be copied with its references, but the Anchor Override and Root Bone differ from avatar to avatar. After copying, delete it and run `Setup Outfit` again on the target avatar so that it is set up for that avatar.
+:::
+
 ## Mapping
 
 Objects of the source and the target are matched automatically by **path, name, and a dictionary of humanoid bone names** (`Hips` and `Hip`, `UpperArm_L` and `Left arm`, ...). Suffixes added to avoid name clashes, such as `Armature.1` or `.001`, and a common prefix or suffix on one side are recognized and compensated for as well.
