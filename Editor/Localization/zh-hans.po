@@ -320,6 +320,9 @@ msgstr "复制目标"
 msgid "componentCopier.refresh:tooltip"
 msgstr "重新扫描复制源和复制目标"
 
+msgid "componentCopier.swap:tooltip"
+msgstr "交换复制源和复制目标"
+
 msgid "componentCopier.warning.sameObject"
 msgstr "复制源和复制目标是同一个对象。"
 

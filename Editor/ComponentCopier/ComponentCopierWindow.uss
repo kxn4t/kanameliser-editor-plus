@@ -32,7 +32,8 @@
     min-width: 0;
 }
 
-.refresh-button {
+.refresh-button,
+.swap-button {
     width: 24px;
     height: 20px;
     padding: 0;

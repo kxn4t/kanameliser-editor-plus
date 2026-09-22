@@ -11,6 +11,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private ObjectField targetField;
         private Label targetWarningLabel;
         private Button refreshButton;
+        private Button swapButton;
         private string targetWarningKey;
         private bool targetWarningIsError;
 
@@ -57,16 +58,24 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             arrow.AddToClassList("source-arrow");
             section.Add(arrow);
 
+            var targetRow = new VisualElement();
+            targetRow.AddToClassList("source-row");
+            section.Add(targetRow);
+
             targetField = new ObjectField("componentCopier.target")
             {
                 objectType = typeof(GameObject),
                 allowSceneObjects = true,
                 value = targetRoot,
             };
-            targetField.AddToClassList("target-field");
+            targetField.AddToClassList("source-field");
             targetField.AddToClassList("ndmf-tr");
             targetField.RegisterValueChangedCallback(evt => OnTargetChanged(evt.newValue as GameObject));
-            section.Add(targetField);
+            targetRow.Add(targetField);
+
+            swapButton = new Button(SwapRoots) { text = "⇅" };
+            swapButton.AddToClassList("swap-button");
+            targetRow.Add(swapButton);
 
             targetWarningLabel = new Label();
             targetWarningLabel.AddToClassList("inline-warning");
@@ -94,6 +103,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             ValidateTarget();
             UpdateSourceWarnings();
             Recompute();
+        }
+
+        /// <summary>
+        /// Copies in the other direction. The component list and the manual mappings belong to the old source,
+        /// so they start over just like after picking a new source by hand.
+        /// </summary>
+        private void SwapRoots()
+        {
+            (sourceRoot, targetRoot) = (targetRoot, sourceRoot);
+            sourceField.SetValueWithoutNotify(sourceRoot);
+            targetField.SetValueWithoutNotify(targetRoot);
+            OnSourceChanged(sourceRoot);
         }
 
         /// <summary>
@@ -142,6 +163,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             targetWarningLabel.EnableInClassList("inline-warning--error", targetWarningIsError);
 
             refreshButton.tooltip = Localization.S("componentCopier.refresh:tooltip");
+            swapButton.tooltip = Localization.S("componentCopier.swap:tooltip");
+            swapButton.SetEnabled(sourceRoot != null || targetRoot != null);
         }
     }
 }
