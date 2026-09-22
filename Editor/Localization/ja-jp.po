@@ -320,6 +320,9 @@ msgstr "コピー先"
 msgid "componentCopier.refresh:tooltip"
 msgstr "コピー元とコピー先を再スキャン"
 
+msgid "componentCopier.swap:tooltip"
+msgstr "コピー元とコピー先を入れ替え"
+
 msgid "componentCopier.warning.sameObject"
 msgstr "コピー元とコピー先が同じオブジェクトです。"
 

@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Component Copier**: Added a `⇅` button that swaps the source and the target
+
+---
+
+### 追加
+
+- **Component Copier**: コピー元とコピー先を入れ替える `⇅` ボタンを追加
+
 ## [1.1.0] - 2026-09-22
 
 ### Added

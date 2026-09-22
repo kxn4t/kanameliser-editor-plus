@@ -12,7 +12,7 @@ Typical uses:
 1. Open `Tools > Kanameliser Editor Plus > Component Copier` from the menu
 2. Set **Source** to the object that holds the settings (a Hierarchy object, a Prefab instance, or a Prefab asset in the Project view all work; the components below it are listed)
 3. Check the components to copy
-4. Set **Target** to the scene object that receives the settings (the objects of the source and the target are matched automatically)
+4. Set **Target** to the scene object that receives the settings (the objects of the source and the target are matched automatically; the `⇅` button swaps the source and the target)
 5. Look through the **Mapping** section and, where a row is marked to review (`?`) or unmapped (`✖`), pick the counterpart by hand as needed
 6. Read the **pre-check** and, if everything looks right, press **Apply** (Undo reverts it)
 7. Check the diff shown after applying to confirm that everything arrived as expected

@@ -321,6 +321,9 @@ msgstr "Target"
 msgid "componentCopier.refresh:tooltip"
 msgstr "Rescan the source and target"
 
+msgid "componentCopier.swap:tooltip"
+msgstr "Swap the source and target"
+
 msgid "componentCopier.warning.sameObject"
 msgstr "Source and target are the same object."
 
