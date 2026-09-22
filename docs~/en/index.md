@@ -38,6 +38,9 @@ features:
   - title: Component Manager
     details: Lists all components on selected objects and their children. Filter, multi-select, and batch delete.
     link: /en/features/component-manager
+  - title: Component Copier
+    details: Copy PhysBone, Modular Avatar, and other components to another outfit or avatar, with bone and collider references redirected to the target.
+    link: /en/features/component-copier
   - title: AO Bounds Setter
     details: Batch configure Anchor Override, Root Bone, and Bounds across multiple meshes.
     link: /en/features/ao-bounds-setter

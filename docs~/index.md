@@ -38,6 +38,9 @@ features:
   - title: Component Manager
     details: 選択オブジェクトとその子の全コンポーネントを一覧表示。検索・一括削除が可能。
     link: /features/component-manager
+  - title: Component Copier
+    details: PhysBone や Modular Avatar などのコンポーネントを別の衣装・アバターへコピー。ボーンやコライダーへの参照もコピー先へ置き換え。
+    link: /features/component-copier
   - title: AO Bounds Setter
     details: 複数メッシュのAnchor Override・Root Bone・Boundsを一括設定。衣装制作に便利。
     link: /features/ao-bounds-setter

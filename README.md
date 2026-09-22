@@ -53,6 +53,18 @@ Lists all components on selected objects and their children.
 
 Access: `Tools > Kanameliser Editor Plus > Component Manager`
 
+### Component Copier
+
+Copies components (PhysBone, Contact, Constraint, Modular Avatar, ...) from one outfit or avatar to another, and redirects the references inside them (bones, colliders, constraint sources, ...) to the corresponding objects of the target.
+
+- Carry settings over to an updated version of an outfit, or to its version for another avatar
+- Objects are matched by path, name, and a humanoid bone dictionary; similar-name matches are only suggested and can be corrected by hand
+- Presets (PhysBone / Contact / Constraint / MA / All), search with regular expressions, and per-component selection
+- Prefabs and empty objects missing in the target are added; references to the surrounding avatar are redirected to the target avatar
+- A pre-check lists what will happen, a diff check verifies the result, and everything reverts with a single Undo
+
+Access: `Tools > Kanameliser Editor Plus > Component Copier`, or right-click a Hierarchy object, a Prefab asset, or a component header → `Kanameliser Editor Plus`
+
 ### Material Copier
 
 Copy & paste materials from multiple selected GameObjects to GameObjects with matching names.
