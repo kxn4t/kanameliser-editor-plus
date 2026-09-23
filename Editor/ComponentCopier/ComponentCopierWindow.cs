@@ -83,7 +83,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             pendingOnlyComponent = only;
             // A component on the middle line has no other side to go to, so it asks for an ordinary copy
-            if (mirrorMode && only != null && new MirrorSides(MirrorRootOf(source.transform)).Of(only.transform) == Side.None)
+            if (mirrorMode && only != null && new MirrorSides(AvatarRoots.MirrorRoot(source.transform)).Of(only.transform) == Side.None)
                 LeaveMirrorMode();
 
             sourceField?.SetValueWithoutNotify(source);
@@ -289,28 +289,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 keyRoot: sourceRoot.transform);
         }
 
-        /// <summary>
-        /// The hierarchy a mirror copy works in: the avatar the source sits on, so that references to the
-        /// bones and colliders of the avatar are mirrored too. Outside of an avatar, the outermost model (an
-        /// object with an Animator), else the topmost parent: a part such as "UpperLeg_L" has no other side of
-        /// its own. The model comes first because an organizing object above it ("Avatars") need not sit on
-        /// its middle line, and the outermost one because an outfit FBX on the model has an Animator too.
-        /// </summary>
-        private Transform MirrorRoot() => sourceRoot != null ? MirrorRootOf(sourceRoot.transform) : null;
-
-        private static Transform MirrorRootOf(Transform source)
-        {
-            var avatarRoot = AvatarObjectReferences.FindAvatarRoot(source);
-            if (avatarRoot != null) return avatarRoot;
-
-            Transform model = null;
-            for (var current = source; current != null; current = current.parent)
-            {
-                if (current.GetComponent<Animator>() != null) model = current;
-            }
-
-            return model != null ? model : source.root;
-        }
+        /// <summary>The hierarchy a mirror copy works in, see <see cref="AvatarRoots.MirrorRoot"/>.</summary>
+        private Transform MirrorRoot() => sourceRoot != null ? AvatarRoots.MirrorRoot(sourceRoot.transform) : null;
 
         /// <summary>
         /// The mirror map spans the whole avatar, so like the map of the surroundings it is kept while nothing

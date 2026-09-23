@@ -405,7 +405,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         /// <summary>
         /// The avatars the source and the target sit on, as MA sees them (see
-        /// <see cref="AvatarObjectReferences.FindAvatarRoot"/>). Null when a side is not on an avatar.
+        /// <see cref="AvatarRoots.Find"/>). Null when a side is not on an avatar.
         /// </summary>
         public Transform SourceAvatarRoot;
         public Transform TargetAvatarRoot;
