@@ -41,8 +41,8 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         {
             var map = TransformMapper.Build(source, target);
             return CopyPlanBuilder.Build(Select(source, typeof(ModularAvatarMoveTo)), map,
-                settings ?? new CopySettings(), null,
-                referenced => ExternalContext.BuildMap(source, target, referenced));
+                settings ?? new CopySettings(),
+                externalMapProvider: referenced => ExternalContext.BuildMap(source, target, referenced));
         }
 
         [Test]

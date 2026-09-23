@@ -45,19 +45,24 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Transform keyRoot = null)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
-            settings ??= new CopySettings();
 
-            var selectedList = selected.ToList();
-            var objectsToAddList = (objectsToAdd ?? Enumerable.Empty<Transform>()).ToList();
-            var leftOutKeys = new HashSet<ComponentKey>(leftOut ?? Enumerable.Empty<ComponentKey>());
+            var request = new Request
+            {
+                Selected = selected.ToList(),
+                Map = map,
+                Settings = settings ?? new CopySettings(),
+                ObjectsToAdd = (objectsToAdd ?? Enumerable.Empty<Transform>()).ToList(),
+                ExternalMapProvider = externalMapProvider,
+                LeftOutKeys = new HashSet<ComponentKey>(leftOut ?? Enumerable.Empty<ComponentKey>()),
+                MirrorRoot = mirrorRoot,
+                KeyRoot = keyRoot != null ? keyRoot : map.SourceRoot,
+            };
             var heldBack = new Dictionary<Component, List<PlannedReference>>();
 
             while (true)
             {
-                var plan = BuildOnce(
-                    selectedList, map, settings, objectsToAddList, externalMapProvider, leftOutKeys, heldBack,
-                    mirrorRoot, keyRoot != null ? keyRoot : map.SourceRoot);
-                if (settings.UnresolvedPolicy != UnresolvedReferencePolicy.SkipComponent) return plan;
+                var plan = BuildOnce(request, heldBack);
+                if (request.Settings.UnresolvedPolicy != UnresolvedReferencePolicy.SkipComponent) return plan;
 
                 // Whether a reference is resolved is only known once the plan is complete, and holding a
                 // component back leaves the ones that refer to it without their counterpart. So the plan is
@@ -81,29 +86,39 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
         }
 
+        /// <summary>The arguments of <see cref="Build"/>, normalized once for every round of <see cref="BuildOnce"/>.</summary>
+        private sealed class Request
+        {
+            public List<ComponentEntry> Selected;
+            public TransformMap Map;
+            public CopySettings Settings;
+            public List<Transform> ObjectsToAdd;
+            public Func<IReadOnlyCollection<Transform>, TransformMap> ExternalMapProvider;
+            public HashSet<ComponentKey> LeftOutKeys;
+            public Transform MirrorRoot;
+            public Transform KeyRoot;
+        }
+
         /// <param name="heldBack">
         /// Components that are left out because of their unresolved references, with those references. They
         /// are planned as blocked without touching the target: no object is created for them, and references
         /// to them count as unresolved.
         /// </param>
-        private static CopyPlan BuildOnce(
-            List<ComponentEntry> selected, TransformMap map, CopySettings settings,
-            List<Transform> objectsToAdd, Func<IReadOnlyCollection<Transform>, TransformMap> externalMapProvider,
-            HashSet<ComponentKey> leftOutKeys, Dictionary<Component, List<PlannedReference>> heldBack,
-            Transform mirrorRoot, Transform keyRoot)
+        private static CopyPlan BuildOnce(Request request, Dictionary<Component, List<PlannedReference>> heldBack)
         {
+            var map = request.Map;
             var plan = new CopyPlan
             {
                 Map = map,
-                Settings = settings,
+                Settings = request.Settings,
                 SourceAvatarRoot = AvatarObjectReferences.FindAvatarRoot(map.SourceRoot),
                 TargetAvatarRoot = AvatarObjectReferences.FindAvatarRoot(map.TargetRoot),
-                Mirror = mirrorRoot != null ? new MirrorContext(mirrorRoot) : null,
-                KeyRoot = keyRoot,
+                Mirror = request.MirrorRoot != null ? new MirrorContext(request.MirrorRoot) : null,
+                KeyRoot = request.KeyRoot,
             };
             var context = new HostResolver(plan);
 
-            foreach (var entry in selected)
+            foreach (var entry in request.Selected)
             {
                 if (heldBack.TryGetValue(entry.Component, out var unresolved))
                 {
@@ -125,7 +140,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 plan.Components.Add(planned);
             }
 
-            foreach (var source in objectsToAdd)
+            foreach (var source in request.ObjectsToAdd)
             {
                 var blockReason = context.RequestObject(source);
                 if (blockReason != BlockReason.None)
@@ -133,9 +148,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             var externalTransforms = new HashSet<Transform>();
-            PlanDependencies(plan, context, externalTransforms, leftOutKeys);
-            if (externalTransforms.Count > 0 && externalMapProvider != null && settings.RedirectExternalReferences)
-                plan.ExternalMap = externalMapProvider(externalTransforms);
+            PlanDependencies(plan, context, externalTransforms, request.LeftOutKeys);
+            if (externalTransforms.Count > 0 && request.ExternalMapProvider != null &&
+                request.Settings.RedirectExternalReferences)
+            {
+                plan.ExternalMap = request.ExternalMapProvider(externalTransforms);
+            }
 
             CollectReferences(plan, context);
             PlanLeftOutObjects(plan);
@@ -166,6 +184,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var planned = new PlannedComponent
             {
                 Entry = entry,
+                // Set here as well, not only by DecideActions: the default action is Add
+                Action = ComponentAction.Blocked,
                 BlockReason = BlockReason.UnresolvedReference,
                 UnresolvedReferences = unresolved,
             };
@@ -451,8 +471,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     {
                         Entry = entry,
                         HostToCreate = host,
-                        Implicit = !leftOut,
-                        LeftOut = leftOut,
+                        Origin = leftOut ? ComponentOrigin.LeftOut : ComponentOrigin.Implicit,
                     });
                 }
             }
@@ -586,13 +605,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (value is GameObject || value is Transform)
             {
-                var targetRef = new TargetRef { AsGameObject = value is GameObject };
+                bool asGameObject = value is GameObject;
 
                 // Planned objects first, for the same reason the host resolution checks nested prefabs first
-                if (objectsBySource.TryGetValue(transform, out targetRef.ObjectToCreate) ||
-                    plan.Map.TryResolve(transform, out targetRef.Transform))
+                if (objectsBySource.TryGetValue(transform, out var toCreate))
                 {
-                    return new PlannedReference { Kind = ReferenceKind.InternalMapped, Expected = targetRef };
+                    return new PlannedReference
+                    {
+                        Kind = ReferenceKind.InternalMapped,
+                        Expected = TargetRef.ToObjectToCreate(toCreate, asGameObject),
+                    };
+                }
+
+                if (plan.Map.TryResolve(transform, out var mapped))
+                {
+                    return new PlannedReference
+                    {
+                        Kind = ReferenceKind.InternalMapped,
+                        Expected = TargetRef.ToObject(mapped, asGameObject),
+                    };
                 }
 
                 return new PlannedReference { Kind = ReferenceKind.InternalUnresolved };
@@ -605,7 +636,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return new PlannedReference
                 {
                     Kind = ReferenceKind.NewComponent,
-                    Expected = new TargetRef { PlannedComponent = plannedComponent },
+                    Expected = TargetRef.ToPlannedComponent(plannedComponent),
                 };
             }
 
@@ -619,7 +650,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     return new PlannedReference
                     {
                         Kind = ReferenceKind.InternalMapped,
-                        Expected = new TargetRef { ExistingComponent = existing },
+                        Expected = TargetRef.ToComponent(existing),
                     };
                 }
             }
@@ -647,7 +678,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var kept = new PlannedReference
             {
                 Kind = ReferenceKind.ExternalScene,
-                Expected = new TargetRef { Fixed = value },
+                Expected = TargetRef.Keep(value),
             };
 
             // Without surroundings to map there is still the user's word: manual mappings are part of every
@@ -662,7 +693,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return new PlannedReference
                 {
                     Kind = ReferenceKind.ExternalMapped,
-                    Expected = new TargetRef { Transform = counterpart, AsGameObject = value is GameObject },
+                    Expected = TargetRef.ToObject(counterpart, value is GameObject),
                 };
             }
 
@@ -674,7 +705,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return new PlannedReference
             {
                 Kind = ReferenceKind.ExternalMapped,
-                Expected = new TargetRef { ExistingComponent = existing },
+                Expected = TargetRef.ToComponent(existing),
             };
         }
 

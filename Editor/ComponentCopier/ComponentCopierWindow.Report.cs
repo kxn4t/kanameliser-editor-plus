@@ -148,8 +148,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             // "Identical" is counted apart from "Skip": lumped together, a target that is already up to date
             // looks as if the Overwrite policy had been ignored
             // Components held back by the unresolved-reference setting are skips too, as far as the user is concerned
-            int skipped = Count(ComponentAction.Skip) +
-                          plan.Components.Count(c => c.BlockReason == BlockReason.UnresolvedReference);
+            int skipped = Count(ComponentAction.Skip) + plan.Components.Count(c => c.IsHeldBack);
             var summary = new Label(Localization.S("componentCopier.report.summary",
                 Count(ComponentAction.Add), Count(ComponentAction.Overwrite), Count(ComponentAction.Replace),
                 skipped, Count(ComponentAction.SkipIdentical), objectsToCreate));
@@ -203,8 +202,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 AddWarning(mirrorMode ? "componentCopier.warning.mirrorSourceIsAsset" : "componentCopier.warning.targetIsAsset");
 
             var blocked = plan.Components
-                .Where(c => c.Action == ComponentAction.Blocked && !c.Implicit &&
-                            c.BlockReason != BlockReason.UnresolvedReference)
+                .Where(c => c.Action == ComponentAction.Blocked && !c.Implicit && !c.IsHeldBack)
                 .ToList();
             if (blocked.Count > 0)
             {
@@ -222,7 +220,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             // Held back as the setting says. Nothing of them is written, so their references are not cleared
             // and are listed apart from the ones below.
-            var heldBack = plan.Components.Where(c => c.BlockReason == BlockReason.UnresolvedReference).ToList();
+            var heldBack = plan.Components.Where(c => c.IsHeldBack).ToList();
             if (heldBack.Count > 0)
             {
                 var warning = AddWarning("componentCopier.report.heldBack", heldBack.Count);
@@ -483,11 +481,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             if (reference.MissingDependency is { } dependency)
             {
-                if (plannedByKey.TryGetValue(dependency, out var referenced) &&
-                    referenced.BlockReason == BlockReason.UnresolvedReference)
-                {
+                if (plannedByKey.TryGetValue(dependency, out var referenced) && referenced.IsHeldBack)
                     return Localization.S("componentCopier.report.cause.heldBack");
-                }
 
                 if (available.Contains(dependency) && !selectedKeys.Contains(dependency))
                     return Localization.S("componentCopier.report.cause.notSelected");

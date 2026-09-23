@@ -112,7 +112,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var planned = plan.ObjectsToCreate
                 .Where(o => o.PrefabRoot == null)
                 .OrderBy(o => hierarchyOrder.TryGetValue(o.Source, out int index) ? index : int.MaxValue)
-                .Select(o => map.Get(o.Source) ?? new TransformMapping { Source = o.Source })
+                .Select(o => map.Get(o.Source) ?? TransformMapping.Unmapped(o.Source, new List<MappingCandidate>()))
                 .ToList();
             // ... unless the user asked to pick an existing object instead; those rows need a counterpart again
             var toCreate = planned.Where(m => !pickExistingFor.Contains(m.Source)).ToList();
@@ -227,19 +227,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private VisualElement CreateWillCreateRow(TransformMapping mapping, PlannedObject plannedObject)
         {
-            var row = new VisualElement();
-            row.AddToClassList("mapping-row");
+            var row = CreateMappingRowFrame(
+                ObjectMatcher.GetRelativePathFromRoot(mapping.Source, map.SourceRoot), mapping.Source);
             row.AddToClassList("mapping-row--willcreate");
-
-            string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, map.SourceRoot);
-            var sourceLabel = WithOverflowTooltip(new Label(sourcePath));
-            sourceLabel.AddToClassList("mapping-source");
-            sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(mapping.Source));
-            row.Add(sourceLabel);
-
-            var arrow = new Label("→");
-            arrow.AddToClassList("mapping-arrow");
-            row.Add(arrow);
 
             string createdPath = PlannedTargetPath(plannedObject);
             var createdLabel = WithOverflowTooltip(new Label("+ " + createdPath));
@@ -247,17 +237,65 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             createdLabel.AddToClassList("mapping-created-path");
             row.Add(createdLabel);
 
-            var note = new Label(MappingNote(mapping, plannedObject, false));
-            note.AddToClassList("mapping-note");
-            row.Add(note);
+            AddMappingNote(row, MappingNote(mapping, plannedObject, false));
+            AddRowMenuButton(row, () => ShowWillCreateMenu(mapping));
+            return row;
+        }
 
-            var menuButton = new Button { text = "▾" };
-            menuButton.clicked += () => ShowWillCreateMenu(mapping);
-            menuButton.AddToClassList("mapping-menu-button");
-            menuButton.tooltip = Localization.S("componentCopier.mapping.menu:tooltip");
-            row.Add(menuButton);
+        /// <summary>
+        /// The start that every row of the mapping section shares: the source path, which reveals the object when
+        /// clicked, and the arrow. The caller adds the target side.
+        /// </summary>
+        private static VisualElement CreateMappingRowFrame(string sourcePath, Transform source)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("mapping-row");
+
+            var sourceLabel = WithOverflowTooltip(new Label(sourcePath));
+            sourceLabel.AddToClassList("mapping-source");
+            sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(source));
+            row.Add(sourceLabel);
+
+            var arrow = new Label("→");
+            arrow.AddToClassList("mapping-arrow");
+            row.Add(arrow);
 
             return row;
+        }
+
+        private static void AddMappingNote(VisualElement row, string text)
+        {
+            var note = new Label(text);
+            note.AddToClassList("mapping-note");
+            row.Add(note);
+        }
+
+        private static void AddRowMenuButton(VisualElement row, System.Action showMenu)
+        {
+            var menuButton = new Button(showMenu)
+            {
+                text = "▾",
+                tooltip = Localization.S("componentCopier.mapping.menu:tooltip"),
+            };
+            menuButton.AddToClassList("mapping-menu-button");
+            row.Add(menuButton);
+        }
+
+        /// <summary>The candidates of a mapping as menu items, the current target checked, then a separator.</summary>
+        private void AddCandidateItems(GenericMenu menu, TransformMapping mapping, Transform targetRoot)
+        {
+            foreach (var candidate in mapping.Candidates)
+            {
+                var target = candidate.Target;
+                if (target == null) continue;
+
+                // GenericMenu turns '/' into submenus
+                string path = ObjectMatcher.GetRelativePathFromRoot(target, targetRoot).Replace("/", " ∕ ");
+                menu.AddItem(new GUIContent(path), mapping.Target == target,
+                    () => SetManualMapping(mapping.Source, target));
+            }
+
+            if (mapping.Candidates.Count > 0) menu.AddSeparator("");
         }
 
         /// <summary>Where a planned object ends up, as a path below the target root.</summary>
@@ -281,18 +319,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private void ShowWillCreateMenu(TransformMapping mapping)
         {
             var menu = new GenericMenu();
-
-            foreach (var candidate in mapping.Candidates)
-            {
-                var target = candidate.Target;
-                if (target == null) continue;
-
-                // GenericMenu turns '/' into submenus
-                string path = ObjectMatcher.GetRelativePathFromRoot(target, map.TargetRoot).Replace("/", " ∕ ");
-                menu.AddItem(new GUIContent(path), false, () => SetManualMapping(mapping.Source, target));
-            }
-
-            if (mapping.Candidates.Count > 0) menu.AddSeparator("");
+            AddCandidateItems(menu, mapping, map.TargetRoot);
 
             // Creating is the default, but the counterpart may exist under a name that could not be matched
             menu.AddItem(new GUIContent(Localization.S("componentCopier.mapping.menu.pickExisting")), false, () =>
@@ -505,18 +532,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private VisualElement CreateKeptReferenceRow(Transform transform)
         {
-            var row = new VisualElement();
-            row.AddToClassList("mapping-row");
-
-            string path = ScenePath(transform);
-            var sourceLabel = WithOverflowTooltip(new Label(path));
-            sourceLabel.AddToClassList("mapping-source");
-            sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(transform));
-            row.Add(sourceLabel);
-
-            var arrow = new Label("→");
-            arrow.AddToClassList("mapping-arrow");
-            row.Add(arrow);
+            var row = CreateMappingRowFrame(ScenePath(transform), transform);
 
             // Nothing can be suggested here, but the user may know better: e.g. the avatar the target is
             // going to be placed on is in the scene already
@@ -548,11 +564,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             });
             row.Add(targetPicker);
 
-            var note = new Label(Localization.S(chosen != null
+            AddMappingNote(row, Localization.S(chosen != null
                 ? "componentCopier.mapping.note.manual"
                 : "componentCopier.mapping.note.externalKept"));
-            note.AddToClassList("mapping-note");
-            row.Add(note);
             row.EnableInClassList("mapping-row--manual", chosen != null);
 
             return row;
@@ -601,8 +615,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             bool external = owner != null;
             owner ??= map;
 
-            var row = new VisualElement();
-            row.AddToClassList("mapping-row");
+            string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, owner.SourceRoot);
+            if (external)
+                sourcePath = string.IsNullOrEmpty(sourcePath) ? owner.SourceRoot.name : owner.SourceRoot.name + "/" + sourcePath;
+            var row = CreateMappingRowFrame(sourcePath, mapping.Source);
+
             if (plannedObject != null)
             {
                 // Only here while the user picks an existing object for it; still nothing to be alarmed about
@@ -619,18 +636,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 row.AddToClassList(ComponentCopierStrings.MappingRowClass(mapping.State));
             }
-
-            string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, owner.SourceRoot);
-            if (external)
-                sourcePath = string.IsNullOrEmpty(sourcePath) ? owner.SourceRoot.name : owner.SourceRoot.name + "/" + sourcePath;
-            var sourceLabel = WithOverflowTooltip(new Label(sourcePath));
-            sourceLabel.AddToClassList("mapping-source");
-            sourceLabel.RegisterCallback<ClickEvent>(_ => Reveal(mapping.Source));
-            row.Add(sourceLabel);
-
-            var arrow = new Label("→");
-            arrow.AddToClassList("mapping-arrow");
-            row.Add(arrow);
 
             // A reference to the outside without a counterpart is kept, so the field shows the object it keeps
             // pointing at. Inside the source an empty field is the truth: that reference gets cleared.
@@ -660,9 +665,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             });
             row.Add(targetPicker);
 
-            var note = new Label(MappingNote(mapping, plannedObject, external));
-            note.AddToClassList("mapping-note");
-            row.Add(note);
+            AddMappingNote(row, MappingNote(mapping, plannedObject, external));
 
             if (mapping.State == MappingState.NeedsReview)
             {
@@ -677,13 +680,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             // A confirmed match inside the source needs no second thought. A reference to the outside does:
             // keeping it is a legitimate choice even when a counterpart was found.
             if (external || mapping.State != MappingState.Confirmed)
-            {
-                var menuButton = new Button { text = "▾" };
-                menuButton.clicked += () => ShowMappingMenu(mapping, owner);
-                menuButton.AddToClassList("mapping-menu-button");
-                menuButton.tooltip = Localization.S("componentCopier.mapping.menu:tooltip");
-                row.Add(menuButton);
-            }
+                AddRowMenuButton(row, () => ShowMappingMenu(mapping, owner));
 
             return row;
         }
@@ -691,19 +688,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private void ShowMappingMenu(TransformMapping mapping, TransformMap owner)
         {
             var menu = new GenericMenu();
-
-            foreach (var candidate in mapping.Candidates)
-            {
-                var target = candidate.Target;
-                if (target == null) continue;
-
-                // GenericMenu turns '/' into submenus
-                string path = ObjectMatcher.GetRelativePathFromRoot(target, owner.TargetRoot).Replace("/", " ∕ ");
-                menu.AddItem(new GUIContent(path), mapping.Target == target,
-                    () => SetManualMapping(mapping.Source, target));
-            }
-
-            if (mapping.Candidates.Count > 0) menu.AddSeparator("");
+            AddCandidateItems(menu, mapping, owner.TargetRoot);
 
             // "No counterpart" clears a reference into the source, but keeps one to the outside as it is
             bool keepsReference = owner != map;

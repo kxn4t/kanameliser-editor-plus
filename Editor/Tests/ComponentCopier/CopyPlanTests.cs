@@ -216,8 +216,8 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         private static CopyPlan BuildPlanWithSurroundings(Transform source, Transform target, params System.Type[] types)
         {
             var map = TransformMapper.Build(source, target);
-            return CopyPlanBuilder.Build(Select(source, types), map, new CopySettings(), null,
-                referenced => ExternalContext.BuildMap(source, target, referenced));
+            return CopyPlanBuilder.Build(Select(source, types), map, new CopySettings(),
+                externalMapProvider: referenced => ExternalContext.BuildMap(source, target, referenced));
         }
 
         [Test]
@@ -248,8 +248,8 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 
             var plan = CopyPlanBuilder.Build(
                 Select(source, typeof(ParentConstraint)), TransformMapper.Build(source, target),
-                new CopySettings { RedirectExternalReferences = false }, null,
-                referenced => ExternalContext.BuildMap(source, target, referenced));
+                new CopySettings { RedirectExternalReferences = false },
+                externalMapProvider: referenced => ExternalContext.BuildMap(source, target, referenced));
 
             Assert.IsNull(plan.ExternalMap);
             Assert.AreEqual(ReferenceKind.ExternalScene, plan.Components.Single().References.Single().Kind);
@@ -270,8 +270,8 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             };
             var plan = CopyPlanBuilder.Build(
                 Select(source, typeof(ParentConstraint)), TransformMapper.Build(source, target, manual),
-                new CopySettings { RedirectExternalReferences = false }, null,
-                referenced => ExternalContext.BuildMap(source, target, referenced, manual));
+                new CopySettings { RedirectExternalReferences = false },
+                externalMapProvider: referenced => ExternalContext.BuildMap(source, target, referenced, manual));
 
             // Consumers must not assume a map behind a redirected reference
             Assert.IsNull(plan.ExternalMap);
@@ -296,8 +296,8 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             var manual = new Dictionary<Transform, Transform> { { avatarA.Find("Armature/Hips"), null } };
             var plan = CopyPlanBuilder.Build(
                 Select(source, typeof(ParentConstraint)), TransformMapper.Build(source, target, manual),
-                new CopySettings(), null,
-                referenced => ExternalContext.BuildMap(source, target, referenced, manual));
+                new CopySettings(),
+                externalMapProvider: referenced => ExternalContext.BuildMap(source, target, referenced, manual));
 
             Assert.AreEqual(ReferenceKind.ExternalScene, plan.Components.Single().References.Single().Kind);
         }
@@ -318,8 +318,8 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             };
             var plan = CopyPlanBuilder.Build(
                 Select(source, typeof(ParentConstraint)), TransformMapper.Build(source, target, manual),
-                new CopySettings(), null,
-                referenced => ExternalContext.BuildMap(source, target, referenced, manual));
+                new CopySettings(),
+                externalMapProvider: referenced => ExternalContext.BuildMap(source, target, referenced, manual));
             Assert.IsNull(plan.ExternalMap);
 
             CopyExecutor.Execute(plan);
@@ -399,7 +399,7 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             var map = TransformMapper.Build(source, target);
 
             var plan = CopyPlanBuilder.Build(
-                new List<ComponentEntry>(), map, new CopySettings(), new[] { source.Find("Anchors") });
+                new List<ComponentEntry>(), map, new CopySettings(), objectsToAdd: new[] { source.Find("Anchors") });
             CopyExecutor.Execute(plan);
 
             Assert.IsNotNull(target.Find("Anchors/A"));
