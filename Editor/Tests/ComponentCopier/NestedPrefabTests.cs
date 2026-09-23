@@ -243,7 +243,7 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             Assert.IsEmpty(CopyPlanBuilder.Build(nothingSelected, map, new CopySettings()).ObjectsToCreate,
                 "Without a request or a selected component the prefab is left alone");
 
-            var plan = CopyPlanBuilder.Build(nothingSelected, map, new CopySettings(), new[] { sourceHat });
+            var plan = CopyPlanBuilder.Build(nothingSelected, map, new CopySettings(), objectsToAdd: new[] { sourceHat });
             var result = CopyExecutor.Execute(plan);
 
             Assert.AreEqual(1, result.InstantiatedPrefabs);
@@ -268,7 +268,7 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 
             var map = TransformMapper.Build(source, target);
             var plan = CopyPlanBuilder.Build(
-                Enumerable.Empty<ComponentEntry>(), map, new CopySettings(), new[] { sourceHat });
+                Enumerable.Empty<ComponentEntry>(), map, new CopySettings(), objectsToAdd: new[] { sourceHat });
 
             Assert.AreEqual(BlockReason.BoneMissing, plan.BlockedObjects.Single().Reason);
             Assert.IsEmpty(plan.ObjectsToCreate);
@@ -289,7 +289,8 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             CollectionAssert.AreEqual(new[] { sourceHat }, NestedPrefabs.FindMissingRoots(map));
 
             var plan = CopyPlanBuilder.Build(
-                Enumerable.Empty<ComponentEntry>(), map, new CopySettings(), new[] { sourceHat.Find("Ribbon_Inner") });
+                Enumerable.Empty<ComponentEntry>(), map, new CopySettings(),
+                objectsToAdd: new[] { sourceHat.Find("Ribbon_Inner") });
             var result = CopyExecutor.Execute(plan);
 
             Assert.AreEqual(1, result.InstantiatedPrefabs, "Requesting the inner prefab adds the outer one, once");

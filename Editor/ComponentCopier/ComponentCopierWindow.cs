@@ -279,12 +279,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private CopyPlan BuildPlan(CopySettings planSettings)
         {
-            // A mirror copy stays inside one avatar, so there are no surroundings to redirect to
             return CopyPlanBuilder.Build(
                 entries.Where(e => selectedKeys.Contains(e.Key)), map, planSettings,
-                missingObjects.Where(p => selectedObjectPaths.Contains(ObjectPath(p))),
-                mirrorMode ? null : GetExternalMap, leftOutKeys,
-                mirrorMode ? map.SourceRoot : null, sourceRoot.transform);
+                objectsToAdd: missingObjects.Where(p => selectedObjectPaths.Contains(ObjectPath(p))),
+                // A mirror copy stays inside one avatar, so there are no surroundings to redirect to
+                externalMapProvider: mirrorMode ? null : GetExternalMap,
+                leftOut: leftOutKeys,
+                mirrorRoot: mirrorMode ? map.SourceRoot : null,
+                keyRoot: sourceRoot.transform);
         }
 
         /// <summary>
