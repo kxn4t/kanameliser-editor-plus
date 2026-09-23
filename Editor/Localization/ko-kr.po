@@ -501,6 +501,9 @@ msgstr "대응 없음 (수동)"
 msgid "componentCopier.mapping.note.unmapped"
 msgstr "찾을 수 없음"
 
+msgid "componentCopier.mapping.reason.root"
+msgstr "루트"
+
 msgid "componentCopier.mapping.reason.exactPath"
 msgstr "같은 경로"
 

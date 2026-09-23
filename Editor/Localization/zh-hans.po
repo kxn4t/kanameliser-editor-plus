@@ -500,6 +500,9 @@ msgstr "无对应（手动）"
 msgid "componentCopier.mapping.note.unmapped"
 msgstr "未找到"
 
+msgid "componentCopier.mapping.reason.root"
+msgstr "根对象"
+
 msgid "componentCopier.mapping.reason.exactPath"
 msgstr "路径相同"
 
