@@ -25,6 +25,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public DiffKind Kind;
         public string Expected;
         public string Actual;
+
+        /// <summary>
+        /// For an <see cref="DiffKind.UnresolvedReference"/>: the target holds no value, which is what writing
+        /// the plan leaves there as well. <see cref="Actual"/> is only meant for display.
+        /// </summary>
+        public bool AlreadyCleared;
     }
 
     internal sealed class ComponentDiff
@@ -85,24 +91,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return diff;
             }
 
-            var references = new Dictionary<string, PlannedReference>();
-            var values = new Dictionary<string, PlannedValue>();
-            foreach (var value in planned.Values) values[value.PropertyPath] = value;
-            var pathReferences = new Dictionary<string, PlannedReference>();
-            foreach (var reference in planned.References)
+            foreach (var propertyDiff in PropertyDiffs(planned, actual))
             {
-                references[reference.PropertyPath] = reference;
-                if (reference.RewritesPath) pathReferences[reference.PathPropertyPath] = reference;
-            }
-
-            using var sourceObject = new SerializedObject(planned.Entry.Component);
-            using var actualObject = new SerializedObject(actual);
-
-            foreach (var sourceProperty in ReferenceWalker.Leaves(sourceObject))
-            {
-                var propertyDiff = CompareProperty(sourceProperty, actualObject, references, pathReferences, values);
-                if (propertyDiff == null) continue;
-
                 if (diff.Properties.Count >= MaxPropertyDiffs)
                 {
                     diff.Truncated = true;
@@ -150,13 +140,40 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         }
 
         /// <summary>
+        /// The properties that writing the plan would change, in serialization order. Lazy, so that a caller
+        /// can stop at the first one that matters.
+        /// </summary>
+        private static IEnumerable<PropertyDiff> PropertyDiffs(PlannedComponent planned, Component actual)
+        {
+            var references = new Dictionary<string, PlannedReference>();
+            var values = new Dictionary<string, PlannedValue>();
+            foreach (var value in planned.Values) values[value.PropertyPath] = value;
+            var pathReferences = new Dictionary<string, PlannedReference>();
+            foreach (var reference in planned.References)
+            {
+                references[reference.PropertyPath] = reference;
+                if (reference.RewritesPath) pathReferences[reference.PathPropertyPath] = reference;
+            }
+
+            using var sourceObject = new SerializedObject(planned.Entry.Component);
+            using var actualObject = new SerializedObject(actual);
+
+            foreach (var sourceProperty in ReferenceWalker.Leaves(sourceObject))
+            {
+                var propertyDiff = CompareProperty(sourceProperty, actualObject, references, pathReferences, values);
+                if (propertyDiff != null) yield return propertyDiff;
+            }
+        }
+
+        /// <summary>
         /// True when writing the plan would not change the existing component at all.
         /// Unresolved references do not count: clearing them is still a no-op only if they are already empty.
         /// </summary>
         public static bool IsIdentical(PlannedComponent planned, Component existing)
         {
-            var diff = Compare(planned, existing);
-            return diff.Properties.All(p => p.Kind == DiffKind.UnresolvedReference && p.Actual == NoneText);
+            // Not through Compare: it cuts its list off, and a real difference may hide behind the recorded ones
+            return existing != null &&
+                   PropertyDiffs(planned, existing).All(p => p.Kind == DiffKind.UnresolvedReference && p.AlreadyCleared);
         }
 
         internal const string NoneText = "None";
@@ -205,8 +222,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 {
                     if (reference.Kind == ReferenceKind.InternalUnresolved)
                     {
-                        return Diff(sourceProperty, DiffKind.UnresolvedReference,
+                        var unresolved = Diff(sourceProperty, DiffKind.UnresolvedReference,
                             ObjectToString(reference.SourceValue), ObjectToString(actualValue));
+                        unresolved.AlreadyCleared = actualValue == null;
+                        return unresolved;
                     }
 
                     var expected = reference.Expected.Resolve();
