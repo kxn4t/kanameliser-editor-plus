@@ -93,13 +93,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             if (map == null) return;
 
-            var diffSettings = new CopySettings
-            {
-                ExistingPolicy = ExistingComponentPolicy.Overwrite,
-                CreateMissingObjects = settings.CreateMissingObjects,
-                RedirectExternalReferences = settings.RedirectExternalReferences,
-                UnresolvedPolicy = settings.UnresolvedPolicy,
-            };
+            var diffSettings = settings.Clone();
+            diffSettings.ExistingPolicy = ExistingComponentPolicy.Overwrite;
             var diffPlan = BuildPlan(diffSettings);
 
             detailReport = CopyVerifier.Verify(diffPlan);
