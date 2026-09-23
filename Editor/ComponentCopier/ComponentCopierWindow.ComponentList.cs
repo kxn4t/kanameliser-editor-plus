@@ -454,7 +454,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     tooltip = Localization.S("componentCopier.prefabs.blocked"),
                 };
                 chip.AddToClassList("status-chip");
-                chip.AddToClassList("status-chip--blocked");
+                chip.AddToClassList(ComponentCopierStrings.StatusChipClass(ComponentAction.Blocked));
                 row.Add(chip);
             }
             else if (planned)
@@ -463,7 +463,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     ? "componentCopier.prefabs.status.withComponents"
                     : "componentCopier.prefabs.status.add"));
                 chip.AddToClassList("status-chip");
-                chip.AddToClassList("status-chip--add");
+                chip.AddToClassList(ComponentCopierStrings.StatusChipClass(ComponentAction.Add));
                 row.Add(chip);
             }
 

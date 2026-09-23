@@ -567,7 +567,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             AddMappingNote(row, Localization.S(chosen != null
                 ? "componentCopier.mapping.note.manual"
                 : "componentCopier.mapping.note.externalKept"));
-            row.EnableInClassList("mapping-row--manual", chosen != null);
+            row.EnableInClassList(ComponentCopierStrings.MappingRowClass(MappingState.Manual), chosen != null);
 
             return row;
         }
@@ -630,7 +630,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // A reference to the outside without a counterpart is kept, so nothing is lost and it does
                 // not get the red of an unmapped object. But it keeps pointing at the other avatar, which is
                 // rarely what a copy to a new avatar wants: the user should have a look, as with a suggestion.
-                row.AddToClassList("mapping-row--needsreview");
+                row.AddToClassList(ComponentCopierStrings.MappingRowClass(MappingState.NeedsReview));
             }
             else
             {

@@ -239,8 +239,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var warning = AddWarning("componentCopier.report.unresolved", unresolved.Count);
                 AddDependencyButton(warning, unresolved, available);
                 AddIssueRows(WithReferences(ReferenceKind.InternalUnresolved), planned => CreateReferenceIssueRow(
-                    planned, ReferenceKind.InternalUnresolved, "componentCopier.diff.unresolvedReference",
-                    DescribeUnresolved));
+                    planned, ReferenceKind.InternalUnresolved,
+                    ComponentCopierStrings.DiffKindKey(DiffKind.UnresolvedReference), DescribeUnresolved));
             }
 
             // Mirrored as far as the rules go; the rest depends on the rig and is left to the user
@@ -319,7 +319,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private VisualElement CreateBlockedRow(PlannedComponent planned)
         {
-            var foldout = CreateIssueFoldout(planned, "blocked", "componentCopier.action.blocked");
+            var foldout = CreateIssueFoldout(
+                planned, "blocked", ComponentCopierStrings.ActionKey(ComponentAction.Blocked));
 
             var reason = new Label(Localization.S(ComponentCopierStrings.BlockReasonKey(planned.BlockReason)));
             reason.AddToClassList("diff-property");
@@ -358,7 +359,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private VisualElement CreateHeldBackRow(PlannedComponent planned, Func<PlannedReference, string> describe)
         {
-            var foldout = CreateIssueFoldout(planned, "heldBack", "componentCopier.diff.unresolvedReference");
+            var foldout = CreateIssueFoldout(
+                planned, "heldBack", ComponentCopierStrings.DiffKindKey(DiffKind.UnresolvedReference));
 
             var reason = new Label(Localization.S(ComponentCopierStrings.BlockReasonKey(planned.BlockReason)));
             reason.AddToClassList("diff-property");
