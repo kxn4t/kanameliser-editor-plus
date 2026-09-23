@@ -73,6 +73,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 WriteValues(planned);
                 RedirectReferences(planned);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(planned.Result);
+                RevertOverridesEqualToPrefab(planned.Result);
             }
 
             RemoveLeftOut(plan, leftOut, result);
@@ -352,6 +353,62 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             // The component was already registered for Undo in pass 1
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// A property of a prefab instance that is written through a SerializedObject stays an override even
+        /// when it ends up with the value of the prefab. A redirected reference usually does: the source's
+        /// "Upper_arm.L" is copied first, then replaced by the "Upper_arm.R" the prefab has anyway. Such
+        /// overrides are reverted, so that only real changes show up as overrides.
+        /// </summary>
+        private static void RevertOverridesEqualToPrefab(Component component)
+        {
+            if (!PrefabUtility.IsPartOfPrefabInstance(component)) return;
+
+            // A component added to the instance has no counterpart, and no overrides of its own
+            var original = PrefabUtility.GetCorrespondingObjectFromSource(component);
+            if (original == null) return;
+            string assetPath = AssetDatabase.GetAssetPath(original);
+            var instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(component);
+
+            using var instance = new SerializedObject(component);
+            using var prefab = new SerializedObject(original);
+
+            var unchanged = new List<string>();
+            foreach (var property in ReferenceWalker.Leaves(instance))
+            {
+                if (!property.prefabOverride) continue;
+
+                var prefabProperty = prefab.FindProperty(property.propertyPath);
+                if (prefabProperty != null && EqualsPrefabValue(property, prefabProperty, assetPath, instanceRoot))
+                    unchanged.Add(property.propertyPath);
+            }
+
+            foreach (var path in unchanged)
+            {
+                // Each revert changes the component under the SerializedObject
+                instance.Update();
+                var property = instance.FindProperty(path);
+                if (property != null) PrefabUtility.RevertPropertyOverride(property, InteractionMode.UserAction);
+            }
+        }
+
+        /// <param name="instanceRoot">The outermost prefab instance the property's component belongs to.</param>
+        private static bool EqualsPrefabValue(
+            SerializedProperty property, SerializedProperty prefabProperty, string assetPath, GameObject instanceRoot)
+        {
+            if (property.propertyType != SerializedPropertyType.ObjectReference)
+                return SerializedProperty.DataEquals(property, prefabProperty);
+
+            var value = property.objectReferenceValue;
+            var prefabValue = prefabProperty.objectReferenceValue;
+            if (value == null || prefabValue == null) return value == null && prefabValue == null;
+
+            // The instance points at objects of the instance where the prefab points at its own. Another
+            // instance of the same prefab has the same corresponding objects, but pointing there is a change.
+            if (!PrefabUtility.IsPartOfPrefabInstance(value)) return value == prefabValue;
+            if (PrefabUtility.GetOutermostPrefabInstanceRoot(value) != instanceRoot) return false;
+            return PrefabUtility.GetCorrespondingObjectFromSourceAtPath(value, assetPath) == prefabValue;
         }
     }
 }

@@ -166,6 +166,32 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void CopyBetweenInstancesOfOnePrefab_KeepsAReferenceIntoTheOtherInstance()
+        {
+            // An outfit whose hat follows the outfit's own hips
+            var outfitAsset = SavePrefab("Outfit_Twins", outfit =>
+            {
+                var hips = AddChild(AddChild(outfit, "Armature"), "Hips");
+                AddChild(AddChild(outfit, "Hat"), "Ribbon").gameObject.AddComponent<ParentConstraint>()
+                    .AddSource(new ConstraintSource { sourceTransform = hips, weight = 1f });
+            });
+            var outfitA = Instantiate(outfitAsset, CreateHierarchy("AvatarA"));
+            var outfitB = Instantiate(outfitAsset, CreateHierarchy("AvatarB"));
+            var hipsA = outfitA.Find("Armature/Hips");
+
+            // Only the hat is copied, so the hips of A lie outside the source and are kept as they are
+            var plan = BuildPlan(outfitA.Find("Hat"), outfitB.Find("Hat"), new CopySettings(), typeof(ParentConstraint));
+            var planned = plan.Components.Single();
+            Assert.AreEqual(ComponentAction.Overwrite, planned.Action);
+            Assert.AreEqual(ReferenceKind.ExternalScene, planned.References.Single(r => r.SourceValue == hipsA).Kind);
+
+            CopyExecutor.Execute(plan);
+
+            // Both hips stand for the same object of the prefab, yet pointing at A's is a real change
+            Assert.AreSame(hipsA, outfitB.Find("Hat/Ribbon").GetComponent<ParentConstraint>().GetSource(0).sourceTransform);
+        }
+
+        [Test]
         public void ObjectCreationTurnedOff_DoesNotInstantiatePrefabs()
         {
             var hatAsset = SaveHatWithCollider("Hat_Disabled");
@@ -461,6 +487,37 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
                 using var chainObject = new SerializedObject(chain.gameObject);
                 Assert.IsTrue(chainObject.FindProperty("m_Name").prefabOverride, chain.name);
             }
+        }
+
+        [Test]
+        public void MirrorCopy_OntoAPrefabInstance_KeepsNoOverrideThatEqualsThePrefab()
+        {
+            // An avatar prefab with a constraint on each side, both following their own hand
+            var asset = SavePrefab("Avatar_Overrides", avatar =>
+            {
+                var hips = AddChild(avatar, "Hips");
+                foreach (var side in new[] { "L", "R" })
+                {
+                    var hand = AddChild(hips, "Hand_" + side);
+                    hand.localPosition = new Vector3(side == "L" ? 0.5f : -0.5f, 1f, 0f);
+                    AddChild(hand, "Item_" + side).gameObject.AddComponent<ParentConstraint>()
+                        .AddSource(new ConstraintSource { sourceTransform = hand, weight = 1f });
+                }
+            });
+            var avatarInstance = Instantiate(asset, CreateHierarchy("Scene"));
+            avatarInstance.Find("Hips/Hand_L/Item_L").GetComponent<ParentConstraint>()
+                .SetTranslationOffset(0, new Vector3(0f, 0.1f, 0f));
+
+            var map = MirrorMapper.Build(avatarInstance);
+            var left = Select(avatarInstance, typeof(ParentConstraint)).Where(e => map.Sides.Of(e.Host) == Side.Left);
+            var plan = CopyPlanBuilder.Build(left, map, new CopySettings(), mirrorRoot: avatarInstance);
+            Assert.AreEqual(ComponentAction.Overwrite, plan.Components.Single().Action);
+            CopyExecutor.Execute(plan);
+
+            // "Hand_L" is copied and then redirected to the "Hand_R" the prefab has anyway: no override
+            using var copied = new SerializedObject(avatarInstance.Find("Hips/Hand_R/Item_R").GetComponent<ParentConstraint>());
+            Assert.IsFalse(copied.FindProperty("m_Sources.Array.data[0].sourceTransform").prefabOverride, "source");
+            Assert.IsTrue(copied.FindProperty("m_TranslationOffsets.Array.data[0]").prefabOverride, "offset");
         }
 
         [Test]

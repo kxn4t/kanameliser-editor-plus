@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Positions and rotations are mirrored across the middle of the avatar, and the side of Contact tags, the Parameter of PhysBones and Contact Receivers, the Collider to Remap of MA Global Colliders, and the bone of MA Bone Proxies is flipped
   - Values that depend on the bone axes (PhysBone Limit Rotation, some constraint offsets, frozen axes) are copied as is and listed in the pre-check
 
+### Fixed
+
+- **Component Copier** — Copying onto a Prefab instance no longer leaves overrides on values that end up equal to the Prefab, such as a reference redirected to the object the Prefab already points at.
+
 ---
 
 ### 追加
@@ -29,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - オブジェクトは名前の左右表記（`_L` / `_R`、`Left` / `Right`、`左` / `右`）または Humanoid ボーンで対応付け、足りないオブジェクトは反転した名前で作成します
   - 位置と回転はアバターの中心を基準に左右反転し、Contact のタグ、PhysBone と Contact Receiver の Parameter、MA Global Collider の上書き対象のコライダー、MA Bone Proxy の追従先は左右を入れ替えます
   - ボーンの軸に依存する値（PhysBone の Limit Rotation、一部の Constraint のオフセット、固定する軸）はそのままコピーし、適用前チェックに一覧表示します
+
+### 修正
+
+- **Component Copier** — Prefab インスタンスへコピーしたとき、Prefab と同じ値に戻った項目（Prefab がもともと指しているオブジェクトへ置き換えた参照など）がオーバーライドとして残らないようにしました。
 
 ## [1.1.0] - 2026-09-22
 
