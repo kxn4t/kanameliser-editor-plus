@@ -198,6 +198,23 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void AnotherTarget_ForgetsTheObjectsToPickAnExistingOneFor()
+        {
+            var source = CreateHierarchy("Source", "Anchor");
+            var target = CreateHierarchy("Target");
+            var otherTarget = CreateHierarchy("OtherTarget");
+            var anchor = source.Find("Anchor");
+            anchor.gameObject.AddComponent<SphereCollider>();
+            var session = StartSession(source, target);
+            Assert.IsTrue(session.Plan.ObjectsToCreate.Any(o => o.Source == anchor));
+            session.SetPickingExisting(anchor, true);
+
+            session.SetTarget(otherTarget.gameObject);
+
+            Assert.IsFalse(session.IsPickingExisting(anchor), "It was meant for the old target");
+        }
+
+        [Test]
         public void TargetInsideTheSource_IsNotPlanned()
         {
             var source = CreateHierarchy("Source", "Inner");

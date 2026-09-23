@@ -390,10 +390,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             Recompute();
         }
 
-        /// <summary>The corrections belong to one pair of roots; another pair starts over.</summary>
+        /// <summary>
+        /// The corrections belong to one pair of roots, and so does the wish to pick an existing object instead
+        /// of creating one: the new target may well have it. Another pair starts over.
+        /// </summary>
         private void ForgetMappings()
         {
             manualMappings.Clear();
+            pickExistingFor.Clear();
             InvalidateMaps();
         }
 
@@ -471,6 +475,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             foreach (var key in dead)
                 manualMappings.Remove(key);
             if (dead.Count > 0) InvalidateMaps();
+            pickExistingFor.RemoveWhere(t => t == null);
 
             Recompute();
         }
