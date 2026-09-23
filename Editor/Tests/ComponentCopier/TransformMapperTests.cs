@@ -189,7 +189,7 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         [TestCase(".001", ".001")]
         public void StripRenameSuffix_RemovesOnlyRenameMarkers(string name, string expected)
         {
-            Assert.AreEqual(expected, TransformMapper.StripRenameSuffix(name));
+            Assert.AreEqual(expected, RenameSuffix.Strip(name));
         }
 
         [Test]

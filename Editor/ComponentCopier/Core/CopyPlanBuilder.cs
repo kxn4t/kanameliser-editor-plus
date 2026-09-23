@@ -267,7 +267,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             /// </summary>
             public BlockReason RequestObject(Transform source)
             {
-                if (source == null || !ReferenceWalker.IsInside(source, plan.Map.SourceRoot))
+                if (source == null || !Hierarchy.IsInside(source, plan.Map.SourceRoot))
                     return BlockReason.None;
 
                 var missingRoot = FindMissingNestedPrefabRoot(source);
@@ -351,7 +351,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             private PlannedObject Register(PlannedObject planned)
             {
-                planned.SiblingOccurrence = NestedPrefabs.SiblingOccurrence(planned.Source);
+                planned.SiblingOccurrence = Hierarchy.SiblingOccurrence(planned.Source);
                 // A mirror copy creates "Skirt_L" as "Skirt_R"
                 planned.Name = plan.Mirror != null && SideName.TryFlip(planned.Source.name, out var flipped)
                     ? flipped
@@ -406,7 +406,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     var transform = ReferenceWalker.GetTransform(value);
                     if (transform == null || transform == plan.Map.SourceRoot) continue;
 
-                    if (!ReferenceWalker.IsInside(transform, plan.Map.SourceRoot))
+                    if (!Hierarchy.IsInside(transform, plan.Map.SourceRoot))
                     {
                         if (!EditorUtility.IsPersistent(value)) externalTransforms.Add(transform);
                         continue;
@@ -440,7 +440,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // Keyed like the selection, so that the caller recognizes them. A mirror copy can also bring a
                 // prefab from elsewhere in the avatar (the counterpart of a referenced object), keyed from the
                 // map. Such a key can read like one of the source, so the user's choices do not apply to it.
-                bool inKeyRoot = ReferenceWalker.IsInside(host.Source, plan.KeyRoot);
+                bool inKeyRoot = Hierarchy.IsInside(host.Source, plan.KeyRoot);
                 foreach (var entry in ComponentScanner.ScanObject(
                              host.Source, inKeyRoot ? plan.KeyRoot : plan.Map.SourceRoot))
                 {
@@ -494,11 +494,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         break;
 
                     case ExistingComponentPolicy.Replace:
-                        bool hasExisting = planned.TargetHost != null &&
-                                           ExactTypeComponents(planned.TargetHost, type).Any();
-                        planned.Action = hasExisting ? ComponentAction.Replace : ComponentAction.Add;
-                        if (hasExisting && replacedHosts.Add((planned.TargetHost, type)))
-                            plan.ComponentsToRemove.AddRange(ExactTypeComponents(planned.TargetHost, type));
+                        var replaced = ComponentScanner.ExactTypeComponents(planned.TargetHost, type);
+                        planned.Action = replaced.Count > 0 ? ComponentAction.Replace : ComponentAction.Add;
+                        if (replaced.Count > 0 && replacedHosts.Add((planned.TargetHost, type)))
+                            plan.ComponentsToRemove.AddRange(replaced);
                         break;
 
                     default:
@@ -579,7 +578,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var transform = ReferenceWalker.GetTransform(value);
             if (transform == null) return null;
 
-            if (!ReferenceWalker.IsInside(transform, plan.Map.SourceRoot))
+            if (!Hierarchy.IsInside(transform, plan.Map.SourceRoot))
             {
                 if (EditorUtility.IsPersistent(value)) return null;
                 return ClassifyExternalReference(plan, transform, value);
@@ -629,7 +628,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return new PlannedReference
             {
                 Kind = ReferenceKind.InternalUnresolved,
-                MissingDependency = ReferenceWalker.IsInside(transform, plan.KeyRoot)
+                MissingDependency = Hierarchy.IsInside(transform, plan.KeyRoot)
                     ? new ComponentKey(
                         ObjectMatcher.GetRelativePathFromRoot(transform, plan.KeyRoot),
                         component.GetType().FullName, index)
@@ -708,11 +707,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     }
                 }
             }
-        }
-
-        private static IEnumerable<Component> ExactTypeComponents(Transform host, Type type)
-        {
-            return host.GetComponents(type).Where(c => c != null && c.GetType() == type);
         }
     }
 }

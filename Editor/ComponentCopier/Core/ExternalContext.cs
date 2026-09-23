@@ -67,7 +67,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var sourceContext = FindRoot(sourceRoot);
             var targetContext = FindRoot(targetRoot);
 
-            var scope = referenced.Where(t => ReferenceWalker.IsInside(t, sourceContext)).ToList();
+            var scope = referenced.Where(t => Hierarchy.IsInside(t, sourceContext)).ToList();
             return scope.Count > 0 ? TransformMapper.Build(sourceContext, targetContext, manual, scope) : null;
         }
     }

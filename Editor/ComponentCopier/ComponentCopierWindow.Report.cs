@@ -383,7 +383,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             foreach (var propertyPath in planned.AxisDependentProperties.Take(MaxIssueLines))
             {
-                var line = new Label(propertyPath.Replace(".Array.data[", "["));
+                var line = new Label(ReferenceWalker.DisplayName(propertyPath));
                 line.AddToClassList("diff-property");
                 foldout.Add(line);
             }
@@ -409,7 +409,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             foreach (var reference in references.Take(MaxIssueLines))
             {
-                string name = reference.DisplayPath.Replace(".Array.data[", "[");
+                string name = ReferenceWalker.DisplayName(reference.DisplayPath);
                 var line = new Label($"{name}: {describe(reference)}");
                 line.AddToClassList("diff-property");
                 line.AddToClassList("diff-property--link");
@@ -476,7 +476,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             string name = value.name;
             var transform = ReferenceWalker.GetTransform(value);
             if (sourceRoot != null && transform != sourceRoot.transform &&
-                ReferenceWalker.IsInside(transform, sourceRoot.transform))
+                Hierarchy.IsInside(transform, sourceRoot.transform))
             {
                 name = ObjectMatcher.GetRelativePathFromRoot(transform, sourceRoot.transform);
             }
@@ -568,7 +568,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (map == null) return "";
 
             var from = sourceRoot != null && map.TryResolve(sourceRoot.transform, out var counterpart) &&
-                       ReferenceWalker.IsInside(transform, counterpart)
+                       Hierarchy.IsInside(transform, counterpart)
                 ? counterpart
                 : map.TargetRoot;
             string path = ObjectMatcher.GetRelativePathFromRoot(transform, from);

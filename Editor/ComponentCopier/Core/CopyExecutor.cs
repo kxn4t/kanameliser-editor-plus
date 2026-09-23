@@ -99,7 +99,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 // Objects below an instantiated prefab are usually there already
                 Transform transform = planned.PrefabRoot != null
-                    ? NestedPrefabs.FindChild(parent, planned.Source.name, planned.SiblingOccurrence, madeHere)
+                    ? Hierarchy.FindChild(parent, planned.Source.name, planned.SiblingOccurrence, madeHere)
                     : null;
 
                 if (transform != null && transform.name != planned.Name) renames.Add((transform, planned.Name));

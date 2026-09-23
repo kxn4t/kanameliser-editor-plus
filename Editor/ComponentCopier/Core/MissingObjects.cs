@@ -43,7 +43,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             var result = new List<Transform>();
             if (scope == null || scope == map.SourceRoot) Visit(map.SourceRoot, false);
-            else if (!NestedPrefabs.AnyAncestorBelow(scope, map.SourceRoot, IsOutOfReach)) VisitChild(scope, false);
+            else if (!Hierarchy.AnyAncestorBelow(scope, map.SourceRoot, IsOutOfReach)) VisitChild(scope, false);
             return result;
 
             // A missing prefab arrives as a whole, and nothing can be created below a missing bone

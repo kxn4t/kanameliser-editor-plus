@@ -55,7 +55,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (side != Side.None) return side;
 
             // Humanoid names are a bone concept: a mesh object called "UpperLeftArm" is paired like any other
-            if (!HumanoidBoneDictionary.TryFindBone(TransformMapper.StripRenameSuffix(transform.name), out var bone))
+            if (!HumanoidBoneDictionary.TryFindBone(RenameSuffix.Strip(transform.name), out var bone))
                 return Side.None;
             if (skeleton.HasSkeleton && !skeleton.IsInArmature(transform)) return Side.None;
             return HumanoidBoneDictionary.SideOf(bone);

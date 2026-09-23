@@ -269,7 +269,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // the avatar, and such a key could name a component of the source.
                 foreach (var planned in plan.Components)
                 {
-                    if (ReferenceWalker.IsInside(planned.Entry.Host, sourceRoot.transform))
+                    if (Hierarchy.IsInside(planned.Entry.Host, sourceRoot.transform))
                         plannedByKey[planned.Entry.Key] = planned;
                 }
             }

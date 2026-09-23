@@ -56,7 +56,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 this.manual = manual ?? new Dictionary<Transform, Transform>();
 
                 Map = new TransformMap(root);
-                var all = TransformMapper.Descendants(root);
+                var all = Hierarchy.Descendants(root);
 
                 foreach (var transform in all)
                 {
@@ -78,7 +78,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 foreach (var transform in all)
                 {
                     if (hasSkeleton && !InArmature(transform)) continue;
-                    if (!HumanoidBoneDictionary.TryFindBone(TransformMapper.StripRenameSuffix(transform.name), out var bone))
+                    if (!HumanoidBoneDictionary.TryFindBone(RenameSuffix.Strip(transform.name), out var bone))
                         continue;
 
                     dictionaryBones[transform] = bone;
@@ -181,7 +181,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         return Confirmed(source, mirroredTransform, MappingReason.MirroredBone);
                 }
 
-                int occurrence = NestedPrefabs.SiblingOccurrence(source);
+                int occurrence = Hierarchy.SiblingOccurrence(source);
                 bool hasMarker = SideName.TryFlip(source.name, out var flipped);
 
                 // Below the counterpart of the parent first: "Hips/Skirt_L" → "Hips/Skirt_R". Ahead of the bone
@@ -192,7 +192,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 bool parentMapped = anchor == source.parent;
                 if (hasMarker)
                 {
-                    var sibling = NestedPrefabs.FindChild(anchorCounterpart, flipped, occurrence);
+                    var sibling = Hierarchy.FindChild(anchorCounterpart, flipped, occurrence);
                     if (sibling != null)
                     {
                         return parentMapped
@@ -244,7 +244,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (anchorCounterpart == source.parent)
                     return Confirmed(source, source, MappingReason.SelfCenter);
 
-                var sameName = NestedPrefabs.FindChild(anchorCounterpart, source.name, occurrence);
+                var sameName = Hierarchy.FindChild(anchorCounterpart, source.name, occurrence);
                 if (sameName != null)
                 {
                     // Below an unmapped parent, a plain name such as "Strap" found further up is only a guess:
@@ -311,7 +311,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             private List<Transform> FuzzyChildren(Transform parent, string name)
             {
-                return parent.Cast<Transform>()
+                return Hierarchy.Children(parent)
                     .Where(t => ObjectMatcher.HasCommonBaseName(t.name, name, FuzzyMinTokenLength))
                     .ToList();
             }

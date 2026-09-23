@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -39,7 +38,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var result = new List<Transform>();
             if (scope == null || scope == map.SourceRoot) Visit(map.SourceRoot);
             // Inside a missing prefab, the outer prefab is what arrives
-            else if (!AnyAncestorBelow(scope, map.SourceRoot, IsMissing)) VisitChild(scope);
+            else if (!Hierarchy.AnyAncestorBelow(scope, map.SourceRoot, IsMissing)) VisitChild(scope);
             return result;
 
             bool IsMissing(Transform transform) =>
@@ -58,44 +57,5 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
         }
 
-        /// <summary>True when an object between <paramref name="transform"/> and <paramref name="root"/> matches.</summary>
-        public static bool AnyAncestorBelow(Transform transform, Transform root, Func<Transform, bool> predicate)
-        {
-            for (var ancestor = transform.parent; ancestor != null && ancestor != root; ancestor = ancestor.parent)
-            {
-                if (predicate(ancestor)) return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>Index of a transform among its same-name siblings.</summary>
-        public static int SiblingOccurrence(Transform transform)
-        {
-            if (transform.parent == null) return 0;
-
-            int occurrence = 0;
-            foreach (Transform sibling in transform.parent)
-            {
-                if (sibling == transform) break;
-                if (sibling.name == transform.name) occurrence++;
-            }
-
-            return occurrence;
-        }
-
-        /// <param name="skip">Children that do not count, such as the ones a copy has just created.</param>
-        public static Transform FindChild(Transform parent, string name, int occurrence, HashSet<Transform> skip = null)
-        {
-            int seen = 0;
-            foreach (Transform child in parent)
-            {
-                if (child.name != name || (skip != null && skip.Contains(child))) continue;
-                if (seen == occurrence) return child;
-                seen++;
-            }
-
-            return null;
-        }
     }
 }

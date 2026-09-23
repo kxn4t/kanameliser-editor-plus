@@ -54,7 +54,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             void Add(Transform transform)
             {
                 if (transform == null || transform == map.SourceRoot) return;
-                if (!ReferenceWalker.IsInside(transform, map.SourceRoot)) return;
+                if (!Hierarchy.IsInside(transform, map.SourceRoot)) return;
                 if (seen.Add(transform)) relevant.Add(transform);
             }
 
@@ -396,7 +396,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             foreach (var reference in external)
             {
-                var mapping = owner != null && ReferenceWalker.IsInside(reference.Target, owner.SourceRoot)
+                var mapping = owner != null && Hierarchy.IsInside(reference.Target, owner.SourceRoot)
                     ? owner.Get(reference.Target)
                     : null;
                 mappingContainer.Add(mapping != null
@@ -535,7 +535,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 var picked = evt.newValue as Transform;
                 if (picked != null && picked != transform &&
-                    (EditorUtility.IsPersistent(picked) || ReferenceWalker.IsInside(picked, sourceRoot.transform)))
+                    (EditorUtility.IsPersistent(picked) || Hierarchy.IsInside(picked, sourceRoot.transform)))
                 {
                     targetPicker.SetValueWithoutNotify(evt.previousValue);
                     return;
@@ -650,7 +650,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // Picking the object itself is another way of saying "keep it"
                 if (external && picked == mapping.Source) picked = null;
 
-                if (picked != null && !ReferenceWalker.IsInside(picked, owner.TargetRoot))
+                if (picked != null && !Hierarchy.IsInside(picked, owner.TargetRoot))
                 {
                     targetPicker.SetValueWithoutNotify(evt.previousValue);
                     return;

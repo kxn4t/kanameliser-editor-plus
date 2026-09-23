@@ -266,7 +266,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return toCreate.Created != null ? Frame.Of(toCreate.Created) : plan.Mirror.MirroredFrame(source);
 
             if (plan.Map.TryResolve(source, out var target)) return Frame.Of(target);
-            if (!ReferenceWalker.IsInside(source, plan.Map.SourceRoot)) return Frame.Of(source);
+            if (!Hierarchy.IsInside(source, plan.Map.SourceRoot)) return Frame.Of(source);
 
             return plan.Mirror.MirroredFrame(source);
         }
