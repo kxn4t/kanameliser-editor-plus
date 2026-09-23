@@ -17,6 +17,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         Blocked,
         /// <summary>
         /// Arrives with a nested prefab although the user left it out, and is removed from the new instance.
+        /// Set exactly for the components whose <see cref="PlannedComponent.Origin"/> is
+        /// <see cref="ComponentOrigin.LeftOut"/>.
+        /// </summary>
+        LeftOut,
+    }
+
+    /// <summary>Why a component is part of the plan.</summary>
+    internal enum ComponentOrigin
+    {
+        /// <summary>The user selected it.</summary>
+        Selected,
+        /// <summary>
+        /// Not selected, but inside a nested prefab that gets instantiated. A prefab is brought over as a whole,
+        /// so everything in it is made to match the source.
+        /// </summary>
+        Implicit,
+        /// <summary>
+        /// Inside such a prefab and unchecked on purpose. It still arrives with the prefab, so it is removed from
+        /// the new instance afterwards.
         /// </summary>
         LeftOut,
     }
@@ -98,28 +117,51 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     /// <summary>
     /// Expected reference value expressed on the target side.
     /// Resolved late because objects and components created by the plan do not exist at planning time.
+    /// Each factory names one kind of value; a reference holds exactly one of them.
     /// </summary>
     internal sealed class TargetRef
     {
-        public Transform Transform;
-        public PlannedObject ObjectToCreate;
-        public bool AsGameObject;
+        private Transform existingObject;
+        private bool asGameObject;
+        private PlannedComponent plannedComponent;
+        private Component existingComponent;
+        private Object kept;
 
-        public PlannedComponent PlannedComponent;
-        public Component ExistingComponent;
+        /// <summary>The object the plan creates, when the reference points at one.</summary>
+        public PlannedObject ObjectToCreate { get; private set; }
 
-        /// <summary>Value that is kept unchanged (external scene objects).</summary>
-        public Object Fixed;
+        private TargetRef()
+        {
+        }
+
+        /// <summary>An object that exists in the target.</summary>
+        public static TargetRef ToObject(Transform transform, bool asGameObject) =>
+            new TargetRef { existingObject = transform, asGameObject = asGameObject };
+
+        /// <summary>An object the plan creates (or instantiates with a prefab).</summary>
+        public static TargetRef ToObjectToCreate(PlannedObject planned, bool asGameObject) =>
+            new TargetRef { ObjectToCreate = planned, asGameObject = asGameObject };
+
+        /// <summary>A component the plan writes.</summary>
+        public static TargetRef ToPlannedComponent(PlannedComponent planned) =>
+            new TargetRef { plannedComponent = planned };
+
+        /// <summary>A component that exists in the target and is left alone.</summary>
+        public static TargetRef ToComponent(Component component) =>
+            new TargetRef { existingComponent = component };
+
+        /// <summary>A value kept as it is (a scene object outside of the source).</summary>
+        public static TargetRef Keep(Object value) => new TargetRef { kept = value };
 
         public Object Resolve()
         {
-            if (Fixed != null) return Fixed;
-            if (PlannedComponent != null) return PlannedComponent.Actual;
-            if (ExistingComponent != null) return ExistingComponent;
+            if (kept != null) return kept;
+            if (plannedComponent != null) return plannedComponent.Actual;
+            if (existingComponent != null) return existingComponent;
 
-            var transform = Transform != null ? Transform : ObjectToCreate?.Created;
+            var transform = existingObject != null ? existingObject : ObjectToCreate?.Created;
             if (transform == null) return null;
-            return AsGameObject ? transform.gameObject : transform;
+            return asGameObject ? transform.gameObject : transform;
         }
     }
 
@@ -307,17 +349,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         public List<PlannedReference> UnresolvedReferences = new();
 
-        /// <summary>
-        /// True for components that were not selected but belong to a nested prefab that gets instantiated.
-        /// A prefab is brought over as a whole, so everything in it is made to match the source.
-        /// </summary>
-        public bool Implicit;
+        public ComponentOrigin Origin;
+
+        /// <summary>See <see cref="ComponentOrigin.Implicit"/>.</summary>
+        public bool Implicit => Origin == ComponentOrigin.Implicit;
+
+        /// <summary>See <see cref="ComponentOrigin.LeftOut"/>.</summary>
+        public bool LeftOut => Origin == ComponentOrigin.LeftOut;
 
         /// <summary>
-        /// True for a component inside a nested prefab that the user unchecked on purpose. The prefab still
-        /// arrives as a whole, so the component is removed from the new instance afterwards.
+        /// Held back by <see cref="UnresolvedReferencePolicy.SkipComponent"/>: blocked like the others, but shown
+        /// as a skip, since the host may well exist.
         /// </summary>
-        public bool LeftOut;
+        public bool IsHeldBack => BlockReason == BlockReason.UnresolvedReference;
 
         /// <summary>Component written by <see cref="CopyExecutor"/>.</summary>
         public Component Result;

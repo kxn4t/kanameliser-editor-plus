@@ -910,7 +910,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 {
                     var unresolvedLabel = new Label("⚠ " + unresolved)
                     {
-                        tooltip = Localization.S(planned.BlockReason == BlockReason.UnresolvedReference
+                        tooltip = Localization.S(planned.IsHeldBack
                             ? "componentCopier.row.heldBack:tooltip"
                             : "componentCopier.row.unresolved:tooltip", unresolved),
                     };
@@ -972,7 +972,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private static string ActionLabel(PlannedComponent planned)
         {
             // Held back by the unresolved-reference setting: "Blocked" alone would hide that it is a skip
-            if (planned.BlockReason == BlockReason.UnresolvedReference)
+            if (planned.IsHeldBack)
                 return Localization.S("componentCopier.action.skipUnresolved");
 
             return planned.WillWrite && ArrivesWithPrefab(planned)

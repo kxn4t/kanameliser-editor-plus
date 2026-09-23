@@ -112,7 +112,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var planned = plan.ObjectsToCreate
                 .Where(o => o.PrefabRoot == null)
                 .OrderBy(o => hierarchyOrder.TryGetValue(o.Source, out int index) ? index : int.MaxValue)
-                .Select(o => map.Get(o.Source) ?? new TransformMapping { Source = o.Source })
+                .Select(o => map.Get(o.Source) ?? TransformMapping.Unmapped(o.Source, new List<MappingCandidate>()))
                 .ToList();
             // ... unless the user asked to pick an existing object instead; those rows need a counterpart again
             var toCreate = planned.Where(m => !pickExistingFor.Contains(m.Source)).ToList();

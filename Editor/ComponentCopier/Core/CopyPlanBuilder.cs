@@ -166,6 +166,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var planned = new PlannedComponent
             {
                 Entry = entry,
+                // Set here as well, not only by DecideActions: the default action is Add
+                Action = ComponentAction.Blocked,
                 BlockReason = BlockReason.UnresolvedReference,
                 UnresolvedReferences = unresolved,
             };
@@ -451,8 +453,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     {
                         Entry = entry,
                         HostToCreate = host,
-                        Implicit = !leftOut,
-                        LeftOut = leftOut,
+                        Origin = leftOut ? ComponentOrigin.LeftOut : ComponentOrigin.Implicit,
                     });
                 }
             }
@@ -586,13 +587,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (value is GameObject || value is Transform)
             {
-                var targetRef = new TargetRef { AsGameObject = value is GameObject };
+                bool asGameObject = value is GameObject;
 
                 // Planned objects first, for the same reason the host resolution checks nested prefabs first
-                if (objectsBySource.TryGetValue(transform, out targetRef.ObjectToCreate) ||
-                    plan.Map.TryResolve(transform, out targetRef.Transform))
+                if (objectsBySource.TryGetValue(transform, out var toCreate))
                 {
-                    return new PlannedReference { Kind = ReferenceKind.InternalMapped, Expected = targetRef };
+                    return new PlannedReference
+                    {
+                        Kind = ReferenceKind.InternalMapped,
+                        Expected = TargetRef.ToObjectToCreate(toCreate, asGameObject),
+                    };
+                }
+
+                if (plan.Map.TryResolve(transform, out var mapped))
+                {
+                    return new PlannedReference
+                    {
+                        Kind = ReferenceKind.InternalMapped,
+                        Expected = TargetRef.ToObject(mapped, asGameObject),
+                    };
                 }
 
                 return new PlannedReference { Kind = ReferenceKind.InternalUnresolved };
@@ -605,7 +618,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return new PlannedReference
                 {
                     Kind = ReferenceKind.NewComponent,
-                    Expected = new TargetRef { PlannedComponent = plannedComponent },
+                    Expected = TargetRef.ToPlannedComponent(plannedComponent),
                 };
             }
 
@@ -619,7 +632,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     return new PlannedReference
                     {
                         Kind = ReferenceKind.InternalMapped,
-                        Expected = new TargetRef { ExistingComponent = existing },
+                        Expected = TargetRef.ToComponent(existing),
                     };
                 }
             }
@@ -647,7 +660,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var kept = new PlannedReference
             {
                 Kind = ReferenceKind.ExternalScene,
-                Expected = new TargetRef { Fixed = value },
+                Expected = TargetRef.Keep(value),
             };
 
             // Without surroundings to map there is still the user's word: manual mappings are part of every
@@ -662,7 +675,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return new PlannedReference
                 {
                     Kind = ReferenceKind.ExternalMapped,
-                    Expected = new TargetRef { Transform = counterpart, AsGameObject = value is GameObject },
+                    Expected = TargetRef.ToObject(counterpart, value is GameObject),
                 };
             }
 
@@ -674,7 +687,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return new PlannedReference
             {
                 Kind = ReferenceKind.ExternalMapped,
-                Expected = new TargetRef { ExistingComponent = existing },
+                Expected = TargetRef.ToComponent(existing),
             };
         }
 
