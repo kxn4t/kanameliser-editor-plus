@@ -363,6 +363,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         public bool IsHeldBack => BlockReason == BlockReason.UnresolvedReference;
 
+        /// <summary>
+        /// Inside a nested prefab that gets added: the component arrives with the prefab, selected or not, and can
+        /// only be kept from arriving by leaving it out.
+        /// </summary>
+        public bool ArrivesWithPrefab =>
+            HostToCreate != null && (HostToCreate.IsPrefabRoot || HostToCreate.PrefabRoot != null);
+
         /// <summary>Component written by <see cref="CopyExecutor"/>.</summary>
         public Component Result;
 

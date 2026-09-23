@@ -12,8 +12,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     {
         private bool confirmedMappingsExpanded;
         private bool createdMappingsExpanded;
-        // Objects that would be created, for which the user wants to pick an existing object instead
-        private readonly HashSet<Transform> pickExistingFor = new();
         private Label mappingSummaryLabel;
 
         private void CreateMappingSection(VisualElement parent)
@@ -53,12 +51,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             void Add(Transform transform)
             {
-                if (transform == null || transform == map.SourceRoot) return;
-                if (!Hierarchy.IsInside(transform, map.SourceRoot)) return;
+                if (transform == null || transform == session.Map.SourceRoot) return;
+                if (!Hierarchy.IsInside(transform, session.Map.SourceRoot)) return;
                 if (seen.Add(transform)) relevant.Add(transform);
             }
 
-            foreach (var planned in plan.Components)
+            foreach (var planned in session.Plan.Components)
             {
                 Add(planned.Entry.Host);
                 foreach (var reference in planned.References)
@@ -74,7 +72,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             // Blocked components have no references collected yet, but their host is what needs attention
             return relevant
                 .OrderBy(t => hierarchyOrder.TryGetValue(t, out int index) ? index : int.MaxValue)
-                .Select(t => map.Get(t))
+                .Select(t => session.Map.Get(t))
                 .Where(m => m != null)
                 .ToList();
         }
@@ -82,7 +80,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private Dictionary<Transform, int> SourceHierarchyOrder()
         {
             var order = new Dictionary<Transform, int>();
-            foreach (var transform in map.SourceRoot.GetComponentsInChildren<Transform>(true))
+            foreach (var transform in session.Map.SourceRoot.GetComponentsInChildren<Transform>(true))
                 order[transform] = order.Count;
             return order;
         }
@@ -92,12 +90,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             mappingContainer.Clear();
             mappingSummaryLabel.text = "";
 
+            var map = session.Map;
+            var plan = session.Plan;
+
             if (map == null || plan == null)
             {
                 mappingContainer.Add(InfoLabel(
-                    mirrorMode ? "componentCopier.info.selectSource"
-                    : targetRoot == null ? "componentCopier.info.selectTarget"
-                    : sourceRoot == null ? "componentCopier.info.needsSource"
+                    session.MirrorMode ? "componentCopier.info.selectSource"
+                    : session.TargetRoot == null ? "componentCopier.info.selectTarget"
+                    : session.SourceRoot == null ? "componentCopier.info.needsSource"
                     : "componentCopier.info.fixTarget"));
                 return;
             }
@@ -115,8 +116,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 .Select(o => map.Get(o.Source) ?? TransformMapping.Unmapped(o.Source, new List<MappingCandidate>()))
                 .ToList();
             // ... unless the user asked to pick an existing object instead; those rows need a counterpart again
-            var toCreate = planned.Where(m => !pickExistingFor.Contains(m.Source)).ToList();
-            var pickingExisting = planned.Where(m => pickExistingFor.Contains(m.Source)).ToList();
+            var toCreate = planned.Where(m => !session.IsPickingExisting(m.Source)).ToList();
+            var pickingExisting = planned.Where(m => session.IsPickingExisting(m.Source)).ToList();
 
             var mappings = CollectRelevantMappings(hierarchyOrder)
                 .Where(m => !created.ContainsKey(m.Source))
@@ -228,7 +229,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private VisualElement CreateWillCreateRow(TransformMapping mapping, PlannedObject plannedObject)
         {
             var row = CreateMappingRowFrame(
-                ObjectMatcher.GetRelativePathFromRoot(mapping.Source, map.SourceRoot), mapping.Source);
+                ObjectMatcher.GetRelativePathFromRoot(mapping.Source, session.Map.SourceRoot), mapping.Source);
             row.AddToClassList("mapping-row--willcreate");
 
             string createdPath = PlannedTargetPath(plannedObject);
@@ -310,7 +311,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             string parentPath = existingParent != null
-                ? ObjectMatcher.GetRelativePathFromRoot(existingParent, map.TargetRoot)
+                ? ObjectMatcher.GetRelativePathFromRoot(existingParent, session.Map.TargetRoot)
                 : "";
             if (!string.IsNullOrEmpty(parentPath)) names.Insert(0, parentPath);
             return string.Join("/", names);
@@ -319,12 +320,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private void ShowWillCreateMenu(TransformMapping mapping)
         {
             var menu = new GenericMenu();
-            AddCandidateItems(menu, mapping, map.TargetRoot);
+            AddCandidateItems(menu, mapping, session.Map.TargetRoot);
 
             // Creating is the default, but the counterpart may exist under a name that could not be matched
             menu.AddItem(new GUIContent(Localization.S("componentCopier.mapping.menu.pickExisting")), false, () =>
             {
-                pickExistingFor.Add(mapping.Source);
+                session.SetPickingExisting(mapping.Source, true);
                 RenderMapping();
             });
 
@@ -339,7 +340,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             var byTarget = new Dictionary<Transform, ExternalReference>();
 
-            foreach (var planned in plan.Components)
+            foreach (var planned in session.Plan.Components)
             {
                 foreach (var reference in planned.References)
                 {
@@ -373,10 +374,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             if (external.Count == 0) return;
 
-            var owner = plan.ExternalMap;
+            var owner = session.Plan.ExternalMap;
             // A mirror copy spans the avatar, so the outside is outside of the avatar and stays as it is
-            bool canRedirect = !mirrorMode && targetRoot != null &&
-                               ExternalContext.CanRedirect(sourceRoot.transform, targetRoot.transform);
+            bool canRedirect = !session.MirrorMode && session.TargetRoot != null &&
+                               ExternalContext.CanRedirect(session.SourceRoot.transform, session.TargetRoot.transform);
 
             var titleRow = new VisualElement();
             titleRow.AddToClassList("mapping-group-title-row");
@@ -384,12 +385,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             var title = new Label(owner != null
                 ? Localization.S("componentCopier.mapping.group.external", owner.SourceRoot.name, owner.TargetRoot.name)
-                : Localization.S(mirrorMode
+                : Localization.S(session.MirrorMode
                     ? "componentCopier.mapping.group.externalKept.mirror"
                     : "componentCopier.mapping.group.externalKept"))
             {
                 tooltip = Localization.S(canRedirect ? "componentCopier.mapping.group.external:tooltip"
-                    : mirrorMode ? "componentCopier.mapping.external.mirrorKept"
+                    : session.MirrorMode ? "componentCopier.mapping.external.mirrorKept"
                     : "componentCopier.mapping.group.externalKept:tooltip"),
             };
             title.AddToClassList("mapping-group-title");
@@ -401,22 +402,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 var redirectToggle = new Toggle(Localization.S("componentCopier.mapping.external.redirect"))
                 {
-                    value = settings.RedirectExternalReferences,
+                    value = session.Settings.RedirectExternalReferences,
                     tooltip = Localization.S("componentCopier.mapping.external.redirect:tooltip"),
                 };
                 redirectToggle.AddToClassList("mapping-group-toggle");
                 redirectToggle.RegisterValueChangedCallback(evt =>
-                {
-                    settings.RedirectExternalReferences = evt.newValue;
-                    settings.Save();
-                    Recompute();
-                });
+                    ChangeSettings(s => s.RedirectExternalReferences = evt.newValue));
                 titleRow.Add(redirectToggle);
             }
             else
             {
                 // Said in the open rather than in a tooltip: rows that only say "kept" look like a failure
-                mappingContainer.Add(InfoLabel(mirrorMode
+                mappingContainer.Add(InfoLabel(session.MirrorMode
                     ? "componentCopier.mapping.external.mirrorKept"
                     : "componentCopier.mapping.external.noSurroundings"));
             }
@@ -536,7 +533,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             // Nothing can be suggested here, but the user may know better: e.g. the avatar the target is
             // going to be placed on is in the scene already
-            manualMappings.TryGetValue(transform, out var chosen);
+            session.ManualMappings.TryGetValue(transform, out var chosen);
             var targetPicker = new ObjectField
             {
                 objectType = typeof(Transform),
@@ -551,16 +548,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 var picked = evt.newValue as Transform;
                 if (picked != null && picked != transform &&
-                    (EditorUtility.IsPersistent(picked) || Hierarchy.IsInside(picked, sourceRoot.transform)))
+                    (EditorUtility.IsPersistent(picked) || Hierarchy.IsInside(picked, session.SourceRoot.transform)))
                 {
                     targetPicker.SetValueWithoutNotify(evt.previousValue);
                     return;
                 }
 
                 // Emptying the field, or picking the object itself, goes back to keeping the reference
-                if (picked == null || picked == transform) manualMappings.Remove(transform);
-                else manualMappings[transform] = picked;
-                Recompute();
+                if (picked == null || picked == transform) session.ResetMapping(transform);
+                else session.SetManualMapping(transform, picked);
+                RenderAll();
             });
             row.Add(targetPicker);
 
@@ -613,7 +610,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             // Rows about the outside belong to the map of the surroundings; their paths start at its root
             bool external = owner != null;
-            owner ??= map;
+            owner ??= session.Map;
 
             string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, owner.SourceRoot);
             if (external)
@@ -691,7 +688,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             AddCandidateItems(menu, mapping, owner.TargetRoot);
 
             // "No counterpart" clears a reference into the source, but keeps one to the outside as it is
-            bool keepsReference = owner != map;
+            bool keepsReference = owner != session.Map;
             bool isNone = mapping.State == MappingState.Manual && mapping.Target == null;
             menu.AddItem(
                 new GUIContent(Localization.S(keepsReference
@@ -699,23 +696,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     : "componentCopier.mapping.menu.none")),
                 isNone, () => SetManualMapping(mapping.Source, null));
 
-            if (pickExistingFor.Contains(mapping.Source))
+            if (session.IsPickingExisting(mapping.Source))
             {
                 menu.AddItem(new GUIContent(Localization.S("componentCopier.mapping.menu.createInstead")), false, () =>
                 {
-                    pickExistingFor.Remove(mapping.Source);
+                    session.SetPickingExisting(mapping.Source, false);
                     RenderMapping();
                 });
             }
 
-            if (manualMappings.ContainsKey(mapping.Source))
+            if (session.ManualMappings.ContainsKey(mapping.Source))
             {
                 menu.AddItem(new GUIContent(Localization.S("componentCopier.mapping.menu.reset")), false, () =>
                 {
-                    manualMappings.Remove(mapping.Source);
-                    // Back to automatic also means back to being created, if that is what automatic says
-                    pickExistingFor.Remove(mapping.Source);
-                    Recompute();
+                    session.ResetMapping(mapping.Source);
+                    RenderAll();
                 });
             }
 
@@ -724,19 +719,17 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void SetManualMapping(Transform source, Transform target)
         {
-            manualMappings[source] = target;
-            Recompute();
+            session.SetManualMapping(source, target);
+            RenderAll();
         }
 
         private void ConfirmAll(MappingReason reason)
         {
-            foreach (var mapping in CollectRelevantMappings())
-            {
-                if (mapping.State == MappingState.NeedsReview && mapping.Reason == reason)
-                    manualMappings[mapping.Source] = mapping.Target;
-            }
-
-            Recompute();
+            session.SetManualMappings(CollectRelevantMappings()
+                .Where(m => m.State == MappingState.NeedsReview && m.Reason == reason)
+                .Select(m => (m.Source, m.Target))
+                .ToList());
+            RenderAll();
         }
 
         private string MappingNote(TransformMapping mapping, PlannedObject plannedObject, bool external)
@@ -760,7 +753,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     // Kept, but worth a look: see NeedsDecision
                     return Localization.S("componentCopier.mapping.note.externalNoCounterpart");
                 case MappingState.Unmapped:
-                    return Localization.S(map.SourceSkeleton.IsBone(mapping.Source)
+                    return Localization.S(session.Map.SourceSkeleton.IsBone(mapping.Source)
                         ? "componentCopier.mapping.note.boneMissing"
                         : "componentCopier.mapping.note.unmapped");
                 default:

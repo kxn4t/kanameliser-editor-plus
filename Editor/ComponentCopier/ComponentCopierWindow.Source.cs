@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -15,8 +16,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private Button swapButton;
         private Toggle mirrorToggle;
         private PopupField<Side> mirrorDirectionField;
-        private string targetWarningKey;
-        private bool targetWarningIsError;
 
         private void CreateSourceSection(VisualElement root)
         {
@@ -33,14 +32,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 objectType = typeof(GameObject),
                 allowSceneObjects = true,
-                value = sourceRoot,
             };
             sourceField.AddToClassList("source-field");
             sourceField.AddToClassList("ndmf-tr");
-            sourceField.RegisterValueChangedCallback(evt => OnSourceChanged(evt.newValue as GameObject));
+            sourceField.RegisterValueChangedCallback(evt => SetSource(evt.newValue as GameObject));
             sourceRow.Add(sourceField);
 
-            refreshButton = new Button(() => Rescan(resetSelection: false));
+            refreshButton = new Button(Rescan);
             refreshButton.AddToClassList("refresh-button");
 
             var refreshIcon = EditorGUIUtility.IconContent("Refresh");
@@ -76,7 +74,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             arrowRowEnd.AddToClassList("arrow-row__side--end");
             arrowRow.Add(arrowRowEnd);
 
-            mirrorToggle = new Toggle("componentCopier.mirror") { value = mirrorMode };
+            mirrorToggle = new Toggle("componentCopier.mirror");
             mirrorToggle.AddToClassList("mirror-toggle");
             mirrorToggle.AddToClassList("ndmf-tr");
             mirrorToggle.RegisterValueChangedCallback(evt => OnMirrorChanged(evt.newValue));
@@ -90,16 +88,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 objectType = typeof(GameObject),
                 allowSceneObjects = true,
-                value = targetRoot,
             };
             targetField.AddToClassList("source-field");
             targetField.AddToClassList("ndmf-tr");
-            targetField.RegisterValueChangedCallback(evt => OnTargetChanged(evt.newValue as GameObject));
+            targetField.RegisterValueChangedCallback(evt => SetTarget(evt.newValue as GameObject));
             targetRow.Add(targetField);
 
             // A mirror copy needs no target: the source is its own. The direction takes the place of the target.
             mirrorDirectionField = new PopupField<Side>("componentCopier.target",
-                new List<Side> { Side.Left, Side.Right }, mirrorSide, OtherSideLabel, OtherSideLabel);
+                new List<Side> { Side.Left, Side.Right }, session.MirrorSide, OtherSideLabel, OtherSideLabel);
             mirrorDirectionField.AddToClassList("source-field");
             mirrorDirectionField.AddToClassList("ndmf-tr");
             mirrorDirectionField.RegisterValueChangedCallback(evt => OnMirrorSideChanged(evt.newValue));
@@ -114,102 +111,77 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             targetWarningLabel.AddToClassList("inline-warning");
             section.Add(targetWarningLabel);
 
-            UpdateMirrorControls();
-            ValidateTarget();
+            SyncSourceControls();
             UpdateSourceWarnings();
-        }
-
-        private void OnSourceChanged(GameObject newSource)
-        {
-            sourceRoot = newSource;
-            if (mirrorMode && newSource != null) AdoptSideOf(newSource.transform);
-            manualMappings.Clear();
-            ClearDetailReport();
-            ValidateTarget();
-            UpdateSourceWarnings();
-            Rescan(resetSelection: true);
-        }
-
-        private void OnTargetChanged(GameObject newTarget)
-        {
-            // Picking a target ("Use as Target" from the menu, ...) asks for an ordinary copy
-            bool leavesMirror = newTarget != null && mirrorMode;
-            if (leavesMirror) LeaveMirrorMode();
-
-            targetRoot = newTarget;
-            manualMappings.Clear();
-            ClearDetailReport();
-            ValidateTarget();
-            UpdateSourceWarnings();
-            // The list of a mirror copy holds one side only
-            if (leavesMirror) Rescan(resetSelection: false);
-            else Recompute();
-        }
-
-        /// <summary>Turns the mirror copy off from code, when the user asked for something it cannot do.</summary>
-        private void LeaveMirrorMode()
-        {
-            mirrorMode = false;
-            mirrorToggle?.SetValueWithoutNotify(false);
-            UpdateMirrorControls();
         }
 
         /// <summary>
-        /// Copies in the other direction. The component list and the manual mappings belong to the old source,
-        /// so they start over just like after picking a new source by hand.
+        /// Takes a new source, from the field or from <see cref="Open"/>. The component list starts over, see
+        /// <see cref="CopySession.SetSource"/>.
         /// </summary>
+        private void SetSource(GameObject source, Component only = null)
+        {
+            session.SetSource(source, only);
+            expandedIssues.Clear();
+            // The component asked for is in view right away
+            var picked = only != null ? session.Entries.FirstOrDefault(e => e.Component == only) : null;
+            if (picked != null) expandedTypes.Add(GroupId(picked));
+            OnInputsChanged();
+        }
+
+        private void SetTarget(GameObject target)
+        {
+            session.SetTarget(target);
+            OnInputsChanged();
+        }
+
         private void SwapRoots()
         {
-            (sourceRoot, targetRoot) = (targetRoot, sourceRoot);
-            sourceField.SetValueWithoutNotify(sourceRoot);
-            targetField.SetValueWithoutNotify(targetRoot);
-            OnSourceChanged(sourceRoot);
+            session.Swap();
+            expandedIssues.Clear();
+            OnInputsChanged();
         }
 
-        /// <summary>
-        /// The source stays, so the checks of the components that are still listed stay too. The mirror map
-        /// pairs other objects than the map to a target, so the manual mappings start over.
-        /// </summary>
         private void OnMirrorChanged(bool value)
         {
-            mirrorMode = value;
-            if (mirrorMode && sourceRoot != null) AdoptSideOf(sourceRoot.transform);
-            manualMappings.Clear();
-            ClearDetailReport();
-            UpdateMirrorControls();
-            ValidateTarget();
-            UpdateSourceWarnings();
-            Rescan(resetSelection: false);
+            session.SetMirrorMode(value);
+            OnInputsChanged();
         }
 
         private void OnMirrorSideChanged(Side side)
         {
-            mirrorSide = side;
-            ClearDetailReport();
-            Rescan(resetSelection: false);
+            session.SetMirrorSide(side);
+            OnInputsChanged();
         }
 
         /// <summary>
-        /// A source on one side (a hand, a component picked from its context menu, ...) only has something to
-        /// copy in one direction, so that direction is chosen. The avatar itself leaves the choice alone.
+        /// After the roots or the mode changed. The report snapshot belongs to the old setup, and the session may
+        /// have changed more than the control that was used: a target leaves the mirror copy, a source on one
+        /// side picks the direction.
         /// </summary>
-        /// <param name="sides">Those of the mirror map when it is at hand; read from the avatar otherwise.</param>
-        private void AdoptSideOf(Transform transform, MirrorSides sides = null)
+        private void OnInputsChanged()
         {
-            var side = (sides ?? new MirrorSides(MirrorRoot())).Of(transform);
-            if (side == Side.None || side == mirrorSide) return;
-
-            mirrorSide = side;
-            mirrorDirectionField?.SetValueWithoutNotify(side);
+            ClearDetailReport();
+            SyncSourceControls();
+            RenderAll();
         }
 
-        /// <summary>A mirror copy has no target of its own: the target field makes way for the direction.</summary>
-        private void UpdateMirrorControls()
+        /// <summary>
+        /// Shows the roots and the mode of the session without calling back. The controls may not exist yet:
+        /// <see cref="Open"/> fills in the roots before the window has its GUI.
+        /// </summary>
+        private void SyncSourceControls()
         {
-            if (targetField == null) return;
+            if (sourceField == null) return;
 
-            targetField.style.display = mirrorMode ? DisplayStyle.None : DisplayStyle.Flex;
-            mirrorDirectionField.style.display = mirrorMode ? DisplayStyle.Flex : DisplayStyle.None;
+            sourceField.SetValueWithoutNotify(session.SourceRoot);
+            targetField.SetValueWithoutNotify(session.TargetRoot);
+            mirrorToggle.SetValueWithoutNotify(session.MirrorMode);
+            mirrorDirectionField.SetValueWithoutNotify(session.MirrorSide);
+
+            // A mirror copy has no target of its own: the target field makes way for the direction
+            targetField.style.display = session.MirrorMode ? DisplayStyle.None : DisplayStyle.Flex;
+            mirrorDirectionField.style.display = session.MirrorMode ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         /// <summary>The direction as a target: "Other side (L → R)".</summary>
@@ -220,62 +192,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 : "componentCopier.mirror.rightToLeft"));
         }
 
-        /// <summary>
-        /// Assets are accepted as a target for diff checks only: applying to an asset (e.g. a Prefab Variant)
-        /// cannot be undone, so Apply stays disabled for them.
-        /// </summary>
-        private void ValidateTarget()
-        {
-            targetWarningKey = null;
-            targetWarningIsError = false;
-
-            if (mirrorMode)
-            {
-                // The source is its own target, and an asset can take a copy no more than as a target
-                if (IsTargetAsset()) targetWarningKey = "componentCopier.warning.mirrorSourceIsAsset";
-                return;
-            }
-
-            if (targetRoot == null) return;
-
-            if (sourceRoot != null)
-            {
-                if (targetRoot == sourceRoot)
-                {
-                    targetWarningKey = "componentCopier.warning.sameObject";
-                    targetWarningIsError = true;
-                    return;
-                }
-
-                if (targetRoot.transform.IsChildOf(sourceRoot.transform) ||
-                    sourceRoot.transform.IsChildOf(targetRoot.transform))
-                {
-                    targetWarningKey = "componentCopier.warning.nested";
-                    targetWarningIsError = true;
-                    return;
-                }
-            }
-
-            if (IsTargetAsset()) targetWarningKey = "componentCopier.warning.targetIsAsset";
-        }
-
-        private bool IsTargetAsset() => EffectiveTarget != null && EditorUtility.IsPersistent(EffectiveTarget);
-
-        private bool IsTargetUsable() => targetRoot != null && !targetWarningIsError;
-
         private void UpdateSourceWarnings()
         {
             if (targetWarningLabel == null) return;
 
-            bool visible = targetWarningKey != null;
-            targetWarningLabel.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-            targetWarningLabel.text = visible ? Localization.S(targetWarningKey) : "";
-            targetWarningLabel.EnableInClassList("inline-warning--error", targetWarningIsError);
+            string warningKey = session.TargetWarning(out bool isError);
+            targetWarningLabel.style.display = warningKey != null ? DisplayStyle.Flex : DisplayStyle.None;
+            targetWarningLabel.text = warningKey != null ? Localization.S(warningKey) : "";
+            targetWarningLabel.EnableInClassList("inline-warning--error", isError);
 
             refreshButton.tooltip = Localization.S("componentCopier.refresh:tooltip");
             swapButton.tooltip = Localization.S("componentCopier.swap:tooltip");
             // A mirror copy has no target to swap with; the direction does that job
-            swapButton.SetEnabled(!mirrorMode && (sourceRoot != null || targetRoot != null));
+            swapButton.SetEnabled(!session.MirrorMode && (session.SourceRoot != null || session.TargetRoot != null));
             mirrorToggle.tooltip = Localization.S("componentCopier.mirror:tooltip");
             // PopupField caches its formatted text
             mirrorDirectionField.SetValueWithoutNotify(mirrorDirectionField.value);

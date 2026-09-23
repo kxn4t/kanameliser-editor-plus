@@ -56,8 +56,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             title.AddToClassList("ndmf-tr");
             headerRow.Add(title);
 
-            groupMode = (GroupMode)EditorPrefs.GetInt(GroupModePrefsKey, (int)GroupMode.ByType);
-
             var groupModeToggle = new VisualElement();
             groupModeToggle.AddToClassList("mode-toggle-group");
             headerRow.Add(groupModeToggle);
@@ -135,64 +133,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void ToggleAllPreset() => TogglePreset(e => e.Category != ComponentCategory.ExcludedByDefault);
 
-        /// <summary>
-        /// A chip is "on" when every matching component is selected, so it always reflects the real selection
-        /// even after individual checkboxes were changed.
-        /// </summary>
         private void TogglePreset(Func<ComponentEntry, bool> filter)
         {
-            var matching = entries.Where(filter).ToList();
-            if (matching.Count == 0) return;
-
-            bool allChecked = matching.All(IsChecked);
-            foreach (var entry in matching)
-                SetChecked(entry, !allChecked);
-
-            Recompute();
-        }
-
-        /// <summary>
-        /// A checkbox says whether the component ends up in the target. Inside a nested prefab that gets added
-        /// that is true without being selected: the prefab arrives as a whole.
-        /// </summary>
-        private bool IsChecked(ComponentEntry entry)
-        {
-            if (selectedKeys.Contains(entry.Key)) return true;
-            return plannedByKey.TryGetValue(entry.Key, out var planned) && planned.Implicit && planned.WillWrite;
-        }
-
-        /// <summary>
-        /// Unchecking a component that arrives with a nested prefab cannot simply deselect it, it would still
-        /// come along. It is remembered as left out instead, and removed from the new instance.
-        /// Does not recompute; the caller does that once.
-        /// </summary>
-        private void SetChecked(ComponentEntry entry, bool value)
-        {
-            plannedByKey.TryGetValue(entry.Key, out var planned);
-
-            if (!value)
-            {
-                selectedKeys.Remove(entry.Key);
-                if (planned != null && ArrivesWithPrefab(planned)) leftOutKeys.Add(entry.Key);
-                return;
-            }
-
-            bool wasLeftOut = leftOutKeys.Remove(entry.Key);
-            // Back to coming along with the prefab. Selecting it would keep copying a component that is not
-            // copied by default (a renderer of a hat, ...) once the prefab exists in the target.
-            if (wasLeftOut && planned != null && planned.LeftOut &&
-                entry.Category == ComponentCategory.ExcludedByDefault)
-            {
-                return;
-            }
-
-            selectedKeys.Add(entry.Key);
-        }
-
-        private static bool ArrivesWithPrefab(PlannedComponent planned)
-        {
-            var host = planned.HostToCreate;
-            return host != null && (host.IsPrefabRoot || host.PrefabRoot != null);
+            session.TogglePreset(filter);
+            RenderAll();
         }
 
         /// <summary>
@@ -201,7 +145,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private void SyncToolPresetButtons()
         {
-            var tools = entries
+            var tools = session.Entries
                 .Where(e => e.Tool != null)
                 .GroupBy(e => e.Tool.Id)
                 .Select(g => g.First().Tool)
@@ -247,11 +191,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void UpdatePresetButton(Button button, Func<ComponentEntry, bool> filter, bool hideWhenEmpty)
         {
-            var matching = entries.Where(filter).ToList();
+            var matching = session.Entries.Where(filter).ToList();
             // A chip that can never be pressed for this source is only noise
             button.style.display = hideWhenEmpty && matching.Count == 0 ? DisplayStyle.None : DisplayStyle.Flex;
             button.SetEnabled(matching.Count > 0);
-            button.EnableInClassList("preset-chip--active", matching.Count > 0 && matching.All(IsChecked));
+            button.EnableInClassList("preset-chip--active", matching.Count > 0 && matching.All(session.IsChecked));
         }
 
         #endregion
@@ -282,7 +226,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private Label NoSideComponentsLabel()
         {
-            var side = Localization.S(mirrorSide == Side.Left ? "componentCopier.side.left" : "componentCopier.side.right");
+            var side = Localization.S(session.MirrorSide == Side.Left
+                ? "componentCopier.side.left"
+                : "componentCopier.side.right");
             var label = new Label(Localization.S("componentCopier.info.noSideComponents", side));
             label.AddToClassList("info-label");
             return label;
@@ -294,14 +240,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             UpdatePresetButtons();
             UpdateListControls();
 
-            if (sourceRoot == null)
+            if (session.SourceRoot == null)
             {
                 listContainer.Add(InfoLabel("componentCopier.info.selectSource"));
                 return;
             }
 
             var filter = BuildSearchFilter();
-            var visible = entries.Where(e => filter(e)).ToList();
+            var visible = session.Entries.Where(e => filter(e)).ToList();
 
             var normal = visible.Where(e => e.Category != ComponentCategory.ExcludedByDefault).ToList();
             var excluded = visible.Where(e => e.Category == ComponentCategory.ExcludedByDefault).ToList();
@@ -309,7 +255,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (normal.Count == 0 && (!showExcluded || excluded.Count == 0))
             {
                 // Nothing on the chosen side at all (renderers aside) is said as such, not hidden by the search
-                listContainer.Add(mirrorMode && entries.All(e => e.Category == ComponentCategory.ExcludedByDefault)
+                bool sideIsEmpty = session.MirrorMode &&
+                                   session.Entries.All(e => e.Category == ComponentCategory.ExcludedByDefault);
+                listContainer.Add(sideIsEmpty
                     ? NoSideComponentsLabel()
                     : InfoLabel("componentCopier.info.noComponents"));
                 AddMissingObjectGroup();
@@ -348,39 +296,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private void AddMissingObjectGroup()
         {
-            if (plan == null || missingObjects.Count == 0) return;
+            var missingRoots = session.MissingRoots.ToList();
+            if (session.Plan == null || missingRoots.Count == 0) return;
 
-            var plannedRoots = new HashSet<Transform>(
-                plan.ObjectsToCreate.Where(o => o.PrefabRoot == null).Select(o => o.Source));
-            plannedRoots.IntersectWith(missingObjects);
-            var blockedReasons = plan.BlockedObjects.ToDictionary(b => b.Source, b => b.Reason);
+            var blockedReasons = session.Plan.BlockedObjects.ToDictionary(b => b.Source, b => b.Reason);
+            int plannedCount = missingRoots.Count(session.IsObjectPlanned);
 
             // Same rule as the rows: an object that comes along with a selected component counts as checked,
             // otherwise the header stays empty above a row that is ticked
-            bool AddedByComponents(Transform p) =>
-                plannedRoots.Contains(p) && !selectedObjectPaths.Contains(ObjectPath(p));
-
-            int checkedCount = missingObjects.Count(p =>
-                selectedObjectPaths.Contains(ObjectPath(p)) || AddedByComponents(p));
-
             var (group, header, toggle) = CreateGroupFrame(
-                MissingObjectGroupId, checkedCount, missingObjects.Count,
-                value =>
-                {
-                    foreach (var missing in missingObjects)
-                    {
-                        // Left to their components; checking them here would keep them after those are deselected
-                        if (AddedByComponents(missing)) continue;
-
-                        if (value) selectedObjectPaths.Add(ObjectPath(missing));
-                        else selectedObjectPaths.Remove(ObjectPath(missing));
-                    }
-                },
-                () => missingObjects.Select(
-                    missing => CreateMissingObjectRow(missing, plannedRoots.Contains(missing), blockedReasons)));
+                MissingObjectGroupId, missingRoots.Count(session.IsObjectChecked), missingRoots.Count,
+                value => session.SetObjectsChecked(missingRoots, value),
+                () => missingRoots.Select(missing => CreateMissingObjectRow(missing, blockedReasons)));
             group.AddToClassList("prefab-group");
             // Nothing to decide when every object is already on its way
-            toggle.SetEnabled(!missingObjects.All(AddedByComponents));
+            toggle.SetEnabled(!missingRoots.All(session.IsObjectAddedByComponents));
             listContainer.Add(group);
 
             var icon = new Image { image = EditorGUIUtility.IconContent("GameObject Icon").image };
@@ -394,29 +324,26 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             nameLabel.AddToClassList("group-name");
             header.Add(nameLabel);
 
-            AddGroupBadges(header, missingObjects.Count,
-                plannedRoots.Count > 0 ? Localization.S("componentCopier.prefabs.summary", plannedRoots.Count) : "",
+            AddGroupBadges(header, missingRoots.Count,
+                plannedCount > 0 ? Localization.S("componentCopier.prefabs.summary", plannedCount) : "",
                 blockedReasons.Count);
         }
 
         private VisualElement CreateMissingObjectRow(
-            Transform missing, bool planned, Dictionary<Transform, BlockReason> blockedReasons)
+            Transform missing, Dictionary<Transform, BlockReason> blockedReasons)
         {
-            string path = ObjectPath(missing);
-            bool selected = selectedObjectPaths.Contains(path);
             // Already on its way because a selected component needs it; unchecking would have no effect
-            bool addedByComponents = planned && !selected;
+            bool addedByComponents = session.IsObjectAddedByComponents(missing);
 
             var row = new VisualElement();
             row.AddToClassList("component-row");
 
-            var toggle = new Toggle { value = selected || addedByComponents };
+            var toggle = new Toggle { value = session.IsObjectChecked(missing) };
             toggle.SetEnabled(!addedByComponents);
             toggle.RegisterValueChangedCallback(evt =>
             {
-                if (evt.newValue) selectedObjectPaths.Add(path);
-                else selectedObjectPaths.Remove(path);
-                Recompute();
+                session.SetObjectsChecked(new[] { missing }, evt.newValue);
+                RenderAll();
             });
             row.Add(toggle);
 
@@ -435,8 +362,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             RevealOnRowClick(row, toggle, missing);
 
             // From the root of the map: in a mirror copy, the source itself can be the missing prefab
-            bool isPrefab = NestedPrefabs.GetPrefabAsset(missing, map.SourceRoot) != null;
-            int emptyChildren = isPrefab ? 0 : MissingObjects.CountBelow(missing, map);
+            bool isPrefab = NestedPrefabs.GetPrefabAsset(missing, session.Map.SourceRoot) != null;
+            int emptyChildren = isPrefab ? 0 : MissingObjects.CountBelow(missing, session.Map);
             if (emptyChildren > 0)
             {
                 var childrenLabel = new Label("+" + emptyChildren)
@@ -457,7 +384,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 chip.AddToClassList(ComponentCopierStrings.StatusChipClass(ComponentAction.Blocked));
                 row.Add(chip);
             }
-            else if (planned)
+            else if (session.IsObjectPlanned(missing))
             {
                 var chip = new Label(Localization.S(addedByComponents
                     ? "componentCopier.prefabs.status.withComponents"
@@ -564,7 +491,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private void AddObjectTree(List<ComponentEntry> groupEntries)
         {
-            var root = sourceRoot.transform;
+            var root = session.SourceRoot.transform;
             var nodes = new Dictionary<Transform, ObjectNode>();
 
             ObjectNode NodeFor(Transform transform)
@@ -588,7 +515,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             // The root's children are not indented; everything is below the root anyway
             if (rootNode.Entries.Count > 0)
-                listContainer.Add(CreateObjectGroup(rootNode, "", sourceRoot.name));
+                listContainer.Add(CreateObjectGroup(rootNode, "", session.SourceRoot.name));
             foreach (var child in rootNode.Children)
                 AddObjectNode(listContainer, child, "");
         }
@@ -676,7 +603,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private Label CreatePrefabBadge(Transform transform)
         {
-            var asset = NestedPrefabs.GetPrefabAsset(transform, sourceRoot.transform);
+            var asset = NestedPrefabs.GetPrefabAsset(transform, session.SourceRoot.transform);
             if (asset == null) return null;
 
             // A product term, like the preset chips
@@ -687,8 +614,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private string GetObjectPath(Transform transform)
         {
-            string path = ObjectMatcher.GetRelativePathFromRoot(transform, sourceRoot.transform);
-            return string.IsNullOrEmpty(path) ? sourceRoot.name : path;
+            string path = ObjectMatcher.GetRelativePathFromRoot(transform, session.SourceRoot.transform);
+            return string.IsNullOrEmpty(path) ? session.SourceRoot.name : path;
         }
 
         private VisualElement CreateGroup(GroupInfo info)
@@ -696,12 +623,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var groupEntries = info.Entries;
 
             var (group, header, _) = CreateGroupFrame(
-                info.Id, groupEntries.Count(IsChecked), groupEntries.Count,
-                value =>
-                {
-                    foreach (var entry in groupEntries)
-                        SetChecked(entry, value);
-                },
+                info.Id, groupEntries.Count(session.IsChecked), groupEntries.Count,
+                value => session.SetChecked(groupEntries, value),
                 () => groupEntries.Select(CreateRow));
             group.EnableInClassList("component-group--excluded", info.Excluded);
 
@@ -745,7 +668,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// group in the header, and rows that are built when the group is first opened. The caller adds the rest
         /// of the header. Alt+click on a header opens or closes every group at once.
         /// </summary>
-        /// <param name="setChecked">Applies the group checkbox to the rows; the plan is recomputed afterwards.</param>
+        /// <param name="setChecked">Applies the group checkbox to the rows, see <see cref="CopySession"/>.</param>
         /// <param name="createRows">Builds the rows. Called once, when the group is first shown open.</param>
         private (VisualElement group, VisualElement header, Toggle toggle) CreateGroupFrame(
             string id, int checkedCount, int count, Action<bool> setChecked, Func<IEnumerable<VisualElement>> createRows)
@@ -787,7 +710,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 evt.StopPropagation();
                 setChecked(evt.newValue);
-                Recompute();
+                RenderAll();
             });
             header.Add(toggle);
 
@@ -801,7 +724,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 {
                     if (expanded)
                     {
-                        expandedTypes.UnionWith(entries.Select(GroupId));
+                        expandedTypes.UnionWith(session.Entries.Select(GroupId));
                         expandedTypes.Add(MissingObjectGroupId);
                     }
                     else
@@ -846,11 +769,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var row = new VisualElement();
             row.AddToClassList("component-row");
 
-            var toggle = new Toggle { value = IsChecked(entry) };
+            var toggle = new Toggle { value = session.IsChecked(entry) };
             toggle.RegisterValueChangedCallback(evt =>
             {
-                SetChecked(entry, evt.newValue);
-                Recompute();
+                session.SetChecked(entry, evt.newValue);
+                RenderAll();
             });
             row.Add(toggle);
 
@@ -878,7 +801,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             row.Add(rowLabel);
             RevealOnRowClick(row, toggle, entry.Host);
 
-            if (plannedByKey.TryGetValue(entry.Key, out var planned))
+            if (session.TryGetPlanned(entry.Key, out var planned))
             {
                 int unresolved = planned.References.Count(r => r.Kind == ReferenceKind.InternalUnresolved) +
                                  planned.UnresolvedReferences.Count;
@@ -905,7 +828,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private string DisplayPath(ComponentEntry entry)
         {
-            return string.IsNullOrEmpty(entry.Key.RelativePath) ? sourceRoot.name : entry.Key.RelativePath;
+            return string.IsNullOrEmpty(entry.Key.RelativePath) ? session.SourceRoot.name : entry.Key.RelativePath;
         }
 
         #endregion
@@ -914,7 +837,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private bool HasWarning(ComponentEntry entry)
         {
-            if (!plannedByKey.TryGetValue(entry.Key, out var planned)) return false;
+            if (!session.TryGetPlanned(entry.Key, out var planned)) return false;
             return planned.Action == ComponentAction.Blocked ||
                    planned.References.Any(r => r.Kind == ReferenceKind.InternalUnresolved);
         }
@@ -925,7 +848,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var counts = new List<(string label, int count)>();
             foreach (var entry in groupEntries)
             {
-                if (!plannedByKey.TryGetValue(entry.Key, out var planned)) continue;
+                if (!session.TryGetPlanned(entry.Key, out var planned)) continue;
 
                 string label = ActionLabel(planned);
                 int index = counts.FindIndex(c => c.label == label);
@@ -951,7 +874,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (planned.IsHeldBack)
                 return Localization.S("componentCopier.action.skipUnresolved");
 
-            return planned.WillWrite && ArrivesWithPrefab(planned)
+            return planned.WillWrite && planned.ArrivesWithPrefab
                 ? Localization.S("componentCopier.action.withPrefab")
                 : ActionName(planned.Action);
         }
