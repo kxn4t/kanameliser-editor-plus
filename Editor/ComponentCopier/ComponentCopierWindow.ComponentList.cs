@@ -920,7 +920,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 var chip = new Label(ActionLabel(planned)) { tooltip = ActionTooltip(planned) };
                 chip.AddToClassList("status-chip");
-                chip.AddToClassList("status-chip--" + planned.Action.ToString().ToLowerInvariant());
+                chip.AddToClassList(ComponentCopierStrings.StatusChipClass(planned.Action));
                 row.Add(chip);
             }
 
@@ -962,7 +962,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private static string ActionName(ComponentAction action)
         {
-            return Localization.S("componentCopier.action." + Camel(action));
+            return Localization.S(ComponentCopierStrings.ActionKey(action));
         }
 
         /// <summary>
@@ -985,13 +985,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             switch (planned.Action)
             {
                 case ComponentAction.Blocked:
-                    return Localization.S("componentCopier.blocked." + Camel(planned.BlockReason));
+                    return Localization.S(ComponentCopierStrings.BlockReasonKey(planned.BlockReason));
                 // Both leave the target alone, but for different reasons; with the Overwrite policy an
                 // unexplained "Identical" reads as if the policy was ignored
                 case ComponentAction.Skip:
                 case ComponentAction.SkipIdentical:
                 case ComponentAction.LeftOut:
-                    return Localization.S("componentCopier.action." + Camel(planned.Action) + ":tooltip");
+                    return Localization.S(ComponentCopierStrings.ActionTooltipKey(planned.Action));
                 default:
                     return "";
             }

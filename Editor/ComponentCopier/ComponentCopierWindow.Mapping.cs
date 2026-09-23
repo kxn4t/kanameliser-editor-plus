@@ -617,7 +617,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
             else
             {
-                row.AddToClassList("mapping-row--" + mapping.State.ToString().ToLowerInvariant());
+                row.AddToClassList(ComponentCopierStrings.MappingRowClass(mapping.State));
             }
 
             string sourcePath = ObjectMatcher.GetRelativePathFromRoot(mapping.Source, owner.SourceRoot);
@@ -779,7 +779,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         ? "componentCopier.mapping.note.boneMissing"
                         : "componentCopier.mapping.note.unmapped");
                 default:
-                    return Localization.S("componentCopier.mapping.reason." + Camel(mapping.Reason));
+                    return Localization.S(ComponentCopierStrings.MappingReasonKey(mapping.Reason));
             }
         }
     }

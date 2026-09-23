@@ -13,7 +13,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     /// </summary>
     public partial class ComponentCopierWindow : EditorWindow
     {
-        private const string UssPath =
+        internal const string UssPath =
             "Packages/net.kanameliser.editor-plus/Editor/ComponentCopier/ComponentCopierWindow.uss";
         private const long RefreshDebounceMs = 400;
 
@@ -471,19 +471,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private static string PolicyLabel(ExistingComponentPolicy policy)
         {
-            return Localization.S("componentCopier.policy." + Camel(policy));
+            return Localization.S(ComponentCopierStrings.PolicyKey(policy));
         }
 
         private static string UnresolvedPolicyLabel(UnresolvedReferencePolicy policy)
         {
-            return Localization.S("componentCopier.unresolvedPolicy." + Camel(policy));
-        }
-
-        /// <summary>Enum value as a localization key segment ("SkipIdentical" becomes "skipIdentical").</summary>
-        private static string Camel(System.Enum value)
-        {
-            string name = value.ToString();
-            return char.ToLowerInvariant(name[0]) + name.Substring(1);
+            return Localization.S(ComponentCopierStrings.UnresolvedPolicyKey(policy));
         }
 
         /// <summary>
