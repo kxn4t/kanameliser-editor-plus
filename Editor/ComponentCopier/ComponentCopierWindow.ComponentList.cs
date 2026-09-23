@@ -355,23 +355,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             plannedRoots.IntersectWith(missingObjects);
             var blockedReasons = plan.BlockedObjects.ToDictionary(b => b.Source, b => b.Reason);
 
-            var group = new VisualElement();
-            group.AddToClassList("component-group");
-            group.AddToClassList("prefab-group");
-            listContainer.Add(group);
-
-            var header = new VisualElement();
-            header.AddToClassList("group-header");
-            group.Add(header);
-
-            var content = new VisualElement();
-            content.AddToClassList("group-content");
-            group.Add(content);
-
-            var arrow = new Label("▶");
-            arrow.AddToClassList("collapsible-arrow");
-            header.Add(arrow);
-
             // Same rule as the rows: an object that comes along with a selected component counts as checked,
             // otherwise the header stays empty above a row that is ticked
             bool AddedByComponents(Transform p) =>
@@ -379,29 +362,26 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             int checkedCount = missingObjects.Count(p =>
                 selectedObjectPaths.Contains(ObjectPath(p)) || AddedByComponents(p));
-            var toggle = new Toggle
-            {
-                value = checkedCount == missingObjects.Count,
-                showMixedValue = checkedCount > 0 && checkedCount < missingObjects.Count,
-            };
-            toggle.AddToClassList("group-toggle");
+
+            var (group, header, toggle) = CreateGroupFrame(
+                MissingObjectGroupId, checkedCount, missingObjects.Count,
+                value =>
+                {
+                    foreach (var missing in missingObjects)
+                    {
+                        // Left to their components; checking them here would keep them after those are deselected
+                        if (AddedByComponents(missing)) continue;
+
+                        if (value) selectedObjectPaths.Add(ObjectPath(missing));
+                        else selectedObjectPaths.Remove(ObjectPath(missing));
+                    }
+                },
+                () => missingObjects.Select(
+                    missing => CreateMissingObjectRow(missing, plannedRoots.Contains(missing), blockedReasons)));
+            group.AddToClassList("prefab-group");
             // Nothing to decide when every object is already on its way
             toggle.SetEnabled(!missingObjects.All(AddedByComponents));
-            toggle.RegisterValueChangedCallback(evt =>
-            {
-                evt.StopPropagation();
-                foreach (var missing in missingObjects)
-                {
-                    // Left to their components; checking them here would keep them after those are deselected
-                    if (AddedByComponents(missing)) continue;
-
-                    if (evt.newValue) selectedObjectPaths.Add(ObjectPath(missing));
-                    else selectedObjectPaths.Remove(ObjectPath(missing));
-                }
-
-                Recompute();
-            });
-            header.Add(toggle);
+            listContainer.Add(group);
 
             var icon = new Image { image = EditorGUIUtility.IconContent("GameObject Icon").image };
             icon.AddToClassList("group-icon");
@@ -414,43 +394,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             nameLabel.AddToClassList("group-name");
             header.Add(nameLabel);
 
-            var countLabel = new Label(missingObjects.Count.ToString());
-            countLabel.AddToClassList("count-badge");
-            header.Add(countLabel);
-
-            var summaryLabel = new Label(plannedRoots.Count > 0
-                ? Localization.S("componentCopier.prefabs.summary", plannedRoots.Count)
-                : "");
-            summaryLabel.AddToClassList("group-summary");
-            header.Add(summaryLabel);
-
-            if (blockedReasons.Count > 0)
-            {
-                var warningLabel = new Label("⚠ " + blockedReasons.Count);
-                warningLabel.AddToClassList("warning-badge");
-                header.Add(warningLabel);
-            }
-
-            void ApplyExpanded(bool expanded)
-            {
-                arrow.EnableInClassList("collapsible-arrow--open", expanded);
-                content.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
-            }
-
-            header.RegisterCallback<ClickEvent>(evt =>
-            {
-                if (evt.target is VisualElement element && (element == toggle || toggle.Contains(element))) return;
-
-                bool expanded = !expandedTypes.Contains(MissingObjectGroupId);
-                if (expanded) expandedTypes.Add(MissingObjectGroupId);
-                else expandedTypes.Remove(MissingObjectGroupId);
-                ApplyExpanded(expanded);
-            });
-
-            foreach (var missing in missingObjects)
-                content.Add(CreateMissingObjectRow(missing, plannedRoots.Contains(missing), blockedReasons));
-
-            ApplyExpanded(expandedTypes.Contains(MissingObjectGroupId));
+            AddGroupBadges(header, missingObjects.Count,
+                plannedRoots.Count > 0 ? Localization.S("componentCopier.prefabs.summary", plannedRoots.Count) : "",
+                blockedReasons.Count);
         }
 
         private VisualElement CreateMissingObjectRow(
@@ -749,50 +695,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             var groupEntries = info.Entries;
 
-            var group = new VisualElement();
-            group.AddToClassList("component-group");
-            group.EnableInClassList("component-group--excluded", info.Excluded);
-
-            var header = new VisualElement();
-            header.AddToClassList("group-header");
-            group.Add(header);
-
-            var content = new VisualElement();
-            content.AddToClassList("group-content");
-            group.Add(content);
-
-            var arrow = new Label("▶");
-            arrow.AddToClassList("collapsible-arrow");
-            header.Add(arrow);
-
-            void ApplyExpanded(bool expanded)
-            {
-                arrow.EnableInClassList("collapsible-arrow--open", expanded);
-                content.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
-                // Rows are only built when first shown; avatars can carry hundreds of components
-                if (expanded && content.childCount == 0)
+            var (group, header, _) = CreateGroupFrame(
+                info.Id, groupEntries.Count(IsChecked), groupEntries.Count,
+                value =>
                 {
                     foreach (var entry in groupEntries)
-                        content.Add(CreateRow(entry));
-                }
-            }
-
-            int selectedCount = groupEntries.Count(IsChecked);
-            var toggle = new Toggle
-            {
-                value = selectedCount == groupEntries.Count,
-                showMixedValue = selectedCount > 0 && selectedCount < groupEntries.Count,
-            };
-            toggle.AddToClassList("group-toggle");
-            toggle.RegisterValueChangedCallback(evt =>
-            {
-                evt.StopPropagation();
-                foreach (var entry in groupEntries)
-                    SetChecked(entry, evt.newValue);
-
-                Recompute();
-            });
-            header.Add(toggle);
+                        SetChecked(entry, value);
+                },
+                () => groupEntries.Select(CreateRow));
+            group.EnableInClassList("component-group--excluded", info.Excluded);
 
             var icon = new Image { image = info.Icon };
             icon.AddToClassList("group-icon");
@@ -825,44 +736,109 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var prefabBadge = info.PingTarget != null ? CreatePrefabBadge(info.PingTarget.transform) : null;
             if (prefabBadge != null) header.Add(prefabBadge);
 
-            var countLabel = new Label(groupEntries.Count.ToString());
+            AddGroupBadges(header, groupEntries.Count, BuildGroupSummary(groupEntries), groupEntries.Count(HasWarning));
+            return group;
+        }
+
+        /// <summary>
+        /// The frame of a collapsible group in the component list: the fold arrow and the checkbox for the whole
+        /// group in the header, and rows that are built when the group is first opened. The caller adds the rest
+        /// of the header. Alt+click on a header opens or closes every group at once.
+        /// </summary>
+        /// <param name="setChecked">Applies the group checkbox to the rows; the plan is recomputed afterwards.</param>
+        /// <param name="createRows">Builds the rows. Called once, when the group is first shown open.</param>
+        private (VisualElement group, VisualElement header, Toggle toggle) CreateGroupFrame(
+            string id, int checkedCount, int count, Action<bool> setChecked, Func<IEnumerable<VisualElement>> createRows)
+        {
+            var group = new VisualElement();
+            group.AddToClassList("component-group");
+
+            var header = new VisualElement();
+            header.AddToClassList("group-header");
+            group.Add(header);
+
+            var content = new VisualElement();
+            content.AddToClassList("group-content");
+            group.Add(content);
+
+            var arrow = new Label("▶");
+            arrow.AddToClassList("collapsible-arrow");
+            header.Add(arrow);
+
+            void ApplyExpanded(bool expanded)
+            {
+                arrow.EnableInClassList("collapsible-arrow--open", expanded);
+                content.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
+                // Rows are only built when first shown; avatars can carry hundreds of components
+                if (expanded && content.childCount == 0)
+                {
+                    foreach (var row in createRows())
+                        content.Add(row);
+                }
+            }
+
+            var toggle = new Toggle
+            {
+                value = checkedCount == count,
+                showMixedValue = checkedCount > 0 && checkedCount < count,
+            };
+            toggle.AddToClassList("group-toggle");
+            toggle.RegisterValueChangedCallback(evt =>
+            {
+                evt.StopPropagation();
+                setChecked(evt.newValue);
+                Recompute();
+            });
+            header.Add(toggle);
+
+            header.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (IsClickOn(evt, toggle)) return;
+
+                bool expanded = !expandedTypes.Contains(id);
+
+                if (evt.altKey)
+                {
+                    if (expanded)
+                    {
+                        expandedTypes.UnionWith(entries.Select(GroupId));
+                        expandedTypes.Add(MissingObjectGroupId);
+                    }
+                    else
+                    {
+                        expandedTypes.Clear();
+                    }
+
+                    RenderComponentList();
+                    return;
+                }
+
+                if (expanded) expandedTypes.Add(id);
+                else expandedTypes.Remove(id);
+                ApplyExpanded(expanded);
+            });
+
+            ApplyExpanded(expandedTypes.Contains(id));
+            return (group, header, toggle);
+        }
+
+        /// <summary>The end of a group header: the number of rows, what happens to them, and the warnings.</summary>
+        private static void AddGroupBadges(VisualElement header, int count, string summary, int warnings)
+        {
+            var countLabel = new Label(count.ToString());
             countLabel.AddToClassList("count-badge");
             header.Add(countLabel);
 
-            var summaryLabel = new Label(BuildGroupSummary(groupEntries));
+            var summaryLabel = new Label(summary);
             summaryLabel.AddToClassList("group-summary");
             header.Add(summaryLabel);
 
-            int warnings = groupEntries.Count(HasWarning);
             if (warnings > 0)
             {
                 var warningLabel = new Label("⚠ " + warnings);
                 warningLabel.AddToClassList("warning-badge");
                 header.Add(warningLabel);
             }
-
-            header.RegisterCallback<ClickEvent>(evt =>
-            {
-                if (evt.target is VisualElement element && (element == toggle || toggle.Contains(element))) return;
-
-                bool expanded = !expandedTypes.Contains(info.Id);
-
-                // Alt+click expands or collapses every group at once
-                if (evt.altKey)
-                {
-                    if (expanded) expandedTypes.UnionWith(entries.Select(GroupId));
-                    else expandedTypes.Clear();
-                    RenderComponentList();
-                    return;
-                }
-
-                if (expanded) expandedTypes.Add(info.Id);
-                else expandedTypes.Remove(info.Id);
-                ApplyExpanded(expanded);
-            });
-
-            ApplyExpanded(expandedTypes.Contains(info.Id));
-            return group;
         }
 
         private VisualElement CreateRow(ComponentEntry entry)

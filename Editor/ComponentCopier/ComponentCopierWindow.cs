@@ -501,10 +501,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             row.RegisterCallback<ClickEvent>(evt =>
             {
-                if (evt.target is VisualElement element && (element == checkbox || checkbox.Contains(element))) return;
+                if (IsClickOn(evt, checkbox)) return;
                 Reveal(target);
             });
         }
+
+        /// <summary>True when a click that bubbled up to a row or header landed on <paramref name="element"/>.</summary>
+        private static bool IsClickOn(ClickEvent evt, VisualElement element) =>
+            evt.target is VisualElement target && (target == element || element.Contains(target));
 
         /// <summary>
         /// Shows the label's own text as a tooltip, but only while the label cuts it off. UI Toolkit centers a
