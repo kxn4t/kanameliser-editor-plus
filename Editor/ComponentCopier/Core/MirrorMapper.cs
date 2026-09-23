@@ -19,9 +19,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     /// </summary>
     internal static class MirrorMapper
     {
-        private const int MaxCandidates = 8;
-        private const int FuzzyMinTokenLength = 3;
-
         /// <param name="root">
         /// The hierarchy the map spans. Usually the avatar, so that references from an outfit to the bones and
         /// colliders of the avatar are mirrored as well.
@@ -90,28 +87,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             public void Run()
             {
-                Map.Set(new TransformMapping
-                {
-                    Source = root,
-                    Target = root,
-                    State = MappingState.Confirmed,
-                    Reason = MappingReason.Root,
-                });
-
-                foreach (var pair in manual)
-                {
-                    if (pair.Key == null || pair.Key == root) continue;
-                    Map.Set(new TransformMapping
-                    {
-                        Source = pair.Key,
-                        Target = pair.Value,
-                        State = MappingState.Manual,
-                        Reason = MappingReason.Manual,
-                    });
-                }
-
+                Map.SetRootAndManual(manual);
                 Visit(root, root, root);
-                AddCandidatesToManualMappings();
+                Map.OfferAutomaticAnswers(manual.Keys, source =>
+                {
+                    var anchor = NearestMappedAncestor(source, out var anchorCounterpart);
+                    return Resolve(source, anchor, anchorCounterpart);
+                });
             }
 
             /// <param name="anchor">The nearest mapped ancestor of the children: the parent itself when it is mapped.</param>
@@ -130,28 +112,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     // Below an unmapped object, children are still looked for below the nearest mapped ancestor
                     if (mapping.IsUsable) Visit(child, child, mapping.Target);
                     else Visit(child, anchor, anchorCounterpart);
-                }
-            }
-
-            /// <summary>
-            /// A manual mapping skips every automatic rule, which would leave it without candidates for changing
-            /// one's mind. So the automatic answer is worked out after all and kept as candidates only.
-            /// </summary>
-            private void AddCandidatesToManualMappings()
-            {
-                foreach (var pair in manual)
-                {
-                    var source = pair.Key;
-                    if (source == null || source == root || !source.IsChildOf(root)) continue;
-
-                    var manualMapping = Map.Get(source);
-                    if (manualMapping == null || manualMapping.State != MappingState.Manual) continue;
-
-                    var anchor = NearestMappedAncestor(source, out var anchorCounterpart);
-                    var automatic = Resolve(source, anchor, anchorCounterpart);
-                    manualMapping.Candidates = automatic.State == MappingState.Confirmed
-                        ? new List<MappingCandidate> { new MappingCandidate { Target = automatic.Target, Score = 1f } }
-                        : automatic.Candidates;
                 }
             }
 
@@ -274,63 +234,22 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             private bool InArmature(Transform transform) =>
                 Map.SourceSkeleton.HasSkeleton && Map.SourceSkeleton.IsInArmature(transform);
 
-            private static TransformMapping Confirmed(Transform source, Transform target, MappingReason reason)
-            {
-                return new TransformMapping
-                {
-                    Source = source,
-                    Target = target,
-                    State = MappingState.Confirmed,
-                    Reason = reason,
-                };
-            }
+            private static TransformMapping Confirmed(Transform source, Transform target, MappingReason reason) =>
+                TransformMapping.Confirmed(source, target, reason);
 
-            private TransformMapping Suggest(Transform source, List<Transform> targets, MappingReason reason)
-            {
-                var candidates = Rank(source, targets);
-                return new TransformMapping
-                {
-                    Source = source,
-                    Target = candidates[0].Target,
-                    State = MappingState.NeedsReview,
-                    Reason = reason,
-                    Candidates = candidates,
-                };
-            }
+            private TransformMapping Suggest(Transform source, IEnumerable<Transform> targets, MappingReason reason) =>
+                TransformMapping.Suggested(source, Rank(source, targets), reason);
 
-            private TransformMapping Unmapped(Transform source, List<Transform> candidates)
-            {
-                return new TransformMapping
-                {
-                    Source = source,
-                    State = MappingState.Unmapped,
-                    Reason = MappingReason.None,
-                    Candidates = Rank(source, candidates),
-                };
-            }
+            private TransformMapping Unmapped(Transform source, IEnumerable<Transform> candidates) =>
+                TransformMapping.Unmapped(source, Rank(source, candidates));
 
-            private List<Transform> FuzzyChildren(Transform parent, string name)
-            {
-                return Hierarchy.Children(parent)
-                    .Where(t => ObjectMatcher.HasCommonBaseName(t.name, name, FuzzyMinTokenLength))
-                    .ToList();
-            }
+            private static IEnumerable<Transform> FuzzyChildren(Transform parent, string name) =>
+                Hierarchy.Children(parent)
+                    .Where(t => ObjectMatcher.HasCommonBaseName(t.name, name, MappingCandidates.FuzzyMinTokenLength));
 
-            private List<MappingCandidate> Rank(Transform source, List<Transform> targets)
-            {
-                string sourcePath = paths[source];
-                return targets
-                    .Where(t => t != source)
-                    .Select(t => new MappingCandidate
-                    {
-                        Target = t,
-                        Score = ObjectMatcher.PathSegmentScore(sourcePath, paths[t]),
-                    })
-                    .OrderByDescending(c => c.Score)
-                    .ThenBy(c => ObjectMatcher.LevenshteinDistance(sourcePath, paths[c.Target]))
-                    .Take(MaxCandidates)
-                    .ToList();
-            }
+            /// <summary>Both sides live in one hierarchy, so the source itself is never its own candidate.</summary>
+            private List<MappingCandidate> Rank(Transform source, IEnumerable<Transform> targets) =>
+                MappingCandidates.Rank(paths[source], targets.Where(t => t != source), paths);
         }
     }
 }

@@ -314,5 +314,18 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
                 MappingReason.ExactPath);
             Assert.IsFalse(map.TryResolve(source.Find("Armature/pelvis"), out _));
         }
+
+        [Test]
+        public void Suggestion_WithoutCandidates_IsUnmapped()
+        {
+            // The mirror mapper drops the source from its own candidates, which can leave none
+            var source = CreateHierarchy("Source", "Item");
+
+            var mapping = TransformMapping.Suggested(
+                source.Find("Item"), new List<MappingCandidate>(), MappingReason.MirroredName);
+
+            Assert.AreEqual(MappingState.Unmapped, mapping.State);
+            Assert.IsNull(mapping.Target);
+        }
     }
 }

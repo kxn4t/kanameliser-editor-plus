@@ -19,8 +19,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     {
         private const int MinAffixVotes = 3;
         private const int MinAffixBaseNameLength = 3;
-        private const int MaxCandidates = 8;
-        private const int FuzzyMinTokenLength = 3;
 
         /// <param name="manual">
         /// User-specified mappings. They take priority over every automatic rule.
@@ -162,27 +160,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             public void Run()
             {
-                Map.Set(new TransformMapping
-                {
-                    Source = sourceRoot,
-                    Target = targetRoot,
-                    State = MappingState.Confirmed,
-                    Reason = MappingReason.Root,
-                });
+                Map.SetRootAndManual(manual);
                 usedTargets.Add(targetRoot);
-
-                foreach (var pair in manual)
-                {
-                    if (pair.Key == null || pair.Key == sourceRoot) continue;
-                    Map.Set(new TransformMapping
-                    {
-                        Source = pair.Key,
-                        Target = pair.Value,
-                        State = MappingState.Manual,
-                        Reason = MappingReason.Manual,
-                    });
-                    if (pair.Value != null) usedTargets.Add(pair.Value);
-                }
+                usedTargets.UnionWith(Map.All
+                    .Where(m => m.State == MappingState.Manual && m.Target != null)
+                    .Select(m => m.Target));
 
                 // Exact matches claim their targets first so that the global rules below cannot steal them.
                 ExactPass(sourceRoot, targetRoot, true);
@@ -192,42 +174,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 BuildDictionaryBones();
 
                 ResolvePass(sourceRoot, targetRoot);
-                AddCandidatesToManualMappings();
-            }
-
-            /// <summary>
-            /// A manual mapping skips every automatic rule, which also left it without candidates: after
-            /// choosing "no counterpart" (or "keep as is") the menu had nothing to offer for changing one's
-            /// mind. So the automatic answer is worked out after all and kept as candidates only.
-            /// </summary>
-            private void AddCandidatesToManualMappings()
-            {
-                foreach (var pair in manual)
-                {
-                    var source = pair.Key;
-                    if (source == null || source == sourceRoot || !source.IsChildOf(sourceRoot)) continue;
-
-                    var manualMapping = Map.Get(source);
-                    if (manualMapping == null || manualMapping.State != MappingState.Manual) continue;
-
-                    // Runs last, so everything else has claimed its target and the answer does not disturb it
-                    Resolve(source, NearestMappedAncestorTarget(source));
-                    var automatic = Map.Get(source);
-
-                    var candidates = automatic.Candidates;
-                    if (automatic.State == MappingState.Confirmed && automatic.Target != null)
-                    {
-                        candidates = new List<MappingCandidate>
-                        {
-                            new MappingCandidate { Target = automatic.Target, Score = 1f },
-                        };
-                        // Confirming claimed the target; it is only on offer
-                        if (automatic.Target != manualMapping.Target) usedTargets.Remove(automatic.Target);
-                    }
-
-                    manualMapping.Candidates = candidates;
-                    Map.Set(manualMapping);
-                }
+                Map.OfferAutomaticAnswers(manual.Keys, source => Resolve(source, NearestMappedAncestorTarget(source)));
             }
 
             private Transform NearestMappedAncestorTarget(Transform source)
@@ -282,7 +229,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     var match = Hierarchy.FindChild(target, child.name, index);
                     if (match == null || !IsAvailable(child, match)) continue;
 
-                    Confirm(child, match, pathExact ? MappingReason.ExactPath : MappingReason.ChildOfMappedParent);
+                    Apply(TransformMapping.Confirmed(
+                        child, match, pathExact ? MappingReason.ExactPath : MappingReason.ChildOfMappedParent));
                     ExactPass(child, match, pathExact);
                 }
             }
@@ -301,9 +249,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                     if (!Map.Contains(child))
                     {
-                        Resolve(child, contextTarget);
-
-                        var resolved = Map.Get(child);
+                        var resolved = Resolve(child, contextTarget);
+                        Apply(resolved);
                         if (resolved.IsUsable) ExactPass(child, resolved.Target, false);
                     }
 
@@ -312,7 +259,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 }
             }
 
-            private void Resolve(Transform source, Transform contextTarget)
+            private TransformMapping Resolve(Transform source, Transform contextTarget)
             {
                 bool inArmature = SourceInArmature(source);
                 var contextChildren = Hierarchy.Children(contextTarget).Where(t => SameRegion(source, t)).ToList();
@@ -323,8 +270,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     .ToList();
                 if (sameNameChildren.Count == 1)
                 {
-                    Confirm(source, sameNameChildren[0], MappingReason.ChildOfMappedParent);
-                    return;
+                    return TransformMapping.Confirmed(source, sameNameChildren[0], MappingReason.ChildOfMappedParent);
                 }
 
                 // Child that was only renamed: "Armature" vs "Armature.1", "Hips" vs "Hips_v2".
@@ -334,8 +280,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (renamedChildren.Count == 1 && !usedTargets.Contains(renamedChildren[0]) &&
                     Hierarchy.Children(source.parent).Count(s => CanonicalSourceName(s.name) == canonical) == 1)
                 {
-                    Confirm(source, renamedChildren[0], MappingReason.RenamedChild);
-                    return;
+                    return TransformMapping.Confirmed(source, renamedChildren[0], MappingReason.RenamedChild);
                 }
 
                 // Humanoid bones defined by both Animators
@@ -343,8 +288,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     targetAnimatorBones.TryGetValue(animatorBone, out var animatorTarget) &&
                     IsAvailable(source, animatorTarget))
                 {
-                    Confirm(source, animatorTarget, MappingReason.HumanoidAnimator);
-                    return;
+                    return TransformMapping.Confirmed(source, animatorTarget, MappingReason.HumanoidAnimator);
                 }
 
                 // Humanoid bone synonym dictionary
@@ -356,14 +300,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                     if (unique && unused.Count == 1)
                     {
-                        Confirm(source, unused[0], MappingReason.HumanoidDictionary);
-                        return;
+                        return TransformMapping.Confirmed(source, unused[0], MappingReason.HumanoidDictionary);
                     }
 
                     if (unused.Count > 0)
                     {
-                        Suggest(source, unused, MappingReason.HumanoidDictionary);
-                        return;
+                        return Suggest(source, unused, MappingReason.HumanoidDictionary);
                     }
                 }
 
@@ -373,14 +315,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     var unused = sameName.Where(t => !usedTargets.Contains(t)).ToList();
                     if (unused.Count == 1 && sameName.Count == 1 && sourceNameCount[(inArmature, source.name)] == 1)
                     {
-                        Confirm(source, unused[0], MappingReason.UniqueName);
-                        return;
+                        return TransformMapping.Confirmed(source, unused[0], MappingReason.UniqueName);
                     }
 
                     if (unused.Count > 0)
                     {
-                        Suggest(source, unused, MappingReason.AmbiguousName);
-                        return;
+                        return Suggest(source, unused, MappingReason.AmbiguousName);
                     }
                 }
 
@@ -391,8 +331,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     var unused = affixTargets.Where(t => !usedTargets.Contains(t)).ToList();
                     if (unused.Count > 0)
                     {
-                        Suggest(source, unused, MappingReason.AffixStripped);
-                        return;
+                        return Suggest(source, unused, MappingReason.AffixStripped);
                     }
                 }
 
@@ -402,8 +341,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     targetDictionaryBones.TryGetValue(HumanBodyBones.Chest, out var chestTargets) &&
                     chestTargets.Count == 1)
                 {
-                    Suggest(source, chestTargets, MappingReason.UpperChestFallback);
-                    return;
+                    return Suggest(source, chestTargets, MappingReason.UpperChestFallback);
                 }
 
                 // Names that differ only by case or structural suffixes (.001, _01, (1), ...)
@@ -415,23 +353,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     .ToList();
                 if (normalizedTargets.Count > 0)
                 {
-                    Suggest(source, normalizedTargets, MappingReason.NormalizedName);
-                    return;
+                    return Suggest(source, normalizedTargets, MappingReason.NormalizedName);
                 }
 
                 // Fuzzy matches are listed as candidates only; nothing is preselected.
                 var fuzzyTargets = targetAll
                     .Where(t => IsAvailable(source, t))
-                    .Where(t => ObjectMatcher.HasCommonBaseName(t.name, source.name, FuzzyMinTokenLength))
-                    .ToList();
+                    .Where(t => ObjectMatcher.HasCommonBaseName(
+                        t.name, source.name, MappingCandidates.FuzzyMinTokenLength));
 
-                Map.Set(new TransformMapping
-                {
-                    Source = source,
-                    State = MappingState.Unmapped,
-                    Reason = MappingReason.None,
-                    Candidates = Rank(source, fuzzyTargets),
-                });
+                return TransformMapping.Unmapped(source, Rank(source, fuzzyTargets));
             }
 
             #endregion
@@ -527,45 +458,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             #region Helpers
 
-            private void Confirm(Transform source, Transform target, MappingReason reason)
+            /// <summary>Records a mapping. A confirmed one claims its target, so that no other source gets it.</summary>
+            private void Apply(TransformMapping mapping)
             {
-                Map.Set(new TransformMapping
-                {
-                    Source = source,
-                    Target = target,
-                    State = MappingState.Confirmed,
-                    Reason = reason,
-                });
-                usedTargets.Add(target);
+                Map.Set(mapping);
+                if (mapping.State == MappingState.Confirmed && mapping.Target != null) usedTargets.Add(mapping.Target);
             }
 
-            private void Suggest(Transform source, List<Transform> targets, MappingReason reason)
-            {
-                var candidates = Rank(source, targets);
-                Map.Set(new TransformMapping
-                {
-                    Source = source,
-                    Target = candidates[0].Target,
-                    State = MappingState.NeedsReview,
-                    Reason = reason,
-                    Candidates = candidates,
-                });
-            }
+            private TransformMapping Suggest(Transform source, IEnumerable<Transform> targets, MappingReason reason) =>
+                TransformMapping.Suggested(source, Rank(source, targets), reason);
 
-            private List<MappingCandidate> Rank(Transform source, List<Transform> targets)
-            {
-                string sourcePath = ObjectMatcher.GetRelativePathFromRoot(source, sourceRoot);
-                return targets
-                    .Select(t => new MappingCandidate
-                    {
-                        Target = t,
-                        Score = ObjectMatcher.PathSegmentScore(sourcePath, targetPaths[t]),
-                    })
-                    .OrderByDescending(c => c.Score)
-                    .ThenBy(c => ObjectMatcher.LevenshteinDistance(sourcePath, targetPaths[c.Target]))
-                    .Take(MaxCandidates)
-                    .ToList();
-            }
+            private List<MappingCandidate> Rank(Transform source, IEnumerable<Transform> targets) =>
+                MappingCandidates.Rank(ObjectMatcher.GetRelativePathFromRoot(source, sourceRoot), targets, targetPaths);
 
             #endregion
         }

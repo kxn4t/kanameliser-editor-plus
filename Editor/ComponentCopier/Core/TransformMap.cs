@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEngine;
 
 namespace Kanameliser.EditorPlus.ComponentCopier
@@ -59,6 +62,75 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>True when the mapping may be used without further user confirmation.</summary>
         public bool IsUsable =>
             Target != null && (State == MappingState.Confirmed || State == MappingState.Manual);
+
+        public static TransformMapping Confirmed(Transform source, Transform target, MappingReason reason) =>
+            new TransformMapping { Source = source, Target = target, State = MappingState.Confirmed, Reason = reason };
+
+        /// <summary>The best of the ranked candidates as a suggestion; unmapped when there is none.</summary>
+        public static TransformMapping Suggested(
+            Transform source, List<MappingCandidate> candidates, MappingReason reason)
+        {
+            if (candidates.Count == 0) return Unmapped(source, candidates);
+
+            return new TransformMapping
+            {
+                Source = source,
+                Target = candidates[0].Target,
+                State = MappingState.NeedsReview,
+                Reason = reason,
+                Candidates = candidates,
+            };
+        }
+
+        /// <param name="candidates">Weak candidates the user may pick from; nothing is preselected.</param>
+        public static TransformMapping Unmapped(Transform source, List<MappingCandidate> candidates) =>
+            new TransformMapping
+            {
+                Source = source,
+                State = MappingState.Unmapped,
+                Reason = MappingReason.None,
+                Candidates = candidates,
+            };
+
+        /// <param name="target">Null when the user said the source has no counterpart.</param>
+        public static TransformMapping Manual(Transform source, Transform target) =>
+            new TransformMapping { Source = source, Target = target, State = MappingState.Manual, Reason = MappingReason.Manual };
+    }
+
+    /// <summary>The candidates a mapping offers to choose from, shared by both mappers.</summary>
+    internal static class MappingCandidates
+    {
+        public const int MaxCount = 8;
+
+        /// <summary>Shortest name token two names must share to make a fuzzy candidate.</summary>
+        public const int FuzzyMinTokenLength = 3;
+
+        /// <summary>Best first: by how much of the path agrees, then by how close the paths are.</summary>
+        public static List<MappingCandidate> Rank(
+            string sourcePath, IEnumerable<Transform> targets, IReadOnlyDictionary<Transform, string> targetPaths)
+        {
+            return targets
+                .Select(t => new MappingCandidate
+                {
+                    Target = t,
+                    Score = ObjectMatcher.PathSegmentScore(sourcePath, targetPaths[t]),
+                })
+                .OrderByDescending(c => c.Score)
+                .ThenBy(c => ObjectMatcher.LevenshteinDistance(sourcePath, targetPaths[c.Target]))
+                .Take(MaxCount)
+                .ToList();
+        }
+
+        /// <summary>
+        /// The automatic answer for a source that the user mapped by hand: a confirmed target, or the candidates
+        /// it would have offered.
+        /// </summary>
+        public static List<MappingCandidate> FromAutomatic(TransformMapping automatic)
+        {
+            return automatic.State == MappingState.Confirmed && automatic.Target != null
+                ? new List<MappingCandidate> { new MappingCandidate { Target = automatic.Target, Score = 1f } }
+                : automatic.Candidates;
+        }
     }
 
     /// <summary>
@@ -105,6 +177,45 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public IEnumerable<TransformMapping> All => mappings.Values;
 
         public void Set(TransformMapping mapping) => mappings[mapping.Source] = mapping;
+
+        /// <summary>
+        /// Records the pair of roots and the user's mappings, which come before every automatic rule. Manual
+        /// mappings are part of every map, whatever object they are about: one map serves the source, another
+        /// the avatar around it, and the user's word holds in both.
+        /// </summary>
+        public void SetRootAndManual(IReadOnlyDictionary<Transform, Transform> manual)
+        {
+            Set(TransformMapping.Confirmed(SourceRoot, TargetRoot, MappingReason.Root));
+            if (manual == null) return;
+
+            foreach (var pair in manual)
+            {
+                if (pair.Key == null || pair.Key == SourceRoot) continue;
+                Set(TransformMapping.Manual(pair.Key, pair.Value));
+            }
+        }
+
+        /// <summary>
+        /// A manual mapping skips every automatic rule, which would leave it without candidates: after choosing
+        /// "no counterpart" (or "keep as is") the menu had nothing to offer for changing one's mind. So the
+        /// automatic answer is worked out after all and kept as candidates only.
+        /// </summary>
+        /// <param name="resolve">
+        /// The automatic answer for a source. Must not change the map: called last, when everything else has
+        /// claimed its target, the answer only fills the menu.
+        /// </param>
+        public void OfferAutomaticAnswers(IEnumerable<Transform> manualSources, Func<Transform, TransformMapping> resolve)
+        {
+            foreach (var source in manualSources)
+            {
+                if (source == null || source == SourceRoot || !source.IsChildOf(SourceRoot)) continue;
+
+                var mapping = Get(source);
+                if (mapping == null || mapping.State != MappingState.Manual) continue;
+
+                mapping.Candidates = MappingCandidates.FromAutomatic(resolve(source));
+            }
+        }
 
         public bool Contains(Transform source) => source != null && mappings.ContainsKey(source);
 
