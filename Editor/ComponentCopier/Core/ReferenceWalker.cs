@@ -108,9 +108,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             };
         }
 
-        public static bool IsInside(Transform transform, Transform root)
-        {
-            return transform != null && root != null && (transform == root || transform.IsChildOf(root));
-        }
+        /// <summary>A property path as it is shown: "m_Sources.Array.data[0]" reads "m_Sources[0]".</summary>
+        public static string DisplayName(string propertyPath) => propertyPath.Replace(".Array.data[", "[");
     }
 }

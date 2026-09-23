@@ -267,7 +267,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             /// </summary>
             public BlockReason RequestObject(Transform source)
             {
-                if (source == null || !ReferenceWalker.IsInside(source, plan.Map.SourceRoot))
+                if (source == null || !Hierarchy.IsInside(source, plan.Map.SourceRoot))
                     return BlockReason.None;
 
                 var missingRoot = FindMissingNestedPrefabRoot(source);
@@ -351,7 +351,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             private PlannedObject Register(PlannedObject planned)
             {
-                planned.SiblingOccurrence = NestedPrefabs.SiblingOccurrence(planned.Source);
+                planned.SiblingOccurrence = Hierarchy.SiblingOccurrence(planned.Source);
                 // A mirror copy creates "Skirt_L" as "Skirt_R"
                 planned.Name = plan.Mirror != null && SideName.TryFlip(planned.Source.name, out var flipped)
                     ? flipped
@@ -406,7 +406,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     var transform = ReferenceWalker.GetTransform(value);
                     if (transform == null || transform == plan.Map.SourceRoot) continue;
 
-                    if (!ReferenceWalker.IsInside(transform, plan.Map.SourceRoot))
+                    if (!Hierarchy.IsInside(transform, plan.Map.SourceRoot))
                     {
                         if (!EditorUtility.IsPersistent(value)) externalTransforms.Add(transform);
                         continue;
@@ -440,7 +440,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // Keyed like the selection, so that the caller recognizes them. A mirror copy can also bring a
                 // prefab from elsewhere in the avatar (the counterpart of a referenced object), keyed from the
                 // map. Such a key can read like one of the source, so the user's choices do not apply to it.
-                bool inKeyRoot = ReferenceWalker.IsInside(host.Source, plan.KeyRoot);
+                bool inKeyRoot = Hierarchy.IsInside(host.Source, plan.KeyRoot);
                 foreach (var entry in ComponentScanner.ScanObject(
                              host.Source, inKeyRoot ? plan.KeyRoot : plan.Map.SourceRoot))
                 {
@@ -494,11 +494,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         break;
 
                     case ExistingComponentPolicy.Replace:
-                        bool hasExisting = planned.TargetHost != null &&
-                                           ExactTypeComponents(planned.TargetHost, type).Any();
-                        planned.Action = hasExisting ? ComponentAction.Replace : ComponentAction.Add;
-                        if (hasExisting && replacedHosts.Add((planned.TargetHost, type)))
-                            plan.ComponentsToRemove.AddRange(ExactTypeComponents(planned.TargetHost, type));
+                        var replaced = ComponentScanner.ExactTypeComponents(planned.TargetHost, type);
+                        planned.Action = replaced.Count > 0 ? ComponentAction.Replace : ComponentAction.Add;
+                        if (replaced.Count > 0 && replacedHosts.Add((planned.TargetHost, type)))
+                            plan.ComponentsToRemove.AddRange(replaced);
                         break;
 
                     default:
@@ -579,7 +578,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var transform = ReferenceWalker.GetTransform(value);
             if (transform == null) return null;
 
-            if (!ReferenceWalker.IsInside(transform, plan.Map.SourceRoot))
+            if (!Hierarchy.IsInside(transform, plan.Map.SourceRoot))
             {
                 if (EditorUtility.IsPersistent(value)) return null;
                 return ClassifyExternalReference(plan, transform, value);
@@ -629,7 +628,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return new PlannedReference
             {
                 Kind = ReferenceKind.InternalUnresolved,
-                MissingDependency = ReferenceWalker.IsInside(transform, plan.KeyRoot)
+                MissingDependency = Hierarchy.IsInside(transform, plan.KeyRoot)
                     ? new ComponentKey(
                         ObjectMatcher.GetRelativePathFromRoot(transform, plan.KeyRoot),
                         component.GetType().FullName, index)
@@ -708,184 +707,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     }
                 }
             }
-        }
-
-        private static IEnumerable<Component> ExactTypeComponents(Transform host, Type type)
-        {
-            return host.GetComponents(type).Where(c => c != null && c.GetType() == type);
-        }
-    }
-
-    /// <summary>
-    /// Nested prefabs inside the source hierarchy, e.g. a prefab that bundles PhysBone settings, or a hat
-    /// placed below the Head bone.
-    /// </summary>
-    internal static class NestedPrefabs
-    {
-        /// <summary>
-        /// Returns the prefab asset when <paramref name="transform"/> is the root of a nested prefab instance
-        /// below <paramref name="sourceRoot"/>, otherwise null.
-        /// </summary>
-        public static GameObject GetPrefabAsset(Transform transform, Transform sourceRoot)
-        {
-            if (transform == null || transform == sourceRoot) return null;
-            if (!PrefabUtility.IsAnyPrefabInstanceRoot(transform.gameObject)) return null;
-
-            // Path based on purpose: GetCorrespondingObjectFromSource returns the object inside the outer
-            // prefab, and ...FromOriginalSource skips variants and returns their base.
-            string path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(transform.gameObject);
-            return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(path);
-        }
-
-        /// <summary>
-        /// Lists the nested prefabs of the source that have no counterpart in the target.
-        /// Only the outermost ones are returned: a prefab inside a missing prefab arrives with it.
-        /// </summary>
-        /// <param name="scope">
-        /// Limits the search to this part of the source (itself included), such as the source of a mirror copy
-        /// within the avatar that the map spans.
-        /// </param>
-        public static List<Transform> FindMissingRoots(TransformMap map, Transform scope = null)
-        {
-            var result = new List<Transform>();
-            if (scope == null || scope == map.SourceRoot) Visit(map.SourceRoot);
-            // Inside a missing prefab, the outer prefab is what arrives
-            else if (!AnyAncestorBelow(scope, map.SourceRoot, IsMissing)) VisitChild(scope);
-            return result;
-
-            bool IsMissing(Transform transform) =>
-                GetPrefabAsset(transform, map.SourceRoot) != null && !map.TryResolve(transform, out _);
-
-            void Visit(Transform parent)
-            {
-                foreach (Transform child in parent)
-                    VisitChild(child);
-            }
-
-            void VisitChild(Transform child)
-            {
-                if (IsMissing(child)) result.Add(child);
-                else Visit(child);
-            }
-        }
-
-        /// <summary>True when an object between <paramref name="transform"/> and <paramref name="root"/> matches.</summary>
-        public static bool AnyAncestorBelow(Transform transform, Transform root, Func<Transform, bool> predicate)
-        {
-            for (var ancestor = transform.parent; ancestor != null && ancestor != root; ancestor = ancestor.parent)
-            {
-                if (predicate(ancestor)) return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>Index of a transform among its same-name siblings.</summary>
-        public static int SiblingOccurrence(Transform transform)
-        {
-            if (transform.parent == null) return 0;
-
-            int occurrence = 0;
-            foreach (Transform sibling in transform.parent)
-            {
-                if (sibling == transform) break;
-                if (sibling.name == transform.name) occurrence++;
-            }
-
-            return occurrence;
-        }
-
-        /// <param name="skip">Children that do not count, such as the ones a copy has just created.</param>
-        public static Transform FindChild(Transform parent, string name, int occurrence, HashSet<Transform> skip = null)
-        {
-            int seen = 0;
-            foreach (Transform child in parent)
-            {
-                if (child.name != name || (skip != null && skip.Contains(child))) continue;
-                if (seen == occurrence) return child;
-                seen++;
-            }
-
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Empty objects of the source (anchors, organizing folders, leaf objects) that the target lacks.
-    /// No component ever asks for them, so the component list cannot bring them over.
-    /// </summary>
-    internal static class MissingObjects
-    {
-        /// <summary>True for an object that has nothing but its Transform.</summary>
-        public static bool IsEmpty(Transform transform)
-        {
-            // Missing scripts come back as null entries and still count as something
-            return transform != null && transform.GetComponents<Component>().Length == 1;
-        }
-
-        /// <summary>
-        /// True for an empty object that can be offered for creation. Bones are never created, nested prefabs
-        /// are listed on their own, and an unconfirmed match may well be the counterpart.
-        /// </summary>
-        public static bool IsMissingEmpty(Transform transform, TransformMap map)
-        {
-            if (!IsEmpty(transform) || map.TryResolve(transform, out _)) return false;
-            if (map.SourceSkeleton.IsBone(transform)) return false;
-            if (NestedPrefabs.GetPrefabAsset(transform, map.SourceRoot) != null) return false;
-
-            var mapping = map.Get(transform);
-            return mapping == null || mapping.State != MappingState.NeedsReview;
-        }
-
-        /// <summary>
-        /// Lists the missing empty objects. Only the topmost ones are returned: the empty objects below them
-        /// are created along with them.
-        /// </summary>
-        /// <param name="scope">
-        /// Limits the search to this part of the source (itself included), such as the source of a mirror copy
-        /// within the avatar that the map spans. The topmost missing objects within it are returned, even when
-        /// the objects above it are missing too: those are created on the way.
-        /// </param>
-        public static List<Transform> FindRoots(TransformMap map, Transform scope = null)
-        {
-            var result = new List<Transform>();
-            if (scope == null || scope == map.SourceRoot) Visit(map.SourceRoot, false);
-            else if (!NestedPrefabs.AnyAncestorBelow(scope, map.SourceRoot, IsOutOfReach)) VisitChild(scope, false);
-            return result;
-
-            // A missing prefab arrives as a whole, and nothing can be created below a missing bone
-            bool IsOutOfReach(Transform transform) =>
-                !map.TryResolve(transform, out _) &&
-                (NestedPrefabs.GetPrefabAsset(transform, map.SourceRoot) != null ||
-                 map.SourceSkeleton.IsBone(transform));
-
-            void Visit(Transform parent, bool parentComesAlong)
-            {
-                foreach (Transform child in parent)
-                    VisitChild(child, parentComesAlong);
-            }
-
-            void VisitChild(Transform child, bool parentComesAlong)
-            {
-                if (IsOutOfReach(child)) return;
-
-                bool missingEmpty = IsMissingEmpty(child, map);
-                if (missingEmpty && !parentComesAlong) result.Add(child);
-
-                Visit(child, missingEmpty);
-            }
-        }
-
-        /// <summary>Number of empty objects below <paramref name="root"/> that are created along with it.</summary>
-        public static int CountBelow(Transform root, TransformMap map)
-        {
-            int count = 0;
-            foreach (Transform child in root)
-            {
-                if (IsMissingEmpty(child, map)) count += 1 + CountBelow(child, map);
-            }
-
-            return count;
         }
     }
 }

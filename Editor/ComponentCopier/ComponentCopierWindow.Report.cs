@@ -93,13 +93,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             if (map == null) return;
 
-            var diffSettings = new CopySettings
-            {
-                ExistingPolicy = ExistingComponentPolicy.Overwrite,
-                CreateMissingObjects = settings.CreateMissingObjects,
-                RedirectExternalReferences = settings.RedirectExternalReferences,
-                UnresolvedPolicy = settings.UnresolvedPolicy,
-            };
+            var diffSettings = settings.Clone();
+            diffSettings.ExistingPolicy = ExistingComponentPolicy.Overwrite;
             var diffPlan = BuildPlan(diffSettings);
 
             detailReport = CopyVerifier.Verify(diffPlan);
@@ -328,7 +323,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             var foldout = CreateIssueFoldout(planned, "blocked", "componentCopier.action.blocked");
 
-            var reason = new Label(Localization.S("componentCopier.blocked." + Camel(planned.BlockReason)));
+            var reason = new Label(Localization.S(ComponentCopierStrings.BlockReasonKey(planned.BlockReason)));
             reason.AddToClassList("diff-property");
             foldout.Add(reason);
 
@@ -367,7 +362,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             var foldout = CreateIssueFoldout(planned, "heldBack", "componentCopier.diff.unresolvedReference");
 
-            var reason = new Label(Localization.S("componentCopier.blocked." + Camel(planned.BlockReason)));
+            var reason = new Label(Localization.S(ComponentCopierStrings.BlockReasonKey(planned.BlockReason)));
             reason.AddToClassList("diff-property");
             foldout.Add(reason);
 
@@ -383,7 +378,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             foreach (var propertyPath in planned.AxisDependentProperties.Take(MaxIssueLines))
             {
-                var line = new Label(propertyPath.Replace(".Array.data[", "["));
+                var line = new Label(ReferenceWalker.DisplayName(propertyPath));
                 line.AddToClassList("diff-property");
                 foldout.Add(line);
             }
@@ -409,7 +404,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             foreach (var reference in references.Take(MaxIssueLines))
             {
-                string name = reference.DisplayPath.Replace(".Array.data[", "[");
+                string name = ReferenceWalker.DisplayName(reference.DisplayPath);
                 var line = new Label($"{name}: {describe(reference)}");
                 line.AddToClassList("diff-property");
                 line.AddToClassList("diff-property--link");
@@ -426,7 +421,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             var id = (kind, planned.Entry.Key);
             var foldout = CreateReportFoldout(
-                Localization.S(kindKey), planned.Entry.Key.RelativePath, planned.Entry.Type.Name, "warning");
+                Localization.S(kindKey), planned.Entry.Key.RelativePath, planned.Entry.Type.Name, "diff-row--warning");
             foldout.value = expandedIssues.Contains(id);
             foldout.RegisterValueChangedCallback(evt =>
             {
@@ -437,13 +432,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return foldout;
         }
 
-        private static Foldout CreateReportFoldout(string kindText, string path, string typeName, string kindClass)
+        private static Foldout CreateReportFoldout(string kindText, string path, string typeName, string rowClass)
         {
             if (string.IsNullOrEmpty(path)) path = "/";
 
             var foldout = new Foldout { text = $"[{kindText}] {path} — {typeName}", value = false };
             foldout.AddToClassList("diff-row");
-            foldout.AddToClassList("diff-row--" + kindClass);
+            foldout.AddToClassList(rowClass);
             return foldout;
         }
 
@@ -476,7 +471,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             string name = value.name;
             var transform = ReferenceWalker.GetTransform(value);
             if (sourceRoot != null && transform != sourceRoot.transform &&
-                ReferenceWalker.IsInside(transform, sourceRoot.transform))
+                Hierarchy.IsInside(transform, sourceRoot.transform))
             {
                 name = ObjectMatcher.GetRelativePathFromRoot(transform, sourceRoot.transform);
             }
@@ -568,7 +563,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (map == null) return "";
 
             var from = sourceRoot != null && map.TryResolve(sourceRoot.transform, out var counterpart) &&
-                       ReferenceWalker.IsInside(transform, counterpart)
+                       Hierarchy.IsInside(transform, counterpart)
                 ? counterpart
                 : map.TargetRoot;
             string path = ObjectMatcher.GetRelativePathFromRoot(transform, from);
@@ -584,14 +579,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 ? diff.Planned.Entry.Key.RelativePath
                 : diff.Actual != null ? TargetPath(diff.Actual.transform) : "";
 
-            var foldout = CreateReportFoldout(Localization.S("componentCopier.diff." + Camel(diff.Kind)),
-                path, typeName, diff.Kind.ToString().ToLowerInvariant());
+            var foldout = CreateReportFoldout(Localization.S(ComponentCopierStrings.DiffKindKey(diff.Kind)),
+                path, typeName, ComponentCopierStrings.DiffRowClass(diff.Kind));
 
             foreach (var property in diff.Properties)
             {
                 var line = new Label($"{property.DisplayName}: {property.Expected} → {property.Actual}");
                 line.AddToClassList("diff-property");
-                line.AddToClassList("diff-property--" + property.Kind.ToString().ToLowerInvariant());
+                line.AddToClassList(ComponentCopierStrings.DiffPropertyClass(property.Kind));
                 foldout.Add(line);
             }
 

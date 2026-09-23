@@ -501,6 +501,9 @@ msgstr "No counterpart (manual)"
 msgid "componentCopier.mapping.note.unmapped"
 msgstr "Not found"
 
+msgid "componentCopier.mapping.reason.root"
+msgstr "Root"
+
 msgid "componentCopier.mapping.reason.exactPath"
 msgstr "Same path"
 

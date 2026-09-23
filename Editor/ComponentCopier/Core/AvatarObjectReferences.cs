@@ -73,7 +73,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             var transform = ReferenceWalker.GetTransform(target);
             if (transform == null) return "";
-            if (avatarRoot == null || !ReferenceWalker.IsInside(transform, avatarRoot)) return null;
+            if (avatarRoot == null || !Hierarchy.IsInside(transform, avatarRoot)) return null;
             if (transform == avatarRoot) return AvatarRootPath;
 
             var segments = new List<string>();

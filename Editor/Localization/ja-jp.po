@@ -500,6 +500,9 @@ msgstr "対応先なし（手動）"
 msgid "componentCopier.mapping.note.unmapped"
 msgstr "見つかりません"
 
+msgid "componentCopier.mapping.reason.root"
+msgstr "ルート"
+
 msgid "componentCopier.mapping.reason.exactPath"
 msgstr "同じパス"
 

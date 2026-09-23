@@ -1,5 +1,4 @@
 using System;
-using System.Text.RegularExpressions;
 
 namespace Kanameliser.EditorPlus.ComponentCopier
 {
@@ -22,7 +21,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private const char LeftKanji = '左';
         private const char RightKanji = '右';
 
-        private static readonly Regex RenameSuffix = new Regex(@"(\.\d+|\s\(\d+\))$", RegexOptions.Compiled);
         private static readonly string[] Words = { "left", "Left", "LEFT", "right", "Right", "RIGHT" };
 
         public static Side GetSide(string name) => TryFlip(name, out _, out var side) ? side : Side.None;
@@ -38,13 +36,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             side = Side.None;
             if (string.IsNullOrEmpty(name)) return false;
 
-            string suffix = "";
-            var match = RenameSuffix.Match(name);
-            if (match.Success && match.Index > 0)
-            {
-                suffix = match.Value;
-                name = name.Substring(0, match.Index);
-            }
+            RenameSuffix.TrySplit(name, out name, out var suffix);
 
             if (!TryFlipEnd(name, out var result, out side) &&
                 !TryFlipStart(name, out result, out side) &&

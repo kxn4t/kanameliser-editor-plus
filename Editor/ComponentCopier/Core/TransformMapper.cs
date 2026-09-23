@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEngine;
 
@@ -23,11 +22,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private const int MaxCandidates = 8;
         private const int FuzzyMinTokenLength = 3;
 
-        // Suffixes added when an object is renamed to avoid a clash: "Armature.1" (Modular Avatar setups),
-        // "Hips.001" (Blender), "Collider (1)" (Unity). "_01" is deliberately not included: it usually
-        // numbers the links of a chain and is part of the real name.
-        private static readonly Regex RenameSuffix = new Regex(@"(\.\d+|\s\(\d+\))$", RegexOptions.Compiled);
-
         /// <param name="manual">
         /// User-specified mappings. They take priority over every automatic rule.
         /// A null value marks the source as having no counterpart.
@@ -47,18 +41,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var context = new Context(sourceRoot, targetRoot, manual, scope);
             context.Run();
             return context.Map;
-        }
-
-        internal static string StripRenameSuffix(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return name ?? "";
-            string stripped = RenameSuffix.Replace(name, "");
-            return stripped.Length > 0 ? stripped : name;
-        }
-
-        internal static List<Transform> Descendants(Transform root)
-        {
-            return root.GetComponentsInChildren<Transform>(true).Where(t => t != root).ToList();
         }
 
         /// <summary>
@@ -91,7 +73,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (byName == null)
                 {
                     byName = new Dictionary<string, Transform>();
-                    foreach (var transform in Descendants(root))
+                    foreach (var transform in Hierarchy.Descendants(root))
                     {
                         if (!byName.ContainsKey(transform.name)) byName[transform.name] = transform;
                     }
@@ -153,8 +135,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 Map = new TransformMap(sourceRoot, targetRoot);
                 separateRegions = Map.SourceSkeleton.HasSkeleton && Map.TargetSkeleton.HasSkeleton;
 
-                sourceAll = Descendants(sourceRoot);
-                targetAll = Descendants(targetRoot);
+                sourceAll = Hierarchy.Descendants(sourceRoot);
+                targetAll = Hierarchy.Descendants(targetRoot);
 
                 foreach (var target in targetAll)
                 {
@@ -297,7 +279,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         continue;
                     }
 
-                    var match = FindChildByNameAndOccurrence(target, child.name, index);
+                    var match = Hierarchy.FindChild(target, child.name, index);
                     if (match == null || !IsAvailable(child, match)) continue;
 
                     Confirm(child, match, pathExact ? MappingReason.ExactPath : MappingReason.ChildOfMappedParent);
@@ -333,7 +315,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             private void Resolve(Transform source, Transform contextTarget)
             {
                 bool inArmature = SourceInArmature(source);
-                var contextChildren = Children(contextTarget).Where(t => SameRegion(source, t)).ToList();
+                var contextChildren = Hierarchy.Children(contextTarget).Where(t => SameRegion(source, t)).ToList();
 
                 // Same-name child of the nearest mapped ancestor (covers extra intermediate objects on the source side)
                 var sameNameChildren = contextChildren
@@ -350,7 +332,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 string canonical = CanonicalSourceName(source.name);
                 var renamedChildren = contextChildren.Where(t => CanonicalTargetName(t.name) == canonical).ToList();
                 if (renamedChildren.Count == 1 && !usedTargets.Contains(renamedChildren[0]) &&
-                    Children(source.parent).Count(s => CanonicalSourceName(s.name) == canonical) == 1)
+                    Hierarchy.Children(source.parent).Count(s => CanonicalSourceName(s.name) == canonical) == 1)
                 {
                     Confirm(source, renamedChildren[0], MappingReason.RenamedChild);
                     return;
@@ -458,15 +440,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             private string CanonicalSourceName(string name)
             {
-                string stripped = StripRenameSuffix(name);
-                if (affixRule != null && !affixRule.OnTarget) stripped = StripRenameSuffix(affixRule.Strip(stripped));
+                string stripped = RenameSuffix.Strip(name);
+                if (affixRule != null && !affixRule.OnTarget) stripped = RenameSuffix.Strip(affixRule.Strip(stripped));
                 return stripped;
             }
 
             private string CanonicalTargetName(string name)
             {
-                string stripped = StripRenameSuffix(name);
-                if (affixRule != null && affixRule.OnTarget) stripped = StripRenameSuffix(affixRule.Strip(stripped));
+                string stripped = RenameSuffix.Strip(name);
+                if (affixRule != null && affixRule.OnTarget) stripped = RenameSuffix.Strip(affixRule.Strip(stripped));
                 return stripped;
             }
 
@@ -501,13 +483,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 var sourceNames = sourceAll
                     .Where(s => !Map.Contains(s) && (!separateRegions || SourceInArmature(s)))
-                    .Select(s => StripRenameSuffix(s.name))
+                    .Select(s => RenameSuffix.Strip(s.name))
                     .Where(n => n.Length >= MinAffixBaseNameLength)
                     .Distinct()
                     .ToList();
                 var targetNames = targetAll
                     .Where(t => !usedTargets.Contains(t) && (!separateRegions || TargetInArmature(t)))
-                    .Select(t => StripRenameSuffix(t.name))
+                    .Select(t => RenameSuffix.Strip(t.name))
                     .Where(n => n.Length >= MinAffixBaseNameLength)
                     .Distinct()
                     .ToList();
@@ -585,26 +567,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     .ToList();
             }
 
-            private static IEnumerable<Transform> Children(Transform parent)
-            {
-                if (parent == null) yield break;
-                foreach (Transform child in parent)
-                    yield return child;
-            }
-
-            private static Transform FindChildByNameAndOccurrence(Transform parent, string name, int occurrence)
-            {
-                int seen = 0;
-                foreach (Transform child in parent)
-                {
-                    if (child.name != name) continue;
-                    if (seen == occurrence) return child;
-                    seen++;
-                }
-
-                return null;
-            }
-
             #endregion
         }
 
@@ -640,73 +602,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 string stripped = Strip(sourceName);
                 return stripped == sourceName ? null : stripped;
             }
-        }
-    }
-
-    /// <summary>
-    /// The surroundings of a copied hierarchy: usually the avatar an outfit sits on. Components of the outfit
-    /// refer to it (a bone a constraint follows, a collider on the body), and when the outfit is copied to
-    /// another avatar those references should follow.
-    /// </summary>
-    internal static class ExternalContext
-    {
-        // Compared by name because the SDK is not referenced from this assembly
-        private static readonly string[] AvatarRootTypeNames =
-        {
-            "VRC.SDK3.Avatars.Components.VRCAvatarDescriptor",
-            "nadena.dev.ndmf.runtime.components.NDMFAvatarRoot",
-        };
-
-        /// <summary>True for an object that carries an avatar root marker (the VRChat avatar descriptor).</summary>
-        public static bool IsAvatarRoot(Transform transform)
-        {
-            return transform != null && transform.GetComponents<Component>()
-                .Any(c => c != null && Array.IndexOf(AvatarRootTypeNames, c.GetType().FullName) >= 0);
-        }
-
-        /// <summary>
-        /// Returns the avatar root above <paramref name="root"/>, or else its topmost ancestor.
-        /// Null when <paramref name="root"/> has no parent, i.e. there are no surroundings to speak of.
-        /// </summary>
-        public static Transform FindRoot(Transform root)
-        {
-            if (root == null || root.parent == null) return null;
-
-            for (var current = root.parent; current != null; current = current.parent)
-            {
-                if (IsAvatarRoot(current)) return current;
-            }
-
-            return root.root;
-        }
-
-        /// <summary>
-        /// False when there is nothing to redirect to: one side has no surroundings, or both share them (two
-        /// outfits on the same avatar), in which case the references are right as they are.
-        /// </summary>
-        public static bool CanRedirect(Transform sourceRoot, Transform targetRoot)
-        {
-            var sourceContext = FindRoot(sourceRoot);
-            var targetContext = FindRoot(targetRoot);
-            return sourceContext != null && targetContext != null && sourceContext != targetContext;
-        }
-
-        /// <summary>
-        /// Maps the surroundings of the source to the surroundings of the target, resolving only the referenced
-        /// objects. Returns null when <see cref="CanRedirect"/> says no, or none of the objects is part of the
-        /// source's surroundings.
-        /// </summary>
-        public static TransformMap BuildMap(
-            Transform sourceRoot, Transform targetRoot, IEnumerable<Transform> referenced,
-            IReadOnlyDictionary<Transform, Transform> manual = null)
-        {
-            if (!CanRedirect(sourceRoot, targetRoot)) return null;
-
-            var sourceContext = FindRoot(sourceRoot);
-            var targetContext = FindRoot(targetRoot);
-
-            var scope = referenced.Where(t => ReferenceWalker.IsInside(t, sourceContext)).ToList();
-            return scope.Count > 0 ? TransformMapper.Build(sourceContext, targetContext, manual, scope) : null;
         }
     }
 }

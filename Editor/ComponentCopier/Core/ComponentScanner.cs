@@ -239,36 +239,33 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         }
 
         /// <summary>
-        /// Returns the index-th component of the given type on a GameObject, or null.
-        /// Matches the exact type so that subclasses do not shift the index.
+        /// The components of exactly the given type on a GameObject, in order; empty for a null host.
+        /// Subclasses are left out, so that they do not shift the indices of <see cref="ComponentKey"/>.
         /// </summary>
-        public static Component FindByTypeAndIndex(Transform host, Type type, int index)
+        public static List<Component> ExactTypeComponents(Transform host, Type type)
         {
-            if (host == null) return null;
+            var result = new List<Component>();
+            if (host == null) return result;
 
-            int seen = 0;
             foreach (var component in host.GetComponents(type))
             {
-                if (component == null || component.GetType() != type) continue;
-                if (seen == index) return component;
-                seen++;
+                if (component != null && component.GetType() == type) result.Add(component);
             }
 
-            return null;
+            return result;
+        }
+
+        /// <summary>Returns the index-th component of exactly the given type on a GameObject, or null.</summary>
+        public static Component FindByTypeAndIndex(Transform host, Type type, int index)
+        {
+            var components = ExactTypeComponents(host, type);
+            return index >= 0 && index < components.Count ? components[index] : null;
         }
 
         /// <summary>Index of a component among same-type components on its GameObject.</summary>
         public static int IndexAmongSameType(Component component)
         {
-            var type = component.GetType();
-            int index = 0;
-            foreach (var other in component.GetComponents(type))
-            {
-                if (other == component) return index;
-                if (other != null && other.GetType() == type) index++;
-            }
-
-            return 0;
+            return Math.Max(0, ExactTypeComponents(component.transform, component.GetType()).IndexOf(component));
         }
     }
 }

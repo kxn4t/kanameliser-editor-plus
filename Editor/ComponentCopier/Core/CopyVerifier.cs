@@ -25,6 +25,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public DiffKind Kind;
         public string Expected;
         public string Actual;
+
+        /// <summary>
+        /// For an <see cref="DiffKind.UnresolvedReference"/>: the target holds no value, which is what writing
+        /// the plan leaves there as well. <see cref="Actual"/> is only meant for display.
+        /// </summary>
+        public bool AlreadyCleared;
     }
 
     internal sealed class ComponentDiff
@@ -85,24 +91,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return diff;
             }
 
-            var references = new Dictionary<string, PlannedReference>();
-            var values = new Dictionary<string, PlannedValue>();
-            foreach (var value in planned.Values) values[value.PropertyPath] = value;
-            var pathReferences = new Dictionary<string, PlannedReference>();
-            foreach (var reference in planned.References)
+            foreach (var propertyDiff in PropertyDiffs(planned, actual))
             {
-                references[reference.PropertyPath] = reference;
-                if (reference.RewritesPath) pathReferences[reference.PathPropertyPath] = reference;
-            }
-
-            using var sourceObject = new SerializedObject(planned.Entry.Component);
-            using var actualObject = new SerializedObject(actual);
-
-            foreach (var sourceProperty in ReferenceWalker.Leaves(sourceObject))
-            {
-                var propertyDiff = CompareProperty(sourceProperty, actualObject, references, pathReferences, values);
-                if (propertyDiff == null) continue;
-
                 if (diff.Properties.Count >= MaxPropertyDiffs)
                 {
                     diff.Truncated = true;
@@ -137,8 +127,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var type = planned.Entry.Type;
             int leftOut = plan.Components.Count(
                 c => c.LeftOut && c.HostToCreate == planned.HostToCreate && c.Entry.Type == type);
-            int expected = ExactTypeComponents(planned.Entry.Host, type).Count - leftOut;
-            var actual = ExactTypeComponents(host, type);
+            int expected = ComponentScanner.ExactTypeComponents(planned.Entry.Host, type).Count - leftOut;
+            var actual = ComponentScanner.ExactTypeComponents(host, type);
 
             if (actual.Count > expected)
             {
@@ -149,9 +139,30 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return diff;
         }
 
-        private static List<Component> ExactTypeComponents(Transform host, Type type)
+        /// <summary>
+        /// The properties that writing the plan would change, in serialization order. Lazy, so that a caller
+        /// can stop at the first one that matters.
+        /// </summary>
+        private static IEnumerable<PropertyDiff> PropertyDiffs(PlannedComponent planned, Component actual)
         {
-            return host.GetComponents(type).Where(c => c != null && c.GetType() == type).ToList();
+            var references = new Dictionary<string, PlannedReference>();
+            var values = new Dictionary<string, PlannedValue>();
+            foreach (var value in planned.Values) values[value.PropertyPath] = value;
+            var pathReferences = new Dictionary<string, PlannedReference>();
+            foreach (var reference in planned.References)
+            {
+                references[reference.PropertyPath] = reference;
+                if (reference.RewritesPath) pathReferences[reference.PathPropertyPath] = reference;
+            }
+
+            using var sourceObject = new SerializedObject(planned.Entry.Component);
+            using var actualObject = new SerializedObject(actual);
+
+            foreach (var sourceProperty in ReferenceWalker.Leaves(sourceObject))
+            {
+                var propertyDiff = CompareProperty(sourceProperty, actualObject, references, pathReferences, values);
+                if (propertyDiff != null) yield return propertyDiff;
+            }
         }
 
         /// <summary>
@@ -160,8 +171,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         public static bool IsIdentical(PlannedComponent planned, Component existing)
         {
-            var diff = Compare(planned, existing);
-            return diff.Properties.All(p => p.Kind == DiffKind.UnresolvedReference && p.Actual == NoneText);
+            // Not through Compare: it cuts its list off, and a real difference may hide behind the recorded ones
+            return existing != null &&
+                   PropertyDiffs(planned, existing).All(p => p.Kind == DiffKind.UnresolvedReference && p.AlreadyCleared);
         }
 
         internal const string NoneText = "None";
@@ -210,8 +222,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 {
                     if (reference.Kind == ReferenceKind.InternalUnresolved)
                     {
-                        return Diff(sourceProperty, DiffKind.UnresolvedReference,
+                        var unresolved = Diff(sourceProperty, DiffKind.UnresolvedReference,
                             ObjectToString(reference.SourceValue), ObjectToString(actualValue));
+                        unresolved.AlreadyCleared = actualValue == null;
+                        return unresolved;
                     }
 
                     var expected = reference.Expected.Resolve();
@@ -240,7 +254,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return new PropertyDiff
             {
                 PropertyPath = property.propertyPath,
-                DisplayName = property.propertyPath.Replace(".Array.data[", "["),
+                DisplayName = ReferenceWalker.DisplayName(property.propertyPath),
                 Kind = kind,
                 Expected = expected,
                 Actual = actual,
@@ -284,16 +298,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 foreach (var type in types)
                 {
-                    int index = 0;
-                    foreach (var component in transform.GetComponents(type))
+                    var components = ComponentScanner.ExactTypeComponents(transform, type);
+                    for (int index = 0; index < components.Count; index++)
                     {
-                        if (component == null || component.GetType() != type) continue;
-                        int currentIndex = index++;
-
+                        var component = components[index];
                         if (accounted.Contains(component) || removed.Contains(component)) continue;
 
                         sourceByTarget.TryGetValue(transform, out var source);
-                        if (ComponentScanner.FindByTypeAndIndex(source, type, currentIndex) != null) continue;
+                        if (ComponentScanner.FindByTypeAndIndex(source, type, index) != null) continue;
 
                         yield return component;
                     }

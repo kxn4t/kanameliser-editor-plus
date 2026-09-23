@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Component Copier** — Copying onto a Prefab instance no longer leaves overrides on values that end up equal to the Prefab, such as a reference redirected to the object the Prefab already points at.
+- **Component Copier** — A reference to the avatar root itself (e.g. a constraint that follows the avatar) no longer shows a raw localization key in the Mapping section.
+- **Component Copier** — An existing component is no longer skipped as identical while a reference that the copy clears still points at an object named "None", or while a difference comes after 50 or more such references.
 
 ---
 
@@ -37,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 修正
 
 - **Component Copier** — Prefab インスタンスへコピーしたとき、Prefab と同じ値に戻った項目（Prefab がもともと指しているオブジェクトへ置き換えた参照など）がオーバーライドとして残らないようにしました。
+- **Component Copier** — アバターのルート自体への参照（アバターに追従する Constraint など）があると、対応付けセクションに翻訳前のキーがそのまま表示される問題を修正しました。
+- **Component Copier** — コピーで空になる参照が「None」という名前のオブジェクトを指しているときや、そうした参照が 50 個以上あり、その後ろに差分があるときに、既存のコンポーネントが「同一」としてスキップされる問題を修正しました。
 
 ## [1.1.0] - 2026-09-22
 

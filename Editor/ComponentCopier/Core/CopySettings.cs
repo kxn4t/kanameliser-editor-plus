@@ -42,17 +42,26 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         public bool RedirectExternalReferences = true;
 
+        /// <summary>
+        /// An independent copy, for a variation of the settings (the diff check always compares as Overwrite).
+        /// Copies every field, so a new setting cannot be forgotten.
+        /// </summary>
+        public CopySettings Clone() => (CopySettings)MemberwiseClone();
+
         public static CopySettings Load()
         {
+            // Unsaved settings keep the defaults of the field initializers
+            var defaults = new CopySettings();
             return new CopySettings
             {
                 ExistingPolicy = (ExistingComponentPolicy)EditorPrefs.GetInt(
-                    PrefsPrefix + nameof(ExistingPolicy), (int)ExistingComponentPolicy.Overwrite),
-                CreateMissingObjects = EditorPrefs.GetBool(PrefsPrefix + nameof(CreateMissingObjects), true),
+                    PrefsPrefix + nameof(ExistingPolicy), (int)defaults.ExistingPolicy),
+                CreateMissingObjects = EditorPrefs.GetBool(
+                    PrefsPrefix + nameof(CreateMissingObjects), defaults.CreateMissingObjects),
                 UnresolvedPolicy = (UnresolvedReferencePolicy)EditorPrefs.GetInt(
-                    PrefsPrefix + nameof(UnresolvedPolicy), (int)UnresolvedReferencePolicy.Clear),
+                    PrefsPrefix + nameof(UnresolvedPolicy), (int)defaults.UnresolvedPolicy),
                 RedirectExternalReferences = EditorPrefs.GetBool(
-                    PrefsPrefix + nameof(RedirectExternalReferences), true),
+                    PrefsPrefix + nameof(RedirectExternalReferences), defaults.RedirectExternalReferences),
             };
         }
 
