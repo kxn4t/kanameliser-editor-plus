@@ -70,8 +70,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 if (planned.Result == null) continue;
 
+                WriteValues(planned);
                 RedirectReferences(planned);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(planned.Result);
+                RevertOverridesEqualToPrefab(planned.Result);
             }
 
             RemoveLeftOut(plan, leftOut, result);
@@ -82,6 +84,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private static void CreateObjects(CopyPlan plan, ExecutionResult result)
         {
+            // Objects inside an instantiated prefab carry the names of the asset, and a mirror copy renames
+            // them. Only once all of them are found: a sibling renamed early ("Chain_L" → "Chain_R") would be
+            // found again under its new name.
+            var renames = new List<(Transform transform, string name)>();
+            // Objects made here are not the ones that came with a prefab, whatever their name
+            var madeHere = new HashSet<Transform>();
+
             // ObjectsToCreate is ordered parents first
             foreach (var planned in plan.ObjectsToCreate)
             {
@@ -90,17 +99,20 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 // Objects below an instantiated prefab are usually there already
                 Transform transform = planned.PrefabRoot != null
-                    ? NestedPrefabs.FindChild(parent, planned.Source.name, planned.SiblingOccurrence)
+                    ? NestedPrefabs.FindChild(parent, planned.Source.name, planned.SiblingOccurrence, madeHere)
                     : null;
+
+                if (transform != null && transform.name != planned.Name) renames.Add((transform, planned.Name));
 
                 if (transform == null && planned.PrefabAsset != null)
                 {
                     var instance = PrefabUtility.InstantiatePrefab(planned.PrefabAsset, parent) as GameObject;
                     if (instance != null)
                     {
-                        instance.name = planned.Source.name;
+                        instance.name = planned.Name;
                         Undo.RegisterCreatedObjectUndo(instance, UndoGroupName);
                         transform = instance.transform;
+                        madeHere.Add(transform);
                         result.InstantiatedPrefabs++;
                     }
                 }
@@ -114,22 +126,30 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 if (transform == null)
                 {
-                    var gameObject = new GameObject(planned.Source.name);
+                    var gameObject = new GameObject(planned.Name);
                     Undo.RegisterCreatedObjectUndo(gameObject, UndoGroupName);
                     transform = gameObject.transform;
                     transform.SetParent(parent, false);
+                    madeHere.Add(transform);
                     result.CreatedObjects++;
                 }
 
-                CopyObjectState(planned.Source, transform);
+                CopyObjectState(planned.Source, transform, plan.Mirror);
                 planned.Created = transform;
+            }
+
+            // Recorded again: CopyObjectState recorded the old name, and the new one would be lost on reload
+            foreach (var (transform, name) in renames)
+            {
+                transform.name = name;
+                PrefabUtility.RecordPrefabInstancePropertyModifications(transform.gameObject);
             }
         }
 
         /// <summary>
         /// Transforms are never copied with CopySerialized: that would also copy the parent and child links.
         /// </summary>
-        private static void CopyObjectState(Transform source, Transform target)
+        private static void CopyObjectState(Transform source, Transform target, MirrorContext mirror)
         {
             var sourceObject = source.gameObject;
             var targetObject = target.gameObject;
@@ -138,9 +158,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             targetObject.tag = sourceObject.tag;
             targetObject.SetActive(sourceObject.activeSelf);
 
-            target.localPosition = source.localPosition;
-            target.localRotation = source.localRotation;
-            target.localScale = source.localScale;
+            if (mirror != null)
+            {
+                // The mirror image of the pose, whatever the frame of the new parent looks like. The size is
+                // kept in world space too, which is what the plan assumed (MirrorContext.MirroredFrame).
+                mirror.Place(target, source);
+                target.localScale = WorldSizeScale(source, target.parent);
+            }
+            else
+            {
+                target.localPosition = source.localPosition;
+                target.localRotation = source.localRotation;
+                target.localScale = source.localScale;
+            }
 
             // Values equal to the prefab asset do not become overrides
             PrefabUtility.RecordPrefabInstancePropertyModifications(targetObject);
@@ -265,6 +295,38 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return Undo.AddComponent(host.gameObject, planned.Entry.Type);
         }
 
+        /// <summary>
+        /// The local scale that gives the source's size below <paramref name="parent"/>: the source scale where
+        /// the parents are equally scaled, as on the two sides of an avatar.
+        /// </summary>
+        private static Vector3 WorldSizeScale(Transform source, Transform parent)
+        {
+            var scale = source.localScale;
+            if (source.parent == null || parent == null) return scale;
+
+            var from = source.parent.lossyScale;
+            var to = parent.lossyScale;
+            return new Vector3(Rescale(scale.x, from.x, to.x), Rescale(scale.y, from.y, to.y), Rescale(scale.z, from.z, to.z));
+        }
+
+        private static float Rescale(float scale, float from, float to) =>
+            Mathf.Approximately(to, 0f) || Mathf.Approximately(from, to) ? scale : scale * from / to;
+
+        private static void WriteValues(PlannedComponent planned)
+        {
+            if (planned.Values.Count == 0) return;
+
+            using var serializedObject = new SerializedObject(planned.Result);
+            foreach (var value in planned.Values)
+            {
+                var property = serializedObject.FindProperty(value.PropertyPath);
+                if (property != null) value.Write(property);
+            }
+
+            // Registered for Undo in pass 1, like the references
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         private static void RedirectReferences(PlannedComponent planned)
         {
             if (planned.References.Count == 0) return;
@@ -291,6 +353,62 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             // The component was already registered for Undo in pass 1
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// A property of a prefab instance that is written through a SerializedObject stays an override even
+        /// when it ends up with the value of the prefab. A redirected reference usually does: the source's
+        /// "Upper_arm.L" is copied first, then replaced by the "Upper_arm.R" the prefab has anyway. Such
+        /// overrides are reverted, so that only real changes show up as overrides.
+        /// </summary>
+        private static void RevertOverridesEqualToPrefab(Component component)
+        {
+            if (!PrefabUtility.IsPartOfPrefabInstance(component)) return;
+
+            // A component added to the instance has no counterpart, and no overrides of its own
+            var original = PrefabUtility.GetCorrespondingObjectFromSource(component);
+            if (original == null) return;
+            string assetPath = AssetDatabase.GetAssetPath(original);
+            var instanceRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(component);
+
+            using var instance = new SerializedObject(component);
+            using var prefab = new SerializedObject(original);
+
+            var unchanged = new List<string>();
+            foreach (var property in ReferenceWalker.Leaves(instance))
+            {
+                if (!property.prefabOverride) continue;
+
+                var prefabProperty = prefab.FindProperty(property.propertyPath);
+                if (prefabProperty != null && EqualsPrefabValue(property, prefabProperty, assetPath, instanceRoot))
+                    unchanged.Add(property.propertyPath);
+            }
+
+            foreach (var path in unchanged)
+            {
+                // Each revert changes the component under the SerializedObject
+                instance.Update();
+                var property = instance.FindProperty(path);
+                if (property != null) PrefabUtility.RevertPropertyOverride(property, InteractionMode.UserAction);
+            }
+        }
+
+        /// <param name="instanceRoot">The outermost prefab instance the property's component belongs to.</param>
+        private static bool EqualsPrefabValue(
+            SerializedProperty property, SerializedProperty prefabProperty, string assetPath, GameObject instanceRoot)
+        {
+            if (property.propertyType != SerializedPropertyType.ObjectReference)
+                return SerializedProperty.DataEquals(property, prefabProperty);
+
+            var value = property.objectReferenceValue;
+            var prefabValue = prefabProperty.objectReferenceValue;
+            if (value == null || prefabValue == null) return value == null && prefabValue == null;
+
+            // The instance points at objects of the instance where the prefab points at its own. Another
+            // instance of the same prefab has the same corresponding objects, but pointing there is a change.
+            if (!PrefabUtility.IsPartOfPrefabInstance(value)) return value == prefabValue;
+            if (PrefabUtility.GetOutermostPrefabInstanceRoot(value) != instanceRoot) return false;
+            return PrefabUtility.GetCorrespondingObjectFromSourceAtPath(value, assetPath) == prefabValue;
         }
     }
 }

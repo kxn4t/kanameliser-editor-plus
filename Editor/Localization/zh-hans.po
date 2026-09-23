@@ -323,6 +323,43 @@ msgstr "重新扫描复制源和复制目标"
 msgid "componentCopier.swap:tooltip"
 msgstr "交换复制源和复制目标"
 
+msgid "componentCopier.mirror"
+msgstr "复制到另一侧"
+
+msgid "componentCopier.mirror:tooltip"
+msgstr "将复制源一侧的组件复制到同一层级的另一侧。对象按名称中的左右标记（_L / _R、Left / Right、左 / 右）或 Humanoid 骨骼对应，位置和旋转以 Avatar 的中心为基准左右翻转。"
+
+msgid "componentCopier.mirror.leftToRight"
+msgstr "L → R"
+
+msgid "componentCopier.mirror.rightToLeft"
+msgstr "R → L"
+
+#, csharp-format
+msgid "componentCopier.mirror.otherSide"
+msgstr "另一侧（{0}）"
+
+msgid "componentCopier.side.left"
+msgstr "左"
+
+msgid "componentCopier.side.right"
+msgstr "右"
+
+#, csharp-format
+msgid "componentCopier.info.noSideComponents"
+msgstr "{0}侧没有组件。左右按对象或其父对象名称中的左右标记（_L / _R、Left / Right、左 / 右）或 Humanoid 骨骼判定。中线上（Hips、Head 等）的组件没有另一侧，因此不会列出。"
+
+#, csharp-format
+msgid "componentCopier.report.mirror"
+msgstr "{0} 个值将调整为另一侧的值（位置和旋转以 {1} 的中心为基准左右翻转，标签和参数名等则互换左右）。"
+
+#, csharp-format
+msgid "componentCopier.report.axisDependent"
+msgstr "{0} 个组件包含依赖骨骼轴向的值（PhysBone 的 Limit Rotation、Constraint 的偏移和冻结的轴等）。这些值按原样复制，请在复制后于另一侧确认。"
+
+msgid "componentCopier.report.kind.axisDependent"
+msgstr "检查轴向"
+
 msgid "componentCopier.warning.sameObject"
 msgstr "复制源和复制目标是同一个对象。"
 
@@ -331,6 +368,9 @@ msgstr "复制源和复制目标不能互相包含。"
 
 msgid "componentCopier.warning.targetIsAsset"
 msgstr "复制目标是资源。对资源的应用无法 Undo，因此只能执行差异检查。要复制请先放置到场景中。"
+
+msgid "componentCopier.warning.mirrorSourceIsAsset"
+msgstr "复制源是资源。「复制到另一侧」会写入复制源本身，而对资源的应用无法 Undo，因此只能执行差异检查。要复制请先放置到场景中。"
 
 msgid "componentCopier.warning.pipelineManager"
 msgstr "已选择 Pipeline Manager。Blueprint ID 也会被复制，上传复制目标将覆盖复制源的 Avatar。"
@@ -487,6 +527,15 @@ msgstr "没有 UpperChest，建议使用 Chest"
 msgid "componentCopier.mapping.reason.normalizedName"
 msgstr "名称相似"
 
+msgid "componentCopier.mapping.reason.mirroredBone"
+msgstr "另一侧的骨骼"
+
+msgid "componentCopier.mapping.reason.mirroredName"
+msgstr "另一侧的名称"
+
+msgid "componentCopier.mapping.reason.selfCenter"
+msgstr "中线（自身）"
+
 msgid "componentCopier.report"
 msgstr "应用前检查"
 
@@ -516,6 +565,9 @@ msgstr "开启时，复制目标一侧有对应对象的引用会替换为该对
 msgid "componentCopier.mapping.external.noSurroundings"
 msgstr "在复制目标之外找不到其他 Avatar，因此不会自动替换（复制目标不在 Avatar 中，或与复制源位于同一个 Avatar 中）。如需替换，请在该行中指定替换对象。"
 
+msgid "componentCopier.mapping.external.mirrorKept"
+msgstr "「复制到另一侧」只在 Avatar 内进行，因此指向 Avatar 之外对象的引用会保持原样。"
+
 msgid "componentCopier.mapping.external.holders"
 msgstr "引用来源：{0}"
 
@@ -539,6 +591,9 @@ msgstr "指向复制源之外的引用"
 
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "指向复制源之外的场景对象的引用。由于复制源和复制目标位于同一个 Avatar 中，或其中一方没有外层父对象，因此不替换，保持不变。"
+
+msgid "componentCopier.mapping.group.externalKept.mirror"
+msgstr "指向 Avatar 之外的引用"
 
 msgid "componentCopier.mapping.note.externalNoCounterpart"
 msgstr "无对应（保持不变）"
@@ -754,6 +809,9 @@ msgstr "跳过整个组件"
 
 msgid "componentCopier.blocked.unresolvedReference"
 msgstr "引用在复制目标中没有对应对象，按设置跳过此组件。在对应关系部分指定对应对象后即会复制。"
+
+msgid "componentCopier.blocked.sameSide"
+msgstr "此组件所属对象的对应对象与复制源位于同一侧。直接复制会覆盖复制源，请在对应关系部分指定另一侧的对象。"
 
 #, csharp-format
 msgid "componentCopier.report.heldBack"

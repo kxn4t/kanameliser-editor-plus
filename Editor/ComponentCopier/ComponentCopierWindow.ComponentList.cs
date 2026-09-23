@@ -280,6 +280,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             groupByObjectButton.EnableInClassList("mode-toggle-button--active", groupMode == GroupMode.ByObject);
         }
 
+        private Label NoSideComponentsLabel()
+        {
+            var side = Localization.S(mirrorSide == Side.Left ? "componentCopier.side.left" : "componentCopier.side.right");
+            var label = new Label(Localization.S("componentCopier.info.noSideComponents", side));
+            label.AddToClassList("info-label");
+            return label;
+        }
+
         private void RenderComponentList()
         {
             listContainer.Clear();
@@ -300,7 +308,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (normal.Count == 0 && (!showExcluded || excluded.Count == 0))
             {
-                listContainer.Add(InfoLabel("componentCopier.info.noComponents"));
+                // Nothing on the chosen side at all (renderers aside) is said as such, not hidden by the search
+                listContainer.Add(mirrorMode && entries.All(e => e.Category == ComponentCategory.ExcludedByDefault)
+                    ? NoSideComponentsLabel()
+                    : InfoLabel("componentCopier.info.noComponents"));
                 AddMissingObjectGroup();
                 return;
             }
@@ -471,12 +482,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             icon.AddToClassList("row-icon");
             row.Add(icon);
 
-            var pathLabel = WithOverflowTooltip(new Label(path));
+            // A mirror copy can lack the counterpart of the source itself, whose path is empty
+            var pathLabel = WithOverflowTooltip(new Label(GetObjectPath(missing)));
             pathLabel.AddToClassList("row-path");
             row.Add(pathLabel);
             RevealOnRowClick(row, toggle, missing);
 
-            bool isPrefab = NestedPrefabs.GetPrefabAsset(missing, sourceRoot.transform) != null;
+            // From the root of the map: in a mirror copy, the source itself can be the missing prefab
+            bool isPrefab = NestedPrefabs.GetPrefabAsset(missing, map.SourceRoot) != null;
             int emptyChildren = isPrefab ? 0 : MissingObjects.CountBelow(missing, map);
             if (emptyChildren > 0)
             {

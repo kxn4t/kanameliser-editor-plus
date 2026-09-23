@@ -324,6 +324,43 @@ msgstr "복사 원본과 복사 대상을 다시 스캔"
 msgid "componentCopier.swap:tooltip"
 msgstr "복사 원본과 복사 대상을 서로 바꾸기"
 
+msgid "componentCopier.mirror"
+msgstr "반대쪽으로 복사"
+
+msgid "componentCopier.mirror:tooltip"
+msgstr "복사 원본의 한쪽 컴포넌트를 같은 계층의 반대쪽으로 복사합니다. 오브젝트는 이름의 좌우 표시(_L / _R, Left / Right, 左 / 右) 또는 Humanoid 본으로 대응시키고, 위치와 회전은 아바타의 중심을 기준으로 좌우 반전합니다."
+
+msgid "componentCopier.mirror.leftToRight"
+msgstr "L → R"
+
+msgid "componentCopier.mirror.rightToLeft"
+msgstr "R → L"
+
+#, csharp-format
+msgid "componentCopier.mirror.otherSide"
+msgstr "반대쪽({0})"
+
+msgid "componentCopier.side.left"
+msgstr "왼쪽"
+
+msgid "componentCopier.side.right"
+msgstr "오른쪽"
+
+#, csharp-format
+msgid "componentCopier.info.noSideComponents"
+msgstr "{0}에 컴포넌트가 없습니다. 좌우는 오브젝트나 그 부모 이름의 좌우 표시(_L / _R, Left / Right, 左 / 右) 또는 Humanoid 본으로 판정합니다. 중앙(Hips, Head 등)의 컴포넌트는 반대쪽이 없으므로 목록에 표시되지 않습니다."
+
+#, csharp-format
+msgid "componentCopier.report.mirror"
+msgstr "값 {0}개를 반대쪽에 맞춥니다(위치와 회전은 {1}의 중심을 기준으로 좌우 반전하고, 태그나 파라미터 이름 등은 좌우를 바꿉니다)."
+
+#, csharp-format
+msgid "componentCopier.report.axisDependent"
+msgstr "컴포넌트 {0}개에 본의 축에 의존하는 값(PhysBone의 Limit Rotation, Constraint의 오프셋이나 고정 축 등)이 있습니다. 그대로 복사되므로 복사 후 반대쪽에서 확인하세요."
+
+msgid "componentCopier.report.kind.axisDependent"
+msgstr "축 확인"
+
 msgid "componentCopier.warning.sameObject"
 msgstr "복사 원본과 복사 대상이 같은 오브젝트입니다."
 
@@ -332,6 +369,9 @@ msgstr "복사 원본과 복사 대상은 서로의 하위에 있는 오브젝�
 
 msgid "componentCopier.warning.targetIsAsset"
 msgstr "복사 대상이 에셋입니다. 에셋에 적용하면 Undo할 수 없으므로 차이 확인만 실행할 수 있습니다. 복사하려면 씬에 배치하세요."
+
+msgid "componentCopier.warning.mirrorSourceIsAsset"
+msgstr "복사 원본이 에셋입니다. 「반대쪽으로 복사」는 복사 원본 자체에 기록하며, 에셋에 적용하면 Undo할 수 없으므로 차이 확인만 실행할 수 있습니다. 복사하려면 씬에 배치하세요."
 
 msgid "componentCopier.warning.pipelineManager"
 msgstr "Pipeline Manager가 선택되어 있습니다. Blueprint ID도 복사되므로 복사 대상을 업로드하면 복사 원본 아바타를 덮어씁니다."
@@ -488,6 +528,15 @@ msgstr "UpperChest가 없어 Chest를 제안"
 msgid "componentCopier.mapping.reason.normalizedName"
 msgstr "유사한 이름"
 
+msgid "componentCopier.mapping.reason.mirroredBone"
+msgstr "반대쪽 본"
+
+msgid "componentCopier.mapping.reason.mirroredName"
+msgstr "반대쪽 이름"
+
+msgid "componentCopier.mapping.reason.selfCenter"
+msgstr "중앙(자기 자신)"
+
 msgid "componentCopier.report"
 msgstr "적용 전 확인"
 
@@ -517,6 +566,9 @@ msgstr "켜면 복사 대상 쪽에 대응하는 오브젝트가 있는 참조�
 msgid "componentCopier.mapping.external.noSurroundings"
 msgstr "복사 대상 바깥에서 다른 아바타를 찾지 못해 자동으로 교체하지 않습니다(복사 대상이 아바타 안에 없거나, 복사 원본과 같은 아바타 안에 있습니다). 교체하려는 참조는 행에서 교체할 대상을 지정하세요."
 
+msgid "componentCopier.mapping.external.mirrorKept"
+msgstr "「반대쪽으로 복사」는 아바타 안에서만 이루어지므로 아바타 바깥 오브젝트에 대한 참조는 그대로 유지합니다."
+
 msgid "componentCopier.mapping.external.holders"
 msgstr "참조하는 곳: {0}"
 
@@ -540,6 +592,9 @@ msgstr "복사 원본 바깥에 대한 참조"
 
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "복사 원본 바깥의 씬 오브젝트를 가리키는 참조입니다. 복사 원본과 복사 대상이 같은 아바타 안에 있거나 어느 한쪽에 바깥쪽 부모가 없으므로, 교체하지 않고 그대로 유지합니다."
+
+msgid "componentCopier.mapping.group.externalKept.mirror"
+msgstr "아바타 바깥에 대한 참조"
 
 msgid "componentCopier.mapping.note.externalNoCounterpart"
 msgstr "대응 없음(그대로 유지)"
@@ -755,6 +810,9 @@ msgstr "컴포넌트 전체 건너뛰기"
 
 msgid "componentCopier.blocked.unresolvedReference"
 msgstr "참조에 복사 대상의 대응이 없어 설정에 따라 이 컴포넌트를 건너뜁니다. 대응 섹션에서 대응을 지정하면 복사됩니다."
+
+msgid "componentCopier.blocked.sameSide"
+msgstr "이 컴포넌트가 붙을 오브젝트의 대응 대상이 복사 원본과 같은 쪽에 있습니다. 이대로는 복사 원본을 덮어쓰게 되므로 대응 섹션에서 반대쪽 오브젝트를 지정하세요."
 
 #, csharp-format
 msgid "componentCopier.report.heldBack"

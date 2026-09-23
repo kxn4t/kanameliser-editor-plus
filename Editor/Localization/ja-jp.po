@@ -323,6 +323,43 @@ msgstr "コピー元とコピー先を再スキャン"
 msgid "componentCopier.swap:tooltip"
 msgstr "コピー元とコピー先を入れ替え"
 
+msgid "componentCopier.mirror"
+msgstr "反対側へコピー"
+
+msgid "componentCopier.mirror:tooltip"
+msgstr "コピー元のコンポーネントを反対側の同じ階層へコピーします。オブジェクトは名前の左右表記（_L / _R、Left / Right、左 / 右）または Humanoid ボーンで対応付け、位置と回転はアバターの中心を基準に左右反転します。"
+
+msgid "componentCopier.mirror.leftToRight"
+msgstr "L → R"
+
+msgid "componentCopier.mirror.rightToLeft"
+msgstr "R → L"
+
+#, csharp-format
+msgid "componentCopier.mirror.otherSide"
+msgstr "反対側（{0}）"
+
+msgid "componentCopier.side.left"
+msgstr "左"
+
+msgid "componentCopier.side.right"
+msgstr "右"
+
+#, csharp-format
+msgid "componentCopier.info.noSideComponents"
+msgstr "{0}側にコンポーネントがありません。左右は、オブジェクト（またはその親）の名前の左右表記（_L / _R、Left / Right、左 / 右）や Humanoid ボーンで判定しています。中央（Hips、Head など）のコンポーネントには反対側が存在しないため、一覧には表示されません。"
+
+#, csharp-format
+msgid "componentCopier.report.mirror"
+msgstr "{0} 件の値を反対側に合わせます（位置と回転は {1} の中心を基準に左右反転し、タグやパラメーター名などは左右を入れ替えます）。"
+
+#, csharp-format
+msgid "componentCopier.report.axisDependent"
+msgstr "{0} 件のコンポーネントに、ボーンの軸に依存する設定値（PhysBone の Limit Rotation、Constraint のオフセットや固定軸など）が含まれています。値はそのままコピーされるため、コピー後に反対側で結果を確認してください。"
+
+msgid "componentCopier.report.kind.axisDependent"
+msgstr "軸を確認"
+
 msgid "componentCopier.warning.sameObject"
 msgstr "コピー元とコピー先が同じオブジェクトです。"
 
@@ -331,6 +368,9 @@ msgstr "コピー元とコピー先は、互いの内側にあるオブジェク
 
 msgid "componentCopier.warning.targetIsAsset"
 msgstr "コピー先がアセットです。アセットへの適用は Undo できないため、差分チェックのみ実行できます。コピーするにはシーンに配置してください。"
+
+msgid "componentCopier.warning.mirrorSourceIsAsset"
+msgstr "コピー元がアセットです。「反対側へコピー」はコピー元自体に書き込みますが、アセットへの変更は Undo できないため、差分チェックのみ実行できます。コピーするにはシーンに配置してください。"
 
 msgid "componentCopier.warning.pipelineManager"
 msgstr "Pipeline Manager が選択されています。Blueprint ID もコピーされるため、コピー先をアップロードするとコピー元のアバターを上書きします。"
@@ -487,6 +527,15 @@ msgstr "UpperChest がないため Chest を提案"
 msgid "componentCopier.mapping.reason.normalizedName"
 msgstr "類似名"
 
+msgid "componentCopier.mapping.reason.mirroredBone"
+msgstr "反対側のボーン"
+
+msgid "componentCopier.mapping.reason.mirroredName"
+msgstr "反対側の名前"
+
+msgid "componentCopier.mapping.reason.selfCenter"
+msgstr "中央（自分自身）"
+
 msgid "componentCopier.report"
 msgstr "適用前チェック"
 
@@ -516,6 +565,9 @@ msgstr "オンにすると、コピー先側に対応するオブジェクトが
 msgid "componentCopier.mapping.external.noSurroundings"
 msgstr "コピー先の外側に別のアバターが見つからないため、自動では置き換えません（コピー先がアバターの中にない、またはコピー元と同じアバターの中にあります）。置き換えたいものは、行で置き換え先を指定してください。"
 
+msgid "componentCopier.mapping.external.mirrorKept"
+msgstr "「反対側へコピー」はアバター内で完結するため、アバター外のオブジェクトへの参照は保持されます。"
+
 msgid "componentCopier.mapping.external.holders"
 msgstr "参照元: {0}"
 
@@ -539,6 +591,9 @@ msgstr "コピー元の外への参照"
 
 msgid "componentCopier.mapping.group.externalKept:tooltip"
 msgstr "コピー元の外のシーンオブジェクトを指している参照です。コピー元とコピー先が同じアバターの中にあるか、どちらかの外側に親がないため、置き換えずにそのまま残します。"
+
+msgid "componentCopier.mapping.group.externalKept.mirror"
+msgstr "アバターの外への参照"
 
 msgid "componentCopier.mapping.note.externalNoCounterpart"
 msgstr "対応なし（そのまま残す）"
@@ -754,6 +809,9 @@ msgstr "コンポーネントごとスキップ"
 
 msgid "componentCopier.blocked.unresolvedReference"
 msgstr "参照にコピー先の対応先がないため、設定に従ってこのコンポーネントをスキップします。対応付けセクションで対応先を指定すると、コピーされます。"
+
+msgid "componentCopier.blocked.sameSide"
+msgstr "このコンポーネントが付くオブジェクトの対応先が、コピー元と同じ側にあります。このままではコピー元を上書きしてしまうため、対応付けセクションで反対側のオブジェクトを指定してください。"
 
 #, csharp-format
 msgid "componentCopier.report.heldBack"

@@ -86,6 +86,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             var references = new Dictionary<string, PlannedReference>();
+            var values = new Dictionary<string, PlannedValue>();
+            foreach (var value in planned.Values) values[value.PropertyPath] = value;
             var pathReferences = new Dictionary<string, PlannedReference>();
             foreach (var reference in planned.References)
             {
@@ -98,7 +100,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             foreach (var sourceProperty in ReferenceWalker.Leaves(sourceObject))
             {
-                var propertyDiff = CompareProperty(sourceProperty, actualObject, references, pathReferences);
+                var propertyDiff = CompareProperty(sourceProperty, actualObject, references, pathReferences, values);
                 if (propertyDiff == null) continue;
 
                 if (diff.Properties.Count >= MaxPropertyDiffs)
@@ -166,7 +168,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private static PropertyDiff CompareProperty(
             SerializedProperty sourceProperty, SerializedObject actualObject,
-            Dictionary<string, PlannedReference> references, Dictionary<string, PlannedReference> pathReferences)
+            Dictionary<string, PlannedReference> references, Dictionary<string, PlannedReference> pathReferences,
+            Dictionary<string, PlannedValue> values)
         {
             string path = sourceProperty.propertyPath;
             var actualProperty = actualObject.FindProperty(path);
@@ -176,6 +179,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 // Elements beyond the target's array length. The array size leaf already reports the cause.
                 if (path.Contains(".Array.data[")) return null;
                 return Diff(sourceProperty, DiffKind.ValueMismatch, ValueToString(sourceProperty), "-");
+            }
+
+            // A value the plan decided on (mirrored position, flipped tag, ...) replaces the source value
+            if (values.TryGetValue(path, out var plannedValue))
+            {
+                return plannedValue.Matches(actualProperty)
+                    ? null
+                    : Diff(sourceProperty, DiffKind.ValueMismatch, plannedValue.Display(), ValueToString(actualProperty));
             }
 
             // The path half of an AvatarObjectReference follows its object half, not the source string
@@ -258,7 +269,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     sourceByTarget[mapping.Target] = mapping.Source;
             }
 
-            foreach (var transform in plan.Map.TargetRoot.GetComponentsInChildren<Transform>(true))
+            // Objects created by the copy came after the map
+            foreach (var created in plan.ObjectsToCreate)
+            {
+                if (created.Created != null && !sourceByTarget.ContainsKey(created.Created))
+                    sourceByTarget[created.Created] = created.Source;
+            }
+
+            IEnumerable<Transform> transforms = plan.Mirror != null
+                ? MirroredTargets(plan, sourceByTarget)
+                : plan.Map.TargetRoot.GetComponentsInChildren<Transform>(true);
+
+            foreach (var transform in transforms)
             {
                 foreach (var type in types)
                 {
@@ -277,6 +299,49 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// A mirror copy maps the avatar onto itself, so the whole target would take in the side being copied
+        /// as well, and the components being copied would show up as extra. The target is the other side: the
+        /// counterparts of the scanned source on the copied side, and whatever the copy writes to beyond them
+        /// (a prefab brought from elsewhere). Each counterpart is compared with its own source object, which
+        /// <paramref name="sourceByTarget"/> is corrected to.
+        /// </summary>
+        private static List<Transform> MirroredTargets(CopyPlan plan, Dictionary<Transform, Transform> sourceByTarget)
+        {
+            var sides = plan.Map.Sides;
+            var copiedSides = new HashSet<Side>(plan.Components
+                .Where(c => !c.Implicit && !c.LeftOut)
+                .Select(c => sides.Of(c.Entry.Host)));
+            copiedSides.Remove(Side.None);
+
+            var createdBySource = plan.ObjectsToCreate
+                .Where(o => o.Created != null)
+                .ToDictionary(o => o.Source, o => o.Created);
+
+            var targets = new List<Transform>();
+            foreach (var source in plan.KeyRoot.GetComponentsInChildren<Transform>(true))
+            {
+                if (!copiedSides.Contains(sides.Of(source))) continue;
+                if (!plan.Map.TryResolve(source, out var target) && !createdBySource.TryGetValue(source, out target))
+                    continue;
+                // Not the other side: a copy there is blocked, and its components are the source's own
+                if (target == source || copiedSides.Contains(sides.Of(target))) continue;
+
+                sourceByTarget[target] = source;
+                targets.Add(target);
+            }
+
+            targets.AddRange(plan.Components.Select(WrittenHost).Where(t => t != null));
+            return targets.Distinct().ToList();
+        }
+
+        private static Transform WrittenHost(PlannedComponent planned)
+        {
+            if (planned.Actual != null) return planned.Actual.transform;
+            if (planned.TargetHost != null) return planned.TargetHost;
+            return planned.HostToCreate?.Created;
         }
 
         #region Value helpers

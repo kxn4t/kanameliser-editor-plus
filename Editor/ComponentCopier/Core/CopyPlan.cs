@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace Kanameliser.EditorPlus.ComponentCopier
@@ -34,6 +35,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// Unlike the other reasons, the host may well exist.
         /// </summary>
         UnresolvedReference,
+        /// <summary>
+        /// A mirror copy would write the component onto its own side: the object is mapped to itself, which
+        /// objects on the middle line are, or (by a manual mapping, ...) to another object on its side.
+        /// </summary>
+        SameSide,
     }
 
     internal enum ReferenceKind
@@ -57,6 +63,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     internal sealed class PlannedObject
     {
         public Transform Source;
+        /// <summary>Name the object is created with: the source name, or its mirror image in a mirror copy.</summary>
+        public string Name;
         public Transform ExistingParent;
         public PlannedObject ParentToCreate;
 
@@ -161,6 +169,110 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             PathPropertyPath != null ? PropertyPath.Substring(0, PropertyPath.LastIndexOf('.')) : PropertyPath;
     }
 
+    /// <summary>
+    /// A value a property gets instead of the source value: the mirrored positions, rotations and tags of a
+    /// mirror copy. Only what the plan decided is stored, so that <see cref="CopyExecutor"/> writes and
+    /// <see cref="CopyVerifier"/> checks the very same thing.
+    /// </summary>
+    internal sealed class PlannedValue
+    {
+        private const float PositionTolerance = 1e-4f;
+        private const float AngleTolerance = 0.01f;
+
+        public string PropertyPath;
+        public SerializedPropertyType Type;
+        public Vector3 VectorValue;
+        public Quaternion QuaternionValue;
+        public float FloatValue;
+        /// <summary>A string, or the name of <see cref="EnumIndex"/> for display.</summary>
+        public string StringValue;
+        public int EnumIndex;
+        public Bounds BoundsValue;
+        /// <summary>A Vector3 of Euler angles: compared as a rotation, since several triples mean the same one.</summary>
+        public bool IsEuler;
+
+        public static PlannedValue OfVector(string path, Vector3 value) =>
+            new PlannedValue { PropertyPath = path, Type = SerializedPropertyType.Vector3, VectorValue = value };
+
+        public static PlannedValue OfEuler(string path, Vector3 value) =>
+            new PlannedValue { PropertyPath = path, Type = SerializedPropertyType.Vector3, VectorValue = value, IsEuler = true };
+
+        public static PlannedValue OfQuaternion(string path, Quaternion value) =>
+            new PlannedValue { PropertyPath = path, Type = SerializedPropertyType.Quaternion, QuaternionValue = value };
+
+        public static PlannedValue OfFloat(string path, float value) =>
+            new PlannedValue { PropertyPath = path, Type = SerializedPropertyType.Float, FloatValue = value };
+
+        public static PlannedValue OfString(string path, string value) =>
+            new PlannedValue { PropertyPath = path, Type = SerializedPropertyType.String, StringValue = value };
+
+        public static PlannedValue OfBounds(string path, Bounds value) =>
+            new PlannedValue { PropertyPath = path, Type = SerializedPropertyType.Bounds, BoundsValue = value };
+
+        public static PlannedValue OfEnum(string path, int index, string name) =>
+            new PlannedValue { PropertyPath = path, Type = SerializedPropertyType.Enum, EnumIndex = index, StringValue = name };
+
+        public void Write(SerializedProperty property)
+        {
+            switch (Type)
+            {
+                case SerializedPropertyType.Vector3: property.vector3Value = VectorValue; break;
+                case SerializedPropertyType.Quaternion: property.quaternionValue = QuaternionValue; break;
+                case SerializedPropertyType.Float: property.floatValue = FloatValue; break;
+                case SerializedPropertyType.String: property.stringValue = StringValue; break;
+                case SerializedPropertyType.Enum: property.enumValueIndex = EnumIndex; break;
+                case SerializedPropertyType.Bounds: property.boundsValue = BoundsValue; break;
+            }
+        }
+
+        /// <summary>Compared with a tolerance: the values went through world space and back.</summary>
+        public bool Matches(SerializedProperty property)
+        {
+            if (property.propertyType != Type) return false;
+
+            switch (Type)
+            {
+                case SerializedPropertyType.Vector3:
+                    return IsEuler
+                        ? AnglesMatch(Quaternion.Euler(VectorValue), Quaternion.Euler(property.vector3Value))
+                        : PointsMatch(VectorValue, property.vector3Value);
+                case SerializedPropertyType.Quaternion:
+                    return AnglesMatch(QuaternionValue, property.quaternionValue);
+                case SerializedPropertyType.Float:
+                    return Mathf.Abs(FloatValue - property.floatValue) <=
+                           PositionTolerance * Mathf.Max(1f, Mathf.Abs(FloatValue));
+                case SerializedPropertyType.String:
+                    return StringValue == property.stringValue;
+                case SerializedPropertyType.Enum:
+                    return EnumIndex == property.enumValueIndex;
+                case SerializedPropertyType.Bounds:
+                    return PointsMatch(BoundsValue.center, property.boundsValue.center) &&
+                           PointsMatch(BoundsValue.size, property.boundsValue.size);
+                default:
+                    return false;
+            }
+        }
+
+        public string Display()
+        {
+            switch (Type)
+            {
+                case SerializedPropertyType.Vector3: return VectorValue.ToString("G4");
+                case SerializedPropertyType.Quaternion: return QuaternionValue.eulerAngles.ToString("G4");
+                case SerializedPropertyType.Float: return FloatValue.ToString("G6");
+                case SerializedPropertyType.String: return "\"" + StringValue + "\"";
+                case SerializedPropertyType.Enum: return StringValue;
+                case SerializedPropertyType.Bounds: return BoundsValue.ToString();
+                default: return Type.ToString();
+            }
+        }
+
+        private static bool PointsMatch(Vector3 a, Vector3 b) =>
+            (a - b).magnitude <= PositionTolerance * Mathf.Max(1f, Mathf.Max(a.magnitude, b.magnitude));
+
+        private static bool AnglesMatch(Quaternion a, Quaternion b) => Quaternion.Angle(a, b) <= AngleTolerance;
+    }
+
     internal sealed class PlannedComponent
     {
         public ComponentEntry Entry;
@@ -174,6 +286,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public ComponentAction Action;
         public BlockReason BlockReason;
         public List<PlannedReference> References = new();
+
+        /// <summary>
+        /// Property values that differ from the source on purpose: the mirrored positions, rotations and tags
+        /// of a mirror copy. Written after the source values and compared by the diff check, which compares
+        /// a counterpart that is kept (Skip) with them too.
+        /// </summary>
+        public List<PlannedValue> Values = new();
+
+        /// <summary>
+        /// Properties that depend on the axes of the bone (PhysBone limits, ...) and were copied as they are
+        /// by a mirror copy, for the user to check. Empty outside of a mirror copy.
+        /// </summary>
+        public List<string> AxisDependentProperties = new();
 
         /// <summary>
         /// The references that hold the component back when <see cref="BlockReason"/> is
@@ -240,6 +365,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         public Transform SourceAvatarRoot;
         public Transform TargetAvatarRoot;
+
+        /// <summary>Set for a mirror copy: the plane the values are mirrored across. Null otherwise.</summary>
+        public MirrorContext Mirror;
+
+        /// <summary>
+        /// The root the component keys are relative to: the source that was scanned. The source root of the map,
+        /// except in a mirror copy, whose map spans the avatar around the source.
+        /// </summary>
+        public Transform KeyRoot;
 
         public List<PlannedComponent> Components = new();
         public List<PlannedObject> ObjectsToCreate = new();

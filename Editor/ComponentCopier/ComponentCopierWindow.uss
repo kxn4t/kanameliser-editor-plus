@@ -49,6 +49,23 @@
     height: 14px;
 }
 
+.arrow-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* Both sides take half of what the arrow leaves, so the arrow stays in the middle of the window */
+.arrow-row__side {
+    flex-grow: 1;
+    flex-basis: 0;
+    flex-direction: row;
+    align-items: center;
+}
+
+.arrow-row__side--end {
+    justify-content: flex-end;
+}
+
 .source-arrow {
     -unity-text-align: middle-center;
     opacity: 0.6;
@@ -226,6 +243,7 @@
 
 /* Unity top-aligns a field label and nudges it down with padding, which only lines up with its own font and
  * row height. Text and checkbox are centered on each other instead. */
+.mirror-toggle.unity-toggle,
 .show-excluded-toggle.unity-toggle,
 .mapping-group-toggle.unity-toggle,
 .settings-create.unity-toggle {
@@ -233,6 +251,7 @@
 }
 
 /* Unity also reserves 150px for the label, which leaves the checkbox far away from a short text */
+.mirror-toggle.unity-toggle > .unity-toggle__label,
 .show-excluded-toggle.unity-toggle > .unity-toggle__label,
 .mapping-group-toggle.unity-toggle > .unity-toggle__label,
 .settings-create.unity-toggle > .unity-toggle__label {
@@ -245,6 +264,7 @@
     -unity-text-align: middle-left;
 }
 
+.mirror-toggle.unity-toggle > .unity-toggle__input,
 .show-excluded-toggle.unity-toggle > .unity-toggle__input,
 .mapping-group-toggle.unity-toggle > .unity-toggle__input,
 .settings-create.unity-toggle > .unity-toggle__input {
@@ -258,6 +278,7 @@
 /* Measured on a screenshot: centered boxes still leave the checkbox a physical pixel above the optical
  * center of the text, because the glyphs sit low in their line box. Inside a centered container a top
  * margin of 1px moves the box down by half of it. */
+.mirror-toggle.unity-toggle .unity-toggle__checkmark,
 .show-excluded-toggle.unity-toggle .unity-toggle__checkmark,
 .mapping-group-toggle.unity-toggle .unity-toggle__checkmark,
 .settings-create.unity-toggle .unity-toggle__checkmark {

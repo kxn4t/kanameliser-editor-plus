@@ -61,6 +61,7 @@ GameObjectのアクティブ状態とEditorOnlyタグをすばやく切り替え
 - パス・名前・Humanoid ボーン辞書でオブジェクトを自動対応付け。類似名は候補として表示し、手動で補正可能
 - プリセット（PhysBone / Contact / Constraint / MA / すべて）、正規表現検索、個別選択
 - コピー先にない Prefab や空オブジェクトの追加、アバターへの参照のコピー先アバターへの置き換えに対応
+- 反対側へコピー: 片側のコンポーネントを同じ階層の反対側へ。位置と回転は左右反転し、タグやパラメーターの左右も入れ替え
 - 適用前チェックで内容を確認、差分チェックで結果を検証、Undo 1 回で元に戻せる
 
 アクセス: `Tools > Kanameliser Editor Plus > Component Copier`、または Hierarchy のオブジェクト・Prefab アセット・コンポーネントヘッダーの右クリック → `Kanameliser Editor Plus`

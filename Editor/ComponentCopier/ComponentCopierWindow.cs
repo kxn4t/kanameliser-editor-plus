@@ -19,6 +19,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         [SerializeField] private GameObject sourceRoot;
         [SerializeField] private GameObject targetRoot;
+        // Mirror copy: the components of one side of the source go to the other side of the same hierarchy
+        [SerializeField] private bool mirrorMode;
+        [SerializeField] private Side mirrorSide = Side.Left;
 
         private CopySettings settings;
         private List<ComponentEntry> entries = new();
@@ -38,6 +41,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private TransformMap externalMap;
         private HashSet<Transform> externalMapScope;
         private int externalMapSignature;
+        private TransformMap mirrorMap;
+        private int mirrorMapSignature;
         private int rescanCount;
         private readonly Dictionary<ComponentKey, PlannedComponent> plannedByKey = new();
 
@@ -77,6 +82,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private void SetSource(GameObject source, Component only)
         {
             pendingOnlyComponent = only;
+            // A component on the middle line has no other side to go to, so it asks for an ordinary copy
+            if (mirrorMode && only != null && new MirrorSides(MirrorRootOf(source.transform)).Of(only.transform) == Side.None)
+                LeaveMirrorMode();
+
             sourceField?.SetValueWithoutNotify(source);
             if (sourceField != null) OnSourceChanged(source);
             else sourceRoot = source;
@@ -85,8 +94,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private void SetTarget(GameObject target)
         {
             targetField?.SetValueWithoutNotify(target);
-            if (targetField != null) OnTargetChanged(target);
-            else targetRoot = target;
+            if (targetField != null)
+            {
+                OnTargetChanged(target);
+                return;
+            }
+
+            // Same request as a target picked in the field, see OnTargetChanged
+            targetRoot = target;
+            if (target != null) LeaveMirrorMode();
         }
 
         private void OnEnable()
@@ -151,6 +167,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private void ScheduleRefresh()
         {
+            // Right away, not with the refresh: a checkbox ticked in the meantime must not plan with a map
+            // that still holds deleted objects
+            mirrorMap = null;
+            externalMapScope = null;
             if (refreshScheduled || rootVisualElement == null || listContainer == null) return;
             if (sourceRoot == null && targetRoot == null) return;
 
@@ -171,6 +191,17 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             rescanCount++;
             var previousKeys = new HashSet<ComponentKey>(entries.Select(e => e.Key));
             entries = sourceRoot != null ? ComponentScanner.Scan(sourceRoot.transform) : new List<ComponentEntry>();
+            if (mirrorMode && sourceRoot != null)
+            {
+                // Built here rather than on the Recompute below, which reuses it
+                var sides = GetMirrorMap().Sides;
+
+                // A component picked from its context menu decides the direction
+                if (pendingOnlyComponent != null) AdoptSideOf(pendingOnlyComponent.transform, sides);
+
+                // Only the chosen side is on offer; objects on the middle line have no other side to go to
+                entries = entries.Where(e => sides.Of(e.Host) == mirrorSide).ToList();
+            }
 
             if (resetSelection)
             {
@@ -194,9 +225,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 var only = entries.FirstOrDefault(e => e.Component == pendingOnlyComponent);
                 pendingOnlyComponent = null;
+                // Nothing else is checked even when it is not listed: the user asked for that one component
+                selectedKeys.Clear();
                 if (only != null)
                 {
-                    selectedKeys.Clear();
                     selectedKeys.Add(only.Key);
                     expandedTypes.Add(GroupId(only));
                 }
@@ -221,15 +253,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             plannedByKey.Clear();
             missingObjects.Clear();
 
-            if (sourceRoot != null && targetRoot != null && IsTargetUsable())
+            if (sourceRoot != null && (mirrorMode || (targetRoot != null && IsTargetUsable())))
             {
-                map = TransformMapper.Build(sourceRoot.transform, targetRoot.transform, manualMappings);
-                missingObjects.AddRange(NestedPrefabs.FindMissingRoots(map));
-                missingObjects.AddRange(MissingObjects.FindRoots(map));
+                map = mirrorMode
+                    ? GetMirrorMap()
+                    : TransformMapper.Build(sourceRoot.transform, targetRoot.transform, manualMappings);
+                // The mirror map spans the avatar; only the chosen side of the source is on offer
+                var scope = mirrorMode ? sourceRoot.transform : null;
+                missingObjects.AddRange(NestedPrefabs.FindMissingRoots(map, scope));
+                missingObjects.AddRange(MissingObjects.FindRoots(map, scope));
+                if (mirrorMode) missingObjects.RemoveAll(t => map.Sides.Of(t) != mirrorSide);
                 plan = BuildPlan(settings);
 
+                // A mirror copy can bring a prefab from elsewhere in the avatar. Its components are keyed from
+                // the avatar, and such a key could name a component of the source.
                 foreach (var planned in plan.Components)
-                    plannedByKey[planned.Entry.Key] = planned;
+                {
+                    if (ReferenceWalker.IsInside(planned.Entry.Host, sourceRoot.transform))
+                        plannedByKey[planned.Entry.Key] = planned;
+                }
             }
 
             RenderAll();
@@ -237,11 +279,56 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private CopyPlan BuildPlan(CopySettings planSettings)
         {
+            // A mirror copy stays inside one avatar, so there are no surroundings to redirect to
             return CopyPlanBuilder.Build(
                 entries.Where(e => selectedKeys.Contains(e.Key)), map, planSettings,
                 missingObjects.Where(p => selectedObjectPaths.Contains(ObjectPath(p))),
-                GetExternalMap, leftOutKeys);
+                mirrorMode ? null : GetExternalMap, leftOutKeys,
+                mirrorMode ? map.SourceRoot : null, sourceRoot.transform);
         }
+
+        /// <summary>
+        /// The hierarchy a mirror copy works in: the avatar the source sits on, so that references to the
+        /// bones and colliders of the avatar are mirrored too. Outside of an avatar, the outermost model (an
+        /// object with an Animator), else the topmost parent: a part such as "UpperLeg_L" has no other side of
+        /// its own. The model comes first because an organizing object above it ("Avatars") need not sit on
+        /// its middle line, and the outermost one because an outfit FBX on the model has an Animator too.
+        /// </summary>
+        private Transform MirrorRoot() => sourceRoot != null ? MirrorRootOf(sourceRoot.transform) : null;
+
+        private static Transform MirrorRootOf(Transform source)
+        {
+            var avatarRoot = AvatarObjectReferences.FindAvatarRoot(source);
+            if (avatarRoot != null) return avatarRoot;
+
+            Transform model = null;
+            for (var current = source; current != null; current = current.parent)
+            {
+                if (current.GetComponent<Animator>() != null) model = current;
+            }
+
+            return model != null ? model : source.root;
+        }
+
+        /// <summary>
+        /// The mirror map spans the whole avatar, so like the map of the surroundings it is kept while nothing
+        /// it depends on changes. Ticking a checkbox only rebuilds the plan.
+        /// </summary>
+        private TransformMap GetMirrorMap()
+        {
+            var mirrorRoot = MirrorRoot();
+            int signature = System.HashCode.Combine(mirrorRoot.GetInstanceID(), rescanCount, ManualMappingSignature());
+            if (mirrorMap == null || signature != mirrorMapSignature)
+            {
+                mirrorMap = MirrorMapper.Build(mirrorRoot, manualMappings);
+                mirrorMapSignature = signature;
+            }
+
+            return mirrorMap;
+        }
+
+        /// <summary>The object that receives the copy: the source itself in a mirror copy.</summary>
+        private GameObject EffectiveTarget => mirrorMode ? sourceRoot : targetRoot;
 
         /// <summary>
         /// The map of the surroundings spans whole avatars, so it is kept while nothing it depends on changes.

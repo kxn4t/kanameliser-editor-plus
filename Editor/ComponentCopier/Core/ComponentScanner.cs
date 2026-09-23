@@ -119,34 +119,46 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             var components = new List<Component>();
             foreach (var transform in root.GetComponentsInChildren<Transform>(true))
-            {
-                string path = ObjectMatcher.GetRelativePathFromRoot(transform, root);
-                var indexByType = new Dictionary<Type, int>();
-
-                transform.GetComponents(components);
-                foreach (var component in components)
-                {
-                    // Missing scripts come back as null
-                    if (component == null || component is Transform) continue;
-
-                    var type = component.GetType();
-                    indexByType.TryGetValue(type, out var index);
-                    indexByType[type] = index + 1;
-
-                    var category = Categorize(type, out var tool);
-                    entries.Add(new ComponentEntry
-                    {
-                        Key = new ComponentKey(path, type.FullName, index),
-                        Component = component,
-                        Type = type,
-                        Host = transform,
-                        Category = category,
-                        Tool = tool,
-                    });
-                }
-            }
+                AddEntries(transform, root, entries, components);
 
             return entries;
+        }
+
+        /// <summary>The components of one object, keyed as a <see cref="Scan"/> of <paramref name="root"/> keys them.</summary>
+        public static List<ComponentEntry> ScanObject(Transform transform, Transform root)
+        {
+            var entries = new List<ComponentEntry>();
+            if (transform != null) AddEntries(transform, root, entries, new List<Component>());
+            return entries;
+        }
+
+        private static void AddEntries(
+            Transform transform, Transform root, List<ComponentEntry> entries, List<Component> components)
+        {
+            string path = ObjectMatcher.GetRelativePathFromRoot(transform, root);
+            var indexByType = new Dictionary<Type, int>();
+
+            transform.GetComponents(components);
+            foreach (var component in components)
+            {
+                // Missing scripts come back as null
+                if (component == null || component is Transform) continue;
+
+                var type = component.GetType();
+                indexByType.TryGetValue(type, out var index);
+                indexByType[type] = index + 1;
+
+                var category = Categorize(type, out var tool);
+                entries.Add(new ComponentEntry
+                {
+                    Key = new ComponentKey(path, type.FullName, index),
+                    Component = component,
+                    Type = type,
+                    Host = transform,
+                    Category = category,
+                    Tool = tool,
+                });
+            }
         }
 
         public static ComponentCategory Categorize(Type type) => Categorize(type, out _);
