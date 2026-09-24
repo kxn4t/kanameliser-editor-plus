@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — Changing the target, the source or **Copy to the other side** now also resets objects set to **Pick an existing object**. They used to stay listed among the objects that need a counterpart instead of under **To be created**.
 - **Component Copier** — A nested Prefab added to the target now follows the source instance's overrides: objects and components removed there are removed from the new instance, and a renamed object is found under its new name instead of being created a second time next to the Prefab's own.
 - **Component Copier** — Components on same-name sibling objects (two `Chain` below one bone, ...) can now be checked apart. They used to share one checkbox state and one status label.
+- **Component Copier** — A reference to an object or component that the copy creates is no longer taken for "None" when the existing component's reference is empty, which skipped the component as identical and left the reference unset.
 
 ---
 
@@ -51,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — **既存のオブジェクトを指定** にしたオブジェクトが、コピー先・コピー元・**反対側へコピー** を切り替えたあとも元に戻らず、**作成予定** ではなく対応先が必要なオブジェクトとして表示され続ける問題を修正しました。
 - **Component Copier** — コピー先に追加されるネストされた Prefab が、コピー元インスタンスのオーバーライドに従うようになりました。コピー元で削除したオブジェクトやコンポーネントは新しいインスタンスからも削除し、改名したオブジェクトは Prefab 側の名前のものと二重に作らず、新しい名前で引き継ぎます。
 - **Component Copier** — 同名の兄弟オブジェクト（1 つのボーンの下に `Chain` が 2 つある場合など）にあるコンポーネントを、別々にチェックできるようになりました。以前はチェック状態とステータス表示が連動していました。
+- **Component Copier** — コピーで作成されるオブジェクトやコンポーネントへの参照が、コピー先の既存コンポーネントで空のとき「None と同じ」とみなされ、コンポーネントが「同一」としてスキップされて参照が設定されない問題を修正しました。
 
 ## [1.1.0] - 2026-09-22
 
