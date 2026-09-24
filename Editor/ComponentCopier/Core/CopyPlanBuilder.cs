@@ -370,7 +370,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             private PlannedObject Register(PlannedObject planned)
             {
-                planned.SiblingOccurrence = Hierarchy.SiblingOccurrence(planned.Source);
                 // A mirror copy creates "Skirt_L" as "Skirt_R"
                 planned.Name = plan.Mirror != null && SideName.TryFlip(planned.Source.name, out var flipped)
                     ? flipped

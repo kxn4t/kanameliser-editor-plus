@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Kanameliser.EditorPlus.ComponentCopier
 {
@@ -84,12 +85,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private static void CreateObjects(CopyPlan plan, ExecutionResult result)
         {
-            // Objects inside an instantiated prefab carry the names of the asset, and a mirror copy renames
-            // them. Only once all of them are found: a sibling renamed early ("Chain_L" → "Chain_R") would be
-            // found again under its new name.
-            var renames = new List<(Transform transform, string name)>();
-            // Objects made here are not the ones that came with a prefab, whatever their name
-            var madeHere = new HashSet<Transform>();
+            var arrivals = new Dictionary<PlannedObject, Dictionary<Object, Object>>();
 
             // ObjectsToCreate is ordered parents first
             foreach (var planned in plan.ObjectsToCreate)
@@ -98,24 +94,25 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (parent == null) continue;
 
                 // Objects below an instantiated prefab are usually there already
-                Transform transform = planned.PrefabRoot != null
-                    ? Hierarchy.FindChild(parent, planned.Source.name, planned.SiblingOccurrence, madeHere)
-                    : null;
-
-                if (transform != null && transform.name != planned.Name) renames.Add((transform, planned.Name));
+                var transform = planned.PrefabRoot != null ? FindArrived(planned, arrivals) : null;
 
                 if (transform == null && planned.PrefabAsset != null)
                 {
                     var instance = PrefabUtility.InstantiatePrefab(planned.PrefabAsset, parent) as GameObject;
                     if (instance != null)
                     {
-                        instance.name = planned.Name;
                         Undo.RegisterCreatedObjectUndo(instance, UndoGroupName);
                         transform = instance.transform;
-                        madeHere.Add(transform);
                         result.InstantiatedPrefabs++;
+                        // Known already: the objects below are looked up in it
+                        planned.Created = transform;
+                        RemoveLikeTheSource(planned, Arrivals(planned, arrivals), result);
                     }
                 }
+
+                // An object that came with a prefab carries the name of the asset; the source may have renamed
+                // it, and a mirror copy renames it. Set before the state is recorded, so that it survives a reload.
+                if (transform != null) transform.name = planned.Name;
 
                 if (planned.LeftOut)
                 {
@@ -130,19 +127,89 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     Undo.RegisterCreatedObjectUndo(gameObject, UndoGroupName);
                     transform = gameObject.transform;
                     transform.SetParent(parent, false);
-                    madeHere.Add(transform);
                     result.CreatedObjects++;
                 }
 
                 CopyObjectState(planned.Source, transform, plan.Mirror);
                 planned.Created = transform;
             }
+        }
 
-            // Recorded again: CopyObjectState recorded the old name, and the new one would be lost on reload
-            foreach (var (transform, name) in renames)
+        /// <summary>
+        /// The object of an instantiated prefab that stands for <paramref name="planned"/>: the one that
+        /// corresponds to the same object of the asset, whatever it is called. Null for an object that was added
+        /// to the source instance; that one is created.
+        /// </summary>
+        private static Transform FindArrived(
+            PlannedObject planned, Dictionary<PlannedObject, Dictionary<Object, Object>> arrivals)
+        {
+            // Every prefab above it is asked, the nearest first. An object of a prefab that was added inside
+            // the prefab corresponds to that inner asset only, since the inner prefab is instantiated on its
+            // own. An object that the outer prefab added inside the inner one corresponds to nothing in the
+            // inner asset, but to an object of the outer asset, and arrives with the outer prefab.
+            for (var prefabRoot = planned.ParentToCreate; prefabRoot != null; prefabRoot = prefabRoot.ParentToCreate)
             {
-                transform.name = name;
-                PrefabUtility.RecordPrefabInstancePropertyModifications(transform.gameObject);
+                if (!prefabRoot.IsPrefabRoot || prefabRoot.Created == null) continue;
+
+                string assetPath = AssetDatabase.GetAssetPath(prefabRoot.PrefabAsset);
+                var assetObject = PrefabUtility.GetCorrespondingObjectFromSourceAtPath(planned.Source.gameObject, assetPath);
+                if (assetObject == null) continue;
+
+                if (Arrivals(prefabRoot, arrivals).TryGetValue(assetObject, out var arrived) && arrived != null)
+                    return ((GameObject)arrived).transform;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// The objects and components of the instance of <paramref name="prefabRoot"/>, by the object of the
+        /// asset each one corresponds to. Built once per prefab, when it is in place.
+        /// </summary>
+        private static Dictionary<Object, Object> Arrivals(
+            PlannedObject prefabRoot, Dictionary<PlannedObject, Dictionary<Object, Object>> arrivals)
+        {
+            if (arrivals.TryGetValue(prefabRoot, out var byAssetObject)) return byAssetObject;
+
+            byAssetObject = NestedPrefabs.CorrespondingObjects(
+                prefabRoot.Created, AssetDatabase.GetAssetPath(prefabRoot.PrefabAsset));
+            arrivals[prefabRoot] = byAssetObject;
+            return byAssetObject;
+        }
+
+        /// <summary>
+        /// Removes from a new prefab instance what the source instance had removed from the asset, as the same
+        /// "removed GameObject" / "removed component" overrides. Runs right after the prefab is instantiated,
+        /// before anything is looked up by its index among same-type components, which the removals shift.
+        /// Worked out here rather than in the plan: nothing else needs it, and the plan is rebuilt on every click.
+        /// </summary>
+        private static void RemoveLikeTheSource(
+            PlannedObject prefabRoot, Dictionary<Object, Object> arrivals, ExecutionResult result)
+        {
+            var (removedObjects, removedComponents) = NestedPrefabs.FindRemoved(prefabRoot.Source, prefabRoot.PrefabAsset);
+            string assetName = prefabRoot.PrefabAsset.name;
+
+            foreach (var assetObject in removedObjects)
+            {
+                if (!arrivals.TryGetValue(assetObject, out var arrived) || !(arrived is GameObject gameObject)) continue;
+                if (!DestroyWithinPrefab(gameObject))
+                {
+                    Debug.LogWarning($"[Component Copier] '{gameObject.name}' was removed from the source instance " +
+                                     $"of '{assetName}', but cannot be removed from the new instance on this Unity version.");
+                }
+            }
+
+            var components = removedComponents
+                .Select(assetComponent => arrivals.TryGetValue(assetComponent, out var arrived) ? arrived as Component : null)
+                .Where(component => component != null)
+                .ToList();
+            var stayed = DestroyComponents(components);
+            result.RemovedComponents += components.Count - stayed.Count;
+            foreach (var component in stayed)
+            {
+                Debug.LogWarning($"[Component Copier] {component.GetType().Name} on '{component.gameObject.name}' was " +
+                                 $"removed from the source instance of '{assetName}', but has to stay in the new " +
+                                 "instance: another component requires it.");
             }
         }
 
@@ -215,39 +282,54 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             foreach (var planned in plan.ObjectsToCreate)
             {
                 if (!planned.LeftOut || planned.Created == null) continue;
-
-                try
-                {
-                    Undo.DestroyObjectImmediate(planned.Created.gameObject);
-                    result.LeftOutObjects++;
-                }
-                catch (InvalidOperationException)
-                {
-                    // Unity versions without removed-GameObject overrides: only the components go
-                }
+                if (DestroyWithinPrefab(planned.Created.gameObject)) result.LeftOutObjects++;
             }
 
             var pending = leftOut.Where(p => p.component != null).ToList();
             result.LeftOutComponents = leftOut.Count - pending.Count;
 
-            // A component that another one requires cannot be removed, and Unity logs an error for the attempt.
-            // So the ones that are free go first, which may free others (both halves of a pair were left out).
+            var stayed = DestroyComponents(pending.Select(p => p.component).ToList());
+            result.LeftOutComponents += pending.Count - stayed.Count;
+            result.FailedRemovals.AddRange(pending.Where(p => stayed.Contains(p.component)).Select(p => p.planned));
+        }
+
+        /// <summary>False on Unity versions without removed-GameObject overrides, where the object has to stay.</summary>
+        private static bool DestroyWithinPrefab(GameObject gameObject)
+        {
+            try
+            {
+                Undo.DestroyObjectImmediate(gameObject);
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Destroys the components. A component that another one requires cannot be removed, and Unity logs an
+        /// error for the attempt, so the ones that are free go first, which may free others (both halves of a
+        /// pair are removed). Returns the ones that had to stay.
+        /// </summary>
+        private static List<Component> DestroyComponents(List<Component> components)
+        {
+            var pending = components.ToList();
             bool progress = true;
             while (progress && pending.Count > 0)
             {
                 progress = false;
-                foreach (var item in pending.ToList())
+                foreach (var component in pending.ToList())
                 {
-                    if (IsRequiredByAnother(item.component)) continue;
+                    if (IsRequiredByAnother(component)) continue;
 
-                    Undo.DestroyObjectImmediate(item.component);
-                    pending.Remove(item);
-                    result.LeftOutComponents++;
+                    Undo.DestroyObjectImmediate(component);
+                    pending.Remove(component);
                     progress = true;
                 }
             }
 
-            result.FailedRemovals.AddRange(pending.Select(p => p.planned));
+            return pending;
         }
 
         private static bool IsRequiredByAnother(Component component)

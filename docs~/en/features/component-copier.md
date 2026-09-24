@@ -125,7 +125,7 @@ Objects created on the other side, prefabs included, get the mirrored position a
 
 When a prefab inside the source (a prefab bundling PhysBone settings, a hat directly below `Head`, ...) does not exist in the target, **the same prefab is instantiated in the target** instead of rebuilding its objects one by one.
 
-Every component inside it is copied, selected or not, and the values changed on the source instance carry over. Components you uncheck are removed automatically once the prefab is instantiated.
+Every component inside it is copied, selected or not, and the values changed on the source instance carry over, as do objects and components you renamed or removed on the source instance. Components you uncheck are removed automatically once the prefab is instantiated.
 
 ## Pre-check and diff check
 

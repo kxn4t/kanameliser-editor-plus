@@ -59,13 +59,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// The child with the given name and <see cref="SiblingOccurrence"/>, or null. The counterpart of
         /// <see cref="SiblingOccurrence"/>: same-name siblings are told apart by their order.
         /// </summary>
-        /// <param name="skip">Children that do not count, such as the ones a copy has just created.</param>
-        public static Transform FindChild(Transform parent, string name, int occurrence, HashSet<Transform> skip = null)
+        public static Transform FindChild(Transform parent, string name, int occurrence)
         {
             int seen = 0;
             foreach (Transform child in parent)
             {
-                if (child.name != name || (skip != null && skip.Contains(child))) continue;
+                if (child.name != name) continue;
                 if (seen == occurrence) return child;
                 seen++;
             }

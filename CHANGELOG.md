@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — A target that is moved into the source (or the source into the target) in the Hierarchy after it was picked is no longer copied to; the window now warns about it as when it is picked that way.
 - **Component Copier** — An existing component is no longer skipped as identical while a reference that the copy clears still points at an object named "None", or while a difference comes after 50 or more such references.
 - **Component Copier** — Changing the target, the source or **Copy to the other side** now also resets objects set to **Pick an existing object**. They used to stay listed among the objects that need a counterpart instead of under **To be created**.
+- **Component Copier** — A nested Prefab added to the target now follows the source instance's overrides: objects and components removed there are removed from the new instance, and a renamed object is found under its new name instead of being created a second time next to the Prefab's own.
 - **Component Copier** — Components on same-name sibling objects (two `Chain` below one bone, ...) can now be checked apart. They used to share one checkbox state and one status label.
 
 ---
@@ -48,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — コピー先を指定したあとに Hierarchy でコピー元の中へ移動した（またはコピー元をコピー先の中へ移動した）場合に、そのままコピーできてしまう問題を修正しました。最初からその配置で指定したときと同じく警告します。
 - **Component Copier** — コピーで空になる参照が「None」という名前のオブジェクトを指しているときや、そうした参照が 50 個以上あり、その後ろに差分があるときに、既存のコンポーネントが「同一」としてスキップされる問題を修正しました。
 - **Component Copier** — **既存のオブジェクトを指定** にしたオブジェクトが、コピー先・コピー元・**反対側へコピー** を切り替えたあとも元に戻らず、**作成予定** ではなく対応先が必要なオブジェクトとして表示され続ける問題を修正しました。
+- **Component Copier** — コピー先に追加されるネストされた Prefab が、コピー元インスタンスのオーバーライドに従うようになりました。コピー元で削除したオブジェクトやコンポーネントは新しいインスタンスからも削除し、改名したオブジェクトは Prefab 側の名前のものと二重に作らず、新しい名前で引き継ぎます。
 - **Component Copier** — 同名の兄弟オブジェクト（1 つのボーンの下に `Chain` が 2 つある場合など）にあるコンポーネントを、別々にチェックできるようになりました。以前はチェック状態とステータス表示が連動していました。
 
 ## [1.1.0] - 2026-09-22

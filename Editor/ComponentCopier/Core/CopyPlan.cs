@@ -94,13 +94,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public GameObject PrefabAsset;
 
         /// <summary>
-        /// The nested prefab root this object arrives with, or null. Objects below an instantiated prefab
-        /// usually exist already once the prefab is in place; only the missing ones are created.
+        /// The outermost nested prefab root this object arrives with, or null. Objects below an instantiated
+        /// prefab usually exist already once the prefab is in place, found by the object of the asset they
+        /// correspond to (the source may have renamed them); only the missing ones are created.
         /// </summary>
         public PlannedObject PrefabRoot;
-
-        /// <summary>Index among same-name siblings, used to find the object inside an instantiated prefab.</summary>
-        public int SiblingOccurrence;
 
         /// <summary>
         /// True for an object inside a nested prefab that is removed from the new instance, because every
