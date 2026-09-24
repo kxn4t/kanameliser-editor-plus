@@ -86,7 +86,8 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             var plan = BuildPlan(source, target, new CopySettings(), typeof(LODGroup));
             var reference = plan.Components.Single().References.Single();
             Assert.AreEqual(ReferenceKind.InternalUnresolved, reference.Kind);
-            Assert.AreEqual(new ComponentKey("Body", typeof(MeshRenderer).FullName, 0), reference.MissingDependency);
+            Assert.AreEqual(ComponentKey.For(source.Find("Body"), source, typeof(MeshRenderer), 0),
+                reference.MissingDependency);
 
             CopyExecutor.Execute(plan);
 
@@ -198,7 +199,7 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             Assert.IsEmpty(plan.ObjectsToCreate);
 
             var lodGroup = plan.Components.Single(c => c.Entry.Type == typeof(LODGroup));
-            Assert.AreEqual(new ComponentKey("Body", typeof(MeshRenderer).FullName, 0),
+            Assert.AreEqual(ComponentKey.For(source.Find("Body"), source, typeof(MeshRenderer), 0),
                 lodGroup.UnresolvedReferences.Single().MissingDependency);
         }
 

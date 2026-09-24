@@ -414,7 +414,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private string GroupId(ComponentEntry entry)
         {
-            return groupMode == GroupMode.ByType ? entry.Type.FullName : ObjectGroupPrefix + entry.Key.RelativePath;
+            return groupMode == GroupMode.ByType ? entry.Type.FullName : ObjectGroupPrefix + entry.Key.ObjectPath;
         }
 
         private void AddGroups(List<ComponentEntry> groupEntries, bool excluded)

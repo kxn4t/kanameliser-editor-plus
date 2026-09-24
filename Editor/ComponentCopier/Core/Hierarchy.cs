@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEngine;
 
 namespace Kanameliser.EditorPlus.ComponentCopier
@@ -70,6 +71,47 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// A path below <paramref name="root"/> that tells same-name siblings apart, for keys: every segment
+        /// carries the <see cref="SiblingOccurrence"/> of its object ("Hips#0/Chain#1"). Empty for the root
+        /// itself. Not meant to be shown; the plain path is <see cref="ObjectMatcher.GetRelativePathFromRoot"/>.
+        /// </summary>
+        public static string IdentityPath(Transform transform, Transform root)
+        {
+            var segments = new List<string>();
+            for (var current = transform; current != null && current != root; current = current.parent)
+                segments.Add(current.name + "#" + SiblingOccurrence(current));
+            segments.Reverse();
+            return string.Join("/", segments);
+        }
+
+        /// <summary>
+        /// The <see cref="IdentityPath"/> of <paramref name="root"/> and everything below it, in one walk:
+        /// counting the same-name siblings anew for every object would go through a bone's hundreds of children
+        /// once per child.
+        /// </summary>
+        public static Dictionary<Transform, string> IdentityPaths(Transform root)
+        {
+            var paths = new Dictionary<Transform, string> { [root] = "" };
+            var occurrences = new Dictionary<(Transform parent, string name), int>();
+
+            // Parents come before their children
+            foreach (var transform in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (transform == root) continue;
+
+                var key = (transform.parent, transform.name);
+                occurrences.TryGetValue(key, out int occurrence);
+                occurrences[key] = occurrence + 1;
+
+                string parentPath = paths[transform.parent];
+                string segment = transform.name + "#" + occurrence;
+                paths[transform] = parentPath.Length == 0 ? segment : parentPath + "/" + segment;
+            }
+
+            return paths;
         }
     }
 }

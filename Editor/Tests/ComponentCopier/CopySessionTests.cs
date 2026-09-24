@@ -108,6 +108,28 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void ComponentsOnSameNameSiblings_AreCheckedApart()
+        {
+            var source = CreateHierarchy("Source", "Hips/Chain", "Hips/Chain");
+            var target = CreateHierarchy("Target", "Hips/Chain", "Hips/Chain");
+            var first = source.Find("Hips").GetChild(0).gameObject.AddComponent<SphereCollider>();
+            var second = source.Find("Hips").GetChild(1).gameObject.AddComponent<SphereCollider>();
+            var session = StartSession(source, target);
+
+            Assert.AreNotEqual(EntryOf(session, first).Key, EntryOf(session, second).Key);
+            Assert.AreEqual(EntryOf(session, first).Key.RelativePath, EntryOf(session, second).Key.RelativePath,
+                "Both are shown by the same path");
+
+            session.SetChecked(EntryOf(session, second), false);
+
+            Assert.IsTrue(session.IsChecked(EntryOf(session, first)));
+            Assert.IsFalse(session.IsChecked(EntryOf(session, second)));
+            Assert.AreSame(first, session.Plan.Components.Single().Entry.Component);
+            Assert.IsTrue(session.TryGetPlanned(EntryOf(session, first).Key, out var planned) &&
+                          planned.Entry.Component == first, "Each row reads its own plan");
+        }
+
+        [Test]
         public void UncheckingAComponentThatArrivesWithAPrefab_LeavesItOut()
         {
             var hatAsset = SavePrefab("Hat_Session", hat =>

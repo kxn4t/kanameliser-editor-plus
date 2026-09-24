@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEditor;
 using UnityEngine;
 
@@ -660,9 +659,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 Kind = ReferenceKind.InternalUnresolved,
                 MissingDependency = Hierarchy.IsInside(transform, plan.KeyRoot)
-                    ? new ComponentKey(
-                        ObjectMatcher.GetRelativePathFromRoot(transform, plan.KeyRoot),
-                        component.GetType().FullName, index)
+                    ? ComponentKey.For(transform, plan.KeyRoot, component.GetType(), index)
                     : (ComponentKey?)null,
             };
         }
