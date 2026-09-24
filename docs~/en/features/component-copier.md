@@ -128,6 +128,8 @@ When a prefab inside the source (a prefab bundling PhysBone settings, a hat dire
 
 Every component inside it is copied, selected or not, and the values changed on the source instance carry over, as do objects and components you renamed or removed on the source instance. Components you uncheck are removed automatically once the prefab is instantiated, and so are components held back by **Skip the component**.
 
+When you map an object inside such a prefab by hand, the prefab counts as present in the target, in part at least, and is not added as a whole: that object goes to the counterpart you picked, and the objects without a counterpart are created one by one. To use existing objects for the other objects of the prefab too, map them in the Mapping section as well.
+
 ## Pre-check and diff check
 
 ### Pre-check

@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — A mirror copy now mirrors MA Mesh Settings bounds as a whole: the new bounds enclose the mirror image of the original ones, so a root bone with different axes on the other side no longer cuts them off.
 - **Component Copier** — Applying a plan whose objects were deleted in the meantime no longer stops halfway; the window refreshes the plan and asks to apply again, and an unexpected error reverts the partial copy.
 - **Component Copier** — A search pattern that takes too long no longer freezes the window; the search is cut off and the pattern is marked until it is changed.
+- **Component Copier** — A nested Prefab that the target lacks is no longer added as a whole once an object inside it is mapped by hand: that object goes to its counterpart, and the other objects are created one by one as needed. The whole Prefab used to be added, and the mapping was ignored.
 
 ---
 
@@ -67,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — **反対側へコピー** で MA Mesh Settings の Bounds を箱ごと反転するようにしました。新しい Bounds は元の Bounds の鏡像を包含するので、反対側のボーンの軸が異なるときに切り詰められる問題を修正しました。
 - **Component Copier** — 適用までの間にオブジェクトが削除されていた計画を適用しても途中で止まらないようにしました。計画を更新して再適用を促し、想定外のエラー時は途中までのコピーを元に戻します。
 - **Component Copier** — 時間のかかりすぎる検索パターンでウィンドウが固まらないようにしました。検索を打ち切り、パターンを変更するまで警告表示します。
+- **Component Copier** — コピー先にないネストされた Prefab の中のオブジェクトに手動で対応先を指定したとき、Prefab ごと追加せず、そのオブジェクトは指定した対応先へ、ほかのオブジェクトは必要に応じて 1 つずつ作成するようにしました。以前は指定を無視して、Prefab ごと追加していました。
 
 ## [1.1.0] - 2026-09-22
 

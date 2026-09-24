@@ -322,7 +322,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             /// <summary>
             /// Returns the outermost nested prefab root on the way from the source root down to
-            /// <paramref name="transform"/> that has no counterpart in the target.
+            /// <paramref name="transform"/> that the target lacks, see <see cref="NestedPrefabs.IsMissing"/>. Decided
+            /// for the prefab as a whole, so that every object in it goes the same way, whichever is resolved first.
             /// </summary>
             private Transform FindMissingNestedPrefabRoot(Transform transform)
             {
@@ -332,10 +333,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
                 for (int i = path.Count - 1; i >= 0; i--)
                 {
-                    var candidate = path[i];
-                    if (NestedPrefabs.GetPrefabAsset(candidate, plan.Map.SourceRoot) == null) continue;
-                    if (plan.Map.TryResolve(candidate, out _)) continue;
-                    return candidate;
+                    if (NestedPrefabs.IsMissing(path[i], plan.Map)) return path[i];
                 }
 
                 return null;

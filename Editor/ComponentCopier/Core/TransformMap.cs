@@ -176,7 +176,27 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public IEnumerable<TransformMapping> All => mappings.Values;
 
-        public void Set(TransformMapping mapping) => mappings[mapping.Source] = mapping;
+        // The sources the user mapped to an object by hand, see HasManualMappingWithin. Found again after every change.
+        private List<Transform> manualSources;
+
+        public void Set(TransformMapping mapping)
+        {
+            mappings[mapping.Source] = mapping;
+            manualSources = null;
+        }
+
+        /// <summary>
+        /// True when the user mapped <paramref name="root"/>, or an object below it, to an object of the target by
+        /// hand. A nested prefab with such an object is in the target, in part at least, as the user said.
+        /// </summary>
+        public bool HasManualMappingWithin(Transform root)
+        {
+            manualSources ??= mappings.Values
+                .Where(m => m.State == MappingState.Manual && m.IsUsable)
+                .Select(m => m.Source)
+                .ToList();
+            return manualSources.Any(source => Hierarchy.IsInside(source, root));
+        }
 
         /// <summary>
         /// Records the pair of roots and the user's mappings, which come before every automatic rule. Manual
