@@ -777,6 +777,13 @@ msgstr "{0} 件のコンポーネントは、ほかのコンポーネントに�
 msgid "componentCopier.report.notRemoved"
 msgstr "{0} 件のコンポーネントは、ほかのコンポーネントに必要とされているため削除できず、そのまま残しました。"
 
+msgid "componentCopier.report.stale"
+msgstr "計画を作ったあとにシーンが変わったため、計画を更新しました。内容を確認して、もう一度適用してください。"
+
+#, csharp-format
+msgid "componentCopier.report.applyFailed"
+msgstr "適用に失敗したため、変更をすべて元に戻しました: {0}"
+
 msgid "componentCopier.prefabs.title"
 msgstr "コピー先にないオブジェクト"
 

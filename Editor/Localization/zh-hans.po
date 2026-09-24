@@ -777,6 +777,13 @@ msgstr "{0} 个组件被其他组件依赖，无法删除。"
 msgid "componentCopier.report.notRemoved"
 msgstr "{0} 个组件被其他组件依赖，无法删除，已保持原样。"
 
+msgid "componentCopier.report.stale"
+msgstr "创建计划后场景发生了变化，已更新计划。请确认内容后重新应用。"
+
+#, csharp-format
+msgid "componentCopier.report.applyFailed"
+msgstr "应用失败，已撤销所有更改：{0}"
+
 msgid "componentCopier.prefabs.title"
 msgstr "复制目标中缺少的对象"
 

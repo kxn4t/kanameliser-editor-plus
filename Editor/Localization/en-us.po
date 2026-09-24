@@ -778,6 +778,13 @@ msgstr "{0} component(s) could not be removed because another component requires
 msgid "componentCopier.report.notRemoved"
 msgstr "{0} component(s) could not be removed because another component requires them; they were left as they are."
 
+msgid "componentCopier.report.stale"
+msgstr "The scene changed after the plan was made. The plan was refreshed; check it and apply again."
+
+#, csharp-format
+msgid "componentCopier.report.applyFailed"
+msgstr "Applying failed and every change was reverted: {0}"
+
 msgid "componentCopier.prefabs.title"
 msgstr "Objects missing in the target"
 

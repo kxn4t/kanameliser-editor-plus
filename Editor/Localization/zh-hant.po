@@ -777,6 +777,13 @@ msgstr "{0} 個元件被其他元件依賴，無法刪除。"
 msgid "componentCopier.report.notRemoved"
 msgstr "{0} 個元件被其他元件依賴，無法刪除，已保持原樣。"
 
+msgid "componentCopier.report.stale"
+msgstr "建立計畫後場景發生了變更，已更新計畫。請確認內容後重新套用。"
+
+#, csharp-format
+msgid "componentCopier.report.applyFailed"
+msgstr "套用失敗，已復原所有變更：{0}"
+
 msgid "componentCopier.prefabs.title"
 msgstr "複製目標中缺少的物件"
 

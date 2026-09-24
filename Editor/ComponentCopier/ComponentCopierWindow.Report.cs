@@ -11,7 +11,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     public partial class ComponentCopierWindow
     {
         // Snapshot shown after "Diff check only" or Apply. Unlike the live preview it is not recomputed,
-        // so the verification of an Apply stays on screen while the preview moves on.
+        // so the verification of an Apply stays on screen while the preview moves on. An Apply that changed
+        // nothing (the plan was out of date, or applying failed) leaves a message without a report.
         private DiffReport detailReport;
         private string detailTitleKey;
         private string detailMessage;
@@ -50,10 +51,49 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void Apply()
         {
-            var executedPlan = session.Plan;
-            if (executedPlan == null || session.IsTargetAsset) return;
+            if (session.Plan == null || session.IsTargetAsset) return;
 
-            var result = CopyExecutor.Execute(executedPlan);
+            // A scene change that the refresh has not picked up yet may have touched the plan on screen, so it is
+            // planned again first. A plan that comes out the same is the one the user has seen, and is applied on this
+            // click. One that changed is shown instead of applied: it may also have selected components that have
+            // just appeared. Tools that change the scene all the time (a clip previewed in the Animation window, ...)
+            // keep a refresh pending, so waiting for none would never apply.
+            if (refreshScheduled)
+            {
+                CancelScheduledRefresh();
+                string shown = session.Plan.Fingerprint();
+                Rescan();
+                if (session.Plan == null || session.Plan.Fingerprint() != shown)
+                {
+                    ShowNotApplied(Localization.S("componentCopier.report.stale"));
+                    return;
+                }
+            }
+
+            var executedPlan = session.Plan;
+            ExecutionResult result;
+            try
+            {
+                result = CopyExecutor.Execute(executedPlan);
+            }
+            catch (Exception exception)
+            {
+                // The executor has put the target back already
+                Debug.LogException(exception);
+                Rescan();
+                ShowNotApplied(Localization.S("componentCopier.report.applyFailed", exception.Message));
+                return;
+            }
+
+            // Something the plan needs was deleted since it was made, and nothing was changed
+            if (result.Stale)
+            {
+                Debug.Log("[Component Copier] Nothing was applied because the plan was out of date: " +
+                          $"{result.StaleReason}.");
+                Rescan();
+                ShowNotApplied(Localization.S("componentCopier.report.stale"));
+                return;
+            }
 
             detailReport = CopyVerifier.Verify(executedPlan);
             detailTitleKey = "componentCopier.report.afterApply";
@@ -87,6 +127,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                       $"from '{session.SourceRoot.name}' to '{targetName}'.");
 
             Rescan();
+        }
+
+        /// <summary>
+        /// Says why an Apply changed nothing, in place of its report. The plan on screen has been made again for the
+        /// scene as it is now, and is left for the user to check and apply.
+        /// </summary>
+        private void ShowNotApplied(string message)
+        {
+            detailReport = null;
+            detailTitleKey = "componentCopier.apply";
+            detailMessage = message;
+            RenderReport();
         }
 
         private void RunDiffCheck()
@@ -124,7 +176,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             RenderPreCheck();
-            if (detailReport != null) RenderDetailReport();
+            if (detailTitleKey != null) RenderDetailReport();
         }
 
         private void RenderPreCheck()
@@ -569,9 +621,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (!string.IsNullOrEmpty(detailMessage))
             {
                 var message = new Label(detailMessage);
-                message.AddToClassList("detail-message");
+                // Without a report, the message says why nothing was applied
+                message.AddToClassList(detailReport != null ? "detail-message" : "warning-text");
                 box.Add(message);
             }
+
+            if (detailReport == null) return;
 
             var counts = new Label(Localization.S("componentCopier.report.diffSummary",
                 detailReport.Count(DiffKind.Match),

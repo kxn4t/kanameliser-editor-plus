@@ -778,6 +778,13 @@ msgstr "컴포넌트 {0}개는 다른 컴포넌트가 필요로 하므로 삭제
 msgid "componentCopier.report.notRemoved"
 msgstr "컴포넌트 {0}개는 다른 컴포넌트가 필요로 하므로 삭제할 수 없어 그대로 두었습니다."
 
+msgid "componentCopier.report.stale"
+msgstr "계획을 만든 뒤 씬이 변경되어 계획을 갱신했습니다. 내용을 확인하고 다시 적용하세요."
+
+#, csharp-format
+msgid "componentCopier.report.applyFailed"
+msgstr "적용에 실패하여 모든 변경을 되돌렸습니다: {0}"
+
 msgid "componentCopier.prefabs.title"
 msgstr "복사 대상에 없는 오브젝트"
 

@@ -9,6 +9,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 {
     internal sealed class ExecutionResult
     {
+        /// <summary>
+        /// Set when nothing was done because the plan no longer fits the scene (see
+        /// <see cref="CopyExecutor.Validate"/>). It is to be made again, and shown before anything is applied.
+        /// </summary>
+        public bool Stale;
+
+        /// <summary>What made the plan stale, for the console. Null otherwise.</summary>
+        public string StaleReason;
+
         public int CreatedObjects;
         public int InstantiatedPrefabs;
         public int RemovedComponents;
@@ -41,14 +50,105 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     {
         private const string UndoGroupName = "Copy Components";
 
+        /// <summary>
+        /// Applies the plan, unless it no longer fits the scene: nothing is changed then, and the result is
+        /// <see cref="ExecutionResult.Stale"/>. An exception midway puts the target back as it was before it is
+        /// passed on, since a copy that stops halfway leaves references pointing into the source hierarchy.
+        /// </summary>
         public static ExecutionResult Execute(CopyPlan plan)
         {
+            // Before the Undo group is opened, so that a stale plan leaves nothing behind, not even an Undo step
+            string problem = Validate(plan);
+            if (problem != null) return new ExecutionResult { Stale = true, StaleReason = problem };
+
             var result = new ExecutionResult();
 
             Undo.IncrementCurrentGroup();
             Undo.SetCurrentGroupName(UndoGroupName);
             int undoGroup = Undo.GetCurrentGroup();
 
+            try
+            {
+                Apply(plan, result);
+            }
+            catch
+            {
+                Undo.RevertAllDownToGroup(undoGroup);
+                throw;
+            }
+
+            Undo.CollapseUndoOperations(undoGroup);
+            return result;
+        }
+
+        /// <summary>
+        /// Checks that the plan still fits the scene, which may have changed since planning: the window plans again
+        /// only after a delay. Everything that is written, and every existing object or component it is written
+        /// against, must still exist, and every component that Replace removes must still be removable. Nothing
+        /// more: changed values or a changed hierarchy are not looked for. What is not written does not count, so
+        /// a blocked component, which has no host, is no problem. Returns the first problem found, for the console,
+        /// or null when the plan can be applied.
+        /// </summary>
+        internal static string Validate(CopyPlan plan)
+        {
+            foreach (var planned in plan.Components)
+            {
+                if (!planned.WillWrite) continue;
+
+                if (planned.Entry.Component == null) return $"the source {Describe(planned)} was deleted";
+                if (planned.Action == ComponentAction.Overwrite && planned.Existing == null)
+                    return $"the component that {Describe(planned)} overwrites was deleted";
+                if (planned.HostToCreate == null && planned.TargetHost == null)
+                    return $"the target object of {Describe(planned)} was deleted";
+
+                foreach (var reference in planned.References)
+                {
+                    if (reference.Expected == null || !reference.Expected.RefersToDestroyedObject) continue;
+
+                    string property = ReferenceWalker.DisplayName(reference.DisplayPath);
+                    return $"the object that {property} of {Describe(planned)} refers to was deleted";
+                }
+            }
+
+            foreach (var planned in plan.ObjectsToCreate)
+            {
+                if (planned.Source == null) return $"the source of the new object '{planned.Name}' was deleted";
+                if (planned.ParentToCreate == null && planned.ExistingParent == null)
+                    return $"the parent of the new object '{planned.Name}' was deleted";
+
+                // Asked of the field itself: IsPrefabRoot turns false once the asset is gone
+                if (!ReferenceEquals(planned.PrefabAsset, null) && planned.PrefabAsset == null)
+                    return $"the prefab asset of the new object '{planned.Name}' was deleted";
+            }
+
+            foreach (var component in plan.ComponentsToRemove)
+            {
+                // Gone already, which leaves nothing to remove
+                if (component == null) continue;
+
+                // A component that requires it may have been added since planning. Planned again, the one that has
+                // to stay is overwritten in place instead.
+                var requirer = ComponentDependencies.FindRequirer(component, plan.ComponentsToRemove);
+                if (requirer != null)
+                {
+                    return $"{requirer.GetType().Name} on '{component.name}' requires the " +
+                           $"{component.GetType().Name} that Replace removes";
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Only what the plan noted down: the objects themselves may be gone.</summary>
+        private static string Describe(PlannedComponent planned)
+        {
+            string path = planned.Entry.Key.RelativePath;
+            return $"{planned.Entry.Type.Name} on '{(path.Length > 0 ? path : "/")}'";
+        }
+
+        /// <summary>Everything <see cref="Execute"/> does to the target, inside the Undo group it opened.</summary>
+        private static void Apply(CopyPlan plan, ExecutionResult result)
+        {
             CreateObjects(plan, result);
             RemoveReplacedComponents(plan, result);
 
@@ -106,9 +206,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             RemoveLeftOut(plan, leftOut, result);
-
-            Undo.CollapseUndoOperations(undoGroup);
-            return result;
         }
 
         private static void CreateObjects(CopyPlan plan, ExecutionResult result)

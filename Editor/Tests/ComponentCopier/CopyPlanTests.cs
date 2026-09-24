@@ -716,7 +716,7 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
-        public void ReplacePolicy_DoesNotAddNextToAComponentThatCouldNotBeRemoved()
+        public void ReplacePolicy_IsStaleOnceARequirementAppearedAfterPlanning()
         {
             var source = CreateHierarchy("Source", "Door");
             var target = CreateHierarchy("Target", "Door");
@@ -729,20 +729,33 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             Assert.AreEqual(ComponentAction.Replace, plan.Components.Single().Action);
             Assert.AreSame(targetBody, plan.ComponentsToRemove.Single());
 
-            // Added after planning, so the plan still removes the Rigidbody. Validating the plan right before
-            // applying is meant to stop this case earlier; this is the executor's own safety net behind that.
+            // Added after planning, so the plan still removes the Rigidbody. The check before applying catches this
+            // first, with the RequireComponent it can see. The executor's own safety net behind it (NotRemoved, and
+            // no copy added next to what stayed) is left for requirements that check cannot see, such as one of a
+            // missing script.
             target.Find("Door").gameObject.AddComponent<HingeJoint>();
 
-            // The removal is not even tried, so Unity logs nothing
             var result = CopyExecutor.Execute(plan);
 
-            Assert.AreSame(targetBody, result.NotRemoved.Single());
+            Assert.IsTrue(result.Stale);
+            StringAssert.Contains("HingeJoint", result.StaleReason);
             Assert.AreEqual(0, result.RemovedComponents);
-            Assert.AreSame(plan.Components.Single(), result.Failed.Single());
             Assert.AreEqual(0, result.WrittenComponents);
-            var bodies = target.Find("Door").GetComponents<Rigidbody>();
-            Assert.AreEqual(1, bodies.Length, "No second Rigidbody may be added next to the one that stayed");
-            Assert.AreEqual(2f, bodies[0].mass);
+            Assert.IsEmpty(result.NotRemoved);
+            Assert.IsEmpty(result.Failed);
+            Assert.AreSame(targetBody, target.Find("Door").GetComponents<Rigidbody>().Single());
+            Assert.AreEqual(2f, targetBody.mass);
+
+            // Planned again, the Rigidbody that has to stay is overwritten in place
+            var replanned = BuildPlan(source, target, settings, typeof(Rigidbody));
+            var planned = replanned.Components.Single();
+            Assert.AreEqual(ComponentAction.Overwrite, planned.Action);
+            Assert.AreSame(targetBody, planned.Existing);
+            Assert.AreEqual("HingeJoint", planned.KeptBy);
+            Assert.IsEmpty(replanned.ComponentsToRemove);
+
+            Assert.IsFalse(CopyExecutor.Execute(replanned).Stale);
+            Assert.AreEqual(5f, targetBody.mass);
         }
 
         [Test]

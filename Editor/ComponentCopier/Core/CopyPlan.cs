@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -165,6 +166,45 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var transform = existingObject != null ? existingObject : ObjectToCreate?.Created;
             if (transform == null) return null;
             return asGameObject ? transform.gameObject : transform;
+        }
+
+        /// <summary>
+        /// True when the reference expects an object or component that exists in the target, and that one has been
+        /// deleted since planning: writing the reference would quietly lose it. What the plan creates or adds does
+        /// not exist yet, and never counts.
+        /// </summary>
+        public bool RefersToDestroyedObject
+        {
+            get
+            {
+                if (IsDestroyed(existingObject) || IsDestroyed(existingComponent) || IsDestroyed(kept)) return true;
+
+                // A planned component resolves to its existing counterpart until it is written. The plan sets one only
+                // for the components that keep using it (Overwrite, Skip, SkipIdentical); the ones it adds or
+                // replaces have none, and nothing to lose.
+                return plannedComponent != null && plannedComponent.Result == null &&
+                       IsDestroyed(plannedComponent.Existing);
+            }
+        }
+
+        /// <summary>Set, and destroyed since. A value that was never set is not destroyed.</summary>
+        private static bool IsDestroyed(Object value) => !ReferenceEquals(value, null) && value == null;
+
+        /// <summary>
+        /// What the reference is to point at, for <see cref="CopyPlan.Fingerprint"/>: an existing object or
+        /// component by its instance ID (which a destroyed one keeps), an object the plan creates by the instance ID
+        /// of its source, and a planned component by its key.
+        /// </summary>
+        internal string Identity()
+        {
+            static int Id(Object value) => ReferenceEquals(value, null) ? 0 : value.GetInstanceID();
+
+            string part = asGameObject ? "gameObject" : "transform";
+            if (!ReferenceEquals(kept, null)) return $"kept {Id(kept)}";
+            if (plannedComponent != null) return $"planned {plannedComponent.Entry.Key}";
+            if (!ReferenceEquals(existingComponent, null)) return $"component {Id(existingComponent)}";
+            if (!ReferenceEquals(existingObject, null)) return $"object {Id(existingObject)} {part}";
+            return ObjectToCreate != null ? $"new {Id(ObjectToCreate.Source)} {part}" : "none";
         }
     }
 
@@ -473,5 +513,45 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public List<KeptComponent> KeptComponents = new();
 
         public List<BrokenReferenceWarning> BrokenReferences = new();
+
+        /// <summary>
+        /// Sums up what the pre-check shows of the plan and what <see cref="CopyExecutor"/> writes, as a string that
+        /// two plans share only when they do the same. The window compares the plan on screen with the one it makes
+        /// again after a scene change: when both are the same, the change did not touch the plan, which can then be
+        /// applied on the same click. Objects are taken by instance ID, which a destroyed one keeps.
+        /// </summary>
+        internal string Fingerprint()
+        {
+            static int Id(Object value) => ReferenceEquals(value, null) ? 0 : value.GetInstanceID();
+
+            var text = new StringBuilder();
+            void Line(params object[] parts) => text.Append(string.Join("|", parts)).Append('\n');
+
+            foreach (var planned in Components)
+            {
+                // The source component as well as its key: the key tells components of one type apart by their
+                // index, which another component inherits when one is deleted
+                Line("component", planned.Entry.Key, Id(planned.Entry.Component), planned.Action, planned.BlockReason,
+                    planned.Origin, Id(planned.TargetHost), Id(planned.HostToCreate?.Source), Id(planned.Existing),
+                    planned.KeptBy);
+                foreach (var reference in planned.References)
+                    Line("reference", reference.PropertyPath, reference.Kind, reference.Expected?.Identity());
+                foreach (var value in planned.Values)
+                    Line("value", value.PropertyPath, value.Display());
+            }
+
+            foreach (var planned in ObjectsToCreate)
+            {
+                Line("object", Id(planned.Source), planned.Name, Id(planned.ExistingParent),
+                    Id(planned.ParentToCreate?.Source), Id(planned.PrefabAsset), planned.LeftOut);
+            }
+
+            foreach (var component in ComponentsToRemove) Line("remove", Id(component));
+            foreach (var kept in KeptComponents) Line("keep", Id(kept.Component), kept.RequiredBy);
+            foreach (var broken in BrokenReferences)
+                Line("broken", Id(broken.Holder), broken.PropertyPath, Id(broken.Removed));
+
+            return text.ToString();
+        }
     }
 }

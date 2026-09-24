@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — When two components of one type had been added to a source Prefab instance and only the second was selected, both copies ended up on one component of the new instance. Each now gets a component of its own, in the source's order.
 - **Component Copier** — A component held back by **Skip the component** no longer stays in a nested Prefab that is added; it is removed from the new instance like an unchecked component, and reported when another component requires it.
 - **Component Copier** — A mirror copy now mirrors MA Mesh Settings bounds as a whole: the new bounds enclose the mirror image of the original ones, so a root bone with different axes on the other side no longer cuts them off.
+- **Component Copier** — Applying a plan whose objects were deleted in the meantime no longer stops halfway; the window refreshes the plan and asks to apply again, and an unexpected error reverts the partial copy.
 
 ---
 
@@ -63,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — コピー元の Prefab インスタンスに同じ型のコンポーネントを 2 つ追加し、2 つめだけを選択してコピーすると、新しいインスタンスでは両方が 1 つのコンポーネントに書き込まれていました。それぞれ別のコンポーネントへ、コピー元の順で書き込むようにしました。
 - **Component Copier** — **コンポーネントごとスキップ** で保留されたコンポーネントが、追加されるネストされた Prefab の中に残らないようにしました。チェックを外したコンポーネントと同様に新しいインスタンスから削除し、ほかのコンポーネントに必要とされていて削除できない場合は報告します。
 - **Component Copier** — **反対側へコピー** で MA Mesh Settings の Bounds を箱ごと反転するようにしました。新しい Bounds は元の Bounds の鏡像を包含するので、反対側のボーンの軸が異なるときに切り詰められる問題を修正しました。
+- **Component Copier** — 適用までの間にオブジェクトが削除されていた計画を適用しても途中で止まらないようにしました。計画を更新して再適用を促し、想定外のエラー時は途中までのコピーを元に戻します。
 
 ## [1.1.0] - 2026-09-22
 
