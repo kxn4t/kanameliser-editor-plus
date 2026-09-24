@@ -818,6 +818,9 @@ msgstr "依物件"
 msgid "componentCopier.search.regex:tooltip"
 msgstr "將搜尋文字視為正規表示式（不區分大小寫）。比對對象為物件路徑和元件類型名稱。例：Skirt|Hair"
 
+msgid "componentCopier.search.timeout:tooltip"
+msgstr "此正規表示式的比對耗時過長，因此在修改之前將被忽略"
+
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "依物件將清單分組。每一列是該物件上的一個元件。"
 

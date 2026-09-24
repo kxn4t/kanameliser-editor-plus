@@ -818,6 +818,9 @@ msgstr "按对象"
 msgid "componentCopier.search.regex:tooltip"
 msgstr "将搜索文本视为正则表达式（不区分大小写）。匹配对象为对象路径和组件类型名称。例：Skirt|Hair"
 
+msgid "componentCopier.search.timeout:tooltip"
+msgstr "此正则表达式的匹配耗时过长，因此在修改之前将被忽略"
+
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "按对象对列表分组。每一行是该对象上的一个组件。"
 

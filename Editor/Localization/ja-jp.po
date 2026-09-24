@@ -818,6 +818,9 @@ msgstr "オブジェクト別"
 msgid "componentCopier.search.regex:tooltip"
 msgstr "検索文字列を正規表現として扱います（大文字と小文字は区別しません）。オブジェクトのパスとコンポーネントの型名が対象です。例: Skirt|Hair"
 
+msgid "componentCopier.search.timeout:tooltip"
+msgstr "この正規表現は照合に時間がかかりすぎるため、変更するまで無視します"
+
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "一覧をオブジェクトごとにまとめます。各行はそのオブジェクトに付いているコンポーネントです。"
 

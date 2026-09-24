@@ -819,6 +819,9 @@ msgstr "By object"
 msgid "componentCopier.search.regex:tooltip"
 msgstr "Treat the search text as a regular expression (case-insensitive). It is matched against the object path and the component type name. Example: Skirt|Hair"
 
+msgid "componentCopier.search.timeout:tooltip"
+msgstr "This pattern takes too long to match, so it is ignored until it is changed"
+
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "Group the list by object. Each row is a component on that object."
 
