@@ -891,6 +891,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 case ComponentAction.SkipIdentical:
                 case ComponentAction.LeftOut:
                     return Localization.S(ComponentCopierStrings.ActionTooltipKey(planned.Action));
+                // Likewise an unexplained "Overwrite" with the Replace policy
+                case ComponentAction.Overwrite when planned.KeptBy != null:
+                    return Localization.S("componentCopier.action.overwrite.kept:tooltip", planned.KeptBy);
                 default:
                     return "";
             }

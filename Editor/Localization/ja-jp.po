@@ -435,6 +435,10 @@ msgstr "コピー先にすでにこのコンポーネントがあるので、設
 msgid "componentCopier.action.skipIdentical:tooltip"
 msgstr "コピー先がすでに同じ内容なので、書き込みません"
 
+#, csharp-format
+msgid "componentCopier.action.overwrite.kept:tooltip"
+msgstr "ほかのコンポーネント（{0}）に必要とされているため、削除せずに上書きします"
+
 msgid "componentCopier.action.blocked"
 msgstr "保留"
 
@@ -617,6 +621,14 @@ msgstr "コピー元の外にあるオブジェクト {0} 個への参照（{1} 
 msgid "componentCopier.report.brokenReference"
 msgstr "{0}（{1}）が、置き換えで削除されるコンポーネントを参照しています: {2}"
 
+#, csharp-format
+msgid "componentCopier.report.kept"
+msgstr "{0} 件は、ほかのコンポーネントに必要とされているため残ります。"
+
+#, csharp-format
+msgid "componentCopier.report.kept.requiredBy"
+msgstr "{0} に必要とされています"
+
 msgid "componentCopier.report.kind.externalKept"
 msgstr "そのまま残す"
 
@@ -760,6 +772,10 @@ msgstr "追加した Prefab から、チェックを外したコンポーネン�
 #, csharp-format
 msgid "componentCopier.report.removeFailed"
 msgstr "{0} 件のコンポーネントは、ほかのコンポーネントに必要とされているため削除できませんでした。"
+
+#, csharp-format
+msgid "componentCopier.report.notRemoved"
+msgstr "{0} 件のコンポーネントは、ほかのコンポーネントに必要とされているため削除できず、そのまま残しました。"
 
 msgid "componentCopier.prefabs.title"
 msgstr "コピー先にないオブジェクト"

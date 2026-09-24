@@ -8,7 +8,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     {
         Add,
         Overwrite,
-        /// <summary>Added after the existing same-type components on the host are removed.</summary>
+        /// <summary>
+        /// Added after the existing same-type components on the host are removed. The ones that another component
+        /// requires stay instead, see <see cref="CopyPlan.KeptComponents"/>.
+        /// </summary>
         Replace,
         /// <summary>Existing component is kept because of <see cref="ExistingComponentPolicy.Skip"/>.</summary>
         Skip,
@@ -323,6 +326,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>Counterpart that already exists in the target (same type, same index), if any.</summary>
         public Component Existing;
 
+        /// <summary>
+        /// Set when Replace overwrites <see cref="Existing"/> in place because another component requires it, so
+        /// that it cannot be removed: the type name of that component. See <see cref="CopyPlan.KeptComponents"/>.
+        /// </summary>
+        public string KeptBy;
+
         public ComponentAction Action;
         public BlockReason BlockReason;
         public List<PlannedReference> References = new();
@@ -394,6 +403,23 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     }
 
     /// <summary>
+    /// An existing component that Replace would remove, but that stays because another component requires it.
+    /// </summary>
+    internal sealed class KeptComponent
+    {
+        public Component Component;
+
+        /// <summary>Type name of a component that requires it.</summary>
+        public string RequiredBy;
+
+        /// <summary>
+        /// The copy that overwrites it in place. Null when more of them stay than there are copies of their type:
+        /// the ones beyond the copies stay as they are.
+        /// </summary>
+        public PlannedComponent OverwrittenBy;
+    }
+
+    /// <summary>
     /// Everything a copy will do, including the expected end state of every component.
     /// Apply executes it and the diff check compares it against reality, so both always agree.
     /// </summary>
@@ -428,6 +454,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public List<PlannedObject> ObjectsToCreate = new();
         public List<BlockedObject> BlockedObjects = new();
         public List<Component> ComponentsToRemove = new();
+
+        /// <summary>
+        /// Existing components of the replaced types that Replace leaves in place, because another component
+        /// requires them. None of them is in <see cref="ComponentsToRemove"/>.
+        /// </summary>
+        public List<KeptComponent> KeptComponents = new();
+
         public List<BrokenReferenceWarning> BrokenReferences = new();
     }
 }

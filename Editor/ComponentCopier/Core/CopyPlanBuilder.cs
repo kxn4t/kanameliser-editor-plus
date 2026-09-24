@@ -479,10 +479,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private static void DecideActions(CopyPlan plan)
         {
             plan.ComponentsToRemove.Clear();
-            var replacedHosts = new HashSet<(Transform host, Type type)>();
+            plan.KeptComponents.Clear();
 
             foreach (var planned in plan.Components)
             {
+                planned.KeptBy = null;
+
                 if (planned.BlockReason != BlockReason.None)
                 {
                     planned.Action = ComponentAction.Blocked;
@@ -511,15 +513,72 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         break;
 
                     case ExistingComponentPolicy.Replace:
-                        var replaced = ComponentScanner.ExactTypeComponents(planned.TargetHost, type);
-                        planned.Action = replaced.Count > 0 ? ComponentAction.Replace : ComponentAction.Add;
-                        if (replaced.Count > 0 && replacedHosts.Add((planned.TargetHost, type)))
-                            plan.ComponentsToRemove.AddRange(replaced);
+                        // What is removed and what stays is decided once every replaced type is known
+                        planned.Existing = null;
+                        planned.Action = ComponentScanner.ExactTypeComponents(planned.TargetHost, type).Count > 0
+                            ? ComponentAction.Replace
+                            : ComponentAction.Add;
                         break;
 
                     default:
                         planned.Action = ComponentAction.Add;
                         break;
+                }
+            }
+
+            if (plan.Settings.ExistingPolicy == ExistingComponentPolicy.Replace) PlanRemovals(plan);
+        }
+
+        /// <summary>
+        /// Replace removes the existing components of the replaced types from each receiving host, and adds the
+        /// copies afterwards. Unity refuses to remove a component that another one requires, so such a component
+        /// stays: the copy of the same index overwrites it in place, and the ones beyond the copies stay as they
+        /// are. Decided here rather than while applying, so that the pre-check shows it.
+        /// </summary>
+        private static void PlanRemovals(CopyPlan plan)
+        {
+            // The copies that replace something are those whose host exists and has components of their type
+            var replacing = plan.Components
+                .Where(c => c.Action == ComponentAction.Replace)
+                .GroupBy(c => (host: c.TargetHost, type: c.Entry.Type))
+                .ToList();
+
+            // A RequireComponent only reaches the components of its own GameObject, so each host is decided alone
+            foreach (var byHost in replacing.GroupBy(copies => copies.Key.host))
+            {
+                var host = byHost.Key;
+                var candidates = byHost
+                    .SelectMany(copies => ComponentScanner.ExactTypeComponents(host, copies.Key.type))
+                    .ToList();
+                var kept = ComponentDependencies.FindKept(candidates);
+                plan.ComponentsToRemove.AddRange(candidates.Where(c => !kept.ContainsKey(c)));
+
+                foreach (var copies in byHost)
+                {
+                    // Paired by index, like the copies and the existing components under the Overwrite policy
+                    var copyList = copies.ToList();
+                    var stays = ComponentScanner.ExactTypeComponents(host, copies.Key.type)
+                        .Where(kept.ContainsKey)
+                        .ToList();
+                    for (int i = 0; i < stays.Count; i++)
+                    {
+                        var component = stays[i];
+                        string requiredBy = kept[component].GetType().Name;
+                        var copy = i < copyList.Count ? copyList[i] : null;
+                        if (copy != null)
+                        {
+                            copy.Action = ComponentAction.Overwrite;
+                            copy.Existing = component;
+                            copy.KeptBy = requiredBy;
+                        }
+
+                        plan.KeptComponents.Add(new KeptComponent
+                        {
+                            Component = component,
+                            RequiredBy = requiredBy,
+                            OverwrittenBy = copy,
+                        });
+                    }
                 }
             }
         }

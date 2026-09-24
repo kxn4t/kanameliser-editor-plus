@@ -435,6 +435,10 @@ msgstr "目标上已有此组件，按设置保留不变"
 msgid "componentCopier.action.skipIdentical:tooltip"
 msgstr "目标的内容已相同，因此不写入"
 
+#, csharp-format
+msgid "componentCopier.action.overwrite.kept:tooltip"
+msgstr "被其他组件依赖，因此保留并覆盖（{0}）"
+
 msgid "componentCopier.action.blocked"
 msgstr "待定"
 
@@ -617,6 +621,14 @@ msgstr "对复制源之外 {0} 个对象的引用（{1} 处）将保持不变。
 msgid "componentCopier.report.brokenReference"
 msgstr "{0}（{1}）引用了将被替换删除的组件：{2}"
 
+#, csharp-format
+msgid "componentCopier.report.kept"
+msgstr "{0} 个组件被其他组件依赖，因此保留。"
+
+#, csharp-format
+msgid "componentCopier.report.kept.requiredBy"
+msgstr "被 {0} 依赖"
+
 msgid "componentCopier.report.kind.externalKept"
 msgstr "保持不变"
 
@@ -760,6 +772,10 @@ msgstr "已从添加的 Prefab 中删除取消勾选的 {0} 个组件和 {1} 个
 #, csharp-format
 msgid "componentCopier.report.removeFailed"
 msgstr "{0} 个组件被其他组件依赖，无法删除。"
+
+#, csharp-format
+msgid "componentCopier.report.notRemoved"
+msgstr "{0} 个组件被其他组件依赖，无法删除，已保持原样。"
 
 msgid "componentCopier.prefabs.title"
 msgstr "复制目标中缺少的对象"

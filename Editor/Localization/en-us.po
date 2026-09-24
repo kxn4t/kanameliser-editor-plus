@@ -436,6 +436,10 @@ msgstr "The target already has this component, and the setting says to keep it"
 msgid "componentCopier.action.skipIdentical:tooltip"
 msgstr "The target already has the same values, so nothing is written"
 
+#, csharp-format
+msgid "componentCopier.action.overwrite.kept:tooltip"
+msgstr "Overwritten in place: {0} requires it"
+
 msgid "componentCopier.action.blocked"
 msgstr "Blocked"
 
@@ -618,6 +622,14 @@ msgstr "References to {0} object(s) outside of the source ({1} place(s)) are kep
 msgid "componentCopier.report.brokenReference"
 msgstr "{0} ({1}) references a component that Replace will remove: {2}"
 
+#, csharp-format
+msgid "componentCopier.report.kept"
+msgstr "{0} component(s) stay because another component requires them."
+
+#, csharp-format
+msgid "componentCopier.report.kept.requiredBy"
+msgstr "required by {0}"
+
 msgid "componentCopier.report.kind.externalKept"
 msgstr "Kept as is"
 
@@ -761,6 +773,10 @@ msgstr "Removed {0} unchecked component(s) and {1} object(s) from the added pref
 #, csharp-format
 msgid "componentCopier.report.removeFailed"
 msgstr "{0} component(s) could not be removed because another component requires them."
+
+#, csharp-format
+msgid "componentCopier.report.notRemoved"
+msgstr "{0} component(s) could not be removed because another component requires them; they were left as they are."
 
 msgid "componentCopier.prefabs.title"
 msgstr "Objects missing in the target"

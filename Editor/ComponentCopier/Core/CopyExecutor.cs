@@ -18,11 +18,20 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public int LeftOutComponents;
         public int LeftOutObjects;
 
-        /// <summary>Components that could not be added (e.g. rejected by DisallowMultipleComponent).</summary>
+        /// <summary>
+        /// Components that could not be added (e.g. rejected by DisallowMultipleComponent), including the ones
+        /// Replace did not add because a component they replace could not be removed.
+        /// </summary>
         public List<PlannedComponent> Failed = new();
 
         /// <summary>Left-out components that had to stay because another component requires them.</summary>
         public List<PlannedComponent> FailedRemovals = new();
+
+        /// <summary>
+        /// Components that Replace was to remove but that had to stay, because another component requires them.
+        /// The plan keeps the ones it knows of, so these come from changes made after planning.
+        /// </summary>
+        public List<Component> NotRemoved = new();
     }
 
     /// <summary>
@@ -43,6 +52,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             CreateObjects(plan, result);
             RemoveReplacedComponents(plan, result);
 
+            // Replace adds its copies once the components they replace are gone. Next to one that stayed, a copy
+            // would be rejected, or duplicate it.
+            var notReplaced = new HashSet<(Transform host, Type type)>(
+                result.NotRemoved.Select(component => (component.transform, component.GetType())));
+
             // Looked up before anything is added: components are found by their index among the same type,
             // which shifts as soon as one is added or removed
             var leftOut = FindLeftOutComponents(plan);
@@ -52,6 +66,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             foreach (var planned in plan.Components)
             {
                 if (!planned.WillWrite) continue;
+
+                // Fails like a component that cannot be added: nothing else is undone, and the references to it
+                // are cleared, which the diff check reports
+                if (planned.Action == ComponentAction.Replace &&
+                    notReplaced.Contains((planned.TargetHost, planned.Entry.Type)))
+                {
+                    result.Failed.Add(planned);
+                    continue;
+                }
 
                 var target = PrepareTargetComponent(planned);
                 if (target == null)
@@ -244,14 +267,17 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             PrefabUtility.RecordPrefabInstancePropertyModifications(target);
         }
 
+        /// <summary>
+        /// Removes what Replace replaces, each component once nothing requires it any more. The plan keeps the
+        /// components that another one requires, so all of these should go. One that has to stay all the same,
+        /// because a component that requires it was added after planning, is noted as not removed.
+        /// </summary>
         private static void RemoveReplacedComponents(CopyPlan plan, ExecutionResult result)
         {
-            foreach (var component in plan.ComponentsToRemove)
-            {
-                if (component == null) continue;
-                Undo.DestroyObjectImmediate(component);
-                result.RemovedComponents++;
-            }
+            var components = plan.ComponentsToRemove.Where(component => component != null).ToList();
+            var stayed = DestroyComponents(components);
+            result.RemovedComponents += components.Count - stayed.Count;
+            result.NotRemoved.AddRange(stayed);
         }
 
         private static List<(PlannedComponent planned, Component component)> FindLeftOutComponents(CopyPlan plan)
@@ -310,7 +336,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>
         /// Destroys the components. A component that another one requires cannot be removed, and Unity logs an
         /// error for the attempt, so the ones that are free go first, which may free others (both halves of a
-        /// pair are removed). Returns the ones that had to stay.
+        /// pair are removed). Returns the ones that had to stay, including any that Unity refused to destroy.
         /// </summary>
         private static List<Component> DestroyComponents(List<Component> components)
         {
@@ -321,9 +347,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 progress = false;
                 foreach (var component in pending.ToList())
                 {
-                    if (IsRequiredByAnother(component)) continue;
+                    if (ComponentDependencies.IsRequiredByAnother(component)) continue;
 
+                    // A requirement the check above cannot see (one of a missing script, ...) makes Unity refuse
+                    // with an error, and the component is still there then
                     Undo.DestroyObjectImmediate(component);
+                    if (component != null) continue;
+
                     pending.Remove(component);
                     progress = true;
                 }
@@ -331,29 +361,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             return pending;
         }
-
-        private static bool IsRequiredByAnother(Component component)
-        {
-            var type = component.GetType();
-            foreach (var other in component.GetComponents<Component>())
-            {
-                if (other == null || other == component) continue;
-
-                var attributes = other.GetType().GetCustomAttributes(typeof(RequireComponent), true);
-                foreach (RequireComponent attribute in attributes)
-                {
-                    if (Requires(attribute.m_Type0, type) || Requires(attribute.m_Type1, type) ||
-                        Requires(attribute.m_Type2, type))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private static bool Requires(Type required, Type type) => required != null && required.IsAssignableFrom(type);
 
         private static Component PrepareTargetComponent(PlannedComponent planned)
         {

@@ -436,6 +436,10 @@ msgstr "대상에 이미 이 컴포넌트가 있으므로 설정에 따라 그�
 msgid "componentCopier.action.skipIdentical:tooltip"
 msgstr "대상이 이미 같은 내용이므로 쓰지 않습니다"
 
+#, csharp-format
+msgid "componentCopier.action.overwrite.kept:tooltip"
+msgstr "다른 컴포넌트가 필요로 하므로 남겨 두고 덮어씁니다 ({0})"
+
 msgid "componentCopier.action.blocked"
 msgstr "보류"
 
@@ -618,6 +622,14 @@ msgstr "복사 원본 바깥의 오브젝트 {0}개에 대한 참조({1}곳)는 
 msgid "componentCopier.report.brokenReference"
 msgstr "{0} ({1})이(가) 교체로 삭제될 컴포넌트를 참조하고 있습니다: {2}"
 
+#, csharp-format
+msgid "componentCopier.report.kept"
+msgstr "컴포넌트 {0}개는 다른 컴포넌트가 필요로 하므로 남습니다."
+
+#, csharp-format
+msgid "componentCopier.report.kept.requiredBy"
+msgstr "{0}이(가) 필요로 함"
+
 msgid "componentCopier.report.kind.externalKept"
 msgstr "그대로 유지"
 
@@ -761,6 +773,10 @@ msgstr "추가한 Prefab에서 체크를 해제한 컴포넌트 {0}개와 오브
 #, csharp-format
 msgid "componentCopier.report.removeFailed"
 msgstr "컴포넌트 {0}개는 다른 컴포넌트가 필요로 하므로 삭제할 수 없었습니다."
+
+#, csharp-format
+msgid "componentCopier.report.notRemoved"
+msgstr "컴포넌트 {0}개는 다른 컴포넌트가 필요로 하므로 삭제할 수 없어 그대로 두었습니다."
 
 msgid "componentCopier.prefabs.title"
 msgstr "복사 대상에 없는 오브젝트"

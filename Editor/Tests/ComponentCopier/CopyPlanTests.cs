@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Kanameliser.EditorPlus.ComponentCopier;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.TestTools;
 
 namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 {
@@ -594,6 +596,156 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void ReplacePolicy_RemovesAComponentAfterTheOneThatRequiresIt()
+        {
+            // HingeJoint requires the Rigidbody next to it, so the Rigidbody, which comes first, has to go last
+            var source = CreateHierarchy("Source", "Door");
+            var target = CreateHierarchy("Target", "Door");
+            source.Find("Door").gameObject.AddComponent<Rigidbody>().mass = 5f;
+            source.Find("Door").gameObject.AddComponent<HingeJoint>().useSpring = true;
+            target.Find("Door").gameObject.AddComponent<Rigidbody>().mass = 2f;
+            target.Find("Door").gameObject.AddComponent<HingeJoint>();
+
+            var settings = new CopySettings { ExistingPolicy = ExistingComponentPolicy.Replace };
+            var plan = BuildPlan(source, target, settings, typeof(Rigidbody), typeof(HingeJoint));
+            Assert.That(plan.Components.Select(c => c.Action), Is.All.EqualTo(ComponentAction.Replace));
+            Assert.AreEqual(2, plan.ComponentsToRemove.Count);
+            Assert.IsEmpty(plan.KeptComponents, "The joint is removed as well, so it holds nothing back");
+
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(2, result.RemovedComponents);
+            Assert.IsEmpty(result.NotRemoved);
+            Assert.IsEmpty(result.Failed);
+            var door = target.Find("Door");
+            Assert.AreEqual(1, door.GetComponents<Rigidbody>().Length);
+            Assert.AreEqual(5f, door.GetComponent<Rigidbody>().mass);
+            Assert.AreEqual(1, door.GetComponents<HingeJoint>().Length);
+            Assert.IsTrue(door.GetComponent<HingeJoint>().useSpring);
+        }
+
+        [Test]
+        public void ReplacePolicy_OverwritesInPlaceAComponentThatAnotherOneRequires()
+        {
+            // The target's HingeJoint is not copied, and the Rigidbody cannot be removed from under it
+            var source = CreateHierarchy("Source", "Door");
+            var target = CreateHierarchy("Target", "Door");
+            source.Find("Door").gameObject.AddComponent<Rigidbody>().mass = 5f;
+            var targetBody = target.Find("Door").gameObject.AddComponent<Rigidbody>();
+            targetBody.mass = 2f;
+            target.Find("Door").gameObject.AddComponent<HingeJoint>();
+
+            var settings = new CopySettings { ExistingPolicy = ExistingComponentPolicy.Replace };
+            var plan = BuildPlan(source, target, settings, typeof(Rigidbody));
+            var planned = plan.Components.Single();
+            Assert.AreEqual(ComponentAction.Overwrite, planned.Action);
+            Assert.AreSame(targetBody, planned.Existing);
+            Assert.AreEqual("HingeJoint", planned.KeptBy);
+            Assert.IsEmpty(plan.ComponentsToRemove);
+            var kept = plan.KeptComponents.Single();
+            Assert.AreSame(targetBody, kept.Component);
+            Assert.AreEqual("HingeJoint", kept.RequiredBy);
+            Assert.AreSame(planned, kept.OverwrittenBy);
+
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(0, result.RemovedComponents);
+            Assert.IsEmpty(result.Failed);
+            Assert.AreSame(targetBody, target.Find("Door").GetComponent<Rigidbody>());
+            Assert.AreEqual(5f, targetBody.mass);
+        }
+
+        [Test]
+        public void ReplacePolicy_LeavesTheComponentsBeyondTheCopiesInPlace()
+        {
+            // AudioLowPassFilter requires an AudioBehaviour: every AudioSource satisfies it, and several can coexist
+            var source = CreateHierarchy("Source", "Speaker");
+            var target = CreateHierarchy("Target", "Speaker");
+            source.Find("Speaker").gameObject.AddComponent<AudioSource>().volume = 0.3f;
+            var speaker = target.Find("Speaker").gameObject;
+            var first = speaker.AddComponent<AudioSource>();
+            first.volume = 0.9f;
+            var second = speaker.AddComponent<AudioSource>();
+            second.volume = 0.8f;
+            speaker.AddComponent<AudioLowPassFilter>();
+
+            var settings = new CopySettings { ExistingPolicy = ExistingComponentPolicy.Replace };
+            var plan = BuildPlan(source, target, settings, typeof(AudioSource));
+            var planned = plan.Components.Single();
+            Assert.AreEqual(ComponentAction.Overwrite, planned.Action);
+            Assert.AreSame(first, planned.Existing);
+            Assert.AreEqual("AudioLowPassFilter", planned.KeptBy);
+            Assert.IsEmpty(plan.ComponentsToRemove);
+            Assert.AreEqual(2, plan.KeptComponents.Count);
+            Assert.AreSame(planned, plan.KeptComponents[0].OverwrittenBy);
+            Assert.AreSame(second, plan.KeptComponents[1].Component);
+            Assert.IsNull(plan.KeptComponents[1].OverwrittenBy, "There is only one copy to overwrite with");
+
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(0, result.RemovedComponents);
+            Assert.IsEmpty(result.Failed);
+            Assert.AreEqual(2, speaker.GetComponents<AudioSource>().Length);
+            Assert.AreEqual(0.3f, first.volume);
+            Assert.AreEqual(0.8f, second.volume);
+            var extra = CopyVerifier.Verify(plan).Components.Single(c => c.Kind == DiffKind.ExtraOnTarget);
+            Assert.AreSame(second, extra.Actual);
+        }
+
+        [Test]
+        public void KeptComponents_FollowAChainOfRequirements()
+        {
+            // C requires B, which requires A. No built-in components chain three deep, so the links are made up.
+            var requirers = new Dictionary<string, string[]>
+            {
+                { "A", new[] { "B" } },
+                { "B", new[] { "C" } },
+                { "C", new string[0] },
+            };
+            string FindRequirer(string component, ICollection<string> removed) =>
+                requirers[component].FirstOrDefault(requirer => !removed.Contains(requirer));
+
+            // C stays, so B has to stay for it, and then A for B
+            var kept = ComponentDependencies.FindKept(new[] { "A", "B" }, FindRequirer);
+            Assert.AreEqual(2, kept.Count);
+            Assert.AreEqual("B", kept["A"]);
+            Assert.AreEqual("C", kept["B"]);
+
+            Assert.IsEmpty(ComponentDependencies.FindKept(new[] { "A", "B", "C" }, FindRequirer),
+                "A requirer that is removed as well holds nothing back");
+        }
+
+        [Test]
+        public void ReplacePolicy_DoesNotAddNextToAComponentThatCouldNotBeRemoved()
+        {
+            var source = CreateHierarchy("Source", "Door");
+            var target = CreateHierarchy("Target", "Door");
+            source.Find("Door").gameObject.AddComponent<Rigidbody>().mass = 5f;
+            var targetBody = target.Find("Door").gameObject.AddComponent<Rigidbody>();
+            targetBody.mass = 2f;
+
+            var settings = new CopySettings { ExistingPolicy = ExistingComponentPolicy.Replace };
+            var plan = BuildPlan(source, target, settings, typeof(Rigidbody));
+            Assert.AreEqual(ComponentAction.Replace, plan.Components.Single().Action);
+            Assert.AreSame(targetBody, plan.ComponentsToRemove.Single());
+
+            // Added after planning, so the plan still removes the Rigidbody. Validating the plan right before
+            // applying is meant to stop this case earlier; this is the executor's own safety net behind that.
+            target.Find("Door").gameObject.AddComponent<HingeJoint>();
+
+            // The removal is not even tried, so Unity logs nothing
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreSame(targetBody, result.NotRemoved.Single());
+            Assert.AreEqual(0, result.RemovedComponents);
+            Assert.AreSame(plan.Components.Single(), result.Failed.Single());
+            Assert.AreEqual(0, result.WrittenComponents);
+            var bodies = target.Find("Door").GetComponents<Rigidbody>();
+            Assert.AreEqual(1, bodies.Length, "No second Rigidbody may be added next to the one that stayed");
+            Assert.AreEqual(2f, bodies[0].mass);
+        }
+
+        [Test]
         public void ExtraComponentOnTarget_IsReported()
         {
             var source = CreateHierarchy("Source", "Bone", "Leftover");
@@ -623,6 +775,80 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 
             Assert.IsNull(target.Find("Armature/Bone/Collider"));
             Assert.IsNull(target.Find("Armature/Bone").GetComponent<SphereCollider>());
+        }
+
+        [Test]
+        public void FailedComponent_LeavesTheRestAppliedAndIsRevertedByASingleUndo()
+        {
+            AssertPartialApplication(UnresolvedReferencePolicy.Clear);
+        }
+
+        [Test]
+        public void FailedComponent_DoesNotHoldBackTheOnesThatReferToIt()
+        {
+            // The setting holds back what the plan cannot resolve; a failure while applying is no such case
+            AssertPartialApplication(UnresolvedReferencePolicy.SkipComponent);
+        }
+
+        /// <summary>
+        /// A cannot be added, B refers to A, and C has nothing to do with A. B and C are written all the same,
+        /// B without the reference that has nothing to point at, and a single Undo takes everything back.
+        /// </summary>
+        private void AssertPartialApplication(UnresolvedReferencePolicy unresolvedPolicy)
+        {
+            var source = CreateHierarchy("Source", "A", "B", "C");
+            var target = CreateHierarchy("Target", "A", "B", "C");
+
+            // The target's A has a Rigidbody already, and there can only be one
+            var sourceBody = source.Find("A").gameObject.AddComponent<Rigidbody>();
+            sourceBody.mass = 9f;
+            var targetBody = target.Find("A").gameObject.AddComponent<Rigidbody>();
+            targetBody.mass = 2f;
+
+            // The joint brings the Rigidbody it requires along; the target's B has only that Rigidbody
+            var sourceJoint = source.Find("B").gameObject.AddComponent<HingeJoint>();
+            sourceJoint.connectedBody = sourceBody;
+            target.Find("B").gameObject.AddComponent<Rigidbody>();
+
+            var sourceCollider = source.Find("C").gameObject.AddComponent<SphereCollider>();
+            sourceCollider.radius = 0.7f;
+
+            var settings = new CopySettings
+            {
+                ExistingPolicy = ExistingComponentPolicy.Add,
+                UnresolvedPolicy = unresolvedPolicy,
+            };
+            // By instance: the Rigidbody of B would fail to be added as well
+            var plan = CopyPlanBuilder.Build(
+                SelectComponents(source, sourceBody, sourceJoint, sourceCollider),
+                TransformMapper.Build(source, target), settings);
+            Assert.That(plan.Components.Select(c => c.Action), Is.All.EqualTo(ComponentAction.Add));
+
+            // Unity turns the second Rigidbody down with a plain log message, not an error
+            LogAssert.Expect(LogType.Log, new Regex("Can't add component 'Rigidbody' to A because"));
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreSame(sourceBody, result.Failed.Single().Entry.Component);
+            Assert.AreEqual(2, result.WrittenComponents);
+            Assert.AreEqual(1, target.Find("A").GetComponents<Rigidbody>().Length);
+            Assert.AreEqual(2f, targetBody.mass);
+
+            // The copy of A does not exist, so B's reference to it is cleared, which the diff check reports
+            var targetJoint = target.Find("B").GetComponent<HingeJoint>();
+            Assert.IsNotNull(targetJoint);
+            Assert.IsNull(targetJoint.connectedBody);
+            Assert.AreEqual(DiffKind.ReferenceMismatch,
+                CopyVerifier.Verify(plan).Components.Single(d => d.Actual == targetJoint).Kind);
+
+            Assert.AreEqual(0.7f, target.Find("C").GetComponent<SphereCollider>().radius);
+
+            Undo.PerformUndo();
+
+            Assert.AreEqual(1, target.Find("A").GetComponents<Rigidbody>().Length);
+            Assert.AreEqual(2f, targetBody.mass);
+            Assert.IsNull(target.Find("B").GetComponent<HingeJoint>());
+            Assert.IsNotNull(target.Find("B").GetComponent<Rigidbody>());
+            Assert.IsNull(target.Find("C").GetComponent<SphereCollider>());
         }
 
         [Test]
