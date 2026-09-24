@@ -88,6 +88,32 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void PathOnlyReference_ToAnObjectTheCopyCreates_IsNotTakenForNone()
+        {
+            // Anchor is an empty object that the target lacks, so the copy creates it
+            var avatarA = CreateAvatar("AvatarA", "Outfit/Item", "Outfit/Anchor");
+            var avatarB = CreateAvatar("AvatarB", "Wear/Item");
+            AddMoveTo(avatarA.Find("Outfit/Item"), "Outfit/Anchor");
+
+            // Equal to the source but for the reference, whose halves are both empty
+            var moveTo = AddMoveTo(avatarB.Find("Wear/Item"), "");
+
+            var plan = BuildPlanWithSurroundings(avatarA.Find("Outfit"), avatarB.Find("Wear"));
+            Assert.AreEqual(ComponentAction.Overwrite, plan.Components.Single().Action);
+
+            // There is no path to expect before the object exists, so the object half reports the mismatch
+            var property = CopyVerifier.Verify(plan).Components.Single().Properties.Single();
+            Assert.AreEqual("target.targetObject", property.PropertyPath);
+            Assert.AreEqual(DiffKind.ReferenceMismatch, property.Kind);
+
+            CopyExecutor.Execute(plan);
+
+            var (targetObject, referencePath) = ReadReference(moveTo);
+            Assert.AreSame(avatarB.Find("Wear/Anchor").gameObject, targetObject);
+            Assert.AreEqual("Wear/Anchor", referencePath);
+        }
+
+        [Test]
         public void UnresolvedReference_IsClearedTogetherWithItsPath()
         {
             var avatarA = CreateAvatar("AvatarA", "Outfit/Item", "Outfit/Anchor");

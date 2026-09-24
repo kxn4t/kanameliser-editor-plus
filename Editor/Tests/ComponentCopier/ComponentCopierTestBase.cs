@@ -128,6 +128,15 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             return ComponentScanner.Scan(root).Where(e => types.Contains(e.Type)).ToList();
         }
 
+        /// <summary>
+        /// The entries of exactly these components. <see cref="Select"/> takes every component of a type, also the
+        /// ones Unity added to satisfy a RequireComponent.
+        /// </summary>
+        internal static List<ComponentEntry> SelectComponents(Transform root, params Component[] components)
+        {
+            return ComponentScanner.Scan(root).Where(e => components.Contains(e.Component)).ToList();
+        }
+
         internal static CopyPlan BuildPlan(
             Transform source, Transform target, CopySettings settings, params System.Type[] types)
         {

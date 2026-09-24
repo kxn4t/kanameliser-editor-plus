@@ -28,6 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — A target that is moved into the source (or the source into the target) in the Hierarchy after it was picked is no longer copied to; the window now warns about it as when it is picked that way.
 - **Component Copier** — An existing component is no longer skipped as identical while a reference that the copy clears still points at an object named "None", or while a difference comes after 50 or more such references.
 - **Component Copier** — Changing the target, the source or **Copy to the other side** now also resets objects set to **Pick an existing object**. They used to stay listed among the objects that need a counterpart instead of under **To be created**.
+- **Component Copier** — A nested Prefab added to the target now follows the source instance's overrides: objects and components removed there are removed from the new instance, and a renamed object is found under its new name instead of being created a second time next to the Prefab's own.
+- **Component Copier** — Components on same-name sibling objects (two `Chain` below one bone, ...) can now be checked apart. They used to share one checkbox state and one status label.
+- **Component Copier** — A reference to an object or component that the copy creates is no longer taken for "None" when the existing component's reference is empty, which skipped the component as identical and left the reference unset.
+- **Component Copier** — **Replace** now removes components in dependency order, and a component that another one requires is planned as an overwrite and shown as such before applying; the number of removed components is reported correctly.
+- **Component Copier** — A component that Unity adds automatically to satisfy a RequireComponent is now reused when it is also copied, instead of failing to add or being duplicated.
+- **Component Copier** — When two components of one type had been added to a source Prefab instance and only the second was selected, both copies ended up on one component of the new instance. Each now gets a component of its own, in the source's order.
+- **Component Copier** — A component held back by **Skip the component** no longer stays in a nested Prefab that is added; it is removed from the new instance like an unchecked component, and reported when another component requires it.
+- **Component Copier** — A mirror copy now mirrors MA Mesh Settings bounds as a whole: the new bounds enclose the mirror image of the original ones, so a root bone with different axes on the other side no longer cuts them off.
+- **Component Copier** — Applying a plan whose objects were deleted in the meantime no longer stops halfway; the window refreshes the plan and asks to apply again, and an unexpected error reverts the partial copy.
+- **Component Copier** — A search pattern that takes too long no longer freezes the window; the search is cut off and the pattern is marked until it is changed.
 
 ---
 
@@ -47,6 +57,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — コピー先を指定したあとに Hierarchy でコピー元の中へ移動した（またはコピー元をコピー先の中へ移動した）場合に、そのままコピーできてしまう問題を修正しました。最初からその配置で指定したときと同じく警告します。
 - **Component Copier** — コピーで空になる参照が「None」という名前のオブジェクトを指しているときや、そうした参照が 50 個以上あり、その後ろに差分があるときに、既存のコンポーネントが「同一」としてスキップされる問題を修正しました。
 - **Component Copier** — **既存のオブジェクトを指定** にしたオブジェクトが、コピー先・コピー元・**反対側へコピー** を切り替えたあとも元に戻らず、**作成予定** ではなく対応先が必要なオブジェクトとして表示され続ける問題を修正しました。
+- **Component Copier** — コピー先に追加されるネストされた Prefab が、コピー元インスタンスのオーバーライドに従うようになりました。コピー元で削除したオブジェクトやコンポーネントは新しいインスタンスからも削除し、改名したオブジェクトは Prefab 側の名前のものと二重に作らず、新しい名前で引き継ぎます。
+- **Component Copier** — 同名の兄弟オブジェクト（1 つのボーンの下に `Chain` が 2 つある場合など）にあるコンポーネントを、別々にチェックできるようになりました。以前はチェック状態とステータス表示が連動していました。
+- **Component Copier** — コピーで作成されるオブジェクトやコンポーネントへの参照が、コピー先の既存コンポーネントで空のとき「None と同じ」とみなされ、コンポーネントが「同一」としてスキップされて参照が設定されない問題を修正しました。
+- **Component Copier** — **置き換え** がコンポーネントを依存関係の順に削除するようになりました。ほかのコンポーネントに必要とされていて削除できないものは、適用前に上書きとして表示したうえでその場で上書きします。削除件数の報告も正しくなりました。
+- **Component Copier** — RequireComponent のために Unity が自動追加したコンポーネントを、それもコピー対象のときは再利用するようにしました。以前は追加に失敗するか重複していました。
+- **Component Copier** — コピー元の Prefab インスタンスに同じ型のコンポーネントを 2 つ追加し、2 つめだけを選択してコピーすると、新しいインスタンスでは両方が 1 つのコンポーネントに書き込まれていました。それぞれ別のコンポーネントへ、コピー元の順で書き込むようにしました。
+- **Component Copier** — **コンポーネントごとスキップ** で保留されたコンポーネントが、追加されるネストされた Prefab の中に残らないようにしました。チェックを外したコンポーネントと同様に新しいインスタンスから削除し、ほかのコンポーネントに必要とされていて削除できない場合は報告します。
+- **Component Copier** — **反対側へコピー** で MA Mesh Settings の Bounds を箱ごと反転するようにしました。新しい Bounds は元の Bounds の鏡像を包含するので、反対側のボーンの軸が異なるときに切り詰められる問題を修正しました。
+- **Component Copier** — 適用までの間にオブジェクトが削除されていた計画を適用しても途中で止まらないようにしました。計画を更新して再適用を促し、想定外のエラー時は途中までのコピーを元に戻します。
+- **Component Copier** — 時間のかかりすぎる検索パターンでウィンドウが固まらないようにしました。検索を打ち切り、パターンを変更するまで警告表示します。
 
 ## [1.1.0] - 2026-09-22
 

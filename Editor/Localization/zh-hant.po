@@ -435,6 +435,10 @@ msgstr "目標上已有此元件，依設定保留不變"
 msgid "componentCopier.action.skipIdentical:tooltip"
 msgstr "目標的內容已相同，因此不寫入"
 
+#, csharp-format
+msgid "componentCopier.action.overwrite.kept:tooltip"
+msgstr "被其他元件依賴，因此保留並覆蓋（{0}）"
+
 msgid "componentCopier.action.blocked"
 msgstr "待定"
 
@@ -617,6 +621,14 @@ msgstr "對複製來源之外 {0} 個物件的參照（{1} 處）將保持不變
 msgid "componentCopier.report.brokenReference"
 msgstr "{0}（{1}）參照了將因取代而刪除的元件：{2}"
 
+#, csharp-format
+msgid "componentCopier.report.kept"
+msgstr "{0} 個元件被其他元件依賴，因此保留。"
+
+#, csharp-format
+msgid "componentCopier.report.kept.requiredBy"
+msgstr "被 {0} 依賴"
+
 msgid "componentCopier.report.kind.externalKept"
 msgstr "保持不變"
 
@@ -755,11 +767,22 @@ msgstr "取消勾選的 {0} 個元件將在新增 Prefab 後刪除，因此變�
 
 #, csharp-format
 msgid "componentCopier.report.appliedLeftOut"
-msgstr "已從新增的 Prefab 中刪除取消勾選的 {0} 個元件和 {1} 個物件。"
+msgstr "已從新增的 Prefab 中刪除被排除的 {0} 個元件和 {1} 個物件。"
 
 #, csharp-format
 msgid "componentCopier.report.removeFailed"
 msgstr "{0} 個元件被其他元件依賴，無法刪除。"
+
+#, csharp-format
+msgid "componentCopier.report.notRemoved"
+msgstr "{0} 個元件被其他元件依賴，無法刪除，已保持原樣。"
+
+msgid "componentCopier.report.stale"
+msgstr "建立計畫後場景發生了變更，已更新計畫。請確認內容後重新套用。"
+
+#, csharp-format
+msgid "componentCopier.report.applyFailed"
+msgstr "套用失敗，已復原所有變更：{0}"
 
 msgid "componentCopier.prefabs.title"
 msgstr "複製目標中缺少的物件"
@@ -794,6 +817,9 @@ msgstr "依物件"
 
 msgid "componentCopier.search.regex:tooltip"
 msgstr "將搜尋文字視為正規表示式（不區分大小寫）。比對對象為物件路徑和元件類型名稱。例：Skirt|Hair"
+
+msgid "componentCopier.search.timeout:tooltip"
+msgstr "此正規表示式的比對耗時過長，因此在修改之前將被忽略"
 
 msgid "componentCopier.groupBy.object:tooltip"
 msgstr "依物件將清單分組。每一列是該物件上的一個元件。"

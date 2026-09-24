@@ -11,7 +11,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     public partial class ComponentCopierWindow
     {
         // Snapshot shown after "Diff check only" or Apply. Unlike the live preview it is not recomputed,
-        // so the verification of an Apply stays on screen while the preview moves on.
+        // so the verification of an Apply stays on screen while the preview moves on. An Apply that changed
+        // nothing (the plan was out of date, or applying failed) leaves a message without a report.
         private DiffReport detailReport;
         private string detailTitleKey;
         private string detailMessage;
@@ -50,10 +51,49 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void Apply()
         {
-            var executedPlan = session.Plan;
-            if (executedPlan == null || session.IsTargetAsset) return;
+            if (session.Plan == null || session.IsTargetAsset) return;
 
-            var result = CopyExecutor.Execute(executedPlan);
+            // A scene change that the refresh has not picked up yet may have touched the plan on screen, so it is
+            // planned again first. A plan that comes out the same is the one the user has seen, and is applied on this
+            // click. One that changed is shown instead of applied: it may also have selected components that have
+            // just appeared. Tools that change the scene all the time (a clip previewed in the Animation window, ...)
+            // keep a refresh pending, so waiting for none would never apply.
+            if (refreshScheduled)
+            {
+                CancelScheduledRefresh();
+                string shown = session.Plan.Fingerprint();
+                Rescan();
+                if (session.Plan == null || session.Plan.Fingerprint() != shown)
+                {
+                    ShowNotApplied(Localization.S("componentCopier.report.stale"));
+                    return;
+                }
+            }
+
+            var executedPlan = session.Plan;
+            ExecutionResult result;
+            try
+            {
+                result = CopyExecutor.Execute(executedPlan);
+            }
+            catch (Exception exception)
+            {
+                // The executor has put the target back already
+                Debug.LogException(exception);
+                Rescan();
+                ShowNotApplied(Localization.S("componentCopier.report.applyFailed", exception.Message));
+                return;
+            }
+
+            // Something the plan needs was deleted since it was made, and nothing was changed
+            if (result.Stale)
+            {
+                Debug.Log("[Component Copier] Nothing was applied because the plan was out of date: " +
+                          $"{result.StaleReason}.");
+                Rescan();
+                ShowNotApplied(Localization.S("componentCopier.report.stale"));
+                return;
+            }
 
             detailReport = CopyVerifier.Verify(executedPlan);
             detailTitleKey = "componentCopier.report.afterApply";
@@ -79,11 +119,26 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     Localization.S("componentCopier.report.removeFailed", result.FailedRemovals.Count);
             }
 
+            if (result.NotRemoved.Count > 0)
+                detailMessage += "\n" + Localization.S("componentCopier.report.notRemoved", result.NotRemoved.Count);
+
             string targetName = session.MirrorMode ? "the other side" : session.TargetRoot.name;
             Debug.Log($"[Component Copier] Copied {result.WrittenComponents} component(s) " +
                       $"from '{session.SourceRoot.name}' to '{targetName}'.");
 
             Rescan();
+        }
+
+        /// <summary>
+        /// Says why an Apply changed nothing, in place of its report. The plan on screen has been made again for the
+        /// scene as it is now, and is left for the user to check and apply.
+        /// </summary>
+        private void ShowNotApplied(string message)
+        {
+            detailReport = null;
+            detailTitleKey = "componentCopier.apply";
+            detailMessage = message;
+            RenderReport();
         }
 
         private void RunDiffCheck()
@@ -121,7 +176,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             RenderPreCheck();
-            if (detailReport != null) RenderDetailReport();
+            if (detailTitleKey != null) RenderDetailReport();
         }
 
         private void RenderPreCheck()
@@ -169,7 +224,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 reportContainer.Add(prefabLabel);
             }
 
-            int leftOutComponents = plan.Components.Count(c => c.LeftOut);
+            // Held-back components inside an added prefab are removed the same way, but the warning about held-back
+            // components below counts them already
+            int leftOutComponents = plan.Components.Count(c => c.LeftOut && !c.IsHeldBack);
             if (leftOutComponents > 0)
             {
                 var leftOutLabel = new Label(Localization.S("componentCopier.report.leftOut",
@@ -259,6 +316,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     reference => DescribeReference(reference.SourceValue)));
             }
 
+            // Replace cannot remove what another component requires. A copy overwrites such a component in place;
+            // the ones beyond the copies stay as they are, and show up as extra after applying.
+            if (plan.KeptComponents.Count > 0)
+            {
+                AddWarning("componentCopier.report.kept", plan.KeptComponents.Count);
+                var surplus = plan.KeptComponents.Where(k => k.OverwrittenBy == null && k.Component != null).ToList();
+                if (surplus.Count > 0) AddIssueRows(surplus, CreateKeptRow);
+            }
+
             foreach (var broken in plan.BrokenReferences.Take(10))
             {
                 if (broken.Holder == null) continue;
@@ -301,14 +367,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// Lists the components a warning is about, in the same form as the rows of the detail report:
         /// a count alone does not tell where to look.
         /// </summary>
-        private void AddIssueRows(List<PlannedComponent> components, Func<PlannedComponent, VisualElement> createRow)
+        private void AddIssueRows<T>(List<T> components, Func<T, VisualElement> createRow)
         {
             var container = new VisualElement();
             container.AddToClassList("warning-details");
             reportContainer.Add(container);
 
-            foreach (var planned in components.Take(MaxIssueRows))
-                container.Add(createRow(planned));
+            foreach (var component in components.Take(MaxIssueRows))
+                container.Add(createRow(component));
 
             if (components.Count > MaxIssueRows)
                 container.Add(MoreLabel(components.Count - MaxIssueRows));
@@ -387,6 +453,26 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return foldout;
         }
 
+        /// <summary>
+        /// A component that Replace leaves as it is. Unlike the other rows, it is a target component that exists
+        /// already, so it is shown by its target path and selected there.
+        /// </summary>
+        private VisualElement CreateKeptRow(KeptComponent kept)
+        {
+            var component = kept.Component;
+            // Named as the diff check will report it after applying
+            string kind = Localization.S(ComponentCopierStrings.DiffKindKey(DiffKind.ExtraOnTarget));
+            var foldout = CreateReportFoldout(
+                kind, TargetPath(component.transform), component.GetType().Name, "diff-row--warning");
+
+            var reason = new Label(Localization.S("componentCopier.report.kept.requiredBy", kept.RequiredBy));
+            reason.AddToClassList("diff-property");
+            foldout.Add(reason);
+
+            AddSelectButton(foldout, component);
+            return foldout;
+        }
+
         private VisualElement CreateReferenceIssueRow(
             PlannedComponent planned, ReferenceKind kind, string kindKey, Func<PlannedReference, string> describe)
         {
@@ -442,12 +528,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>Nothing exists in the target before applying, so the pre-check points at the source.</summary>
         private static void AddSelectSourceButton(Foldout foldout, PlannedComponent planned)
         {
+            AddSelectButton(foldout, planned.Entry.Component);
+        }
+
+        private static void AddSelectButton(Foldout foldout, UnityEngine.Object target)
+        {
             var actions = new VisualElement();
             actions.AddToClassList("diff-actions");
             foldout.Add(actions);
 
-            var source = planned.Entry.Component;
-            actions.Add(new Button(() => Reveal(source)) { text = Localization.S("componentCopier.diff.select") });
+            actions.Add(new Button(() => Reveal(target)) { text = Localization.S("componentCopier.diff.select") });
         }
 
         private static Label MoreLabel(int count)
@@ -531,9 +621,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (!string.IsNullOrEmpty(detailMessage))
             {
                 var message = new Label(detailMessage);
-                message.AddToClassList("detail-message");
+                // Without a report, the message says why nothing was applied
+                message.AddToClassList(detailReport != null ? "detail-message" : "warning-text");
                 box.Add(message);
             }
+
+            if (detailReport == null) return;
 
             var counts = new Label(Localization.S("componentCopier.report.diffSummary",
                 detailReport.Count(DiffKind.Match),

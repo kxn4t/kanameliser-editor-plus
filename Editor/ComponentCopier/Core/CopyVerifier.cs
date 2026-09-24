@@ -205,7 +205,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (pathReferences.TryGetValue(path, out var pathReference))
             {
                 string expectedPath = pathReference.ExpectedPath();
-                // Not created yet (preview before applying): the object half reports the mismatch
+                // Null while the expected object cannot be resolved (not created yet, or destroyed): the object
+                // half never matches then, and reports the mismatch
                 if (expectedPath == null || expectedPath == actualProperty.stringValue) return null;
 
                 var kind = pathReference.Kind == ReferenceKind.InternalUnresolved
@@ -228,8 +229,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         return unresolved;
                     }
 
+                    // Every other kind expects something, so null means it cannot be resolved: the copy has not
+                    // created or added it yet (plans are compared before applying too), or it was destroyed.
+                    // Taking that for None would skip the component as identical and leave the reference unset.
                     var expected = reference.Expected.Resolve();
-                    return expected == actualValue
+                    return expected != null && expected == actualValue
                         ? null
                         : Diff(sourceProperty, DiffKind.ReferenceMismatch,
                             ExpectedToString(reference, expected), ObjectToString(actualValue));
@@ -323,8 +327,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private static List<Transform> MirroredTargets(CopyPlan plan, Dictionary<Transform, Transform> sourceByTarget)
         {
             var sides = plan.Map.Sides;
+            // The sides of what the user picked. A held-back component inside a prefab that is added is planned as
+            // left out, but it was picked, like one held back anywhere else.
             var copiedSides = new HashSet<Side>(plan.Components
-                .Where(c => !c.Implicit && !c.LeftOut)
+                .Where(c => !c.Implicit && (!c.LeftOut || c.IsHeldBack))
                 .Select(c => sides.Of(c.Entry.Host)));
             copiedSides.Remove(Side.None);
 
@@ -435,7 +441,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             if (resolved != null) return ObjectToString(resolved);
 
-            // Not created yet (preview before applying): describe it by its source
+            // Not created yet (preview before applying), or destroyed: describe it by its source
             return ObjectToString(reference.SourceValue);
         }
 

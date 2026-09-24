@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEngine;
 
 namespace Kanameliser.EditorPlus.ComponentCopier
@@ -58,18 +59,58 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// The child with the given name and <see cref="SiblingOccurrence"/>, or null. The counterpart of
         /// <see cref="SiblingOccurrence"/>: same-name siblings are told apart by their order.
         /// </summary>
-        /// <param name="skip">Children that do not count, such as the ones a copy has just created.</param>
-        public static Transform FindChild(Transform parent, string name, int occurrence, HashSet<Transform> skip = null)
+        public static Transform FindChild(Transform parent, string name, int occurrence)
         {
             int seen = 0;
             foreach (Transform child in parent)
             {
-                if (child.name != name || (skip != null && skip.Contains(child))) continue;
+                if (child.name != name) continue;
                 if (seen == occurrence) return child;
                 seen++;
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// A path below <paramref name="root"/> that tells same-name siblings apart, for keys: every segment
+        /// carries the <see cref="SiblingOccurrence"/> of its object ("Hips#0/Chain#1"). Empty for the root
+        /// itself. Not meant to be shown; the plain path is <see cref="ObjectMatcher.GetRelativePathFromRoot"/>.
+        /// </summary>
+        public static string IdentityPath(Transform transform, Transform root)
+        {
+            var segments = new List<string>();
+            for (var current = transform; current != null && current != root; current = current.parent)
+                segments.Add(current.name + "#" + SiblingOccurrence(current));
+            segments.Reverse();
+            return string.Join("/", segments);
+        }
+
+        /// <summary>
+        /// The <see cref="IdentityPath"/> of <paramref name="root"/> and everything below it, in one walk:
+        /// counting the same-name siblings anew for every object would go through a bone's hundreds of children
+        /// once per child.
+        /// </summary>
+        public static Dictionary<Transform, string> IdentityPaths(Transform root)
+        {
+            var paths = new Dictionary<Transform, string> { [root] = "" };
+            var occurrences = new Dictionary<(Transform parent, string name), int>();
+
+            // Parents come before their children
+            foreach (var transform in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (transform == root) continue;
+
+                var key = (transform.parent, transform.name);
+                occurrences.TryGetValue(key, out int occurrence);
+                occurrences[key] = occurrence + 1;
+
+                string parentPath = paths[transform.parent];
+                string segment = transform.name + "#" + occurrence;
+                paths[transform] = parentPath.Length == 0 ? segment : parentPath + "/" + segment;
+            }
+
+            return paths;
         }
     }
 }

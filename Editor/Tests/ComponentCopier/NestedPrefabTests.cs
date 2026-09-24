@@ -270,6 +270,199 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             Assert.AreEqual(0, target.Find("Armature/Head").childCount);
         }
 
+        #region Overrides of the source instance
+
+        [Test]
+        public void ObjectRenamedOnTheSourceInstance_IsFoundUnderItsNewName()
+        {
+            var hatAsset = SaveHatWithCollider("Hat_Renamed");
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            sourceHat.Find("Ribbon").name = "Ribbon_Front";
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            var result = CopyExecutor.Execute(plan);
+
+            var targetHat = target.Find("Armature/Head/Hat_Renamed");
+            Assert.AreEqual(1, targetHat.childCount, "The renamed object must not be created next to the asset's");
+            Assert.AreEqual("Ribbon_Front", targetHat.GetChild(0).name);
+            Assert.AreEqual(1, targetHat.GetChild(0).GetComponents<SphereCollider>().Length);
+            Assert.AreEqual(0, result.CreatedObjects);
+            Assert.AreEqual(0, CopyVerifier.Verify(plan).Count(DiffKind.ExtraOnTarget));
+        }
+
+        [Test]
+        public void ObjectRemovedFromTheSourceInstance_IsRemovedFromTheNewOne()
+        {
+            var hatAsset = SaveHatWithAnchor("Hat_RemovedObject");
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            Undo.DestroyObjectImmediate(sourceHat.Find("Anchor").gameObject);
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            CopyExecutor.Execute(plan);
+
+            var targetHat = target.Find("Armature/Head/Hat_RemovedObject");
+            Assert.IsNull(targetHat.Find("Anchor"), "The asset's object must not come back");
+            Assert.IsNotNull(targetHat.Find("Ribbon"));
+            Assert.AreEqual(1, PrefabUtility.GetRemovedGameObjects(targetHat.gameObject).Count,
+                "Removed as an override, like on the source");
+            Assert.AreEqual(0, CopyVerifier.Verify(plan).Count(DiffKind.ExtraOnTarget));
+        }
+
+        [Test]
+        public void ComponentRemovedFromTheSourceInstance_IsRemovedFromTheNewOne()
+        {
+            var hatAsset = SaveHatWithAnchor("Hat_RemovedComponent");
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            Undo.DestroyObjectImmediate(sourceHat.GetComponent<ParentConstraint>());
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            Assert.IsFalse(plan.Components.Any(c => c.Entry.Type == typeof(ParentConstraint)));
+
+            var result = CopyExecutor.Execute(plan);
+
+            var targetHat = target.Find("Armature/Head/Hat_RemovedComponent");
+            Assert.IsNull(targetHat.GetComponent<ParentConstraint>(), "The asset's component must not come back");
+            Assert.AreEqual(1, PrefabUtility.GetRemovedComponents(targetHat.gameObject).Count,
+                "Removed as an override, like on the source");
+            Assert.AreEqual(1, result.RemovedComponents);
+            Assert.AreEqual(0, CopyVerifier.Verify(plan).Count(DiffKind.ExtraOnTarget));
+        }
+
+        [Test]
+        public void ObjectInsideAPrefabNestedInTheAsset_IsFoundThroughTheInnerPrefab()
+        {
+            var ribbonAsset = SaveHatWithCollider("Ribbon_InAsset");
+            var hatAsset = SavePrefab("Hat_WithInner", hat => Instantiate(ribbonAsset, hat));
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            sourceHat.Find("Ribbon_InAsset/Ribbon").name = "Ribbon_Front";
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(1, result.InstantiatedPrefabs, "The inner prefab arrives with the outer one");
+            Assert.AreEqual(0, result.CreatedObjects);
+            var inner = target.Find("Armature/Head/Hat_WithInner/Ribbon_InAsset");
+            Assert.IsNotNull(inner);
+            Assert.AreEqual(1, inner.childCount, "Looked up against the inner asset, not created a second time");
+            Assert.AreEqual("Ribbon_Front", inner.GetChild(0).name);
+        }
+
+        [Test]
+        public void PrefabAddedInsideTheSourceInstance_IsInstantiatedOnItsOwn()
+        {
+            var ribbonAsset = SaveHatWithCollider("Ribbon_Added");
+            var hatAsset = SavePrefab("Hat_TakingAnAddedPrefab", hat => AddChild(hat, "Top"));
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            var added = Instantiate(ribbonAsset, sourceHat);
+            added.Find("Ribbon").name = "Ribbon_Front";
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(2, result.InstantiatedPrefabs, "The added prefab does not correspond to the outer asset");
+            Assert.AreEqual(0, result.CreatedObjects);
+            var addedInTarget = target.Find("Armature/Head/Hat_TakingAnAddedPrefab/Ribbon_Added");
+            Assert.IsNotNull(addedInTarget);
+            Assert.IsTrue(PrefabUtility.IsAnyPrefabInstanceRoot(addedInTarget.gameObject));
+            Assert.AreEqual(1, addedInTarget.childCount, "Looked up against the added prefab's own asset");
+            Assert.AreEqual("Ribbon_Front", addedInTarget.GetChild(0).name);
+            Assert.AreEqual(1, addedInTarget.GetChild(0).GetComponents<SphereCollider>().Length);
+        }
+
+        [Test]
+        public void ObjectTheOuterPrefabAddedInsideTheInnerOne_ArrivesWithTheOuterPrefab()
+        {
+            var ribbonAsset = SaveHatWithCollider("Ribbon_Extended");
+            var hatAsset = SavePrefab("Hat_ExtendingItsInner", hat =>
+            {
+                var inner = Instantiate(ribbonAsset, hat);
+                AddChild(inner, "Extra").gameObject.AddComponent<SphereCollider>();
+            });
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            Instantiate(hatAsset, source.Find("Armature/Head"));
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            var result = CopyExecutor.Execute(plan);
+
+            // "Extra" is not part of the inner asset, but it is part of the outer one and comes with it
+            Assert.AreEqual(1, result.InstantiatedPrefabs);
+            Assert.AreEqual(0, result.CreatedObjects, "The object the outer prefab brings must not be created again");
+            var inner = target.Find("Armature/Head/Hat_ExtendingItsInner/Ribbon_Extended");
+            Assert.AreEqual(2, inner.childCount);
+            Assert.AreEqual(1, inner.Cast<Transform>().Count(t => t.name == "Extra"));
+            Assert.AreEqual(1, inner.Find("Extra").GetComponents<SphereCollider>().Length);
+            Assert.AreEqual(0, CopyVerifier.Verify(plan).Count(DiffKind.ExtraOnTarget));
+        }
+
+        [Test]
+        public void ComponentRemovedBeforeAnotherOfItsType_KeepsTheIndicesInLine()
+        {
+            var hatAsset = SavePrefab("Hat_RemovedFirst", hat =>
+            {
+                var ribbon = AddChild(hat, "Ribbon").gameObject;
+                ribbon.AddComponent<SphereCollider>().radius = 0.1f;
+                ribbon.AddComponent<SphereCollider>().radius = 0.2f;
+            });
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            var sourceColliders = sourceHat.Find("Ribbon").GetComponents<SphereCollider>();
+            Undo.DestroyObjectImmediate(sourceColliders[0]);
+            sourceColliders[1].radius = 0.5f;
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            CopyExecutor.Execute(plan);
+
+            // The one collider of the source is index 0 there, and must land on the one that stays, not on the
+            // one the source removed
+            var colliders = target.Find("Armature/Head/Hat_RemovedFirst/Ribbon").GetComponents<SphereCollider>();
+            Assert.AreEqual(1, colliders.Length);
+            Assert.AreEqual(0.5f, colliders[0].radius);
+        }
+
+        [Test]
+        public void ImplicitComponentListedAfterASelectedOneOfItsType_KeepsItsIndex()
+        {
+            // Both colliders were added to the source instance, so neither arrives with the prefab. Only the second
+            // one is selected; the first comes along with the prefab and is listed after it.
+            var hatAsset = SavePrefab("Hat_AddedColliders", _ => { });
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head")).gameObject;
+            sourceHat.AddComponent<SphereCollider>().radius = 0.1f;
+            var second = sourceHat.AddComponent<SphereCollider>();
+            second.radius = 0.2f;
+
+            var plan = CopyPlanBuilder.Build(
+                SelectComponents(source, second), TransformMapper.Build(source, target), new CopySettings());
+            CollectionAssert.AreEqual(new[] { ComponentOrigin.Selected, ComponentOrigin.Implicit },
+                plan.Components.Select(c => c.Origin));
+
+            CopyExecutor.Execute(plan);
+
+            // Each gets a copy of its own, in the order of the source: written in the order of the plan, the copy
+            // of the second one would come first and take index 0
+            var colliders = target.Find("Armature/Head/Hat_AddedColliders").GetComponents<SphereCollider>();
+            Assert.AreEqual(2, colliders.Length);
+            CollectionAssert.AreEqual(new[] { 0.1f, 0.2f }, colliders.Select(c => c.radius));
+
+            var replanned = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            Assert.That(replanned.Components.Select(c => c.Action), Is.All.EqualTo(ComponentAction.SkipIdentical));
+        }
+
+        #endregion
+
         #region Left-out components
 
         /// <summary>A hat with a constraint on its root, a collider on "Ribbon" and another on the leaf "Anchor".</summary>
@@ -395,6 +588,92 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             var plan = BuildPlanLeavingOut(source, target, typeof(SphereCollider), typeof(BoxCollider));
 
             Assert.AreEqual(typeof(SphereCollider), plan.Components.Single().Entry.Type);
+        }
+
+        [Test]
+        public void HeldBackComponent_IsRemovedFromTheInstantiatedPrefab()
+        {
+            var hatAsset = SavePrefab("Hat_HeldBack", hat =>
+            {
+                hat.gameObject.AddComponent<SphereCollider>();
+                hat.gameObject.AddComponent<ParentConstraint>();
+            });
+            var source = CreateHierarchy("Source", "Armature/Head", "UnmappedAnchor");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            // With a component of its own the anchor is not created bare, so a reference to it stays unresolved
+            var anchor = source.Find("UnmappedAnchor");
+            anchor.gameObject.AddComponent<BoxCollider>();
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            var sourceConstraint = sourceHat.GetComponent<ParentConstraint>();
+            sourceConstraint.weight = 0.3f;
+            sourceConstraint.AddSource(new ConstraintSource { sourceTransform = anchor, weight = 1f });
+
+            var settings = new CopySettings { UnresolvedPolicy = UnresolvedReferencePolicy.SkipComponent };
+            var plan = BuildPlan(source, target, settings, typeof(SphereCollider), typeof(ParentConstraint));
+            var hatToCreate = plan.ObjectsToCreate.Single(o => o.Source == sourceHat);
+            Assert.IsTrue(hatToCreate.IsPrefabRoot, "The collider brings the prefab");
+            var heldBack = plan.Components.Single(c => c.Entry.Type == typeof(ParentConstraint));
+            Assert.IsTrue(heldBack.IsHeldBack);
+            Assert.AreEqual(ComponentAction.Blocked, heldBack.Action);
+            Assert.IsTrue(heldBack.LeftOut);
+            Assert.IsTrue(heldBack.ArrivesWithPrefab);
+            Assert.AreSame(hatToCreate, heldBack.HostToCreate);
+
+            // Only the setting leaves it out: clearing the reference instead writes it like the rest of the prefab
+            var clearing = BuildPlan(source, target,
+                new CopySettings { UnresolvedPolicy = UnresolvedReferencePolicy.Clear },
+                typeof(SphereCollider), typeof(ParentConstraint));
+            var cleared = clearing.Components.Single(c => c.Entry.Type == typeof(ParentConstraint));
+            Assert.IsFalse(cleared.LeftOut);
+            Assert.IsTrue(cleared.WillWrite);
+            Assert.AreEqual(ReferenceKind.InternalUnresolved, cleared.References.Single().Kind);
+
+            var result = CopyExecutor.Execute(plan);
+
+            // Left in place, it would carry the values of the asset, and the diff check would report it as missing
+            Assert.IsNull(target.Find("Armature/Head/Hat_HeldBack").GetComponent<ParentConstraint>());
+            Assert.AreEqual(1, result.LeftOutComponents);
+            Assert.IsEmpty(result.FailedRemovals);
+            Assert.That(CopyVerifier.Verify(plan).Components.Select(c => c.Kind), Is.All.EqualTo(DiffKind.Match));
+        }
+
+        [Test]
+        public void HeldBackComponentThatAnotherOneRequires_IsKeptAndReported()
+        {
+            var hatAsset = SavePrefab("Hat_HeldBackRequired", hat =>
+            {
+                // Cloth requires the SkinnedMeshRenderer next to it
+                hat.gameObject.AddComponent<SkinnedMeshRenderer>();
+                hat.gameObject.AddComponent<Cloth>();
+                hat.gameObject.AddComponent<SphereCollider>();
+            });
+            var source = CreateHierarchy("Source", "Armature/Head", "UnmappedAnchor");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var anchor = source.Find("UnmappedAnchor");
+            anchor.gameObject.AddComponent<BoxCollider>();
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            var sourceRenderer = sourceHat.GetComponent<SkinnedMeshRenderer>();
+            sourceRenderer.rootBone = anchor;
+
+            // The Cloth is not selected; it comes along with the prefab that the collider brings
+            var settings = new CopySettings { UnresolvedPolicy = UnresolvedReferencePolicy.SkipComponent };
+            var plan = CopyPlanBuilder.Build(
+                SelectComponents(source, sourceHat.GetComponent<SphereCollider>(), sourceRenderer),
+                TransformMapper.Build(source, target), settings);
+            var hatToCreate = plan.ObjectsToCreate.Single(o => o.Source == sourceHat);
+            Assert.IsTrue(hatToCreate.IsPrefabRoot);
+            var heldBack = plan.Components.Single(c => c.Entry.Type == typeof(SkinnedMeshRenderer));
+            Assert.IsTrue(heldBack.IsHeldBack);
+            Assert.IsTrue(heldBack.LeftOut);
+            Assert.AreSame(hatToCreate, heldBack.HostToCreate);
+            Assert.IsTrue(plan.Components.Single(c => c.Entry.Type == typeof(Cloth)).Implicit);
+
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.IsNotNull(target.Find("Armature/Head/Hat_HeldBackRequired").GetComponent<SkinnedMeshRenderer>());
+            CollectionAssert.AreEqual(new[] { heldBack }, result.FailedRemovals);
+            Assert.AreEqual(DiffKind.ExtraOnTarget,
+                CopyVerifier.Verify(plan).Components.Single(c => c.Planned == heldBack).Kind);
         }
 
         #endregion

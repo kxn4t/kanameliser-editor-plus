@@ -24,7 +24,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         WorldDirection,
         /// <summary>A scalar that changes sign: a roll around an axis.</summary>
         NegatedScalar,
-        /// <summary>A Bounds whose center is a point in that space; the size stays.</summary>
+        /// <summary>
+        /// A Bounds in that space, mirrored as a whole: the result encloses the mirror image of the box, and its size
+        /// follows the axes of the other side. Bounds only have to hold the mesh, so they may grow where the box
+        /// stands at an angle; the size of a box collider is its shape and counts as axis dependent instead.
+        /// </summary>
         Bounds,
         /// <summary>A Contact collision tag: "HandL" becomes "HandR".</summary>
         SideTag,

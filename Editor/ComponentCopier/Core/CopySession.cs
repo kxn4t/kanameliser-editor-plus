@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Kanameliser.Editor.MAMaterialHelper.Common;
 using UnityEditor;
 using UnityEngine;
 
@@ -346,8 +345,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>True when the user asked for the object, whether a selected component needs it or not.</summary>
         private bool IsObjectSelected(Transform missing) => selectedObjectPaths.Contains(ObjectPath(missing));
 
-        private string ObjectPath(Transform source) =>
-            ObjectMatcher.GetRelativePathFromRoot(source, SourceRoot.transform);
+        private string ObjectPath(Transform source) => Hierarchy.IdentityPath(source, SourceRoot.transform);
 
         #endregion
 

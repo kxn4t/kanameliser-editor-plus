@@ -57,5 +57,64 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
         }
 
+        /// <summary>
+        /// The objects and components of a prefab instance, by the object of the asset at
+        /// <paramref name="assetPath"/> that each one corresponds to. Whatever was added to the instance
+        /// corresponds to nothing and is left out.
+        /// </summary>
+        public static Dictionary<Object, Object> CorrespondingObjects(Transform instanceRoot, string assetPath)
+        {
+            var byAssetObject = new Dictionary<Object, Object>();
+            foreach (var transform in instanceRoot.GetComponentsInChildren<Transform>(true))
+            {
+                Add(transform.gameObject);
+                foreach (var component in transform.GetComponents<Component>())
+                {
+                    // Missing scripts come back as null
+                    if (component != null) Add(component);
+                }
+            }
+
+            return byAssetObject;
+
+            void Add(Object instanceObject)
+            {
+                var assetObject = PrefabUtility.GetCorrespondingObjectFromSourceAtPath(instanceObject, assetPath);
+                if (assetObject != null) byAssetObject[assetObject] = instanceObject;
+            }
+        }
+
+        /// <summary>
+        /// What <paramref name="instanceRoot"/> removed from <paramref name="asset"/>: the objects and components
+        /// of the asset that no object or component of the instance corresponds to ("removed GameObject" and
+        /// "removed component" overrides). Objects below a removed object are left out; they go with it.
+        /// </summary>
+        public static (List<GameObject> objects, List<Component> components) FindRemoved(
+            Transform instanceRoot, GameObject asset)
+        {
+            var present = CorrespondingObjects(instanceRoot, AssetDatabase.GetAssetPath(asset));
+            var objects = new List<GameObject>();
+            var components = new List<Component>();
+
+            foreach (var transform in asset.GetComponentsInChildren<Transform>(true))
+            {
+                if (!present.ContainsKey(transform.gameObject))
+                {
+                    bool belowRemoved = Hierarchy.AnyAncestorBelow(
+                        transform, asset.transform, ancestor => !present.ContainsKey(ancestor.gameObject));
+                    if (!belowRemoved) objects.Add(transform.gameObject);
+                    continue;
+                }
+
+                foreach (var component in transform.GetComponents<Component>())
+                {
+                    // Missing scripts come back as null on both sides and are left alone
+                    if (component == null || component is Transform || present.ContainsKey(component)) continue;
+                    components.Add(component);
+                }
+            }
+
+            return (objects, components);
+        }
     }
 }

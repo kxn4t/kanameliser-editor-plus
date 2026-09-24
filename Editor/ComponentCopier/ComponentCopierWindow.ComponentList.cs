@@ -22,9 +22,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private const string GroupModePrefsKey = "Kanameliser.EditorPlus.ComponentCopier.GroupMode";
         private const string ObjectGroupPrefix = "object:";
+        // The limit of one match, not of the whole search. A pattern that backtracks badly can take minutes on a
+        // single object path, which would freeze the window.
+        internal static readonly TimeSpan SearchMatchTimeout = TimeSpan.FromMilliseconds(200);
 
         private string searchText = "";
         private bool searchUsesRegex;
+        // The current pattern took too long on some entry. It is ignored until the search text or the regex mode
+        // changes, so that a checkbox click or a rescan does not wait for it again.
+        private bool searchTimedOut;
         private bool showExcluded;
         private GroupMode groupMode;
 
@@ -77,6 +83,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             searchField.RegisterValueChangedCallback(evt =>
             {
                 searchText = evt.newValue ?? "";
+                searchTimedOut = false;
                 RenderComponentList();
             });
             filterRow.Add(searchField);
@@ -86,6 +93,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             regexToggle.RegisterValueChangedCallback(evt =>
             {
                 searchUsesRegex = evt.newValue;
+                searchTimedOut = false;
                 RenderComponentList();
             });
             filterRow.Add(regexToggle);
@@ -246,8 +254,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return;
             }
 
-            var filter = BuildSearchFilter();
-            var visible = session.Entries.Where(e => filter(e)).ToList();
+            var visible = FilterEntries();
 
             var normal = visible.Where(e => e.Category != ComponentCategory.ExcludedByDefault).ToList();
             var excluded = visible.Where(e => e.Category == ComponentCategory.ExcludedByDefault).ToList();
@@ -414,7 +421,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private string GroupId(ComponentEntry entry)
         {
-            return groupMode == GroupMode.ByType ? entry.Type.FullName : ObjectGroupPrefix + entry.Key.RelativePath;
+            return groupMode == GroupMode.ByType ? entry.Type.FullName : ObjectGroupPrefix + entry.Key.ObjectPath;
         }
 
         private void AddGroups(List<ComponentEntry> groupEntries, bool excluded)
@@ -891,37 +898,85 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 case ComponentAction.SkipIdentical:
                 case ComponentAction.LeftOut:
                     return Localization.S(ComponentCopierStrings.ActionTooltipKey(planned.Action));
+                // Likewise an unexplained "Overwrite" with the Replace policy
+                case ComponentAction.Overwrite when planned.KeptBy != null:
+                    return Localization.S("componentCopier.action.overwrite.kept:tooltip", planned.KeptBy);
                 default:
                     return "";
             }
         }
 
-        private Func<ComponentEntry, bool> BuildSearchFilter()
+        /// <summary>
+        /// The entries the list shows: the ones of the categories on display that match the search field. A search
+        /// text that cannot be used filters nothing and marks the field, so the list stays usable.
+        /// </summary>
+        private List<ComponentEntry> FilterEntries()
         {
-            searchField.EnableInClassList("search-field--invalid", false);
+            var inCategory = session.Entries
+                .Where(e => showExcluded || e.Category != ComponentCategory.ExcludedByDefault)
+                .ToList();
 
-            bool MatchesCategory(ComponentEntry e) =>
-                showExcluded || e.Category != ComponentCategory.ExcludedByDefault;
-
-            if (string.IsNullOrWhiteSpace(searchText)) return MatchesCategory;
-
-            if (searchUsesRegex)
+            var visible = inCategory;
+            bool invalidPattern = false;
+            // A pattern that timed out is not tried again, or every render would wait for it once more
+            if (!searchTimedOut)
             {
-                try
-                {
-                    var regex = new Regex(searchText, RegexOptions.IgnoreCase);
-                    return e => MatchesCategory(e) && regex.IsMatch(SearchTarget(e));
-                }
-                catch (ArgumentException)
-                {
-                    // Keep the list usable while the pattern is still being typed
-                    searchField.EnableInClassList("search-field--invalid", true);
-                    return MatchesCategory;
-                }
+                visible = FilterBySearch(inCategory, searchText, searchUsesRegex, SearchMatchTimeout,
+                    out invalidPattern, out bool timedOut);
+                searchTimedOut = timedOut;
             }
 
-            return e => MatchesCategory(e) &&
-                        SearchTarget(e).IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
+            searchField.EnableInClassList("search-field--invalid", invalidPattern || searchTimedOut);
+            // Unlike an invalid pattern, a slow one looks fine, so the field says why it is ignored
+            searchField.tooltip = searchTimedOut ? Localization.S("componentCopier.search.timeout:tooltip") : "";
+            return visible;
+        }
+
+        /// <summary>
+        /// The entries that match the search text in their object path and type name, as plain text or as a regular
+        /// expression (case-insensitive either way). A text that is not a valid pattern, or a pattern that takes
+        /// longer than <paramref name="matchTimeout"/> on one entry, filters nothing: every entry is returned, as
+        /// with an empty search.
+        /// </summary>
+        /// <param name="matchTimeout">The limit of one match, not of the whole search.</param>
+        internal static List<ComponentEntry> FilterBySearch(
+            List<ComponentEntry> entries, string searchText, bool useRegex, TimeSpan matchTimeout,
+            out bool invalidPattern, out bool timedOut)
+        {
+            invalidPattern = false;
+            timedOut = false;
+            if (string.IsNullOrWhiteSpace(searchText)) return entries;
+
+            if (!useRegex)
+            {
+                return entries
+                    .Where(e => SearchTarget(e).IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .ToList();
+            }
+
+            Regex regex;
+            try
+            {
+                regex = new Regex(searchText, RegexOptions.IgnoreCase, matchTimeout);
+            }
+            catch (ArgumentException)
+            {
+                // Keep the list usable while the pattern is still being typed
+                invalidPattern = true;
+                return entries;
+            }
+
+            try
+            {
+                return entries.Where(e => regex.IsMatch(SearchTarget(e))).ToList();
+            }
+            catch (RegexMatchTimeoutException)
+            {
+                // Every entry, not only the ones after the timeout: the rows rejected before it come back, and the
+                // list does not depend on the order in which they were tried
+                timedOut = true;
+                return entries;
+            }
         }
 
         private static string SearchTarget(ComponentEntry entry) => entry.Key.RelativePath + " " + entry.Type.Name;

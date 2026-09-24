@@ -30,6 +30,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private Button applyButton;
         private Button diffButton;
         private bool refreshScheduled;
+        private IVisualElementScheduledItem scheduledRefresh;
 
         [MenuItem("Tools/Kanameliser Editor Plus/Component Copier")]
         public static void ShowWindow() => Open();
@@ -124,11 +125,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (session.SourceRoot == null && session.TargetRoot == null) return;
 
             refreshScheduled = true;
-            rootVisualElement.schedule.Execute(() =>
+            scheduledRefresh = rootVisualElement.schedule.Execute(() =>
             {
                 refreshScheduled = false;
                 Rescan();
             }).StartingIn(RefreshDebounceMs);
+        }
+
+        /// <summary>Drops the refresh that waits for the debounce, for a caller that rescans right away.</summary>
+        private void CancelScheduledRefresh()
+        {
+            scheduledRefresh?.Pause();
+            refreshScheduled = false;
         }
 
         /// <summary>Scans the source again and keeps the choices, see <see cref="CopySession.Rescan"/>.</summary>

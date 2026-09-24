@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,7 +9,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     {
         Add,
         Overwrite,
-        /// <summary>Added after the existing same-type components on the host are removed.</summary>
+        /// <summary>
+        /// Added after the existing same-type components on the host are removed. The ones that another component
+        /// requires stay instead, see <see cref="CopyPlan.KeptComponents"/>.
+        /// </summary>
         Replace,
         /// <summary>Existing component is kept because of <see cref="ExistingComponentPolicy.Skip"/>.</summary>
         Skip,
@@ -16,9 +20,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         SkipIdentical,
         Blocked,
         /// <summary>
-        /// Arrives with a nested prefab although the user left it out, and is removed from the new instance.
-        /// Set exactly for the components whose <see cref="PlannedComponent.Origin"/> is
-        /// <see cref="ComponentOrigin.LeftOut"/>.
+        /// Arrives with a nested prefab although the user unchecked it, and is removed from the new instance.
+        /// Set for the components whose <see cref="PlannedComponent.Origin"/> is
+        /// <see cref="ComponentOrigin.LeftOut"/>, except the ones held back by the unresolved-reference setting:
+        /// those stay <see cref="Blocked"/>, and are removed all the same.
         /// </summary>
         LeftOut,
     }
@@ -34,8 +39,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         Implicit,
         /// <summary>
-        /// Inside such a prefab and unchecked on purpose. It still arrives with the prefab, so it is removed from
-        /// the new instance afterwards.
+        /// Inside such a prefab and unchecked, or held back by the unresolved-reference setting. It still arrives
+        /// with the prefab, so it is removed from the new instance afterwards.
         /// </summary>
         LeftOut,
     }
@@ -94,17 +99,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public GameObject PrefabAsset;
 
         /// <summary>
-        /// The nested prefab root this object arrives with, or null. Objects below an instantiated prefab
-        /// usually exist already once the prefab is in place; only the missing ones are created.
+        /// The outermost nested prefab root this object arrives with, or null. Objects below an instantiated
+        /// prefab usually exist already once the prefab is in place, found by the object of the asset they
+        /// correspond to (the source may have renamed them); only the missing ones are created.
         /// </summary>
         public PlannedObject PrefabRoot;
 
-        /// <summary>Index among same-name siblings, used to find the object inside an instantiated prefab.</summary>
-        public int SiblingOccurrence;
-
         /// <summary>
         /// True for an object inside a nested prefab that is removed from the new instance, because every
-        /// component on it was left out. See <see cref="PlannedComponent.LeftOut"/>.
+        /// component on it was unchecked or held back by the unresolved-reference setting. See
+        /// <see cref="PlannedComponent.LeftOut"/>.
         /// </summary>
         public bool LeftOut;
 
@@ -162,6 +166,45 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var transform = existingObject != null ? existingObject : ObjectToCreate?.Created;
             if (transform == null) return null;
             return asGameObject ? transform.gameObject : transform;
+        }
+
+        /// <summary>
+        /// True when the reference expects an object or component that exists in the target, and that one has been
+        /// deleted since planning: writing the reference would quietly lose it. What the plan creates or adds does
+        /// not exist yet, and never counts.
+        /// </summary>
+        public bool RefersToDestroyedObject
+        {
+            get
+            {
+                if (IsDestroyed(existingObject) || IsDestroyed(existingComponent) || IsDestroyed(kept)) return true;
+
+                // A planned component resolves to its existing counterpart until it is written. The plan sets one only
+                // for the components that keep using it (Overwrite, Skip, SkipIdentical); the ones it adds or
+                // replaces have none, and nothing to lose.
+                return plannedComponent != null && plannedComponent.Result == null &&
+                       IsDestroyed(plannedComponent.Existing);
+            }
+        }
+
+        /// <summary>Set, and destroyed since. A value that was never set is not destroyed.</summary>
+        private static bool IsDestroyed(Object value) => !ReferenceEquals(value, null) && value == null;
+
+        /// <summary>
+        /// What the reference is to point at, for <see cref="CopyPlan.Fingerprint"/>: an existing object or
+        /// component by its instance ID (which a destroyed one keeps), an object the plan creates by the instance ID
+        /// of its source, and a planned component by its key.
+        /// </summary>
+        internal string Identity()
+        {
+            static int Id(Object value) => ReferenceEquals(value, null) ? 0 : value.GetInstanceID();
+
+            string part = asGameObject ? "gameObject" : "transform";
+            if (!ReferenceEquals(kept, null)) return $"kept {Id(kept)}";
+            if (plannedComponent != null) return $"planned {plannedComponent.Entry.Key}";
+            if (!ReferenceEquals(existingComponent, null)) return $"component {Id(existingComponent)}";
+            if (!ReferenceEquals(existingObject, null)) return $"object {Id(existingObject)} {part}";
+            return ObjectToCreate != null ? $"new {Id(ObjectToCreate.Source)} {part}" : "none";
         }
     }
 
@@ -325,6 +368,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>Counterpart that already exists in the target (same type, same index), if any.</summary>
         public Component Existing;
 
+        /// <summary>
+        /// Set when Replace overwrites <see cref="Existing"/> in place because another component requires it, so
+        /// that it cannot be removed: the type name of that component. See <see cref="CopyPlan.KeptComponents"/>.
+        /// </summary>
+        public string KeptBy;
+
         public ComponentAction Action;
         public BlockReason BlockReason;
         public List<PlannedReference> References = new();
@@ -370,6 +419,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public bool ArrivesWithPrefab =>
             HostToCreate != null && (HostToCreate.IsPrefabRoot || HostToCreate.PrefabRoot != null);
 
+        /// <summary>
+        /// The component of the new prefab instance that stands for this one (same type, same index on
+        /// <see cref="HostToCreate"/>), which is written instead of adding another. Noted by
+        /// <see cref="CopyExecutor"/> before it adds anything. Null where nothing arrived: on an existing host or
+        /// an object created from scratch, and when the component was added to the source instance and is not
+        /// part of the prefab asset.
+        /// </summary>
+        public Component Arrived;
+
         /// <summary>Component written by <see cref="CopyExecutor"/>.</summary>
         public Component Result;
 
@@ -393,6 +451,23 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public Component Holder;
         public string PropertyPath;
         public Component Removed;
+    }
+
+    /// <summary>
+    /// An existing component that Replace would remove, but that stays because another component requires it.
+    /// </summary>
+    internal sealed class KeptComponent
+    {
+        public Component Component;
+
+        /// <summary>Type name of a component that requires it.</summary>
+        public string RequiredBy;
+
+        /// <summary>
+        /// The copy that overwrites it in place. Null when more of them stay than there are copies of their type:
+        /// the ones beyond the copies stay as they are.
+        /// </summary>
+        public PlannedComponent OverwrittenBy;
     }
 
     /// <summary>
@@ -430,6 +505,53 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public List<PlannedObject> ObjectsToCreate = new();
         public List<BlockedObject> BlockedObjects = new();
         public List<Component> ComponentsToRemove = new();
+
+        /// <summary>
+        /// Existing components of the replaced types that Replace leaves in place, because another component
+        /// requires them. None of them is in <see cref="ComponentsToRemove"/>.
+        /// </summary>
+        public List<KeptComponent> KeptComponents = new();
+
         public List<BrokenReferenceWarning> BrokenReferences = new();
+
+        /// <summary>
+        /// Sums up what the pre-check shows of the plan and what <see cref="CopyExecutor"/> writes, as a string that
+        /// two plans share only when they do the same. The window compares the plan on screen with the one it makes
+        /// again after a scene change: when both are the same, the change did not touch the plan, which can then be
+        /// applied on the same click. Objects are taken by instance ID, which a destroyed one keeps.
+        /// </summary>
+        internal string Fingerprint()
+        {
+            static int Id(Object value) => ReferenceEquals(value, null) ? 0 : value.GetInstanceID();
+
+            var text = new StringBuilder();
+            void Line(params object[] parts) => text.Append(string.Join("|", parts)).Append('\n');
+
+            foreach (var planned in Components)
+            {
+                // The source component as well as its key: the key tells components of one type apart by their
+                // index, which another component inherits when one is deleted
+                Line("component", planned.Entry.Key, Id(planned.Entry.Component), planned.Action, planned.BlockReason,
+                    planned.Origin, Id(planned.TargetHost), Id(planned.HostToCreate?.Source), Id(planned.Existing),
+                    planned.KeptBy);
+                foreach (var reference in planned.References)
+                    Line("reference", reference.PropertyPath, reference.Kind, reference.Expected?.Identity());
+                foreach (var value in planned.Values)
+                    Line("value", value.PropertyPath, value.Display());
+            }
+
+            foreach (var planned in ObjectsToCreate)
+            {
+                Line("object", Id(planned.Source), planned.Name, Id(planned.ExistingParent),
+                    Id(planned.ParentToCreate?.Source), Id(planned.PrefabAsset), planned.LeftOut);
+            }
+
+            foreach (var component in ComponentsToRemove) Line("remove", Id(component));
+            foreach (var kept in KeptComponents) Line("keep", Id(kept.Component), kept.RequiredBy);
+            foreach (var broken in BrokenReferences)
+                Line("broken", Id(broken.Holder), broken.PropertyPath, Id(broken.Removed));
+
+            return text.ToString();
+        }
     }
 }

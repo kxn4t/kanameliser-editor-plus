@@ -12,29 +12,43 @@ namespace Kanameliser.EditorPlus.ComponentCopier
     /// <summary>
     /// Stable identifier of a component inside a hierarchy.
     /// Survives rescans, so UI state (checks, foldouts) and diff rows can be carried over by key.
+    /// Two components are the same when they sit on the same object, told apart from same-name siblings by
+    /// <see cref="ObjectPath"/>, and have the same type and index there.
     /// </summary>
     internal readonly struct ComponentKey : IEquatable<ComponentKey>
     {
+        /// <summary>The host as it is shown: its plain path below the root ("Hips/Chain").</summary>
         public readonly string RelativePath;
+        /// <summary>The host as it is identified, see <see cref="Hierarchy.IdentityPath"/> ("Hips#0/Chain#1").</summary>
+        public readonly string ObjectPath;
         public readonly string TypeFullName;
         /// <summary>Index among components of the same type on the same GameObject.</summary>
         public readonly int Index;
 
-        public ComponentKey(string relativePath, string typeFullName, int index)
+        public ComponentKey(string objectPath, string relativePath, string typeFullName, int index)
         {
+            ObjectPath = objectPath ?? "";
             RelativePath = relativePath ?? "";
             TypeFullName = typeFullName ?? "";
             Index = index;
         }
 
+        /// <summary>The key of the index-th component of <paramref name="type"/> on <paramref name="host"/>.</summary>
+        public static ComponentKey For(Transform host, Transform root, Type type, int index)
+        {
+            return new ComponentKey(
+                Hierarchy.IdentityPath(host, root), ObjectMatcher.GetRelativePathFromRoot(host, root),
+                type.FullName, index);
+        }
+
         public bool Equals(ComponentKey other) =>
-            RelativePath == other.RelativePath && TypeFullName == other.TypeFullName && Index == other.Index;
+            ObjectPath == other.ObjectPath && TypeFullName == other.TypeFullName && Index == other.Index;
 
         public override bool Equals(object obj) => obj is ComponentKey other && Equals(other);
 
-        public override int GetHashCode() => HashCode.Combine(RelativePath, TypeFullName, Index);
+        public override int GetHashCode() => HashCode.Combine(ObjectPath, TypeFullName, Index);
 
-        public override string ToString() => $"{RelativePath}|{TypeFullName}|{Index}";
+        public override string ToString() => $"{ObjectPath}|{TypeFullName}|{Index}";
     }
 
     /// <summary>Declared in the order the categories are listed in the window.</summary>
@@ -70,6 +84,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public Component Component;
         public Type Type;
         public Transform Host;
+
+        /// <summary>
+        /// Position among all the components of <see cref="Host"/>, in the order the Inspector lists them.
+        /// <see cref="ComponentKey.Index"/> only counts the components of one type.
+        /// </summary>
+        public int Ordinal;
+
         public ComponentCategory Category;
         /// <summary>Set only when <see cref="Category"/> is <see cref="ComponentCategory.Tool"/>.</summary>
         public ToolInfo Tool;
@@ -118,8 +139,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (root == null) return entries;
 
             var components = new List<Component>();
+            var objectPaths = Hierarchy.IdentityPaths(root);
             foreach (var transform in root.GetComponentsInChildren<Transform>(true))
-                AddEntries(transform, root, entries, components);
+                AddEntries(transform, root, objectPaths[transform], entries, components);
 
             return entries;
         }
@@ -128,19 +150,23 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public static List<ComponentEntry> ScanObject(Transform transform, Transform root)
         {
             var entries = new List<ComponentEntry>();
-            if (transform != null) AddEntries(transform, root, entries, new List<Component>());
+            if (transform != null)
+                AddEntries(transform, root, Hierarchy.IdentityPath(transform, root), entries, new List<Component>());
             return entries;
         }
 
         private static void AddEntries(
-            Transform transform, Transform root, List<ComponentEntry> entries, List<Component> components)
+            Transform transform, Transform root, string objectPath, List<ComponentEntry> entries,
+            List<Component> components)
         {
             string path = ObjectMatcher.GetRelativePathFromRoot(transform, root);
             var indexByType = new Dictionary<Type, int>();
 
             transform.GetComponents(components);
-            foreach (var component in components)
+            for (int ordinal = 0; ordinal < components.Count; ordinal++)
             {
+                var component = components[ordinal];
+
                 // Missing scripts come back as null
                 if (component == null || component is Transform) continue;
 
@@ -151,10 +177,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var category = Categorize(type, out var tool);
                 entries.Add(new ComponentEntry
                 {
-                    Key = new ComponentKey(path, type.FullName, index),
+                    Key = new ComponentKey(objectPath, path, type.FullName, index),
                     Component = component,
                     Type = type,
                     Host = transform,
+                    Ordinal = ordinal,
                     Category = category,
                     Tool = tool,
                 });

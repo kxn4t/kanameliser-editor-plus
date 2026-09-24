@@ -119,13 +119,14 @@ Objects created on the other side, prefabs included, get the mirrored position a
 | **Unresolved references** | Copy with None / Skip the component | **Copy with None** |
 
 - **Overwrite**: updates the values without recreating the component, so references held by other components stay intact
+- **Replace**: removes the existing components of the same type, then copies. One that another component requires and therefore cannot be removed (a Rigidbody that a HingeJoint requires, ...) is overwritten in place instead, and the pre-check says so
 - **Unresolved references**: what happens when a reference has no counterpart in the target. **Skip the component** avoids half-configured components, such as a constraint without its source or a PhysBone without its colliders, and holds them back until the mapping is complete
 
 ## Nested prefabs
 
 When a prefab inside the source (a prefab bundling PhysBone settings, a hat directly below `Head`, ...) does not exist in the target, **the same prefab is instantiated in the target** instead of rebuilding its objects one by one.
 
-Every component inside it is copied, selected or not, and the values changed on the source instance carry over. Components you uncheck are removed automatically once the prefab is instantiated.
+Every component inside it is copied, selected or not, and the values changed on the source instance carry over, as do objects and components you renamed or removed on the source instance. Components you uncheck are removed automatically once the prefab is instantiated, and so are components held back by **Skip the component**.
 
 ## Pre-check and diff check
 

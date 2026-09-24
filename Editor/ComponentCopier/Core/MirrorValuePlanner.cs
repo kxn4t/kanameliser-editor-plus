@@ -128,9 +128,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 case SpatialKind.Euler when property.propertyType == SerializedPropertyType.Vector3:
                     return PlannedValue.OfEuler(path, mirror.MirrorEuler(property.vector3Value, from, to));
                 case SpatialKind.Bounds when property.propertyType == SerializedPropertyType.Bounds:
-                    var bounds = property.boundsValue;
-                    bounds.center = mirror.MirrorPoint(bounds.center, from, to);
-                    return PlannedValue.OfBounds(path, bounds);
+                    return PlannedValue.OfBounds(path, mirror.MirrorBounds(property.boundsValue, from, to));
                 default:
                     return null;
             }
