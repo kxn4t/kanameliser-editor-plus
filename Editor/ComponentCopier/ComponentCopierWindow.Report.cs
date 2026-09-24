@@ -50,9 +50,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void Apply()
         {
-            if (plan == null || IsTargetAsset()) return;
+            var executedPlan = session.Plan;
+            if (executedPlan == null || session.IsTargetAsset) return;
 
-            var executedPlan = plan;
             var result = CopyExecutor.Execute(executedPlan);
 
             detailReport = CopyVerifier.Verify(executedPlan);
@@ -79,23 +79,17 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     Localization.S("componentCopier.report.removeFailed", result.FailedRemovals.Count);
             }
 
+            string targetName = session.MirrorMode ? "the other side" : session.TargetRoot.name;
             Debug.Log($"[Component Copier] Copied {result.WrittenComponents} component(s) " +
-                      $"from '{sourceRoot.name}' to '{(mirrorMode ? "the other side" : targetRoot.name)}'.");
+                      $"from '{session.SourceRoot.name}' to '{targetName}'.");
 
-            Rescan(resetSelection: false);
+            Rescan();
         }
 
-        /// <summary>
-        /// Compares against the existing components regardless of the configured policy: with Add or Replace
-        /// the plan has no existing counterparts to compare with.
-        /// </summary>
         private void RunDiffCheck()
         {
-            if (map == null) return;
-
-            var diffSettings = settings.Clone();
-            diffSettings.ExistingPolicy = ExistingComponentPolicy.Overwrite;
-            var diffPlan = BuildPlan(diffSettings);
+            var diffPlan = session.BuildDiffCheckPlan();
+            if (diffPlan == null) return;
 
             detailReport = CopyVerifier.Verify(diffPlan);
             detailTitleKey = "componentCopier.report.diffCheck";
@@ -105,13 +99,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void AddMissingDependencies(List<ComponentKey> keys)
         {
-            foreach (var key in keys)
-            {
-                selectedKeys.Add(key);
-                leftOutKeys.Remove(key);
-            }
-
-            Recompute();
+            session.SelectDependencies(keys);
+            RenderAll();
         }
 
         #endregion
@@ -122,10 +111,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             reportContainer.Clear();
 
-            if (plan == null)
+            if (session.Plan == null)
             {
                 // A mirror copy needs nothing but the source
-                reportContainer.Add(InfoLabel(mirrorMode ? "componentCopier.info.selectSource" : "componentCopier.info.noPlan"));
+                reportContainer.Add(InfoLabel(session.MirrorMode
+                    ? "componentCopier.info.selectSource"
+                    : "componentCopier.info.noPlan"));
                 return;
             }
 
@@ -135,9 +126,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private void RenderPreCheck()
         {
+            var plan = session.Plan;
+
             // Components that arrive with a prefab are reported on the prefab line, like their label in the list
             int Count(ComponentAction action) =>
-                plan.Components.Count(c => c.Action == action && !ArrivesWithPrefab(c));
+                plan.Components.Count(c => c.Action == action && !c.ArrivesWithPrefab);
 
             // Same number as "to be created" in the mapping section: every object that appears in the target,
             // an added prefab counting as one. The prefab line below only says how some of them arrive.
@@ -168,7 +161,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 // A prefab without components (a mesh-only hat with its renderers left out, ...) gets the short
                 // form; "0 components are copied" would read like something went wrong
-                int prefabComponents = plan.Components.Count(c => c.WillWrite && ArrivesWithPrefab(c));
+                int prefabComponents = plan.Components.Count(c => c.WillWrite && c.ArrivesWithPrefab);
                 var prefabLabel = new Label(prefabComponents > 0
                     ? Localization.S("componentCopier.report.prefabs", prefabs, prefabComponents)
                     : Localization.S("componentCopier.report.prefabsOnly", prefabs));
@@ -198,8 +191,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 reportContainer.Add(redirectedLabel);
             }
 
-            if (IsTargetAsset())
-                AddWarning(mirrorMode ? "componentCopier.warning.mirrorSourceIsAsset" : "componentCopier.warning.targetIsAsset");
+            if (session.IsTargetAsset)
+            {
+                AddWarning(session.MirrorMode
+                    ? "componentCopier.warning.mirrorSourceIsAsset"
+                    : "componentCopier.warning.targetIsAsset");
+            }
 
             var blocked = plan.Components
                 .Where(c => c.Action == ComponentAction.Blocked && !c.Implicit && !c.IsHeldBack)
@@ -210,7 +207,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 AddIssueRows(blocked, CreateBlockedRow);
             }
 
-            var available = new HashSet<ComponentKey>(entries.Select(e => e.Key));
+            var available = new HashSet<ComponentKey>(session.Entries.Select(e => e.Key));
             string DescribeUnresolved(PlannedReference reference) =>
                 $"{DescribeReference(reference.SourceValue)} → {CopyVerifier.NoneText}" +
                 $" · {UnresolvedCause(reference, available)}";
@@ -239,8 +236,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var warning = AddWarning("componentCopier.report.unresolved", unresolved.Count);
                 AddDependencyButton(warning, unresolved, available);
                 AddIssueRows(WithReferences(ReferenceKind.InternalUnresolved), planned => CreateReferenceIssueRow(
-                    planned, ReferenceKind.InternalUnresolved, "componentCopier.diff.unresolvedReference",
-                    DescribeUnresolved));
+                    planned, ReferenceKind.InternalUnresolved,
+                    ComponentCopierStrings.DiffKindKey(DiffKind.UnresolvedReference), DescribeUnresolved));
             }
 
             // Mirrored as far as the rules go; the rest depends on the rig and is left to the user
@@ -282,7 +279,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private (int objects, int places) CountExternalReferences(ReferenceKind kind)
         {
-            var references = plan.Components
+            var references = session.Plan.Components
                 .Where(c => c.WillWrite)
                 .SelectMany(c => c.References)
                 .Where(r => r.Kind == kind)
@@ -297,7 +294,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private List<PlannedComponent> WithReferences(ReferenceKind kind)
         {
-            return plan.Components.Where(c => c.WillWrite && c.References.Any(r => r.Kind == kind)).ToList();
+            return session.Plan.Components.Where(c => c.WillWrite && c.References.Any(r => r.Kind == kind)).ToList();
         }
 
         /// <summary>
@@ -319,7 +316,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         private VisualElement CreateBlockedRow(PlannedComponent planned)
         {
-            var foldout = CreateIssueFoldout(planned, "blocked", "componentCopier.action.blocked");
+            var foldout = CreateIssueFoldout(
+                planned, "blocked", ComponentCopierStrings.ActionKey(ComponentAction.Blocked));
 
             var reason = new Label(Localization.S(ComponentCopierStrings.BlockReasonKey(planned.BlockReason)));
             reason.AddToClassList("diff-property");
@@ -339,7 +337,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 .Where(r => r.MissingDependency.HasValue && available.Contains(r.MissingDependency.Value))
                 .Select(r => r.MissingDependency.Value)
                 // A selected one that is held back or blocked cannot be fixed by selecting it
-                .Where(key => !selectedKeys.Contains(key))
+                .Where(key => !session.IsSelected(key))
                 .Distinct()
                 .ToList();
             if (addable.Count == 0) return;
@@ -358,7 +356,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private VisualElement CreateHeldBackRow(PlannedComponent planned, Func<PlannedReference, string> describe)
         {
-            var foldout = CreateIssueFoldout(planned, "heldBack", "componentCopier.diff.unresolvedReference");
+            var foldout = CreateIssueFoldout(
+                planned, "heldBack", ComponentCopierStrings.DiffKindKey(DiffKind.UnresolvedReference));
 
             var reason = new Label(Localization.S(ComponentCopierStrings.BlockReasonKey(planned.BlockReason)));
             reason.AddToClassList("diff-property");
@@ -468,10 +467,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             string name = value.name;
             var transform = ReferenceWalker.GetTransform(value);
-            if (sourceRoot != null && transform != sourceRoot.transform &&
-                Hierarchy.IsInside(transform, sourceRoot.transform))
+            if (session.SourceRoot != null && transform != session.SourceRoot.transform &&
+                Hierarchy.IsInside(transform, session.SourceRoot.transform))
             {
-                name = ObjectMatcher.GetRelativePathFromRoot(transform, sourceRoot.transform);
+                name = ObjectMatcher.GetRelativePathFromRoot(transform, session.SourceRoot.transform);
             }
 
             return value is GameObject || value is Transform ? name : $"{name} ({value.GetType().Name})";
@@ -481,14 +480,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         {
             if (reference.MissingDependency is { } dependency)
             {
-                if (plannedByKey.TryGetValue(dependency, out var referenced) && referenced.IsHeldBack)
+                if (session.TryGetPlanned(dependency, out var referenced) && referenced.IsHeldBack)
                     return Localization.S("componentCopier.report.cause.heldBack");
 
-                if (available.Contains(dependency) && !selectedKeys.Contains(dependency))
+                if (available.Contains(dependency) && !session.IsSelected(dependency))
                     return Localization.S("componentCopier.report.cause.notSelected");
             }
 
-            var mapping = map?.Get(ReferenceWalker.GetTransform(reference.SourceValue));
+            var mapping = session.Map?.Get(ReferenceWalker.GetTransform(reference.SourceValue));
             return mapping != null && mapping.State == MappingState.NeedsReview
                 ? Localization.S("componentCopier.report.cause.needsReview")
                 : Localization.S("componentCopier.report.cause.noCounterpart");
@@ -555,9 +554,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private string TargetPath(Transform transform)
         {
+            var map = session.Map;
             if (map == null) return "";
 
-            var from = sourceRoot != null && map.TryResolve(sourceRoot.transform, out var counterpart) &&
+            var source = session.SourceRoot;
+            var from = source != null && map.TryResolve(source.transform, out var counterpart) &&
                        Hierarchy.IsInside(transform, counterpart)
                 ? counterpart
                 : map.TargetRoot;

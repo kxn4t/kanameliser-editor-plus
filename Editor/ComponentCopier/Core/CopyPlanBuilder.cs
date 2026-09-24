@@ -111,8 +111,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             {
                 Map = map,
                 Settings = request.Settings,
-                SourceAvatarRoot = AvatarObjectReferences.FindAvatarRoot(map.SourceRoot),
-                TargetAvatarRoot = AvatarObjectReferences.FindAvatarRoot(map.TargetRoot),
+                SourceAvatarRoot = AvatarRoots.Find(map.SourceRoot),
+                TargetAvatarRoot = AvatarRoots.Find(map.TargetRoot),
                 Mirror = request.MirrorRoot != null ? new MirrorContext(request.MirrorRoot) : null,
                 KeyRoot = request.KeyRoot,
             };

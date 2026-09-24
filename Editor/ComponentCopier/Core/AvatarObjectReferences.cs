@@ -40,21 +40,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         }
 
         /// <summary>
-        /// The avatar a path is relative to, as MA sees it: the outermost object at or above
-        /// <paramref name="transform"/> that carries an avatar root marker. Null when there is none.
-        /// </summary>
-        public static Transform FindAvatarRoot(Transform transform)
-        {
-            Transform found = null;
-            for (var current = transform; current != null; current = current.parent)
-            {
-                if (ExternalContext.IsAvatarRoot(current)) found = current;
-            }
-
-            return found;
-        }
-
-        /// <summary>
         /// Resolves the path half against the avatar, for a reference whose object half is empty.
         /// </summary>
         public static GameObject ResolvePath(string referencePath, Transform avatarRoot)

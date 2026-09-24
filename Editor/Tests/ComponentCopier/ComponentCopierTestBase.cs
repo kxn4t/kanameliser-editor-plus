@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kanameliser.EditorPlus.ComponentCopier;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 {
@@ -71,6 +73,45 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             }
 
             return root.transform;
+        }
+
+        private const string TempFolderName = "__ComponentCopierTests";
+        private const string TempFolder = "Assets/" + TempFolderName;
+
+        // Once per fixture, so that the assets outlive the instances destroyed in the per-test TearDown
+        [OneTimeTearDown]
+        public void DeleteTempAssets()
+        {
+            if (AssetDatabase.IsValidFolder(TempFolder)) AssetDatabase.DeleteAsset(TempFolder);
+        }
+
+        /// <summary>Saves a prefab asset for the fixture. The name has to be unique among its tests.</summary>
+        protected static GameObject SavePrefab(string name, Action<Transform> build)
+        {
+            if (!AssetDatabase.IsValidFolder(TempFolder)) AssetDatabase.CreateFolder("Assets", TempFolderName);
+
+            var temp = new GameObject(name);
+            try
+            {
+                build(temp.transform);
+                return PrefabUtility.SaveAsPrefabAsset(temp, $"{TempFolder}/{name}.prefab");
+            }
+            finally
+            {
+                Object.DestroyImmediate(temp);
+            }
+        }
+
+        protected static Transform AddChild(Transform parent, string name)
+        {
+            var child = new GameObject(name).transform;
+            child.SetParent(parent, false);
+            return child;
+        }
+
+        protected static Transform Instantiate(GameObject asset, Transform parent)
+        {
+            return ((GameObject)PrefabUtility.InstantiatePrefab(asset, parent)).transform;
         }
 
         /// <summary>Marks transforms as skinning bones. No mesh is needed for that.</summary>

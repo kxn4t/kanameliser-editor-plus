@@ -5,7 +5,6 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
-using Object = UnityEngine.Object;
 
 namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 {
@@ -15,48 +14,6 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
     /// </summary>
     public class NestedPrefabTests : ComponentCopierTestBase
     {
-        private const string TempFolderName = "__ComponentCopierTests";
-        private const string TempFolder = "Assets/" + TempFolderName;
-
-        [OneTimeSetUp]
-        public void CreateTempFolder()
-        {
-            if (!AssetDatabase.IsValidFolder(TempFolder)) AssetDatabase.CreateFolder("Assets", TempFolderName);
-        }
-
-        // One-time, so that the assets outlive the instances destroyed in the per-test TearDown
-        [OneTimeTearDown]
-        public void DeleteTempFolder()
-        {
-            AssetDatabase.DeleteAsset(TempFolder);
-        }
-
-        private static GameObject SavePrefab(string name, Action<Transform> build)
-        {
-            var temp = new GameObject(name);
-            try
-            {
-                build(temp.transform);
-                return PrefabUtility.SaveAsPrefabAsset(temp, $"{TempFolder}/{name}.prefab");
-            }
-            finally
-            {
-                Object.DestroyImmediate(temp);
-            }
-        }
-
-        private static Transform AddChild(Transform parent, string name)
-        {
-            var child = new GameObject(name).transform;
-            child.SetParent(parent, false);
-            return child;
-        }
-
-        private static Transform Instantiate(GameObject asset, Transform parent)
-        {
-            return ((GameObject)PrefabUtility.InstantiatePrefab(asset, parent)).transform;
-        }
-
         private static GameObject SaveHatWithCollider(string name)
         {
             return SavePrefab(name, hat => AddChild(hat, "Ribbon").gameObject.AddComponent<SphereCollider>().radius = 0.1f);
