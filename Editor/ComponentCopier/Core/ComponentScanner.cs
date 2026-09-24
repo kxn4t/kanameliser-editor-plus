@@ -84,6 +84,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public Component Component;
         public Type Type;
         public Transform Host;
+
+        /// <summary>
+        /// Position among all the components of <see cref="Host"/>, in the order the Inspector lists them.
+        /// <see cref="ComponentKey.Index"/> only counts the components of one type.
+        /// </summary>
+        public int Ordinal;
+
         public ComponentCategory Category;
         /// <summary>Set only when <see cref="Category"/> is <see cref="ComponentCategory.Tool"/>.</summary>
         public ToolInfo Tool;
@@ -156,8 +163,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var indexByType = new Dictionary<Type, int>();
 
             transform.GetComponents(components);
-            foreach (var component in components)
+            for (int ordinal = 0; ordinal < components.Count; ordinal++)
             {
+                var component = components[ordinal];
+
                 // Missing scripts come back as null
                 if (component == null || component is Transform) continue;
 
@@ -172,6 +181,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     Component = component,
                     Type = type,
                     Host = transform,
+                    Ordinal = ordinal,
                     Category = category,
                     Tool = tool,
                 });

@@ -431,6 +431,36 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             Assert.AreEqual(0.5f, colliders[0].radius);
         }
 
+        [Test]
+        public void ImplicitComponentListedAfterASelectedOneOfItsType_KeepsItsIndex()
+        {
+            // Both colliders were added to the source instance, so neither arrives with the prefab. Only the second
+            // one is selected; the first comes along with the prefab and is listed after it.
+            var hatAsset = SavePrefab("Hat_AddedColliders", _ => { });
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head")).gameObject;
+            sourceHat.AddComponent<SphereCollider>().radius = 0.1f;
+            var second = sourceHat.AddComponent<SphereCollider>();
+            second.radius = 0.2f;
+
+            var plan = CopyPlanBuilder.Build(
+                SelectComponents(source, second), TransformMapper.Build(source, target), new CopySettings());
+            CollectionAssert.AreEqual(new[] { ComponentOrigin.Selected, ComponentOrigin.Implicit },
+                plan.Components.Select(c => c.Origin));
+
+            CopyExecutor.Execute(plan);
+
+            // Each gets a copy of its own, in the order of the source: written in the order of the plan, the copy
+            // of the second one would come first and take index 0
+            var colliders = target.Find("Armature/Head/Hat_AddedColliders").GetComponents<SphereCollider>();
+            Assert.AreEqual(2, colliders.Length);
+            CollectionAssert.AreEqual(new[] { 0.1f, 0.2f }, colliders.Select(c => c.radius));
+
+            var replanned = BuildPlan(source, target, new CopySettings(), typeof(SphereCollider));
+            Assert.That(replanned.Components.Select(c => c.Action), Is.All.EqualTo(ComponentAction.SkipIdentical));
+        }
+
         #endregion
 
         #region Left-out components

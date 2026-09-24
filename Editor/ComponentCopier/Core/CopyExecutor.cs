@@ -60,10 +60,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             // Looked up before anything is added: components are found by their index among the same type,
             // which shifts as soon as one is added or removed
             var leftOut = FindLeftOutComponents(plan);
+            ClaimArrivedComponents(plan);
+
+            // The components that Unity added along with a copy to satisfy its RequireComponent, by object,
+            // until the copy of their type takes them
+            var autoAdded = new Dictionary<Transform, List<Component>>();
 
             // Pass 1: make every component exist and carry the source values.
             // References still point into the source hierarchy after this pass.
-            foreach (var planned in plan.Components)
+            foreach (var planned in InSourceOrder(plan.Components))
             {
                 if (!planned.WillWrite) continue;
 
@@ -76,7 +81,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     continue;
                 }
 
-                var target = PrepareTargetComponent(planned);
+                var target = PrepareTargetComponent(planned, autoAdded);
                 if (target == null)
                 {
                     result.Failed.Add(planned);
@@ -299,6 +304,41 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         }
 
         /// <summary>
+        /// Notes, for every copy written onto an object of an instantiated prefab, the component that arrived with
+        /// the prefab for it: the one of its type and index there. Each one belongs to that copy alone, since no
+        /// two copies share a host, a type and an index. Looked up before pass 1 adds anything: a lookup by index
+        /// while adding would also find what was added in the meantime (the copy of another component, or one
+        /// that Unity added to satisfy a RequireComponent), and could hand one component to two copies.
+        /// </summary>
+        private static void ClaimArrivedComponents(CopyPlan plan)
+        {
+            foreach (var planned in plan.Components)
+            {
+                if (!planned.WillWrite || planned.HostToCreate == null) continue;
+
+                // Null on an object created from scratch, and when the component was added to the source instance
+                planned.Arrived = ComponentScanner.FindByTypeAndIndex(
+                    planned.HostToCreate.Created, planned.Entry.Type, planned.Entry.Key.Index);
+            }
+        }
+
+        /// <summary>
+        /// The components in the order pass 1 writes them: the ones for one object together, in their order on
+        /// the source object. The copies of one type are then placed in the order of their indices, whatever
+        /// order the plan lists them in (the components that arrive with a nested prefab come after the selected
+        /// ones): a copy added ahead of one with a lower index would take that index. Components of different
+        /// types can still end up in another order, when Unity adds a required one along with a copy.
+        /// </summary>
+        private static IEnumerable<PlannedComponent> InSourceOrder(List<PlannedComponent> components)
+        {
+            // GroupBy keeps the objects in the order they first appear, and OrderBy is stable: ties keep the
+            // order of the plan
+            return components
+                .GroupBy(planned => (planned.TargetHost, planned.HostToCreate))
+                .SelectMany(byHost => byHost.OrderBy(planned => planned.Entry.Ordinal));
+        }
+
+        /// <summary>
         /// Removes what the user left out from the instantiated prefabs. On a prefab instance this becomes a
         /// "removed component" / "removed GameObject" override, which can be reverted from the Overrides menu.
         /// </summary>
@@ -362,7 +402,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return pending;
         }
 
-        private static Component PrepareTargetComponent(PlannedComponent planned)
+        /// <summary>
+        /// The component a copy is written to: the existing one it overwrites, the one that arrived with an
+        /// instantiated prefab, one that Unity added along with an earlier copy to satisfy its RequireComponent,
+        /// or a new one, in that order. Null when the component cannot be added.
+        /// </summary>
+        private static Component PrepareTargetComponent(
+            PlannedComponent planned, Dictionary<Transform, List<Component>> autoAdded)
         {
             if (planned.Action == ComponentAction.Overwrite && planned.Existing != null)
             {
@@ -373,15 +419,54 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var host = planned.TargetHost != null ? planned.TargetHost : planned.HostToCreate?.Created;
             if (host == null) return null;
 
-            // A freshly created host can already carry the component: it came with an instantiated prefab,
-            // or Unity added it to satisfy a RequireComponent. Adding another one would duplicate it.
-            if (planned.HostToCreate != null)
+            // Adding another one would duplicate it
+            if (planned.Arrived != null) return planned.Arrived;
+
+            // Unity may have added one already, along with an earlier copy that requires it, on an existing object
+            // as much as on a new one. Adding another would be rejected where only one is allowed, or leave a
+            // second one while the component that requires it keeps using the first.
+            var type = planned.Entry.Type;
+            if (autoAdded.TryGetValue(host, out var unclaimed))
             {
-                var arrived = ComponentScanner.FindByTypeAndIndex(host, planned.Entry.Type, planned.Entry.Key.Index);
-                if (arrived != null) return arrived;
+                int index = unclaimed.FindIndex(component => component != null && component.GetType() == type);
+                if (index >= 0)
+                {
+                    var reused = unclaimed[index];
+                    unclaimed.RemoveAt(index);
+                    return reused;
+                }
             }
 
-            return Undo.AddComponent(host.gameObject, planned.Entry.Type);
+            return AddComponent(host, type, autoAdded);
+        }
+
+        /// <summary>
+        /// Adds a component, and notes in <paramref name="autoAdded"/> the ones that Unity adds along with it to
+        /// satisfy its RequireComponent. Only those: whatever was there before stays out (the existing components,
+        /// the ones that arrived with a prefab, the copies written so far), so that the Add policy still adds next
+        /// to an existing component, and no component is handed to two copies.
+        /// </summary>
+        private static Component AddComponent(
+            Transform host, Type type, Dictionary<Transform, List<Component>> autoAdded)
+        {
+            var before = new HashSet<Component>(host.GetComponents<Component>());
+            var added = Undo.AddComponent(host.gameObject, type);
+
+            foreach (var component in host.GetComponents<Component>())
+            {
+                // Missing scripts come back as null
+                if (component == null || component == added || before.Contains(component)) continue;
+
+                if (!autoAdded.TryGetValue(host, out var unclaimed))
+                {
+                    unclaimed = new List<Component>();
+                    autoAdded[host] = unclaimed;
+                }
+
+                unclaimed.Add(component);
+            }
+
+            return added;
         }
 
         /// <summary>

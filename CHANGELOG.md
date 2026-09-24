@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — Components on same-name sibling objects (two `Chain` below one bone, ...) can now be checked apart. They used to share one checkbox state and one status label.
 - **Component Copier** — A reference to an object or component that the copy creates is no longer taken for "None" when the existing component's reference is empty, which skipped the component as identical and left the reference unset.
 - **Component Copier** — **Replace** now removes components in dependency order, and a component that another one requires is planned as an overwrite and shown as such before applying; the number of removed components is reported correctly.
+- **Component Copier** — A component that Unity adds automatically to satisfy a RequireComponent is now reused when it is also copied, instead of failing to add or being duplicated.
+- **Component Copier** — When two components of one type had been added to a source Prefab instance and only the second was selected, both copies ended up on one component of the new instance. Each now gets a component of its own, in the source's order.
 
 ---
 
@@ -55,6 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — 同名の兄弟オブジェクト（1 つのボーンの下に `Chain` が 2 つある場合など）にあるコンポーネントを、別々にチェックできるようになりました。以前はチェック状態とステータス表示が連動していました。
 - **Component Copier** — コピーで作成されるオブジェクトやコンポーネントへの参照が、コピー先の既存コンポーネントで空のとき「None と同じ」とみなされ、コンポーネントが「同一」としてスキップされて参照が設定されない問題を修正しました。
 - **Component Copier** — **置き換え** がコンポーネントを依存関係の順に削除するようになりました。ほかのコンポーネントに必要とされていて削除できないものは、適用前に上書きとして表示したうえでその場で上書きします。削除件数の報告も正しくなりました。
+- **Component Copier** — RequireComponent のために Unity が自動追加したコンポーネントを、それもコピー対象のときは再利用するようにしました。以前は追加に失敗するか重複していました。
+- **Component Copier** — コピー元の Prefab インスタンスに同じ型のコンポーネントを 2 つ追加し、2 つめだけを選択してコピーすると、新しいインスタンスでは両方が 1 つのコンポーネントに書き込まれていました。それぞれ別のコンポーネントへ、コピー元の順で書き込むようにしました。
 
 ## [1.1.0] - 2026-09-22
 

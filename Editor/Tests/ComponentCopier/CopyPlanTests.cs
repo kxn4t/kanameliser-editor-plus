@@ -746,6 +746,66 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void ComponentUnityAddsForARequirement_IsReusedOnAnExistingObject()
+        {
+            // The source's joint sits above the Rigidbody it requires, so adding the joint first makes Unity add a
+            // Rigidbody to the target, of which there can only be one
+            var source = CreateHierarchy("Source", "Door");
+            var target = CreateHierarchy("Target", "Door");
+            var sourceDoor = source.Find("Door").gameObject;
+            sourceDoor.AddComponent<Rigidbody>().mass = 9f;
+            var sourceJoint = sourceDoor.AddComponent<HingeJoint>();
+            Assert.IsTrue(UnityEditorInternal.ComponentUtility.MoveComponentUp(sourceJoint),
+                "Test setup: the joint must move above the Rigidbody");
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(Rigidbody), typeof(HingeJoint));
+            Assert.That(plan.Components.Select(c => c.Action), Is.All.EqualTo(ComponentAction.Add));
+
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.IsEmpty(result.Failed);
+            Assert.AreEqual(2, result.WrittenComponents);
+            var door = target.Find("Door");
+            Assert.AreEqual(1, door.GetComponents<Rigidbody>().Length);
+            Assert.AreEqual(9f, door.GetComponent<Rigidbody>().mass);
+            Assert.AreEqual(1, door.GetComponents<HingeJoint>().Length);
+            // Unity turns a second Rigidbody down with a plain log message, which would not fail the test otherwise
+            LogAssert.NoUnexpectedReceived();
+
+            // The Rigidbody came with the joint, and goes with it
+            Undo.PerformUndo();
+            Assert.IsNull(door.GetComponent<HingeJoint>());
+            Assert.IsNull(door.GetComponent<Rigidbody>());
+        }
+
+        [Test]
+        public void AddPolicy_DoesNotReuseAComponentThatWasThereBefore()
+        {
+            // Only what Unity adds while copying is reused. The Add policy adds next to an existing component.
+            var source = CreateHierarchy("Source", "Speaker");
+            var target = CreateHierarchy("Target", "Speaker");
+            var sourceSpeaker = source.Find("Speaker").gameObject;
+            sourceSpeaker.AddComponent<AudioSource>().volume = 0.3f;
+            sourceSpeaker.AddComponent<AudioSource>().volume = 0.6f;
+            var existing = target.Find("Speaker").gameObject.AddComponent<AudioSource>();
+            existing.volume = 0.9f;
+
+            var settings = new CopySettings { ExistingPolicy = ExistingComponentPolicy.Add };
+            var plan = BuildPlan(source, target, settings, typeof(AudioSource));
+            Assert.That(plan.Components.Select(c => c.Action), Is.All.EqualTo(ComponentAction.Add));
+
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.IsEmpty(result.Failed);
+            var audioSources = target.Find("Speaker").GetComponents<AudioSource>();
+            Assert.AreEqual(3, audioSources.Length);
+            Assert.AreSame(existing, audioSources[0]);
+            Assert.AreEqual(0.9f, existing.volume);
+            CollectionAssert.AreEqual(audioSources.Skip(1), plan.Components.Select(c => c.Result));
+            CollectionAssert.AreEqual(new[] { 0.3f, 0.6f }, audioSources.Skip(1).Select(s => s.volume));
+        }
+
+        [Test]
         public void ExtraComponentOnTarget_IsReported()
         {
             var source = CreateHierarchy("Source", "Bone", "Leftover");

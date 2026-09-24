@@ -377,6 +377,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public bool ArrivesWithPrefab =>
             HostToCreate != null && (HostToCreate.IsPrefabRoot || HostToCreate.PrefabRoot != null);
 
+        /// <summary>
+        /// The component of the new prefab instance that stands for this one (same type, same index on
+        /// <see cref="HostToCreate"/>), which is written instead of adding another. Noted by
+        /// <see cref="CopyExecutor"/> before it adds anything. Null where nothing arrived: on an existing host or
+        /// an object created from scratch, and when the component was added to the source instance and is not
+        /// part of the prefab asset.
+        /// </summary>
+        public Component Arrived;
+
         /// <summary>Component written by <see cref="CopyExecutor"/>.</summary>
         public Component Result;
 
