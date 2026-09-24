@@ -154,6 +154,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 plan.ExternalMap = request.ExternalMapProvider(externalTransforms);
             }
 
+            // "Skip the component" means leaving the component out. A held-back one inside a nested prefab that the
+            // plan adds arrives with the prefab all the same, with the values of the asset rather than those of the
+            // source instance, and removing it from the new instance is the only way to leave it out. So it is
+            // planned like an unchecked one, while it stays blocked. The host is taken from the objects the plan
+            // creates anyway: none is planned for a component that is not copied.
+            foreach (var planned in plan.Components)
+            {
+                if (!planned.IsHeldBack || planned.HostToCreate != null) continue;
+                if (!context.ObjectsBySource.TryGetValue(planned.Entry.Host, out var host)) continue;
+                if (!host.IsPrefabRoot && host.PrefabRoot == null) continue;
+
+                planned.HostToCreate = host;
+                planned.Origin = ComponentOrigin.LeftOut;
+            }
+
             CollectReferences(plan, context);
             PlanLeftOutObjects(plan);
             MirrorValuePlanner.Plan(plan, context.ObjectsBySource);

@@ -172,7 +172,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 reportContainer.Add(prefabLabel);
             }
 
-            int leftOutComponents = plan.Components.Count(c => c.LeftOut);
+            // Held-back components inside an added prefab are removed the same way, but the warning about held-back
+            // components below counts them already
+            int leftOutComponents = plan.Components.Count(c => c.LeftOut && !c.IsHeldBack);
             if (leftOutComponents > 0)
             {
                 var leftOutLabel = new Label(Localization.S("componentCopier.report.leftOut",

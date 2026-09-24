@@ -590,6 +590,92 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             Assert.AreEqual(typeof(SphereCollider), plan.Components.Single().Entry.Type);
         }
 
+        [Test]
+        public void HeldBackComponent_IsRemovedFromTheInstantiatedPrefab()
+        {
+            var hatAsset = SavePrefab("Hat_HeldBack", hat =>
+            {
+                hat.gameObject.AddComponent<SphereCollider>();
+                hat.gameObject.AddComponent<ParentConstraint>();
+            });
+            var source = CreateHierarchy("Source", "Armature/Head", "UnmappedAnchor");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            // With a component of its own the anchor is not created bare, so a reference to it stays unresolved
+            var anchor = source.Find("UnmappedAnchor");
+            anchor.gameObject.AddComponent<BoxCollider>();
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            var sourceConstraint = sourceHat.GetComponent<ParentConstraint>();
+            sourceConstraint.weight = 0.3f;
+            sourceConstraint.AddSource(new ConstraintSource { sourceTransform = anchor, weight = 1f });
+
+            var settings = new CopySettings { UnresolvedPolicy = UnresolvedReferencePolicy.SkipComponent };
+            var plan = BuildPlan(source, target, settings, typeof(SphereCollider), typeof(ParentConstraint));
+            var hatToCreate = plan.ObjectsToCreate.Single(o => o.Source == sourceHat);
+            Assert.IsTrue(hatToCreate.IsPrefabRoot, "The collider brings the prefab");
+            var heldBack = plan.Components.Single(c => c.Entry.Type == typeof(ParentConstraint));
+            Assert.IsTrue(heldBack.IsHeldBack);
+            Assert.AreEqual(ComponentAction.Blocked, heldBack.Action);
+            Assert.IsTrue(heldBack.LeftOut);
+            Assert.IsTrue(heldBack.ArrivesWithPrefab);
+            Assert.AreSame(hatToCreate, heldBack.HostToCreate);
+
+            // Only the setting leaves it out: clearing the reference instead writes it like the rest of the prefab
+            var clearing = BuildPlan(source, target,
+                new CopySettings { UnresolvedPolicy = UnresolvedReferencePolicy.Clear },
+                typeof(SphereCollider), typeof(ParentConstraint));
+            var cleared = clearing.Components.Single(c => c.Entry.Type == typeof(ParentConstraint));
+            Assert.IsFalse(cleared.LeftOut);
+            Assert.IsTrue(cleared.WillWrite);
+            Assert.AreEqual(ReferenceKind.InternalUnresolved, cleared.References.Single().Kind);
+
+            var result = CopyExecutor.Execute(plan);
+
+            // Left in place, it would carry the values of the asset, and the diff check would report it as missing
+            Assert.IsNull(target.Find("Armature/Head/Hat_HeldBack").GetComponent<ParentConstraint>());
+            Assert.AreEqual(1, result.LeftOutComponents);
+            Assert.IsEmpty(result.FailedRemovals);
+            Assert.That(CopyVerifier.Verify(plan).Components.Select(c => c.Kind), Is.All.EqualTo(DiffKind.Match));
+        }
+
+        [Test]
+        public void HeldBackComponentThatAnotherOneRequires_IsKeptAndReported()
+        {
+            var hatAsset = SavePrefab("Hat_HeldBackRequired", hat =>
+            {
+                // Cloth requires the SkinnedMeshRenderer next to it
+                hat.gameObject.AddComponent<SkinnedMeshRenderer>();
+                hat.gameObject.AddComponent<Cloth>();
+                hat.gameObject.AddComponent<SphereCollider>();
+            });
+            var source = CreateHierarchy("Source", "Armature/Head", "UnmappedAnchor");
+            var target = CreateHierarchy("Target", "Armature/Head");
+            var anchor = source.Find("UnmappedAnchor");
+            anchor.gameObject.AddComponent<BoxCollider>();
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            var sourceRenderer = sourceHat.GetComponent<SkinnedMeshRenderer>();
+            sourceRenderer.rootBone = anchor;
+
+            // The Cloth is not selected; it comes along with the prefab that the collider brings
+            var settings = new CopySettings { UnresolvedPolicy = UnresolvedReferencePolicy.SkipComponent };
+            var plan = CopyPlanBuilder.Build(
+                SelectComponents(source, sourceHat.GetComponent<SphereCollider>(), sourceRenderer),
+                TransformMapper.Build(source, target), settings);
+            var hatToCreate = plan.ObjectsToCreate.Single(o => o.Source == sourceHat);
+            Assert.IsTrue(hatToCreate.IsPrefabRoot);
+            var heldBack = plan.Components.Single(c => c.Entry.Type == typeof(SkinnedMeshRenderer));
+            Assert.IsTrue(heldBack.IsHeldBack);
+            Assert.IsTrue(heldBack.LeftOut);
+            Assert.AreSame(hatToCreate, heldBack.HostToCreate);
+            Assert.IsTrue(plan.Components.Single(c => c.Entry.Type == typeof(Cloth)).Implicit);
+
+            var result = CopyExecutor.Execute(plan);
+
+            Assert.IsNotNull(target.Find("Armature/Head/Hat_HeldBackRequired").GetComponent<SkinnedMeshRenderer>());
+            CollectionAssert.AreEqual(new[] { heldBack }, result.FailedRemovals);
+            Assert.AreEqual(DiffKind.ExtraOnTarget,
+                CopyVerifier.Verify(plan).Components.Single(c => c.Planned == heldBack).Kind);
+        }
+
         #endregion
 
         #region Mirror copy

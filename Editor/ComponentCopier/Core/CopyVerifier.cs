@@ -327,8 +327,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         private static List<Transform> MirroredTargets(CopyPlan plan, Dictionary<Transform, Transform> sourceByTarget)
         {
             var sides = plan.Map.Sides;
+            // The sides of what the user picked. A held-back component inside a prefab that is added is planned as
+            // left out, but it was picked, like one held back anywhere else.
             var copiedSides = new HashSet<Side>(plan.Components
-                .Where(c => !c.Implicit && !c.LeftOut)
+                .Where(c => !c.Implicit && (!c.LeftOut || c.IsHeldBack))
                 .Select(c => sides.Of(c.Entry.Host)));
             copiedSides.Remove(Side.None);
 

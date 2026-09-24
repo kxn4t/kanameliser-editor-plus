@@ -768,7 +768,7 @@ msgstr "{0} unchecked component(s) are removed after their prefab is added, alon
 
 #, csharp-format
 msgid "componentCopier.report.appliedLeftOut"
-msgstr "Removed {0} unchecked component(s) and {1} object(s) from the added prefabs."
+msgstr "Removed {0} excluded component(s) and {1} object(s) from the added prefabs."
 
 #, csharp-format
 msgid "componentCopier.report.removeFailed"

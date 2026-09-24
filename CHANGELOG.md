@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — **Replace** now removes components in dependency order, and a component that another one requires is planned as an overwrite and shown as such before applying; the number of removed components is reported correctly.
 - **Component Copier** — A component that Unity adds automatically to satisfy a RequireComponent is now reused when it is also copied, instead of failing to add or being duplicated.
 - **Component Copier** — When two components of one type had been added to a source Prefab instance and only the second was selected, both copies ended up on one component of the new instance. Each now gets a component of its own, in the source's order.
+- **Component Copier** — A component held back by **Skip the component** no longer stays in a nested Prefab that is added; it is removed from the new instance like an unchecked component, and reported when another component requires it.
 
 ---
 
@@ -59,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Copier** — **置き換え** がコンポーネントを依存関係の順に削除するようになりました。ほかのコンポーネントに必要とされていて削除できないものは、適用前に上書きとして表示したうえでその場で上書きします。削除件数の報告も正しくなりました。
 - **Component Copier** — RequireComponent のために Unity が自動追加したコンポーネントを、それもコピー対象のときは再利用するようにしました。以前は追加に失敗するか重複していました。
 - **Component Copier** — コピー元の Prefab インスタンスに同じ型のコンポーネントを 2 つ追加し、2 つめだけを選択してコピーすると、新しいインスタンスでは両方が 1 つのコンポーネントに書き込まれていました。それぞれ別のコンポーネントへ、コピー元の順で書き込むようにしました。
+- **Component Copier** — **コンポーネントごとスキップ** で保留されたコンポーネントが、追加されるネストされた Prefab の中に残らないようにしました。チェックを外したコンポーネントと同様に新しいインスタンスから削除し、ほかのコンポーネントに必要とされていて削除できない場合は報告します。
 
 ## [1.1.0] - 2026-09-22
 

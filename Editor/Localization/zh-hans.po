@@ -767,7 +767,7 @@ msgstr "取消勾选的 {0} 个组件将在添加 Prefab 后删除，因此变�
 
 #, csharp-format
 msgid "componentCopier.report.appliedLeftOut"
-msgstr "已从添加的 Prefab 中删除取消勾选的 {0} 个组件和 {1} 个对象。"
+msgstr "已从添加的 Prefab 中删除被排除的 {0} 个组件和 {1} 个对象。"
 
 #, csharp-format
 msgid "componentCopier.report.removeFailed"

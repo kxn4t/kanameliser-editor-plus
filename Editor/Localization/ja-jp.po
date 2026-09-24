@@ -767,7 +767,7 @@ msgstr "チェックを外したコンポーネント {0} 件は、Prefab を追
 
 #, csharp-format
 msgid "componentCopier.report.appliedLeftOut"
-msgstr "追加した Prefab から、チェックを外したコンポーネント {0} 件とオブジェクト {1} 個を削除しました。"
+msgstr "追加した Prefab から、除外したコンポーネント {0} 件とオブジェクト {1} 個を削除しました。"
 
 #, csharp-format
 msgid "componentCopier.report.removeFailed"

@@ -19,9 +19,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         SkipIdentical,
         Blocked,
         /// <summary>
-        /// Arrives with a nested prefab although the user left it out, and is removed from the new instance.
-        /// Set exactly for the components whose <see cref="PlannedComponent.Origin"/> is
-        /// <see cref="ComponentOrigin.LeftOut"/>.
+        /// Arrives with a nested prefab although the user unchecked it, and is removed from the new instance.
+        /// Set for the components whose <see cref="PlannedComponent.Origin"/> is
+        /// <see cref="ComponentOrigin.LeftOut"/>, except the ones held back by the unresolved-reference setting:
+        /// those stay <see cref="Blocked"/>, and are removed all the same.
         /// </summary>
         LeftOut,
     }
@@ -37,8 +38,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         Implicit,
         /// <summary>
-        /// Inside such a prefab and unchecked on purpose. It still arrives with the prefab, so it is removed from
-        /// the new instance afterwards.
+        /// Inside such a prefab and unchecked, or held back by the unresolved-reference setting. It still arrives
+        /// with the prefab, so it is removed from the new instance afterwards.
         /// </summary>
         LeftOut,
     }
@@ -105,7 +106,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         /// <summary>
         /// True for an object inside a nested prefab that is removed from the new instance, because every
-        /// component on it was left out. See <see cref="PlannedComponent.LeftOut"/>.
+        /// component on it was unchecked or held back by the unresolved-reference setting. See
+        /// <see cref="PlannedComponent.LeftOut"/>.
         /// </summary>
         public bool LeftOut;
 
