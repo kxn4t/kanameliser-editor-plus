@@ -240,7 +240,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (objectsBySource.TryGetValue(source, out var toCreate))
             {
                 if (toCreate.ExistingParent != null)
-                    frame = Frame.Of(toCreate.ExistingParent);
+                    frame = plan.FrameAfter(toCreate.ExistingParent);
                 else if (toCreate.ParentToCreate != null)
                     frame = TargetFrame(plan, objectsBySource, toCreate.ParentToCreate.Source);
                 else
@@ -249,13 +249,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             if (!plan.Map.TryResolve(source, out var target) || target.parent == null) return false;
-            frame = Frame.Of(target.parent);
+            frame = plan.FrameAfter(target.parent);
             return true;
         }
 
         /// <summary>
-        /// The frame of the counterpart of a source transform: the existing counterpart, or the pose the
-        /// counterpart is created with. An object outside of the map is not going anywhere.
+        /// The frame of the counterpart of a source transform once the plan is applied: the existing counterpart
+        /// (where a pose of the plan moves it), or the pose the counterpart is created with. An object outside of
+        /// the map is not going anywhere.
         /// </summary>
         internal static Frame TargetFrame(
             CopyPlan plan, IReadOnlyDictionary<Transform, PlannedObject> objectsBySource, Transform source)
@@ -263,7 +264,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (objectsBySource.TryGetValue(source, out var toCreate))
                 return toCreate.Created != null ? Frame.Of(toCreate.Created) : plan.Mirror.MirroredFrame(source);
 
-            if (plan.Map.TryResolve(source, out var target)) return Frame.Of(target);
+            if (plan.Map.TryResolve(source, out var target)) return plan.FrameAfter(target);
             if (!Hierarchy.IsInside(source, plan.Map.SourceRoot)) return Frame.Of(source);
 
             return plan.Mirror.MirroredFrame(source);

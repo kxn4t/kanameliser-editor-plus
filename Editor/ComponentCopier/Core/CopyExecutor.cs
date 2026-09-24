@@ -19,6 +19,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public string StaleReason;
 
         public int CreatedObjects;
+        /// <summary>Existing objects that were given a pose of the plan.</summary>
+        public int PosedObjects;
         public int InstantiatedPrefabs;
         public int RemovedComponents;
         public int WrittenComponents;
@@ -110,6 +112,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 }
             }
 
+            foreach (var pose in plan.Poses)
+            {
+                if (!pose.WillWrite) continue;
+
+                // The values were read from the source when planning; one that is gone may have been replaced
+                if (pose.Source == null) return "the object whose pose is copied was deleted";
+                if (pose.Target == null) return "the object that the pose is copied to was deleted";
+            }
+
             foreach (var planned in plan.ObjectsToCreate)
             {
                 if (planned.Source == null) return $"the source of the new object '{planned.Name}' was deleted";
@@ -149,6 +160,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// <summary>Everything <see cref="Execute"/> does to the target, inside the Undo group it opened.</summary>
         private static void Apply(CopyPlan plan, ExecutionResult result)
         {
+            // First: an object created below a posed one is placed in world space, which assumes its parent is there
+            WritePoses(plan, result);
             CreateObjects(plan, result);
             RemoveReplacedComponents(plan, result);
 
@@ -206,6 +219,57 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             RemoveLeftOut(plan, leftOut, result);
+        }
+
+        /// <summary>Moves the existing counterparts to their poses, parents first like the plan lists them.</summary>
+        private static void WritePoses(CopyPlan plan, ExecutionResult result)
+        {
+            foreach (var pose in plan.Poses)
+            {
+                if (!pose.WillWrite) continue;
+
+                Undo.RecordObject(pose.Target, UndoGroupName);
+                pose.Write(pose.Target);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(pose.Target);
+                RevertPoseEqualToPrefab(pose.Target);
+                result.PosedObjects++;
+            }
+        }
+
+        // Compared axis by axis: a counterpart nudged along y before keeps that override when the pose puts y back
+        // but moves x
+        private static readonly string[] PosePropertyPaths =
+        {
+            "m_LocalPosition.x", "m_LocalPosition.y", "m_LocalPosition.z",
+            "m_LocalRotation.x", "m_LocalRotation.y", "m_LocalRotation.z", "m_LocalRotation.w",
+            "m_LocalScale.x", "m_LocalScale.y", "m_LocalScale.z",
+        };
+
+        /// <summary>
+        /// A pose written back to the values of the prefab would stay an override, on a counterpart that was nudged
+        /// before for instance. Like <see cref="RevertOverridesEqualToPrefab"/>, but for the values of the pose
+        /// alone: the other properties of a Transform link it into the hierarchy.
+        /// </summary>
+        private static void RevertPoseEqualToPrefab(Transform transform)
+        {
+            if (!PrefabUtility.IsPartOfPrefabInstance(transform)) return;
+
+            var original = PrefabUtility.GetCorrespondingObjectFromSource(transform);
+            if (original == null) return;
+
+            using var instance = new SerializedObject(transform);
+            using var prefab = new SerializedObject(original);
+            foreach (string path in PosePropertyPaths)
+            {
+                // Each revert changes the transform under the SerializedObject
+                instance.Update();
+                var property = instance.FindProperty(path);
+                var prefabProperty = prefab.FindProperty(path);
+                if (property == null || prefabProperty == null || !property.prefabOverride) continue;
+
+                if (SerializedProperty.DataEquals(property, prefabProperty))
+                    PrefabUtility.RevertPropertyOverride(property, InteractionMode.UserAction);
+            }
         }
 
         private static void CreateObjects(CopyPlan plan, ExecutionResult result)
@@ -572,16 +636,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         private static Vector3 WorldSizeScale(Transform source, Transform parent)
         {
-            var scale = source.localScale;
-            if (source.parent == null || parent == null) return scale;
-
-            var from = source.parent.lossyScale;
-            var to = parent.lossyScale;
-            return new Vector3(Rescale(scale.x, from.x, to.x), Rescale(scale.y, from.y, to.y), Rescale(scale.z, from.z, to.z));
+            if (source.parent == null || parent == null) return source.localScale;
+            return MirrorContext.SizeScale(source.localScale, source.parent.lossyScale, parent.lossyScale);
         }
-
-        private static float Rescale(float scale, float from, float to) =>
-            Mathf.Approximately(to, 0f) || Mathf.Approximately(from, to) ? scale : scale * from / to;
 
         private static void WriteValues(PlannedComponent planned)
         {

@@ -811,3 +811,29 @@
     min-width: 100px;
     -unity-font-style: bold;
 }
+
+/* ── Copy to Other Side ── */
+
+.other-side__field {
+    margin-top: 2px;
+}
+
+.other-side__note {
+    white-space: normal;
+    margin: 1px 4px 2px 4px;
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.other-side__create {
+    margin-top: 2px;
+}
+
+.other-side__contents {
+    margin-top: 6px;
+}
+
+.other-side__parent-confirm {
+    align-self: flex-start;
+    margin-left: 4px;
+}

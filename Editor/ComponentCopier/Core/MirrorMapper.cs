@@ -24,11 +24,16 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// colliders of the avatar are mirrored as well.
         /// </param>
         /// <param name="manual">User-specified mappings. They take priority over every automatic rule.</param>
-        public static TransformMap Build(Transform root, IReadOnlyDictionary<Transform, Transform> manual = null)
+        /// <param name="pairedSources">
+        /// Sources whose manual entries record counterparts created by an earlier copy. Those pairs hold in both
+        /// directions, and their objects are unavailable to automatic mappings from any other source.
+        /// </param>
+        public static TransformMap Build(Transform root, IReadOnlyDictionary<Transform, Transform> manual = null,
+            IEnumerable<Transform> pairedSources = null)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
 
-            var context = new Context(root, manual);
+            var context = new Context(root, manual, pairedSources);
             context.Run();
             return context.Map;
         }
@@ -39,6 +44,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             private readonly Transform root;
             private readonly IReadOnlyDictionary<Transform, Transform> manual;
+            private readonly Dictionary<Transform, Transform> pairs = new();
             private readonly Dictionary<(bool inArmature, string name), List<Transform>> byName = new();
             private readonly Dictionary<Transform, string> paths = new();
 
@@ -47,10 +53,22 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             private readonly Dictionary<Transform, HumanBodyBones> dictionaryBones = new();
             private readonly Dictionary<HumanBodyBones, List<Transform>> dictionaryBoneTransforms = new();
 
-            public Context(Transform root, IReadOnlyDictionary<Transform, Transform> manual)
+            public Context(Transform root, IReadOnlyDictionary<Transform, Transform> manual,
+                IEnumerable<Transform> pairedSources)
             {
                 this.root = root;
                 this.manual = manual ?? new Dictionary<Transform, Transform>();
+                if (pairedSources != null)
+                {
+                    foreach (var source in pairedSources)
+                    {
+                        if (source == null || !this.manual.TryGetValue(source, out var target) || target == null)
+                            continue;
+
+                        pairs[source] = target;
+                        pairs[target] = source;
+                    }
+                }
 
                 Map = new TransformMap(root);
                 var all = Hierarchy.Descendants(root);
@@ -88,8 +106,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             public void Run()
             {
                 Map.SetRootAndManual(manual);
+                foreach (var pair in pairs)
+                {
+                    // A choice made by the user still takes precedence over a remembered pair.
+                    if (!manual.ContainsKey(pair.Key)) Map.Set(TransformMapping.Manual(pair.Key, pair.Value));
+                }
                 Visit(root, root, root);
-                Map.OfferAutomaticAnswers(manual.Keys, source =>
+                Map.OfferAutomaticAnswers(manual.Keys.Concat(pairs.Keys).Distinct(), source =>
                 {
                     var anchor = NearestMappedAncestor(source, out var anchorCounterpart);
                     return Resolve(source, anchor, anchorCounterpart);
@@ -234,8 +257,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             private bool InArmature(Transform transform) =>
                 Map.SourceSkeleton.HasSkeleton && Map.SourceSkeleton.IsInArmature(transform);
 
-            private static TransformMapping Confirmed(Transform source, Transform target, MappingReason reason) =>
-                TransformMapping.Confirmed(source, target, reason);
+            private bool Available(Transform source, Transform target) =>
+                !pairs.TryGetValue(target, out var counterpart) || counterpart == source;
+
+            private TransformMapping Confirmed(Transform source, Transform target, MappingReason reason) =>
+                Available(source, target)
+                    ? TransformMapping.Confirmed(source, target, reason)
+                    : TransformMapping.Unmapped(source, new List<MappingCandidate>());
 
             private TransformMapping Suggest(Transform source, IEnumerable<Transform> targets, MappingReason reason) =>
                 TransformMapping.Suggested(source, Rank(source, targets), reason);
@@ -249,7 +277,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             /// <summary>Both sides live in one hierarchy, so the source itself is never its own candidate.</summary>
             private List<MappingCandidate> Rank(Transform source, IEnumerable<Transform> targets) =>
-                MappingCandidates.Rank(paths[source], targets.Where(t => t != source), paths);
+                MappingCandidates.Rank(paths[source], targets.Where(t => t != source && Available(source, t)), paths);
         }
     }
 }

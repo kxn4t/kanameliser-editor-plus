@@ -128,6 +128,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         internal static float AverageScale(Vector3 scale) => (Mathf.Abs(scale.x) + Mathf.Abs(scale.y) + Mathf.Abs(scale.z)) / 3f;
 
+        /// <summary>
+        /// The local scale that gives an object the size of its source below another parent: the source's own scale
+        /// where both parents are equally scaled, as on the two sides of an avatar.
+        /// </summary>
+        public static Vector3 SizeScale(Vector3 localScale, Vector3 sourceParentScale, Vector3 targetParentScale) =>
+            new Vector3(Rescale(localScale.x, sourceParentScale.x, targetParentScale.x),
+                Rescale(localScale.y, sourceParentScale.y, targetParentScale.y),
+                Rescale(localScale.z, sourceParentScale.z, targetParentScale.z));
+
+        private static float Rescale(float scale, float from, float to) =>
+            Mathf.Approximately(to, 0f) || Mathf.Approximately(from, to) ? scale : scale * from / to;
+
         /// <summary>How far noise can carry a point near <paramref name="world"/>, in units of that scale.</summary>
         private float PointTolerance(Vector3 world, float scale) =>
             Precision * Mathf.Max(1f, world.magnitude, Root.position.magnitude) / Mathf.Max(scale, 1e-6f);

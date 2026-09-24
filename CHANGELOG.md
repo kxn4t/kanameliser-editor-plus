@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Objects are paired by the side marker of their name (`_L` / `_R`, `Left` / `Right`, `左` / `右`) or by their humanoid bone, and missing objects are created under the flipped name
   - Positions and rotations are mirrored across the middle of the avatar, and the side of Contact tags, the Parameter of PhysBones and Contact Receivers, the Collider to Remap of MA Global Colliders, and the bone of MA Bone Proxies is flipped
   - Values that depend on the bone axes (PhysBone Limit Rotation, some constraint offsets, frozen axes) are copied as is and listed in the pre-check
+- **Component Copier** — Added **Copy to Other Side** to the right-click menu of component headers (the Transform's included) and of objects in the Hierarchy. A small window copies that one object's Transform (mirrored) and components to the matching object on the other side, and creates it below the other side's parent when there is none.
 
 ### Fixed
 
@@ -49,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - オブジェクトは名前の左右表記（`_L` / `_R`、`Left` / `Right`、`左` / `右`）または Humanoid ボーンで対応付け、足りないオブジェクトは反転した名前で作成します
   - 位置と回転はアバターの中心を基準に左右反転し、Contact のタグ、PhysBone と Contact Receiver の Parameter、MA Global Collider の上書き対象のコライダー、MA Bone Proxy の追従先は左右を入れ替えます
   - ボーンの軸に依存する値（PhysBone の Limit Rotation、一部の Constraint のオフセット、固定する軸）はそのままコピーし、適用前チェックに一覧表示します
+- **Component Copier** — コンポーネントヘッダー（Transform を含む）と Hierarchy の右クリックメニューに **Copy to Other Side** を追加。小さなウィンドウで、そのオブジェクト 1 つの Transform（左右反転）とコンポーネントを、反対側の対応するオブジェクトへコピーします。反対側にない場合は、反対側の親の下に作成します。
 
 ### 修正
 

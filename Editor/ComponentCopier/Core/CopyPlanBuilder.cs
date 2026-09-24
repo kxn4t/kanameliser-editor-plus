@@ -35,13 +35,19 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// i.e. the one that was scanned. Defaults to the source root of the map. A mirror copy scans the source
         /// while its map spans the whole avatar.
         /// </param>
+        /// <param name="poses">
+        /// Objects of the source whose pose (local position, rotation and scale) their counterpart is given: the
+        /// mirror image of it in a mirror copy. A counterpart that is missing is created like the host of a
+        /// component, which places it at the pose.
+        /// </param>
         public static CopyPlan Build(
             IEnumerable<ComponentEntry> selected, TransformMap map, CopySettings settings,
             IEnumerable<Transform> objectsToAdd = null,
             Func<IReadOnlyCollection<Transform>, TransformMap> externalMapProvider = null,
             IEnumerable<ComponentKey> leftOut = null,
             Transform mirrorRoot = null,
-            Transform keyRoot = null)
+            Transform keyRoot = null,
+            IEnumerable<Transform> poses = null)
         {
             if (map == null) throw new ArgumentNullException(nameof(map));
 
@@ -55,6 +61,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 LeftOutKeys = new HashSet<ComponentKey>(leftOut ?? Enumerable.Empty<ComponentKey>()),
                 MirrorRoot = mirrorRoot,
                 KeyRoot = keyRoot != null ? keyRoot : map.SourceRoot,
+                Poses = (poses ?? Enumerable.Empty<Transform>()).Where(t => t != null).Distinct().ToList(),
             };
             var heldBack = new Dictionary<Component, List<PlannedReference>>();
 
@@ -96,6 +103,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             public HashSet<ComponentKey> LeftOutKeys;
             public Transform MirrorRoot;
             public Transform KeyRoot;
+            public List<Transform> Poses;
         }
 
         /// <param name="heldBack">
@@ -128,12 +136,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var planned = new PlannedComponent { Entry = entry };
                 context.Resolve(entry.Host, out planned.TargetHost, out planned.HostToCreate,
                     out planned.BlockReason);
-                if (IsOnCopiedSide(plan, entry, planned.TargetHost))
+                if (planned.BlockReason != BlockReason.None) planned.BlockedAt = context.BlockedAt;
+                if (IsOnCopiedSide(plan, entry.Host, planned.TargetHost))
                 {
                     // The "existing" component would be the source itself or another one being copied,
                     // overwritten or even replaced before it is read
                     planned.TargetHost = null;
                     planned.BlockReason = BlockReason.SameSide;
+                    planned.BlockedAt = entry.Host;
                 }
 
                 plan.Components.Add(planned);
@@ -144,6 +154,23 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var blockReason = context.RequestObject(source);
                 if (blockReason != BlockReason.None)
                     plan.BlockedObjects.Add(new BlockedObject { Source = source, Reason = blockReason });
+            }
+
+            // Resolved with the hosts, so that a counterpart to create is planned before what depends on the objects
+            // the plan creates. The values follow once everything is placed, see PlanPoses.
+            foreach (var source in request.Poses)
+            {
+                var pose = new PlannedPose { Source = source };
+                context.Resolve(source, out pose.Target, out pose.HostToCreate, out pose.BlockReason);
+                if (pose.BlockReason != BlockReason.None) pose.BlockedAt = context.BlockedAt;
+                if (IsOnCopiedSide(plan, source, pose.Target))
+                {
+                    pose.Target = null;
+                    pose.BlockReason = BlockReason.SameSide;
+                    pose.BlockedAt = source;
+                }
+
+                plan.Poses.Add(pose);
             }
 
             var externalTransforms = new HashSet<Transform>();
@@ -171,6 +198,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             CollectReferences(plan, context);
             PlanLeftOutObjects(plan);
+            // Before the mirrored values: those of a posed object are expressed in the frame it is moved to
+            PlanPoses(plan);
             MirrorValuePlanner.Plan(plan, context.ObjectsBySource);
 
             // Needs the references, so it runs last
@@ -205,7 +234,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             };
 
             if (plan.Map.TryResolve(entry.Host, out planned.TargetHost) &&
-                !IsOnCopiedSide(plan, entry, planned.TargetHost))
+                !IsOnCopiedSide(plan, entry.Host, planned.TargetHost))
             {
                 planned.Existing = ComponentScanner.FindByTypeAndIndex(planned.TargetHost, entry.Type, entry.Key.Index);
             }
@@ -218,12 +247,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// component there has nowhere to go: its counterpart would be the component itself. An object mapped to
         /// one on its own side (a manual mapping, ...) would take the copy onto the side being copied from.
         /// </summary>
-        private static bool IsOnCopiedSide(CopyPlan plan, ComponentEntry entry, Transform targetHost)
+        private static bool IsOnCopiedSide(CopyPlan plan, Transform sourceHost, Transform targetHost)
         {
             if (plan.Mirror == null || targetHost == null) return false;
-            if (targetHost == entry.Host) return true;
+            if (targetHost == sourceHost) return true;
 
-            return plan.Map.Sides.Of(targetHost) == plan.Map.Sides.Of(entry.Host);
+            return plan.Map.Sides.Of(targetHost) == plan.Map.Sides.Of(sourceHost);
         }
 
         /// <summary>
@@ -238,6 +267,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             public HostResolver(CopyPlan plan)
             {
                 this.plan = plan;
+            }
+
+            /// <summary>
+            /// The object the last blocked resolution stopped at: the host itself, or a parent (or the prefab around
+            /// it) that it would be created below. Only meaningful right after a call that returned a block reason.
+            /// </summary>
+            public Transform BlockedAt { get; private set; }
+
+            private BlockReason Block(BlockReason reason, Transform at)
+            {
+                BlockedAt = at;
+                return reason;
             }
 
             public void Resolve(
@@ -266,20 +307,20 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var mapping = plan.Map.Get(sourceHost);
                 if (mapping != null && mapping.State == MappingState.NeedsReview)
                 {
-                    blockReason = BlockReason.HostNeedsReview;
+                    blockReason = Block(BlockReason.HostNeedsReview, sourceHost);
                     return;
                 }
 
                 // A bone without skin weights would be an empty object that merely looks like the bone
                 if (plan.Map.SourceSkeleton.IsBone(sourceHost))
                 {
-                    blockReason = BlockReason.BoneMissing;
+                    blockReason = Block(BlockReason.BoneMissing, sourceHost);
                     return;
                 }
 
                 if (!plan.Settings.CreateMissingObjects || sourceHost.parent == null)
                 {
-                    blockReason = BlockReason.HostUnmapped;
+                    blockReason = Block(BlockReason.HostUnmapped, sourceHost);
                     return;
                 }
 
@@ -344,8 +385,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 if (ObjectsBySource.ContainsKey(prefabRoot)) return BlockReason.None;
 
                 var mapping = plan.Map.Get(prefabRoot);
-                if (mapping != null && mapping.State == MappingState.NeedsReview) return BlockReason.HostNeedsReview;
-                if (!plan.Settings.CreateMissingObjects) return BlockReason.HostUnmapped;
+                if (mapping != null && mapping.State == MappingState.NeedsReview)
+                    return Block(BlockReason.HostNeedsReview, prefabRoot);
+                if (!plan.Settings.CreateMissingObjects) return Block(BlockReason.HostUnmapped, prefabRoot);
 
                 Resolve(prefabRoot.parent, out var parent, out var parentToCreate, out var blockReason);
                 if (blockReason != BlockReason.None) return blockReason;
@@ -447,8 +489,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     if (!MissingObjects.IsEmpty(transform)) continue;
 
                     // Does nothing for mapped objects; bones, unconfirmed matches and the "create missing
-                    // objects" setting are respected, in which case the reference stays unresolved
-                    context.Resolve(transform, out _, out _, out _);
+                    // objects" setting are respected, in which case the reference stays unresolved, and where the
+                    // resolution stopped is noted for the user
+                    context.Resolve(transform, out _, out _, out var blockReason);
+                    if (blockReason != BlockReason.None)
+                        plan.ReferenceBlocks[transform] = new ReferenceBlock(blockReason, context.BlockedAt);
+                    else
+                        plan.ReferenceBlocks.Remove(transform);
                 }
             }
         }
@@ -593,6 +640,56 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                         });
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Works out the pose of every counterpart that exists, parents first, since a pose is expressed in the parent
+        /// of its target. A mirror copy puts it at the mirror image of the source, with the source's size: the local
+        /// values are carried through world space like the other mirrored values. Any other copy takes the local
+        /// values as they are.
+        /// </summary>
+        private static void PlanPoses(CopyPlan plan)
+        {
+            // By the depth of the targets, which need not follow that of the sources: "Body/Ear_L" can pair with
+            // "Head/Ear_R". Created and blocked ones have no values to plan and go first.
+            plan.Poses = plan.Poses.OrderBy(p => p.Target != null ? Hierarchy.Depth(p.Target) : -1).ToList();
+
+            foreach (var pose in plan.Poses)
+            {
+                if (pose.BlockReason != BlockReason.None)
+                {
+                    pose.Action = ComponentAction.Blocked;
+                    continue;
+                }
+
+                // Placed at the pose when it is created
+                if (pose.HostToCreate != null)
+                {
+                    pose.Action = ComponentAction.Add;
+                    continue;
+                }
+
+                var source = pose.Source;
+                var target = pose.Target;
+                var targetParent = target.parent != null ? plan.FrameAfter(target.parent) : Frame.World;
+                if (plan.Mirror != null)
+                {
+                    var sourceParent = source.parent != null ? Frame.Of(source.parent) : Frame.World;
+                    pose.LocalPosition = plan.Mirror.MirrorPoint(source.localPosition, sourceParent, targetParent);
+                    pose.LocalRotation = plan.Mirror.MirrorRotation(source.localRotation, sourceParent, targetParent);
+                    pose.LocalScale = MirrorContext.SizeScale(
+                        source.localScale, sourceParent.LossyScale, targetParent.LossyScale);
+                }
+                else
+                {
+                    pose.LocalPosition = source.localPosition;
+                    pose.LocalRotation = source.localRotation;
+                    pose.LocalScale = source.localScale;
+                }
+
+                pose.WorldFrame = targetParent.Child(pose.LocalPosition, pose.LocalRotation, pose.LocalScale);
+                pose.Action = pose.Matches(target) ? ComponentAction.SkipIdentical : ComponentAction.Overwrite;
             }
         }
 

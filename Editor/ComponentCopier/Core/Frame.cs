@@ -30,11 +30,39 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return new Frame(matrix, matrix.inverse, position, rotation);
         }
 
+        /// <summary>World space itself: the frame above an object at the top of a scene.</summary>
+        public static Frame World => Of(Vector3.zero, Quaternion.identity, Vector3.one);
+
+        /// <summary>
+        /// The frame of a child with the given local pose, as Unity composes it, except below a parent with a negative
+        /// scale: Unity mirrors the rotation of the child there as well, while this takes the parent's rotation times
+        /// the local one, like <see cref="MirrorContext.MirrorRotation"/> does.
+        /// </summary>
+        public Frame Child(Vector3 localPosition, Quaternion localRotation, Vector3 localScale)
+        {
+            var matrix = localToWorld * Matrix4x4.TRS(localPosition, localRotation, localScale);
+            return new Frame(matrix, matrix.inverse, matrix.MultiplyPoint3x4(Vector3.zero), Rotation * localRotation);
+        }
+
         /// <summary>The same frame at unit scale, for values their frame moves and turns but does not scale.</summary>
         public Frame WithoutScale() => Of(Position, Rotation, Vector3.one);
 
         /// <summary>The average size of one local unit in world space.</summary>
         public float Scale => MirrorContext.AverageScale(localToWorld.lossyScale);
+
+        /// <summary>
+        /// The size of one local unit in world space along each axis, worked out as Transform.lossyScale is: the
+        /// diagonal of what is left once the rotation is taken out. Matrix4x4.lossyScale puts the sign of a mirrored
+        /// axis on x, wherever the mirroring is.
+        /// </summary>
+        public Vector3 LossyScale
+        {
+            get
+            {
+                var scale = Matrix4x4.Rotate(Quaternion.Inverse(Rotation)) * localToWorld;
+                return new Vector3(scale.m00, scale.m11, scale.m22);
+            }
+        }
 
         public Vector3 TransformPoint(Vector3 point) => localToWorld.MultiplyPoint3x4(point);
         public Vector3 InverseTransformPoint(Vector3 point) => worldToLocal.MultiplyPoint3x4(point);

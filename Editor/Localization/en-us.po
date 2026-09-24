@@ -856,3 +856,154 @@ msgstr "Skipped (unresolved)"
 #, csharp-format
 msgid "componentCopier.row.heldBack:tooltip"
 msgstr "{0} reference(s) have no counterpart in the target, so this component is skipped as the setting says."
+
+# ── Component Copier: Copy to Other Side ──
+
+msgid "componentCopier.otherSide.sourceGone"
+msgstr "The object to copy no longer exists. It may have been deleted."
+
+msgid "componentCopier.otherSide.sourceIsAsset"
+msgstr "This object is part of an asset. Changes to an asset cannot be undone; place it in a scene or open it in Prefab Mode to copy it."
+
+msgid "componentCopier.otherSide.noSide"
+msgstr "This object is on the middle line, so it has no other side. Sides are determined by the side marker in the name of the object or one of its parents (_L / _R, Left / Right, 左 / 右), or by its humanoid bone."
+
+msgid "componentCopier.otherSide.confirm"
+msgstr "Confirm"
+
+#, csharp-format
+msgid "componentCopier.otherSide.confirm:tooltip"
+msgstr "Use {0} as the counterpart"
+
+msgid "componentCopier.otherSide.reset"
+msgstr "Auto"
+
+msgid "componentCopier.otherSide.reset:tooltip"
+msgstr "Undo every counterpart picked or confirmed here, and go back to the ones found automatically"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.needsReview"
+msgstr "Suggestion ({0}). Confirm it if it is right, or pick the counterpart."
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.suggestionUnused"
+msgstr "A new one arrives with its Prefab, so the suggestion {0} is not used. Confirm it to copy to {0} instead."
+
+msgid "componentCopier.otherSide.note.manual"
+msgstr "Picked by hand"
+
+msgid "componentCopier.otherSide.note.missing"
+msgstr "There is no counterpart on the other side."
+
+msgid "componentCopier.otherSide.invalidCounterpart"
+msgstr "That object cannot be the counterpart. Pick an object on one side of the avatar (not outside of it, nor on its middle line)."
+
+msgid "componentCopier.otherSide.create"
+msgstr "Create on the other side"
+
+#, csharp-format
+msgid "componentCopier.otherSide.createdAt"
+msgstr "Created as: {0}"
+
+msgid "componentCopier.otherSide.sameName"
+msgstr "An object of the same name exists there already. To copy to it, pick it in the field of the other side."
+
+msgid "componentCopier.otherSide.contents"
+msgstr "What to copy"
+
+msgid "componentCopier.otherSide.pose"
+msgstr "Transform (position, rotation, scale)"
+
+msgid "componentCopier.otherSide.pose:tooltip"
+msgstr "Position and rotation are mirrored, and the scale is set so that the size matches the source"
+
+msgid "componentCopier.otherSide.pose.created:tooltip"
+msgstr "A counterpart that is created is placed at the mirrored position"
+
+msgid "componentCopier.otherSide.pose.bone:tooltip"
+msgstr "The pose of a bone shapes the mesh, and the two sides of a rig need not be mirror images, so it is not copied for a bone unless you check it"
+
+msgid "componentCopier.otherSide.withPrefab:tooltip"
+msgstr "Added along with its Prefab, which arrives as a whole, so it cannot be left out here. Use the Component Copier window to leave it out."
+
+#, csharp-format
+msgid "componentCopier.otherSide.unresolved"
+msgstr "{1} of {0} becomes None: {2} has no counterpart on the other side."
+
+#, csharp-format
+msgid "componentCopier.otherSide.prefab"
+msgstr "{0} is added as a Prefab, and every component in it is copied."
+
+#, csharp-format
+msgid "componentCopier.otherSide.alsoCreated"
+msgstr "{0} is created as well, since a copied component refers to it."
+
+#, csharp-format
+msgid "componentCopier.otherSide.alsoCreatedPrefab"
+msgstr "{0} is added as a Prefab as well, since a copied component refers into it, and every component in it is copied."
+
+msgid "componentCopier.otherSide.upToDate"
+msgstr "The other side already matches."
+
+msgid "componentCopier.otherSide.nothingSelected"
+msgstr "Check what to copy."
+
+msgid "componentCopier.otherSide.blocked.hostNeedsReview"
+msgstr "Nothing can be copied until the counterpart is settled."
+
+msgid "componentCopier.otherSide.blocked.hostUnmapped"
+msgstr "Turn on \"Create on the other side\", or pick the counterpart."
+
+msgid "componentCopier.otherSide.blocked.boneMissing"
+msgstr "The other side has no counterpart of the bone. Bones are never created, so pick the counterpart."
+
+msgid "componentCopier.otherSide.blocked.unresolvedReference"
+msgstr "A reference has no counterpart on the other side, so this component is skipped."
+
+msgid "componentCopier.otherSide.blocked.sameSide"
+msgstr "The counterpart is on the same side as the source. Copying would overwrite the source's side, so pick an object on the other side."
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentNeedsReview"
+msgstr "The counterpart of the parent {0} is only a suggestion, so nothing can be created. Confirm it, or pick the object on the other side directly."
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentBoneMissing"
+msgstr "The other side has no counterpart of the bone {0}, so nothing can be created. Bones are never created; pick the object on the other side directly."
+
+#, csharp-format
+msgid "componentCopier.otherSide.confirmParent"
+msgstr "Map {0} to {1}"
+
+msgid "componentCopier.otherSide.createNew"
+msgstr "Create new"
+
+msgid "componentCopier.otherSide.createNew:tooltip"
+msgstr "Create a new one on the other side instead of using the suggestion"
+
+#, csharp-format
+msgid "componentCopier.otherSide.location"
+msgstr "At: {0}"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.suggestionInvalid"
+msgstr "The suggestion {0} is not on the other side and cannot be used. Pick the counterpart."
+
+#, csharp-format
+msgid "componentCopier.otherSide.partiallyApplied"
+msgstr "{0} component(s) could not be added; the rest was copied (Undo is available)."
+
+#, csharp-format
+msgid "componentCopier.otherSide.unresolvedPending"
+msgstr "{1} of {0} becomes None: the counterpart of {2} is only a suggestion."
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentSuggestionInvalid"
+msgstr "The suggestion for the parent {0} is not on the other side and cannot be used. Pick the object on the other side directly."
+
+#, csharp-format
+msgid "componentCopier.otherSide.createNewParent"
+msgstr "Create {0} anew"
+
+msgid "componentCopier.otherSide.note.paired"
+msgstr "Paired by an earlier apply"

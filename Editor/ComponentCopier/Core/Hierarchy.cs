@@ -21,6 +21,14 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return root.GetComponentsInChildren<Transform>(true).Where(t => t != root).ToList();
         }
 
+        /// <summary>The number of ancestors: 0 at the top of a scene.</summary>
+        public static int Depth(Transform transform)
+        {
+            int depth = 0;
+            for (var parent = transform.parent; parent != null; parent = parent.parent) depth++;
+            return depth;
+        }
+
         /// <summary>The direct children, or nothing for a null parent.</summary>
         public static IEnumerable<Transform> Children(Transform parent)
         {

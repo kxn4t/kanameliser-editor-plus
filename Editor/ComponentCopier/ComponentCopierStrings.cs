@@ -16,6 +16,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public static string BlockReasonKey(BlockReason reason) => "componentCopier.blocked." + Camel(reason);
 
+        /// <summary>
+        /// A block reason as "Copy to Other Side" explains it: that window names the counterpart itself, where the
+        /// main window points to its mapping section.
+        /// </summary>
+        public static string OtherSideBlockReasonKey(BlockReason reason) => "componentCopier.otherSide.blocked." + Camel(reason);
+
         public static string DiffKindKey(DiffKind kind) => "componentCopier.diff." + Camel(kind);
 
         public static string MappingReasonKey(MappingReason reason) => "componentCopier.mapping.reason." + Camel(reason);
