@@ -541,6 +541,129 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
 
             Assert.IsFalse(planned.Values.Any(v => v.PropertyPath == "Bounds"));
         }
+
+        /// <summary>MA Mesh Settings on Item_L that set their bounds in the space of <paramref name="rootBone"/>.</summary>
+        private static void AddMeshSettings(Transform root, Transform rootBone, Bounds bounds)
+        {
+            var settings = root.Find("Hips/Hand_L/Item_L").gameObject
+                .AddComponent<nadena.dev.modular_avatar.core.ModularAvatarMeshSettings>();
+            Set(settings, so =>
+            {
+                so.FindProperty("InheritBounds").intValue =
+                    (int)nadena.dev.modular_avatar.core.ModularAvatarMeshSettings.InheritMode.Set;
+                so.FindProperty("RootBone.targetObject").objectReferenceValue = rootBone.gameObject;
+                so.FindProperty("Bounds").boundsValue = bounds;
+            });
+        }
+
+        private static CopyPlan BuildMeshSettingsPlan(Transform root) =>
+            BuildMirrorPlan(root, typeof(nadena.dev.modular_avatar.core.ModularAvatarMeshSettings));
+
+        private static Bounds PlannedBounds(CopyPlan plan) =>
+            plan.Components.Single().Values.Single(v => v.PropertyPath == "Bounds").BoundsValue;
+
+        /// <summary>The eight corners of a box.</summary>
+        private static IEnumerable<Vector3> Corners(Bounds bounds)
+        {
+            var signs = new[] { -1f, 1f };
+            return signs.SelectMany(x => signs.SelectMany(y => signs.Select(z =>
+                bounds.center + Vector3.Scale(bounds.extents, new Vector3(x, y, z)))));
+        }
+
+        [Test]
+        public void MirrorCopy_KeepsTheSizeOfMeshSettingsBounds_OnMirrorImageFrames()
+        {
+            var root = CreateAvatarWithHands(out var handL, out _);
+            // Away from the origin and turned, where the way through world space leaves float noise
+            root.SetPositionAndRotation(new Vector3(3.2f, 0.4f, -1.7f), Quaternion.Euler(0f, 37f, 0f));
+            // Off the bone, where the size worked out from the corners carries float noise too (0.39999998 for 0.4)
+            AddMeshSettings(root, handL, new Bounds(new Vector3(0.3f, 0.5f, -0.2f), new Vector3(0.4f, 0.3f, 0.2f)));
+
+            var plan = BuildMeshSettingsPlan(root);
+            var bounds = PlannedBounds(plan);
+
+            // Exactly what mirroring the center alone gave: the same size, and the center with its x flipped
+            Assert.AreEqual((0.4f, 0.3f, 0.2f), Components(bounds.size), "size");
+            Assert.AreEqual((-0.3f, 0.5f, -0.2f), Components(bounds.center), "center");
+
+            CopyExecutor.Execute(plan);
+
+            var report = CopyVerifier.Verify(plan);
+            Assert.IsTrue(report.Components.All(c => c.Kind == DiffKind.Match),
+                string.Join("\n", report.Components.SelectMany(c => c.Properties).Select(p => $"{p.PropertyPath}: {p.Expected} vs {p.Actual}")));
+        }
+
+        [Test]
+        public void MirrorCopy_SwapsTheDimensionsOfMeshSettingsBounds_WithTheAxesOfTheRootBone()
+        {
+            var root = CreateAvatarWithHands(out var handL, out var handR);
+            // Hand_R turned a quarter around its z axis on top of the mirror image of Hand_L: the mirror image of
+            // the x axis of Hand_L is its y axis, and the other way around
+            handR.localRotation *= Quaternion.AngleAxis(90f, Vector3.forward);
+            var source = new Bounds(new Vector3(0.1f, 0.3f, -0.05f), new Vector3(2f, 1f, 1f));
+            AddMeshSettings(root, handL, source);
+
+            var plan = BuildMeshSettingsPlan(root);
+            var bounds = PlannedBounds(plan);
+
+            AssertClose(new Vector3(1f, 2f, 1f), bounds.size, "size (2, 1, 1) with x and y swapped");
+            var mirror = new MirrorContext(root);
+            AssertClose(mirror.ReflectPoint(handL.TransformPoint(source.center)), handR.TransformPoint(bounds.center),
+                "center");
+
+            CopyExecutor.Execute(plan);
+
+            var report = CopyVerifier.Verify(plan);
+            Assert.IsTrue(report.Components.All(c => c.Kind == DiffKind.Match),
+                string.Join("\n", report.Components.SelectMany(c => c.Properties).Select(p => $"{p.PropertyPath}: {p.Expected} vs {p.Actual}")));
+        }
+
+        [Test]
+        public void MirrorCopy_EnclosesTheMirrorImageOfMeshSettingsBounds_OnARootBoneTurnedAtAnAngle()
+        {
+            var root = CreateAvatarWithHands(out var handL, out var handR);
+            // Hand_R turned 45 degrees around its y axis on top of the mirror image of Hand_L: the mirror image of
+            // the box stands at an angle to its axes
+            handR.localRotation *= Quaternion.AngleAxis(45f, Vector3.up);
+            var source = new Bounds(new Vector3(0.1f, 0.3f, -0.05f), new Vector3(2f, 1f, 1f));
+            AddMeshSettings(root, handL, source);
+
+            var bounds = PlannedBounds(BuildMeshSettingsPlan(root));
+
+            // Every corner, mirrored in world space and read in Hand_R, lies within the bounds, and the bounds are
+            // no larger than the box around those corners
+            var mirror = new MirrorContext(root);
+            var loose = bounds;
+            loose.Expand(Tolerance);
+            var min = Vector3.positiveInfinity;
+            var max = Vector3.negativeInfinity;
+            foreach (var corner in Corners(source))
+            {
+                var mirrored = handR.InverseTransformPoint(mirror.ReflectPoint(handL.TransformPoint(corner)));
+                Assert.IsTrue(loose.Contains(mirrored), $"corner {corner} is mirrored to {mirrored}, outside of {bounds}");
+                min = Vector3.Min(min, mirrored);
+                max = Vector3.Max(max, mirrored);
+            }
+
+            AssertClose(max - min, bounds.size, "size of the box around the mirrored corners");
+        }
+
+        [Test]
+        public void MirrorCopy_ScalesMeshSettingsBounds_ToTheRootBoneOfTheOtherSide()
+        {
+            var root = CreateAvatarWithHands(out var handL, out var handR);
+            // One unit of Hand_R is two of Hand_L
+            handR.localScale = new Vector3(2f, 2f, 2f);
+            var source = new Bounds(new Vector3(0.1f, 0.3f, -0.05f), new Vector3(2f, 1f, 1f));
+            AddMeshSettings(root, handL, source);
+
+            var bounds = PlannedBounds(BuildMeshSettingsPlan(root));
+
+            AssertClose(new Vector3(1f, 0.5f, 0.5f), bounds.size, "size (2, 1, 1) at half the scale");
+            var mirror = new MirrorContext(root);
+            AssertClose(mirror.ReflectPoint(handL.TransformPoint(source.center)), handR.TransformPoint(bounds.center),
+                "center");
+        }
 #endif
 
         [Test]

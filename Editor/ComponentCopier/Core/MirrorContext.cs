@@ -96,6 +96,36 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return new Vector3(TidyAngle(mirrored.x, euler.x), TidyAngle(mirrored.y, euler.y), TidyAngle(mirrored.z, euler.z));
         }
 
+        /// <summary>
+        /// The box that encloses the mirror image of <paramref name="local"/>: the eight corners are mirrored like
+        /// points, and the result is the axis-aligned box around them. On frames that are mirror images of each
+        /// other that is the mirrored center with the same size. Where the axes of the counterpart differ more than
+        /// that (another bone roll, swapped axes, another scale), the size follows them. Enclosing the mirror image
+        /// of the original bounds keeps this transform from cutting them off; whether they cover the mesh in the
+        /// first place is not its business.
+        /// </summary>
+        public Bounds MirrorBounds(Bounds local, Frame from, Frame to)
+        {
+            var low = local.min;
+            var high = local.max;
+            var min = Vector3.positiveInfinity;
+            var max = Vector3.negativeInfinity;
+            float tolerance = 0f;
+            for (int corner = 0; corner < 8; corner++)
+            {
+                var point = new Vector3((corner & 1) == 0 ? low.x : high.x, (corner & 2) == 0 ? low.y : high.y,
+                    (corner & 4) == 0 ? low.z : high.z);
+                var mirrored = MirrorPoint(point, from, to);
+                min = Vector3.Min(min, mirrored);
+                max = Vector3.Max(max, mirrored);
+                // The size carries the noise of the corners, the farthest one most
+                tolerance = Mathf.Max(tolerance, PointTolerance(from.TransformPoint(point), to.Scale));
+            }
+
+            // The mirrored corners lie symmetric around the mirrored center, so the box around them is centered there
+            return new Bounds(MirrorPoint(local.center, from, to), Tidy(max - min, local.size, tolerance));
+        }
+
         internal static float AverageScale(Vector3 scale) => (Mathf.Abs(scale.x) + Mathf.Abs(scale.y) + Mathf.Abs(scale.z)) / 3f;
 
         /// <summary>How far noise can carry a point near <paramref name="world"/>, in units of that scale.</summary>
