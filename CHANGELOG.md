@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-25
+
 ### Added
 
 - **Component Copier** — The report after applying and the diff check now list references that point outside of the target's avatar (**Refers outside the avatar**), such as a reference to the source's avatar that is kept because it has no counterpart. Each one names the avatar or asset the object is in and selects it on a click.
