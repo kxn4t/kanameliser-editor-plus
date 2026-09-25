@@ -631,11 +631,23 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var counts = new Label(Localization.S("componentCopier.report.diffSummary",
                 detailReport.Count(DiffKind.Match),
                 detailReport.Count(DiffKind.ValueMismatch) + detailReport.Count(DiffKind.ReferenceMismatch),
+                detailReport.Count(DiffKind.OutsideReference),
                 detailReport.Count(DiffKind.UnresolvedReference),
                 detailReport.Count(DiffKind.MissingOnTarget),
                 detailReport.Count(DiffKind.ExtraOnTarget)));
             counts.AddToClassList("detail-counts");
             box.Add(counts);
+
+            // Said in the open: such a reference looks fine in the Inspector, and a component can have one while it
+            // is counted as different
+            int outsidePlaces = detailReport.Components
+                .Sum(c => c.Properties.Count(p => p.Kind == DiffKind.OutsideReference));
+            if (outsidePlaces > 0)
+            {
+                var warning = new Label("⚠ " + Localization.S("componentCopier.report.outsideReferences", outsidePlaces));
+                warning.AddToClassList("warning-text");
+                box.Add(warning);
+            }
 
             foreach (var diff in detailReport.Components.Where(d => d.Kind != DiffKind.Match))
                 box.Add(CreateDiffRow(diff));
@@ -673,10 +685,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             foreach (var property in diff.Properties)
             {
-                var line = new Label($"{property.DisplayName}: {property.Expected} → {property.Actual}");
-                line.AddToClassList("diff-property");
-                line.AddToClassList(ComponentCopierStrings.DiffPropertyClass(property.Kind));
-                foldout.Add(line);
+                foldout.Add(property.Kind == DiffKind.OutsideReference
+                    ? CreateOutsideReferenceLine(property)
+                    : CreatePropertyLine(property));
             }
 
             if (diff.Truncated)
@@ -708,6 +719,41 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             return foldout;
+        }
+
+        private static Label CreatePropertyLine(PropertyDiff property)
+        {
+            var line = new Label($"{property.DisplayName}: {property.Expected} → {property.Actual}");
+            line.AddToClassList("diff-property");
+            line.AddToClassList(ComponentCopierStrings.DiffPropertyClass(property.Kind));
+            return line;
+        }
+
+        /// <summary>
+        /// Names where the object lies, since its name alone reads like the counterpart that was meant ("Hips" is
+        /// on every avatar), and reveals it on a click.
+        /// </summary>
+        private static Label CreateOutsideReferenceLine(PropertyDiff property)
+        {
+            string place = Localization.S("componentCopier.diff.outsideReference.in", PlaceOf(property.Referenced));
+            var line = new Label($"{property.DisplayName}: {property.Actual} · {place}");
+            line.AddToClassList("diff-property");
+            line.AddToClassList(ComponentCopierStrings.DiffPropertyClass(property.Kind));
+            line.AddToClassList("diff-property--link");
+            var referenced = property.Referenced;
+            line.RegisterCallback<ClickEvent>(_ => Reveal(referenced));
+            return line;
+        }
+
+        /// <summary>The avatar or hierarchy an object belongs to, or the asset it is part of.</summary>
+        private static string PlaceOf(UnityEngine.Object value)
+        {
+            if (value == null) return "-";
+            if (EditorUtility.IsPersistent(value)) return AssetDatabase.GetAssetPath(value);
+
+            var transform = ReferenceWalker.GetTransform(value);
+            var avatar = AvatarRoots.Find(transform);
+            return (avatar != null ? avatar : transform.root).name;
         }
 
         #endregion

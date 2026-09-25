@@ -661,7 +661,11 @@ msgstr "{0} 件のコンポーネントは追加できませんでした。"
 
 #, csharp-format
 msgid "componentCopier.report.diffSummary"
-msgstr "一致 {0} · 差分あり {1} · 参照が未解決 {2} · コピー先にない {3} · コピー先にだけある {4}"
+msgstr "一致 {0} · 差分あり {1} · アバターの外を参照 {2} · 参照が未解決 {3} · コピー先にない {4} · コピー先にだけある {5}"
+
+#, csharp-format
+msgid "componentCopier.report.outsideReferences"
+msgstr "コピー先のアバターの外を指している参照が {0} か所あります。置き換え先は対応付けセクションで指定できます。"
 
 msgid "componentCopier.diff.match"
 msgstr "一致"
@@ -671,6 +675,13 @@ msgstr "値が違う"
 
 msgid "componentCopier.diff.referenceMismatch"
 msgstr "参照が違う"
+
+msgid "componentCopier.diff.outsideReference"
+msgstr "アバターの外を参照"
+
+#, csharp-format
+msgid "componentCopier.diff.outsideReference.in"
+msgstr "{0} の中"
 
 msgid "componentCopier.diff.unresolvedReference"
 msgstr "参照が未解決"

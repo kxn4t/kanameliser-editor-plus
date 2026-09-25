@@ -177,7 +177,9 @@ Before applying, the following is listed:
 
 **Diff check only** compares the expected result of the copy with the current state without changing the scene. The same report is shown after applying, so the result can be checked by status:
 
-- **Statuses**: identical / value differs / reference differs / unresolved reference / missing in the target / only in the target
+- **Statuses**: identical / value differs / reference differs / refers outside the avatar / unresolved reference / missing in the target / only in the target
+
+**Refers outside the avatar** marks a reference to an object outside of the target's avatar (or, when the target is not on an avatar, outside of its topmost parent), such as a reference to the source's avatar that was kept because it has no counterpart. Pick a replacement in the Mapping section and apply again.
 
 ## Notes
 
