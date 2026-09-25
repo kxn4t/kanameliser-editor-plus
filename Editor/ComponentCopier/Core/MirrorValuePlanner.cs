@@ -115,6 +115,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             if (!TryGetFrames(plan, objectsBySource, planned, serializedObject, entry, referencePath, out var from, out var to))
                 return null;
 
+            // A rotation in a parent space is the local rotation of a Transform (the rest pose of a constraint),
+            // which Unity mirrors below a parent with a negative scale like the pose
+            bool localRotation = entry.Space == SpatialSpace.Parent || entry.Space == SpatialSpace.ParentOfRootOrHost;
             switch (entry.Kind)
             {
                 case SpatialKind.Position when property.propertyType == SerializedPropertyType.Vector3:
@@ -124,9 +127,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 case SpatialKind.Vector when property.propertyType == SerializedPropertyType.Vector3:
                     return PlannedValue.OfVector(path, mirror.MirrorVector(property.vector3Value, from, to));
                 case SpatialKind.Rotation when property.propertyType == SerializedPropertyType.Quaternion:
-                    return PlannedValue.OfQuaternion(path, mirror.MirrorRotation(property.quaternionValue, from, to));
+                    return PlannedValue.OfQuaternion(path, localRotation
+                        ? mirror.MirrorLocalRotation(property.quaternionValue, from, to)
+                        : mirror.MirrorRotation(property.quaternionValue, from, to));
                 case SpatialKind.Euler when property.propertyType == SerializedPropertyType.Vector3:
-                    return PlannedValue.OfEuler(path, mirror.MirrorEuler(property.vector3Value, from, to));
+                    return PlannedValue.OfEuler(path, localRotation
+                        ? mirror.MirrorLocalEuler(property.vector3Value, from, to)
+                        : mirror.MirrorEuler(property.vector3Value, from, to));
                 case SpatialKind.Bounds when property.propertyType == SerializedPropertyType.Bounds:
                     return PlannedValue.OfBounds(path, mirror.MirrorBounds(property.boundsValue, from, to));
                 default:
@@ -262,7 +269,15 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             CopyPlan plan, IReadOnlyDictionary<Transform, PlannedObject> objectsBySource, Transform source)
         {
             if (objectsBySource.TryGetValue(source, out var toCreate))
-                return toCreate.Created != null ? Frame.Of(toCreate.Created) : plan.Mirror.MirroredFrame(source);
+            {
+                if (toCreate.Created != null) return Frame.Of(toCreate.Created);
+                if (TryGetCounterpartParentFrame(plan, objectsBySource, source, out var parent))
+                {
+                    plan.Mirror.MirrorPose(source, parent, out var position, out var rotation, out var scale);
+                    return parent.Child(position, rotation, scale);
+                }
+                return plan.Mirror.MirroredFrame(source);
+            }
 
             if (plan.Map.TryResolve(source, out var target)) return plan.FrameAfter(target);
             if (!Hierarchy.IsInside(source, plan.Map.SourceRoot)) return Frame.Of(source);

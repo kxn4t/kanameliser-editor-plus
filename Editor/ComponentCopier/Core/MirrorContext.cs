@@ -61,12 +61,27 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// </summary>
         public void Place(Transform target, Transform source)
         {
-            target.position = ReflectPoint(source.position);
-            target.rotation = ReflectRotation(source.rotation);
+            var parent = target.parent != null ? Frame.Of(target.parent) : Frame.World;
+            MirrorPose(source, parent, out var position, out var rotation, out var scale);
+            target.localPosition = position;
+            target.localRotation = rotation;
+            target.localScale = scale;
+        }
 
-            float scale = target.parent != null ? AverageScale(target.parent.lossyScale) : 1f;
-            target.localPosition = Tidy(target.localPosition, source.localPosition, PointTolerance(source.position, scale));
-            target.localRotation = Tidy(target.localRotation, source.localRotation);
+        /// <summary>The local pose that mirrors the source's world position and rotation and keeps its size.</summary>
+        public void MirrorPose(Transform source, Frame parent, out Vector3 position, out Quaternion rotation,
+            out Vector3 scale)
+        {
+            position = Tidy(parent.InverseTransformPoint(ReflectPoint(source.position)), source.localPosition,
+                PointTolerance(source.position, parent.Scale));
+            rotation = Tidy(parent.InverseTransformRotation(ReflectRotation(source.rotation)), source.localRotation);
+            // Measure the child's axes after rotation, not the parent's xyz axes. Each column scales independently,
+            // so this also preserves lossyScale under a non-uniform parent (shear itself is not a Transform scale).
+            var unitScale = parent.Child(Vector3.zero, rotation, Vector3.one).LossyScale;
+            var worldScale = source.lossyScale;
+            scale = new Vector3(SizeAxis(worldScale.x, unitScale.x, source.localScale.x),
+                SizeAxis(worldScale.y, unitScale.y, source.localScale.y),
+                SizeAxis(worldScale.z, unitScale.z, source.localScale.z));
         }
 
         public Vector3 MirrorPoint(Vector3 local, Frame from, Frame to)
@@ -87,12 +102,30 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public Vector3 MirrorWorldDirection(Vector3 world) => Tidy(ReflectDirection(world), world, DirectionTolerance);
 
+        /// <summary>
+        /// A rotation that is turned with its frame, such as the shape of a collider: the runtime puts it after the
+        /// world rotation of the frame.
+        /// </summary>
         public Quaternion MirrorRotation(Quaternion local, Frame from, Frame to) =>
             Tidy(Quaternion.Inverse(to.Rotation) * ReflectRotation(from.Rotation * local), local);
 
-        public Vector3 MirrorEuler(Vector3 euler, Frame from, Frame to)
+        /// <summary>
+        /// The local rotation of a Transform below the frames, such as the rest pose of a constraint. Below a parent
+        /// with a negative scale Unity mirrors it as well, like the pose, see <see cref="Frame.Child"/>.
+        /// </summary>
+        public Quaternion MirrorLocalRotation(Quaternion local, Frame fromParent, Frame toParent) =>
+            Tidy(toParent.InverseTransformRotation(ReflectRotation(fromParent.TransformRotation(local))), local);
+
+        public Vector3 MirrorEuler(Vector3 euler, Frame from, Frame to) =>
+            TidyEuler(MirrorRotation(Quaternion.Euler(euler), from, to), euler);
+
+        /// <summary>See <see cref="MirrorLocalRotation"/>.</summary>
+        public Vector3 MirrorLocalEuler(Vector3 euler, Frame fromParent, Frame toParent) =>
+            TidyEuler(MirrorLocalRotation(Quaternion.Euler(euler), fromParent, toParent), euler);
+
+        private static Vector3 TidyEuler(Quaternion rotation, Vector3 euler)
         {
-            var mirrored = NormalizeEuler(MirrorRotation(Quaternion.Euler(euler), from, to).eulerAngles);
+            var mirrored = NormalizeEuler(rotation.eulerAngles);
             return new Vector3(TidyAngle(mirrored.x, euler.x), TidyAngle(mirrored.y, euler.y), TidyAngle(mirrored.z, euler.z));
         }
 
@@ -128,17 +161,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         internal static float AverageScale(Vector3 scale) => (Mathf.Abs(scale.x) + Mathf.Abs(scale.y) + Mathf.Abs(scale.z)) / 3f;
 
-        /// <summary>
-        /// The local scale that gives an object the size of its source below another parent: the source's own scale
-        /// where both parents are equally scaled, as on the two sides of an avatar.
-        /// </summary>
-        public static Vector3 SizeScale(Vector3 localScale, Vector3 sourceParentScale, Vector3 targetParentScale) =>
-            new Vector3(Rescale(localScale.x, sourceParentScale.x, targetParentScale.x),
-                Rescale(localScale.y, sourceParentScale.y, targetParentScale.y),
-                Rescale(localScale.z, sourceParentScale.z, targetParentScale.z));
-
-        private static float Rescale(float scale, float from, float to) =>
-            Mathf.Approximately(to, 0f) || Mathf.Approximately(from, to) ? scale : scale * from / to;
+        private static float SizeAxis(float world, float unit, float original) =>
+            Mathf.Approximately(unit, 0f)
+                ? original
+                : Tidy(world / unit, original, Precision * Mathf.Max(1f, Mathf.Abs(original)));
 
         /// <summary>How far noise can carry a point near <paramref name="world"/>, in units of that scale.</summary>
         private float PointTolerance(Vector3 world, float scale) =>

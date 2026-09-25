@@ -416,10 +416,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             if (mirror != null)
             {
-                // The mirror image of the pose, whatever the frame of the new parent looks like. The size is
-                // kept in world space too, which is what the plan assumed (MirrorContext.MirroredFrame).
+                // Use the same pose calculation as an existing counterpart, including its world size.
                 mirror.Place(target, source);
-                target.localScale = WorldSizeScale(source, target.parent);
             }
             else
             {
@@ -628,16 +626,6 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
 
             return added;
-        }
-
-        /// <summary>
-        /// The local scale that gives the source's size below <paramref name="parent"/>: the source scale where
-        /// the parents are equally scaled, as on the two sides of an avatar.
-        /// </summary>
-        private static Vector3 WorldSizeScale(Transform source, Transform parent)
-        {
-            if (source.parent == null || parent == null) return source.localScale;
-            return MirrorContext.SizeScale(source.localScale, source.parent.lossyScale, parent.lossyScale);
         }
 
         private static void WriteValues(PlannedComponent planned)

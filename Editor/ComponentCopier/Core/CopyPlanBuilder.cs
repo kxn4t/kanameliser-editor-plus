@@ -675,11 +675,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var targetParent = target.parent != null ? plan.FrameAfter(target.parent) : Frame.World;
                 if (plan.Mirror != null)
                 {
-                    var sourceParent = source.parent != null ? Frame.Of(source.parent) : Frame.World;
-                    pose.LocalPosition = plan.Mirror.MirrorPoint(source.localPosition, sourceParent, targetParent);
-                    pose.LocalRotation = plan.Mirror.MirrorRotation(source.localRotation, sourceParent, targetParent);
-                    pose.LocalScale = MirrorContext.SizeScale(
-                        source.localScale, sourceParent.LossyScale, targetParent.LossyScale);
+                    plan.Mirror.MirrorPose(source, targetParent, out pose.LocalPosition, out pose.LocalRotation,
+                        out pose.LocalScale);
                 }
                 else
                 {

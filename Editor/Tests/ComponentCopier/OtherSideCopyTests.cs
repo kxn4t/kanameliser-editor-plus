@@ -146,11 +146,129 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             foreach (var transform in new[] { a, b, c })
                 AssertClose(transform.lossyScale, Frame.Of(transform).LossyScale, transform.name);
 
-            // Composed the way a pose of the plan is. Below a mirrored parent Unity mirrors the rotation of the child
-            // as well, which Frame.Child does not (see there).
-            a.localScale = Vector3.one;
-            AssertClose(c.lossyScale, Frame.Of(b).Child(c.localPosition, c.localRotation, c.localScale).LossyScale,
-                "child frame");
+            // Predict through two levels without dropping the negative scale on the ancestor.
+            var predictedB = Frame.Of(a).Child(b.localPosition, b.localRotation, b.localScale);
+            var predictedC = predictedB.Child(c.localPosition, c.localRotation, c.localScale);
+            AssertClose(c.lossyScale, predictedC.LossyScale, "child scale");
+            AssertSameRotation(c.rotation, predictedC.Rotation, "child rotation");
+            AssertClose(c.TransformPoint(Vector3.one), predictedC.TransformPoint(Vector3.one), "child point");
+            AssertSameRotation(c.localRotation, predictedB.InverseTransformRotation(c.rotation), "local rotation");
+        }
+
+        [TestCase(-1f, 1f, 1f, true, false)]
+        [TestCase(1f, -1f, 1f, true, false)]
+        [TestCase(1f, 1f, -1f, true, false)]
+        [TestCase(-1f, -1f, 1f, true, false)]
+        [TestCase(-1f, 1f, 1f, false, false)]
+        [TestCase(1f, -1f, 1f, false, false)]
+        [TestCase(1f, 1f, -1f, false, false)]
+        [TestCase(-1f, -1f, 1f, false, false)]
+        [TestCase(-1f, 1f, 1f, true, true)]
+        [TestCase(1f, -1f, 1f, true, true)]
+        [TestCase(1f, 1f, -1f, true, true)]
+        [TestCase(-1f, 1f, 1f, false, true)]
+        [TestCase(1f, -1f, 1f, false, true)]
+        [TestCase(1f, 1f, -1f, false, true)]
+        public void Pose_BelowNegativeScale_MirrorsRotationAndGeometry(
+            float x, float y, float z, bool sourceNegative, bool create)
+        {
+            var root = CreateAvatar(out var handL, out var handR, "Hips/Hand_L/Collider_L");
+            (sourceNegative ? handL : handR).localScale = new Vector3(x, y, z);
+            var source = handL.Find("Collider_L");
+            Pose(source, new Vector3(0.05f, 0.1f, -0.02f), new Vector3(20f, 40f, 0f));
+            if (!create) AddChild(handR, "Collider_R");
+            var sphere = source.gameObject.AddComponent<SphereCollider>();
+            sphere.center = new Vector3(0.01f, 0.02f, 0.03f);
+            var copy = new OtherSideCopy(source);
+            var predicted = MirrorValuePlanner.TargetFrame(copy.Plan,
+                copy.Plan.ObjectsToCreate.ToDictionary(p => p.Source), source);
+
+            CopyExecutor.Execute(copy.Plan);
+
+            var target = handR.Find("Collider_R");
+            var mirror = new MirrorContext(root);
+            AssertSameRotation(mirror.ReflectRotation(source.rotation), target.rotation, "world rotation");
+            AssertSameRotation(target.rotation, predicted.Rotation, "predicted rotation");
+            AssertClose(source.lossyScale, target.lossyScale, "world scale");
+            foreach (var axis in new[] { Vector3.right, Vector3.up, Vector3.forward })
+            {
+                var mirroredAxis = new Vector3(-axis.x, axis.y, axis.z);
+                AssertClose(mirror.ReflectPoint(source.TransformPoint(mirroredAxis)), target.TransformPoint(axis),
+                    "mirrored geometry");
+                AssertClose(target.TransformPoint(axis), predicted.TransformPoint(axis), "predicted geometry");
+            }
+            AssertClose(mirror.ReflectPoint(source.TransformPoint(sphere.center)),
+                target.TransformPoint(target.GetComponent<SphereCollider>().center), "sphere center");
+            Assert.IsFalse(new OtherSideCopy(source).HasWork, "a second copy has nothing left to change");
+        }
+
+        [TestCase(1f, 1f, 1f, false, false)]
+        [TestCase(-1f, 1f, 1f, true, false)]
+        [TestCase(1f, -1f, 1f, true, false)]
+        [TestCase(1f, 1f, -1f, false, false)]
+        [TestCase(-1f, -1f, 1f, true, false)]
+        [TestCase(-1f, 1f, 1f, false, true)]
+        [TestCase(1f, 1f, -1f, true, true)]
+        public void RestRotation_BelowNegativeScale_IsMirroredLikeThePose(
+            float x, float y, float z, bool sourceNegative, bool create)
+        {
+            CreateAvatar(out var handL, out var handR, "Hips/Hand_L/Collider_L");
+            (sourceNegative ? handL : handR).localScale = new Vector3(x, y, z);
+            var source = handL.Find("Collider_L");
+            Pose(source, new Vector3(0.05f, 0.1f, -0.02f), new Vector3(20f, 40f, 0f));
+            if (!create) AddChild(handR, "Collider_R");
+            // At rest where it is now: the rest rotation is a local rotation, like the pose
+            source.gameObject.AddComponent<RotationConstraint>().rotationAtRest = source.localEulerAngles;
+
+            CopyExecutor.Execute(new OtherSideCopy(source).Plan);
+
+            var target = handR.Find("Collider_R");
+            AssertSameRotation(target.localRotation,
+                Quaternion.Euler(target.GetComponent<RotationConstraint>().rotationAtRest), "at rest where it is");
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Pose_BelowNonuniformScale_KeepsSizeAlongTheRotatedChildAxes(bool create)
+        {
+            CreateAvatar(out var handL, out var handR, "Hips/Hand_L/Collider_L");
+            handL.localRotation = handR.localRotation = Quaternion.identity;
+            handL.localScale = new Vector3(2f, 1f, 1f);
+            var source = handL.Find("Collider_L");
+            source.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            if (!create) AddChild(handR, "Collider_R");
+
+            CopyExecutor.Execute(new OtherSideCopy(source).Plan);
+
+            var target = handR.Find("Collider_R");
+            AssertClose(new Vector3(1f, 2f, 1f), source.lossyScale, "source axes");
+            AssertClose(source.lossyScale, target.lossyScale, "copied axes");
+            Assert.IsFalse(new OtherSideCopy(source).HasWork);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Components_BelowNonuniformScale_UseTheActualTargetFrame(bool create)
+        {
+            var root = CreateAvatar(out var handL, out var handR, "Hips/Hand_L/Collider_L");
+            handR.localScale = new Vector3(2f, 1f, 3f);
+            var source = handL.Find("Collider_L");
+            source.localRotation = Quaternion.Euler(20f, 40f, 30f);
+            if (!create) AddChild(handR, "Collider_R");
+            var sphere = source.gameObject.AddComponent<SphereCollider>();
+            sphere.center = new Vector3(0.1f, 0.2f, 0.3f);
+            var copy = new OtherSideCopy(source);
+            var predicted = MirrorValuePlanner.TargetFrame(copy.Plan,
+                copy.Plan.ObjectsToCreate.ToDictionary(p => p.Source), source);
+
+            CopyExecutor.Execute(copy.Plan);
+
+            var target = handR.Find("Collider_R");
+            AssertClose(source.lossyScale, target.lossyScale, "world scale");
+            AssertClose(target.TransformPoint(Vector3.one), predicted.TransformPoint(Vector3.one), "predicted frame");
+            AssertClose(new MirrorContext(root).ReflectPoint(source.TransformPoint(sphere.center)),
+                target.TransformPoint(target.GetComponent<SphereCollider>().center), "sphere center");
+            Assert.IsFalse(new OtherSideCopy(source).HasWork);
         }
 
         [Test]
