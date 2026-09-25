@@ -367,6 +367,121 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void Verification_ReportsAReferenceLeftPointingAtTheSourceAvatar()
+        {
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Tail", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Tail"));
+
+            var plan = BuildPlanWithSurroundings(
+                avatarA.Find("Outfit"), avatarB.Find("Outfit"), typeof(ParentConstraint));
+            CopyExecutor.Execute(plan);
+
+            // Kept as the plan expects, and pointing at the other avatar all the same
+            var diff = CopyVerifier.Verify(plan).Components.Single();
+            Assert.AreEqual(DiffKind.OutsideReference, diff.Kind);
+            var property = diff.Properties.Single();
+            Assert.AreEqual(DiffKind.OutsideReference, property.Kind);
+            Assert.AreSame(avatarA.Find("Armature/Tail"), property.Referenced);
+        }
+
+#if MODULAR_AVATAR_INSTALLED
+        [Test]
+        public void Verification_TakesTheAvatarOfTheTargetForItsBounds()
+        {
+            // Both avatars sit below an object that organizes the scene, which is not the bounds of either
+            var scene = CreateHierarchy("Avatars",
+                "AvatarA/Armature/Tail", "AvatarA/Outfit/Item", "AvatarB/Armature", "AvatarB/Outfit/Item");
+            var avatarA = scene.Find("AvatarA");
+            var avatarB = scene.Find("AvatarB");
+            avatarA.gameObject.AddComponent<nadena.dev.ndmf.runtime.components.NDMFAvatarRoot>();
+            avatarB.gameObject.AddComponent<nadena.dev.ndmf.runtime.components.NDMFAvatarRoot>();
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Tail"));
+
+            var plan = BuildPlanWithSurroundings(
+                avatarA.Find("Outfit"), avatarB.Find("Outfit"), typeof(ParentConstraint));
+            CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(DiffKind.OutsideReference, CopyVerifier.Verify(plan).Components.Single().Kind);
+        }
+#endif
+
+        [Test]
+        public void Verification_AcceptsARedirectedReference()
+        {
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Hips", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature/Hips", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Hips"));
+
+            var plan = BuildPlanWithSurroundings(
+                avatarA.Find("Outfit"), avatarB.Find("Outfit"), typeof(ParentConstraint));
+            CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(DiffKind.Match, CopyVerifier.Verify(plan).Components.Single().Kind);
+        }
+
+        [Test]
+        public void Verification_AcceptsAKeptReferenceIntoTheSharedAvatar()
+        {
+            var avatar = CreateHierarchy("Avatar", "Armature/Hips", "OutfitV1/Item", "OutfitV2/Item");
+            AddParentConstraint(avatar.Find("OutfitV1/Item"), avatar.Find("Armature/Hips"));
+
+            var plan = BuildPlanWithSurroundings(
+                avatar.Find("OutfitV1"), avatar.Find("OutfitV2"), typeof(ParentConstraint));
+            CopyExecutor.Execute(plan);
+
+            Assert.AreEqual(DiffKind.Match, CopyVerifier.Verify(plan).Components.Single().Kind);
+        }
+
+        [Test]
+        public void Verification_ReportsAReferenceIntoAPrefabAsset()
+        {
+            var asset = SavePrefab("OutsideReferenceAnchor", root => AddChild(root, "Anchor"));
+            var source = CreateHierarchy("Source", "Item");
+            var target = CreateHierarchy("Target", "Item");
+            AddParentConstraint(source.Find("Item"), asset.transform.Find("Anchor"));
+
+            var plan = BuildPlan(source, target, new CopySettings(), typeof(ParentConstraint));
+            CopyExecutor.Execute(plan);
+
+            var property = CopyVerifier.Verify(plan).Components.Single().Properties.Single();
+            Assert.AreEqual(DiffKind.OutsideReference, property.Kind);
+        }
+
+        [Test]
+        public void Verification_ReportsADifferentReferenceToTheOutsideOnce()
+        {
+            // Copied before with redirecting off
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Hips", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature/Hips", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Hips"));
+            AddParentConstraint(avatarB.Find("Outfit/Item"), avatarA.Find("Armature/Hips"));
+
+            var plan = BuildPlanWithSurroundings(
+                avatarA.Find("Outfit"), avatarB.Find("Outfit"), typeof(ParentConstraint));
+
+            var diff = CopyVerifier.Verify(plan).Components.Single();
+            Assert.AreEqual(DiffKind.ReferenceMismatch, diff.Kind);
+            Assert.AreEqual(DiffKind.ReferenceMismatch, diff.Properties.Single().Kind);
+        }
+
+        [Test]
+        public void ReferenceKeptOutside_DoesNotKeepACopyFromBeingIdentical()
+        {
+            var avatarA = CreateHierarchy("AvatarA", "Armature/Tail", "Outfit/Item");
+            var avatarB = CreateHierarchy("AvatarB", "Armature", "Outfit/Item");
+            AddParentConstraint(avatarA.Find("Outfit/Item"), avatarA.Find("Armature/Tail"));
+            var source = avatarA.Find("Outfit");
+            var target = avatarB.Find("Outfit");
+
+            CopyExecutor.Execute(BuildPlanWithSurroundings(source, target, typeof(ParentConstraint)));
+            var replanned = BuildPlanWithSurroundings(source, target, typeof(ParentConstraint));
+
+            // Writing it again would change nothing
+            Assert.AreEqual(ComponentAction.SkipIdentical, replanned.Components.Single().Action);
+        }
+
+        [Test]
         public void Mapper_ResolvesOnlyTheScopeBeyondExactMatches()
         {
             var source = CreateHierarchy("Source", "A/Wanted_old", "B/Ignored_old", "C");

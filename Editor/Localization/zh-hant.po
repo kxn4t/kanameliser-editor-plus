@@ -661,7 +661,11 @@ msgstr "{0} 個元件無法新增。"
 
 #, csharp-format
 msgid "componentCopier.report.diffSummary"
-msgstr "一致 {0} · 有差異 {1} · 參照未解決 {2} · 複製目標中缺少 {3} · 僅存在於複製目標 {4}"
+msgstr "一致 {0} · 有差異 {1} · 參照 Avatar 之外 {2} · 參照未解決 {3} · 複製目標中缺少 {4} · 僅存在於複製目標 {5}"
+
+#, csharp-format
+msgid "componentCopier.report.outsideReferences"
+msgstr "有 {0} 處參照指向複製目標 Avatar 之外。可以在對應關係區段指定取代目標。"
 
 msgid "componentCopier.diff.match"
 msgstr "一致"
@@ -671,6 +675,13 @@ msgstr "值不同"
 
 msgid "componentCopier.diff.referenceMismatch"
 msgstr "參照不同"
+
+msgid "componentCopier.diff.outsideReference"
+msgstr "參照 Avatar 之外"
+
+#, csharp-format
+msgid "componentCopier.diff.outsideReference.in"
+msgstr "位於 {0}"
 
 msgid "componentCopier.diff.unresolvedReference"
 msgstr "參照未解決"

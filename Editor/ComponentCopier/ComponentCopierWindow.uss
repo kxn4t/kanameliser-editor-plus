@@ -724,6 +724,7 @@
 .diff-row--warning > .unity-foldout__toggle .unity-foldout__text,
 .diff-row--valuemismatch > .unity-foldout__toggle .unity-foldout__text,
 .diff-row--referencemismatch > .unity-foldout__toggle .unity-foldout__text,
+.diff-row--outsidereference > .unity-foldout__toggle .unity-foldout__text,
 .diff-row--unresolvedreference > .unity-foldout__toggle .unity-foldout__text {
     color: #e5c463;
 }

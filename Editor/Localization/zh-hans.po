@@ -661,7 +661,11 @@ msgstr "{0} 个组件无法添加。"
 
 #, csharp-format
 msgid "componentCopier.report.diffSummary"
-msgstr "一致 {0} · 有差异 {1} · 引用未解决 {2} · 复制目标中缺少 {3} · 仅存在于复制目标 {4}"
+msgstr "一致 {0} · 有差异 {1} · 引用 Avatar 之外 {2} · 引用未解决 {3} · 复制目标中缺少 {4} · 仅存在于复制目标 {5}"
+
+#, csharp-format
+msgid "componentCopier.report.outsideReferences"
+msgstr "有 {0} 处引用指向复制目标 Avatar 之外。可以在对应关系部分指定替换目标。"
 
 msgid "componentCopier.diff.match"
 msgstr "一致"
@@ -671,6 +675,13 @@ msgstr "值不同"
 
 msgid "componentCopier.diff.referenceMismatch"
 msgstr "引用不同"
+
+msgid "componentCopier.diff.outsideReference"
+msgstr "引用 Avatar 之外"
+
+#, csharp-format
+msgid "componentCopier.diff.outsideReference.in"
+msgstr "位于 {0}"
 
 msgid "componentCopier.diff.unresolvedReference"
 msgstr "引用未解决"

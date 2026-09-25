@@ -12,6 +12,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         Match,
         ValueMismatch,
         ReferenceMismatch,
+        /// <summary>
+        /// The target refers to an object outside of its avatar: typically a reference into the source's avatar that
+        /// was kept as it is. It may well be what the plan expected, and is reported all the same.
+        /// </summary>
+        OutsideReference,
         /// <summary>The source reference has no counterpart in the target, so it cannot be carried over.</summary>
         UnresolvedReference,
         MissingOnTarget,
@@ -31,6 +36,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         /// the plan leaves there as well. <see cref="Actual"/> is only meant for display.
         /// </summary>
         public bool AlreadyCleared;
+
+        /// <summary>For an <see cref="DiffKind.OutsideReference"/>: the object outside, for the report to point at.</summary>
+        public Object Referenced;
     }
 
     internal sealed class ComponentDiff
@@ -67,12 +75,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public static DiffReport Verify(CopyPlan plan)
         {
             var report = new DiffReport();
+            var world = TargetWorld(plan);
 
             foreach (var planned in plan.Components)
             {
                 report.Components.Add(planned.LeftOut
                     ? CompareLeftOut(plan, planned)
-                    : Compare(planned, planned.Actual));
+                    : Compare(planned, planned.Actual, world));
             }
 
             foreach (var extra in FindExtraComponents(plan, report))
@@ -81,7 +90,11 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             return report;
         }
 
-        public static ComponentDiff Compare(PlannedComponent planned, Component actual)
+        /// <param name="world">
+        /// The hierarchy <paramref name="actual"/> may refer to, see <see cref="TargetWorld"/>. Null to leave
+        /// references outside of it unreported.
+        /// </param>
+        public static ComponentDiff Compare(PlannedComponent planned, Component actual, Transform world)
         {
             var diff = new ComponentDiff { Planned = planned, Actual = actual, Kind = DiffKind.Match };
 
@@ -91,8 +104,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 return diff;
             }
 
-            foreach (var propertyDiff in PropertyDiffs(planned, actual))
+            var propertyDiffs = PropertyDiffs(planned, actual);
+            if (world != null) propertyDiffs = propertyDiffs.Concat(OutsideReferences(actual, world));
+
+            foreach (var propertyDiff in propertyDiffs)
             {
+                // A reference that differs from the plan is reported as such, wherever it points
+                if (propertyDiff.Kind == DiffKind.OutsideReference &&
+                    diff.Properties.Any(p => p.PropertyPath == propertyDiff.PropertyPath))
+                {
+                    continue;
+                }
+
                 if (diff.Properties.Count >= MaxPropertyDiffs)
                 {
                     diff.Truncated = true;
@@ -106,10 +129,57 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 diff.Kind = DiffKind.ValueMismatch;
             else if (diff.Properties.Any(p => p.Kind == DiffKind.ReferenceMismatch))
                 diff.Kind = DiffKind.ReferenceMismatch;
+            else if (diff.Properties.Any(p => p.Kind == DiffKind.OutsideReference))
+                diff.Kind = DiffKind.OutsideReference;
             else if (diff.Properties.Count > 0)
                 diff.Kind = DiffKind.UnresolvedReference;
 
             return diff;
+        }
+
+        /// <summary>
+        /// The hierarchy the target belongs to: its avatar, or else its topmost parent. VRChat uploads an avatar
+        /// without anything around it, and a reference into another avatar breaks once that one is removed, so a
+        /// copied component should not refer beyond it.
+        /// </summary>
+        private static Transform TargetWorld(CopyPlan plan)
+        {
+            if (plan.TargetAvatarRoot != null) return plan.TargetAvatarRoot;
+            return plan.Map.TargetRoot != null ? plan.Map.TargetRoot.root : null;
+        }
+
+        /// <summary>
+        /// The references of <paramref name="actual"/> to objects outside of <paramref name="world"/>, whatever the
+        /// plan expected: a reference that is kept as it is (it has no counterpart, redirecting is off, ...) matches
+        /// the plan, and still points at the other avatar.
+        /// </summary>
+        private static IEnumerable<PropertyDiff> OutsideReferences(Component actual, Transform world)
+        {
+            using var actualObject = new SerializedObject(actual);
+
+            foreach (var property in ReferenceWalker.Leaves(actualObject))
+            {
+                if (property.propertyType != SerializedPropertyType.ObjectReference) continue;
+
+                var value = property.objectReferenceValue;
+                if (!IsOutside(value, world)) continue;
+
+                var diff = Diff(property, DiffKind.OutsideReference, null, ObjectToString(value));
+                diff.Referenced = value;
+                yield return diff;
+            }
+        }
+
+        private static bool IsOutside(Object value, Transform world)
+        {
+            // Assets (materials, clips, ...) are not part of any hierarchy
+            var transform = ReferenceWalker.GetTransform(value);
+            if (transform == null) return false;
+
+            // A prefab asset in a GameObject field is a prefab to instantiate, not a part of another hierarchy
+            if (value is GameObject && transform.parent == null && EditorUtility.IsPersistent(value)) return false;
+
+            return !Hierarchy.IsInside(transform, world);
         }
 
         /// <summary>

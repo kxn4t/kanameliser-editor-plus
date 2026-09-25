@@ -662,7 +662,11 @@ msgstr "컴포넌트 {0}개를 추가하지 못했습니다."
 
 #, csharp-format
 msgid "componentCopier.report.diffSummary"
-msgstr "일치 {0} · 차이 있음 {1} · 미해결 참조 {2} · 복사 대상에 없음 {3} · 복사 대상에만 있음 {4}"
+msgstr "일치 {0} · 차이 있음 {1} · 아바타 바깥을 참조 {2} · 미해결 참조 {3} · 복사 대상에 없음 {4} · 복사 대상에만 있음 {5}"
+
+#, csharp-format
+msgid "componentCopier.report.outsideReferences"
+msgstr "복사 대상 아바타의 바깥을 가리키는 참조가 {0}곳 있습니다. 교체할 대상은 대응 섹션에서 지정할 수 있습니다."
 
 msgid "componentCopier.diff.match"
 msgstr "일치"
@@ -672,6 +676,13 @@ msgstr "값이 다름"
 
 msgid "componentCopier.diff.referenceMismatch"
 msgstr "참조가 다름"
+
+msgid "componentCopier.diff.outsideReference"
+msgstr "아바타 바깥을 참조"
+
+#, csharp-format
+msgid "componentCopier.diff.outsideReference.in"
+msgstr "{0} 안"
 
 msgid "componentCopier.diff.unresolvedReference"
 msgstr "미해결 참조"

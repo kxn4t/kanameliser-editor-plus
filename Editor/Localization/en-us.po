@@ -662,7 +662,11 @@ msgstr "{0} component(s) could not be added."
 
 #, csharp-format
 msgid "componentCopier.report.diffSummary"
-msgstr "Match {0} · Different {1} · Unresolved reference {2} · Missing on target {3} · Only on target {4}"
+msgstr "Match {0} · Different {1} · Refers outside the avatar {2} · Unresolved reference {3} · Missing on target {4} · Only on target {5}"
+
+#, csharp-format
+msgid "componentCopier.report.outsideReferences"
+msgstr "{0} reference(s) point outside of the target's avatar. Replacements can be picked in the mapping section."
 
 msgid "componentCopier.diff.match"
 msgstr "Match"
@@ -672,6 +676,13 @@ msgstr "Different value"
 
 msgid "componentCopier.diff.referenceMismatch"
 msgstr "Different reference"
+
+msgid "componentCopier.diff.outsideReference"
+msgstr "Refers outside the avatar"
+
+#, csharp-format
+msgid "componentCopier.diff.outsideReference.in"
+msgstr "in {0}"
 
 msgid "componentCopier.diff.unresolvedReference"
 msgstr "Unresolved reference"
