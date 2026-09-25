@@ -856,3 +856,154 @@ msgstr "미해결로 건너뜀"
 #, csharp-format
 msgid "componentCopier.row.heldBack:tooltip"
 msgstr "참조 {0}개에 복사 대상의 대응이 없어 설정에 따라 이 컴포넌트를 건너뜁니다."
+
+# ── Component Copier: Copy to Other Side ──
+
+msgid "componentCopier.otherSide.sourceGone"
+msgstr "복사 원본 오브젝트가 없습니다. 삭제되었을 수 있습니다."
+
+msgid "componentCopier.otherSide.sourceIsAsset"
+msgstr "이 오브젝트는 에셋입니다. 에셋 변경은 Undo할 수 없으므로 씬에 배치하거나 Prefab 모드에서 연 뒤 복사하세요."
+
+msgid "componentCopier.otherSide.noSide"
+msgstr "이 오브젝트는 중앙에 있으므로 반대쪽이 없습니다. 좌우는 오브젝트나 그 부모 이름의 좌우 표시(_L / _R, Left / Right, 左 / 右) 또는 Humanoid 본으로 판정합니다."
+
+msgid "componentCopier.otherSide.confirm"
+msgstr "확정"
+
+#, csharp-format
+msgid "componentCopier.otherSide.confirm:tooltip"
+msgstr "{0}을(를) 대응 대상으로 합니다"
+
+msgid "componentCopier.otherSide.reset"
+msgstr "자동으로"
+
+msgid "componentCopier.otherSide.reset:tooltip"
+msgstr "여기서 지정하거나 확정한 대응을 모두 취소하고, 자동으로 찾은 대응으로 되돌립니다"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.needsReview"
+msgstr "후보입니다({0}). 맞으면 확정하고, 다르면 대응 대상을 지정하세요."
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.suggestionUnused"
+msgstr "Prefab째로 새로 생성하므로 후보 {0}은(는) 사용하지 않습니다. {0}(으)로 복사하려면 확정하세요."
+
+msgid "componentCopier.otherSide.note.manual"
+msgstr "수동 지정"
+
+msgid "componentCopier.otherSide.note.missing"
+msgstr "반대쪽에 대응하는 오브젝트가 없습니다."
+
+msgid "componentCopier.otherSide.invalidCounterpart"
+msgstr "지정한 오브젝트는 사용할 수 없습니다. 아바타 안의 좌우 어느 한쪽에 있는 오브젝트를 지정하세요. (아바타 밖이나 중앙의 오브젝트는 지정할 수 없습니다)"
+
+msgid "componentCopier.otherSide.create"
+msgstr "반대쪽에 생성"
+
+#, csharp-format
+msgid "componentCopier.otherSide.createdAt"
+msgstr "생성 위치: {0}"
+
+msgid "componentCopier.otherSide.sameName"
+msgstr "같은 이름의 오브젝트가 이미 있습니다. 그 오브젝트로 복사하려면 반대쪽 칸에서 지정하세요."
+
+msgid "componentCopier.otherSide.contents"
+msgstr "복사할 내용"
+
+msgid "componentCopier.otherSide.pose"
+msgstr "Transform(위치, 회전, 스케일)"
+
+msgid "componentCopier.otherSide.pose:tooltip"
+msgstr "위치와 회전은 좌우 반전하고, 스케일은 복사 원본과 같은 크기가 되도록 맞춥니다"
+
+msgid "componentCopier.otherSide.pose.created:tooltip"
+msgstr "새로 생성하는 대응 대상은 좌우 반전한 위치에 배치합니다"
+
+msgid "componentCopier.otherSide.pose.bone:tooltip"
+msgstr "본의 위치와 회전은 메시 형태에 영향을 주고 좌우 리그가 대칭이라는 보장이 없으므로, 본은 기본적으로 복사하지 않습니다"
+
+msgid "componentCopier.otherSide.withPrefab:tooltip"
+msgstr "Prefab째로 추가되므로 이 창에서는 제외할 수 없습니다. 제외하려면 Component Copier 창을 사용하세요."
+
+#, csharp-format
+msgid "componentCopier.otherSide.unresolved"
+msgstr "{0}의 {1}은(는) {2}에 반대쪽 대응이 없어 None이 됩니다."
+
+#, csharp-format
+msgid "componentCopier.otherSide.prefab"
+msgstr "{0}을(를) Prefab 그대로 추가합니다. 안에 있는 컴포넌트도 모두 복사합니다."
+
+#, csharp-format
+msgid "componentCopier.otherSide.alsoCreated"
+msgstr "참조 대상으로 {0}도 생성합니다."
+
+#, csharp-format
+msgid "componentCopier.otherSide.alsoCreatedPrefab"
+msgstr "참조 대상으로 {0}을(를) Prefab째로 추가합니다. 안에 있는 컴포넌트도 모두 복사합니다."
+
+msgid "componentCopier.otherSide.upToDate"
+msgstr "반대쪽은 이미 같은 상태입니다."
+
+msgid "componentCopier.otherSide.nothingSelected"
+msgstr "복사할 내용을 선택하세요."
+
+msgid "componentCopier.otherSide.blocked.hostNeedsReview"
+msgstr "대응 대상이 정해질 때까지 복사할 수 없습니다."
+
+msgid "componentCopier.otherSide.blocked.hostUnmapped"
+msgstr "「반대쪽에 생성」을 켜거나 대응 대상을 지정하세요."
+
+msgid "componentCopier.otherSide.blocked.boneMissing"
+msgstr "반대쪽에 대응하는 본이 없습니다. 본은 생성하지 않으므로 대응 대상을 지정하세요."
+
+msgid "componentCopier.otherSide.blocked.unresolvedReference"
+msgstr "참조에 반대쪽 대응이 없어 이 컴포넌트는 건너뜁니다."
+
+msgid "componentCopier.otherSide.blocked.sameSide"
+msgstr "대응 대상이 복사 원본과 같은 쪽에 있습니다. 이대로는 원본 쪽을 덮어쓰게 되므로 반대쪽 오브젝트를 지정하세요."
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentNeedsReview"
+msgstr "부모 {0}의 대응이 확정되지 않아 생성할 수 없습니다. 후보를 확정하거나 반대쪽 오브젝트를 직접 지정하세요."
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentBoneMissing"
+msgstr "반대쪽에 {0}에 대응하는 본이 없어 생성할 수 없습니다. 본은 생성하지 않으므로 반대쪽 오브젝트를 직접 지정하세요."
+
+#, csharp-format
+msgid "componentCopier.otherSide.confirmParent"
+msgstr "{0}의 대응을 {1}(으)로 확정"
+
+msgid "componentCopier.otherSide.createNew"
+msgstr "새로 생성"
+
+msgid "componentCopier.otherSide.createNew:tooltip"
+msgstr "후보를 사용하지 않고 반대쪽에 새로 생성합니다"
+
+#, csharp-format
+msgid "componentCopier.otherSide.location"
+msgstr "위치: {0}"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.suggestionInvalid"
+msgstr "후보 {0}은(는) 반대쪽에 없어 사용할 수 없습니다. 대응 대상을 지정하세요."
+
+#, csharp-format
+msgid "componentCopier.otherSide.partiallyApplied"
+msgstr "컴포넌트 {0}개는 추가할 수 없었습니다. 나머지는 복사했습니다. (Undo로 되돌릴 수 있습니다)"
+
+#, csharp-format
+msgid "componentCopier.otherSide.unresolvedPending"
+msgstr "{0}의 {1}은(는) {2}의 대응이 확정되지 않아 None이 됩니다."
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentSuggestionInvalid"
+msgstr "부모 {0}의 후보는 반대쪽에 없어 사용할 수 없습니다. 반대쪽 오브젝트를 직접 지정하세요."
+
+#, csharp-format
+msgid "componentCopier.otherSide.createNewParent"
+msgstr "{0}을(를) 새로 생성"
+
+msgid "componentCopier.otherSide.note.paired"
+msgstr "이전 적용에서 대응시킨 오브젝트"

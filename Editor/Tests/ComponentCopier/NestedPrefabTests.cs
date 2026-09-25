@@ -50,6 +50,35 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void PrefabWithAnObjectMappedByHand_IsNotBroughtOverAsAWhole()
+        {
+            var hatAsset = SavePrefab("Hat_Manual", hat =>
+            {
+                hat.gameObject.AddComponent<ParentConstraint>();
+                AddChild(hat, "Ribbon").gameObject.AddComponent<SphereCollider>();
+            });
+            var source = CreateHierarchy("Source", "Armature/Head");
+            var target = CreateHierarchy("Target", "Armature/Head/Cap/Ribbon");
+            var sourceHat = Instantiate(hatAsset, source.Find("Armature/Head"));
+            var ribbon = target.Find("Armature/Head/Cap/Ribbon");
+
+            var map = TransformMapper.Build(source, target,
+                new System.Collections.Generic.Dictionary<Transform, Transform> { [sourceHat.Find("Ribbon")] = ribbon });
+            // The hat's own component is planned first, and must not bring the hat along for the ribbon
+            var plan = CopyPlanBuilder.Build(Select(source, typeof(ParentConstraint), typeof(SphereCollider)), map,
+                new CopySettings());
+
+            // The user's word says the hat is there, in part at least: its objects go where the map says, and the
+            // ones without a counterpart are created one by one
+            var createdHat = plan.ObjectsToCreate.Single();
+            Assert.AreSame(sourceHat, createdHat.Source);
+            Assert.IsNull(createdHat.PrefabAsset);
+            Assert.AreSame(createdHat, plan.Components.Single(c => c.Entry.Type == typeof(ParentConstraint)).HostToCreate);
+            Assert.AreSame(ribbon, plan.Components.Single(c => c.Entry.Type == typeof(SphereCollider)).TargetHost);
+            Assert.IsEmpty(NestedPrefabs.FindMissingRoots(map));
+        }
+
+        [Test]
         public void ComponentsInsideThePrefab_AreCopiedEvenWhenNotSelected()
         {
             var hatAsset = SavePrefab("Hat_Implicit", hat =>

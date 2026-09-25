@@ -855,3 +855,154 @@ msgstr "未解決のためスキップ"
 #, csharp-format
 msgid "componentCopier.row.heldBack:tooltip"
 msgstr "{0} 件の参照にコピー先の対応先がないため、設定に従ってこのコンポーネントをスキップします。"
+
+# ── Component Copier: Copy to Other Side ──
+
+msgid "componentCopier.otherSide.sourceGone"
+msgstr "コピー元のオブジェクトがありません。削除された可能性があります。"
+
+msgid "componentCopier.otherSide.sourceIsAsset"
+msgstr "このオブジェクトはアセットです。アセットへの変更は Undo できないため、シーンに配置するか Prefab モードで開いてからコピーしてください。"
+
+msgid "componentCopier.otherSide.noSide"
+msgstr "このオブジェクトは中央にあるため、反対側がありません。左右は、オブジェクト（またはその親）の名前の左右表記（_L / _R、Left / Right、左 / 右）や Humanoid ボーンで判定しています。"
+
+msgid "componentCopier.otherSide.confirm"
+msgstr "確定"
+
+#, csharp-format
+msgid "componentCopier.otherSide.confirm:tooltip"
+msgstr "{0} を対応先にします"
+
+msgid "componentCopier.otherSide.reset"
+msgstr "自動に戻す"
+
+msgid "componentCopier.otherSide.reset:tooltip"
+msgstr "ここで指定・確定した対応先をすべて取り消し、自動で見つけた対応先に戻します"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.needsReview"
+msgstr "候補です（{0}）。正しければ確定し、違う場合は対応先を指定してください。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.suggestionUnused"
+msgstr "Prefab ごと新しく作成するため、候補の {0} は使いません。{0} へコピーする場合は確定してください。"
+
+msgid "componentCopier.otherSide.note.manual"
+msgstr "手動で指定"
+
+msgid "componentCopier.otherSide.note.missing"
+msgstr "反対側に対応するオブジェクトがありません。"
+
+msgid "componentCopier.otherSide.invalidCounterpart"
+msgstr "指定したオブジェクトは使えません。アバター内の、左右どちらかにあるオブジェクトを指定してください。（アバターの外や、中央のオブジェクトは指定できません）"
+
+msgid "componentCopier.otherSide.create"
+msgstr "反対側に作成"
+
+#, csharp-format
+msgid "componentCopier.otherSide.createdAt"
+msgstr "作成先: {0}"
+
+msgid "componentCopier.otherSide.sameName"
+msgstr "同じ名前のオブジェクトがすでにあります。そのオブジェクトへコピーする場合は、反対側の欄で指定してください。"
+
+msgid "componentCopier.otherSide.contents"
+msgstr "コピーする内容"
+
+msgid "componentCopier.otherSide.pose"
+msgstr "Transform（位置・回転・スケール）"
+
+msgid "componentCopier.otherSide.pose:tooltip"
+msgstr "位置と回転は左右反転し、スケールはコピー元と同じ大きさになるように合わせます"
+
+msgid "componentCopier.otherSide.pose.created:tooltip"
+msgstr "新しく作成する対応先は、左右反転した位置に配置します"
+
+msgid "componentCopier.otherSide.pose.bone:tooltip"
+msgstr "ボーンの位置と回転はメッシュの形に影響し、左右のリグが対称とは限らないため、ボーンでは既定でコピーしません"
+
+msgid "componentCopier.otherSide.withPrefab:tooltip"
+msgstr "Prefab ごと追加されるため、このウィンドウでは外せません。外す場合は Component Copier ウィンドウを使ってください。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.unresolved"
+msgstr "{0} の {1} は、{2} に反対側の対応先がないため None になります。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.prefab"
+msgstr "{0} を Prefab のまま追加します。中にあるコンポーネントもすべてコピーします。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.alsoCreated"
+msgstr "参照先として {0} も作成します。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.alsoCreatedPrefab"
+msgstr "参照先として {0} を Prefab ごと追加します。中にあるコンポーネントもすべてコピーします。"
+
+msgid "componentCopier.otherSide.upToDate"
+msgstr "反対側はすでに同じ状態です。"
+
+msgid "componentCopier.otherSide.nothingSelected"
+msgstr "コピーする内容を選んでください。"
+
+msgid "componentCopier.otherSide.blocked.hostNeedsReview"
+msgstr "対応先が決まるまでコピーできません。"
+
+msgid "componentCopier.otherSide.blocked.hostUnmapped"
+msgstr "「反対側に作成」をオンにするか、対応先を指定してください。"
+
+msgid "componentCopier.otherSide.blocked.boneMissing"
+msgstr "反対側に対応するボーンがありません。ボーンは作成しないため、対応先を指定してください。"
+
+msgid "componentCopier.otherSide.blocked.unresolvedReference"
+msgstr "参照に反対側の対応先がないため、このコンポーネントはスキップします。"
+
+msgid "componentCopier.otherSide.blocked.sameSide"
+msgstr "対応先がコピー元と同じ側にあります。このままではコピー元の側を上書きしてしまうため、反対側のオブジェクトを指定してください。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentNeedsReview"
+msgstr "親の {0} の対応先が未確定のため、作成できません。候補を確定するか、反対側のオブジェクトを直接指定してください。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentBoneMissing"
+msgstr "反対側に {0} に対応するボーンがないため、作成できません。ボーンは作成しないため、反対側のオブジェクトを直接指定してください。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.confirmParent"
+msgstr "{0} の対応先を {1} に確定"
+
+msgid "componentCopier.otherSide.createNew"
+msgstr "新しく作成"
+
+msgid "componentCopier.otherSide.createNew:tooltip"
+msgstr "候補を使わず、反対側に新しく作成します"
+
+#, csharp-format
+msgid "componentCopier.otherSide.location"
+msgstr "場所: {0}"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.suggestionInvalid"
+msgstr "候補の {0} は反対側にないため使えません。対応先を指定してください。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.partiallyApplied"
+msgstr "{0} 件のコンポーネントは追加できませんでした。ほかはコピーしました。（Undo で元に戻せます）"
+
+#, csharp-format
+msgid "componentCopier.otherSide.unresolvedPending"
+msgstr "{0} の {1} は、{2} の対応先が未確定のため None になります。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentSuggestionInvalid"
+msgstr "親の {0} の候補は反対側にないため使えません。反対側のオブジェクトを直接指定してください。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.createNewParent"
+msgstr "{0} を新しく作成"
+
+msgid "componentCopier.otherSide.note.paired"
+msgstr "先の適用で対応付けたオブジェクト"

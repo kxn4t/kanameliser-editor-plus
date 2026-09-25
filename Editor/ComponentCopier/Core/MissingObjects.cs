@@ -48,9 +48,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             // A missing prefab arrives as a whole, and nothing can be created below a missing bone
             bool IsOutOfReach(Transform transform) =>
-                !map.TryResolve(transform, out _) &&
-                (NestedPrefabs.GetPrefabAsset(transform, map.SourceRoot) != null ||
-                 map.SourceSkeleton.IsBone(transform));
+                NestedPrefabs.IsMissing(transform, map) ||
+                (!map.TryResolve(transform, out _) && map.SourceSkeleton.IsBone(transform));
 
             void Visit(Transform parent, bool parentComesAlong)
             {

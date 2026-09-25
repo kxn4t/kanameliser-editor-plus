@@ -62,6 +62,7 @@ Copies components (PhysBone, Contact, Constraint, Modular Avatar, ...) from one 
 - Presets (PhysBone / Contact / Constraint / MA / All), search with regular expressions, and per-component selection
 - Prefabs and empty objects missing in the target are added; references to the surrounding avatar are redirected to the target avatar
 - Copy to the other side: the components of one side go to the other side of the same hierarchy, with positions and rotations mirrored and the side of tags and parameters flipped
+- Copy to Other Side from the right-click menu: a small window mirrors a single object, its Transform included, onto the other side
 - A pre-check lists what will happen, a diff check verifies the result, and everything reverts with a single Undo
 
 Access: `Tools > Kanameliser Editor Plus > Component Copier`, or right-click a Hierarchy object, a Prefab asset, or a component header → `Kanameliser Editor Plus`

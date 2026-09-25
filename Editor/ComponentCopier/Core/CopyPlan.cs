@@ -352,10 +352,84 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             }
         }
 
-        private static bool PointsMatch(Vector3 a, Vector3 b) =>
+        internal static bool PointsMatch(Vector3 a, Vector3 b) =>
             (a - b).magnitude <= PositionTolerance * Mathf.Max(1f, Mathf.Max(a.magnitude, b.magnitude));
 
-        private static bool AnglesMatch(Quaternion a, Quaternion b) => Quaternion.Angle(a, b) <= AngleTolerance;
+        internal static bool AnglesMatch(Quaternion a, Quaternion b) => Quaternion.Angle(a, b) <= AngleTolerance;
+    }
+
+    /// <summary>
+    /// The local pose (position, rotation and scale) that an object of the target is given: that of its source, or
+    /// its mirror image in a mirror copy. Planned like a component, so that the pre-check shows what
+    /// <see cref="CopyExecutor"/> writes.
+    /// </summary>
+    internal sealed class PlannedPose
+    {
+        public Transform Source;
+
+        /// <summary>The existing counterpart that is posed. Null when it is created, or when there is none.</summary>
+        public Transform Target;
+
+        /// <summary>
+        /// The counterpart the plan creates. It is created at the pose, like every object the plan creates, so the
+        /// values below are not planned for it.
+        /// </summary>
+        public PlannedObject HostToCreate;
+
+        /// <summary>
+        /// <see cref="ComponentAction.Overwrite"/> moves <see cref="Target"/>, <see cref="ComponentAction.SkipIdentical"/>
+        /// finds it at the pose already, <see cref="ComponentAction.Add"/> creates it, and
+        /// <see cref="ComponentAction.Blocked"/> has nowhere to put it (see <see cref="BlockReason"/>).
+        /// </summary>
+        public ComponentAction Action;
+        public BlockReason BlockReason;
+
+        /// <summary>
+        /// Where the planner stopped when the pose is blocked: the source itself, or a parent (or the nested prefab
+        /// around it) that its counterpart would be created below. Null otherwise.
+        /// </summary>
+        public Transform BlockedAt;
+
+        public Vector3 LocalPosition;
+        public Quaternion LocalRotation;
+        public Vector3 LocalScale;
+
+        /// <summary>
+        /// The frame <see cref="Target"/> is moved to, which the mirrored values of the components on it and below it
+        /// are expressed in. See <see cref="CopyPlan.FrameAfter"/>.
+        /// </summary>
+        public Frame WorldFrame;
+
+        public bool WillWrite => Action == ComponentAction.Overwrite;
+
+        // Relative to the distance from the origin, in world units, like the noise of the way through world space
+        private const float PositionPrecision = 1e-5f;
+        private const float ScalePrecision = 1e-5f;
+
+        /// <summary>
+        /// True when <paramref name="transform"/> is at the pose already. Positions are compared in world units: below a
+        /// parent scaled by 100 (the armature of an FBX), a local unit is a hundred of them, and a fixed local
+        /// tolerance would take a counterpart a centimeter off for one at the pose.
+        /// </summary>
+        public bool Matches(Transform transform)
+        {
+            // A parent scaled to nothing would take any position for the pose
+            float parentScale = transform.parent != null ? MirrorContext.AverageScale(transform.parent.lossyScale) : 1f;
+            float positionTolerance =
+                PositionPrecision * Mathf.Max(1f, transform.position.magnitude) / Mathf.Max(parentScale, 1e-3f);
+            float scaleTolerance = ScalePrecision * Mathf.Max(LocalScale.magnitude, transform.localScale.magnitude);
+
+            return (LocalPosition - transform.localPosition).magnitude <= positionTolerance &&
+                   PlannedValue.AnglesMatch(LocalRotation, transform.localRotation) &&
+                   (LocalScale - transform.localScale).magnitude <= scaleTolerance;
+        }
+
+        public void Write(Transform transform)
+        {
+            transform.localPosition = LocalPosition;
+            transform.localRotation = LocalRotation;
+            transform.localScale = LocalScale;
+        }
     }
 
     internal sealed class PlannedComponent
@@ -376,6 +450,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public ComponentAction Action;
         public BlockReason BlockReason;
+
+        /// <summary>
+        /// Where the planner stopped when the host could not be found or created, see <see cref="PlannedPose.BlockedAt"/>.
+        /// Null otherwise.
+        /// </summary>
+        public Transform BlockedAt;
+
         public List<PlannedReference> References = new();
 
         /// <summary>
@@ -453,6 +534,21 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public Component Removed;
     }
 
+    /// <summary>Why an object a reference points at could not be created, see <see cref="CopyPlan.ReferenceBlocks"/>.</summary>
+    internal readonly struct ReferenceBlock
+    {
+        public readonly BlockReason Reason;
+
+        /// <summary>The object the planner stopped at: the referenced one, or a parent it would be created below.</summary>
+        public readonly Transform At;
+
+        public ReferenceBlock(BlockReason reason, Transform at)
+        {
+            Reason = reason;
+            At = at;
+        }
+    }
+
     /// <summary>
     /// An existing component that Replace would remove, but that stays because another component requires it.
     /// </summary>
@@ -502,6 +598,10 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public Transform KeyRoot;
 
         public List<PlannedComponent> Components = new();
+
+        /// <summary>The poses the caller asked to carry over, parents before their children in the target.</summary>
+        public List<PlannedPose> Poses = new();
+
         public List<PlannedObject> ObjectsToCreate = new();
         public List<BlockedObject> BlockedObjects = new();
         public List<Component> ComponentsToRemove = new();
@@ -513,6 +613,42 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public List<KeptComponent> KeptComponents = new();
 
         public List<BrokenReferenceWarning> BrokenReferences = new();
+
+        /// <summary>
+        /// The empty objects of the source that copied components refer to and that could not be created, with why
+        /// and where the planner stopped: the object itself, or a parent it would be created below. The references to
+        /// them stay unresolved; this says what would resolve them.
+        /// </summary>
+        public Dictionary<Transform, ReferenceBlock> ReferenceBlocks = new();
+
+        /// <summary>
+        /// The frame of an object of the target once the plan is applied. A pose the plan writes moves the object and
+        /// everything below it; any other object keeps the frame it has now. Objects the plan creates are not asked
+        /// for: they are placed in world space, after the poses are written.
+        /// </summary>
+        internal Frame FrameAfter(Transform transform)
+        {
+            if (Poses.Count == 0) return Frame.Of(transform);
+
+            // The objects between the posed ancestor and the transform keep their local poses
+            var chain = new List<Transform>();
+            for (var current = transform; current != null; current = current.parent)
+            {
+                // Only a pose that is written moves anything; one found at the pose already keeps its own frame
+                var pose = Poses.Find(p => p.WillWrite && p.Target == current);
+                if (pose != null)
+                {
+                    var frame = pose.WorldFrame;
+                    for (int i = chain.Count - 1; i >= 0; i--)
+                        frame = frame.Child(chain[i].localPosition, chain[i].localRotation, chain[i].localScale);
+                    return frame;
+                }
+
+                chain.Add(current);
+            }
+
+            return Frame.Of(transform);
+        }
 
         /// <summary>
         /// Sums up what the pre-check shows of the plan and what <see cref="CopyExecutor"/> writes, as a string that
@@ -538,6 +674,13 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                     Line("reference", reference.PropertyPath, reference.Kind, reference.Expected?.Identity());
                 foreach (var value in planned.Values)
                     Line("value", value.PropertyPath, value.Display());
+            }
+
+            foreach (var pose in Poses)
+            {
+                Line("pose", Id(pose.Source), pose.Action, pose.BlockReason, Id(pose.Target),
+                    Id(pose.HostToCreate?.Source), pose.LocalPosition.ToString("G9"),
+                    pose.LocalRotation.ToString("G9"), pose.LocalScale.ToString("G9"));
             }
 
             foreach (var planned in ObjectsToCreate)

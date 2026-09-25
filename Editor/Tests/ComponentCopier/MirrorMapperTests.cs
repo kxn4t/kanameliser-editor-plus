@@ -62,6 +62,114 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
         }
 
         [Test]
+        public void CreatedCounterparts_RemainExclusiveWhenSameNameObjectsAreCopiedOutOfOrder()
+        {
+            OtherSideCopy.ForgetPins();
+            try
+            {
+                var root = CreateHierarchy("Avatar", "Hips/Hand_L/Collider", "Hips/Hand_L/Collider", "Hips/Hand_R");
+                var left = root.Find("Hips/Hand_L");
+                var right = root.Find("Hips/Hand_R");
+                var first = left.GetChild(0);
+                var second = left.GetChild(1);
+                first.gameObject.AddComponent<SphereCollider>().radius = 1f;
+                second.gameObject.AddComponent<SphereCollider>().radius = 2f;
+
+                var secondCopy = new OtherSideCopy(second);
+                CopyExecutor.Execute(secondCopy.Plan);
+                secondCopy.KeepCreated(secondCopy.Plan);
+                var secondCounterpart = right.GetChild(0);
+
+                var reverseCopy = new OtherSideCopy(secondCounterpart);
+                Assert.AreSame(second, reverseCopy.Counterpart,
+                    "a copy back must use the original source, despite its different sibling index");
+                Assert.IsTrue(reverseCopy.IsKept(secondCounterpart), "the reverse pair was not picked by hand");
+                Assert.IsFalse(reverseCopy.HasManualMappings);
+                reverseCopy.ResetMappings();
+                Assert.IsTrue(reverseCopy.IsKept(secondCounterpart), "Auto preserves the reverse pair too");
+
+                var firstCopy = new OtherSideCopy(first);
+                Assert.IsNotNull(firstCopy.Created, "the first source must not overwrite the second one's counterpart");
+                CopyExecutor.Execute(firstCopy.Plan);
+                firstCopy.KeepCreated(firstCopy.Plan);
+                var firstCounterpart = right.GetChild(1);
+
+                Assert.AreEqual(2, right.childCount);
+                Assert.AreEqual(2f, secondCounterpart.GetComponent<SphereCollider>().radius);
+                Assert.AreEqual(1f, firstCounterpart.GetComponent<SphereCollider>().radius);
+                OtherSideCopy.ReloadPins();
+                Assert.AreSame(firstCounterpart, new OtherSideCopy(first).Counterpart);
+                Assert.AreSame(secondCounterpart, new OtherSideCopy(second).Counterpart);
+                Assert.AreSame(first, new OtherSideCopy(firstCounterpart).Counterpart);
+                Assert.AreSame(second, new OtherSideCopy(secondCounterpart).Counterpart);
+            }
+            finally
+            {
+                OtherSideCopy.ForgetPins();
+            }
+        }
+
+        [Test]
+        public void RememberedPairs_StillAllowExplicitManualMappings()
+        {
+            var root = CreateHierarchy("Avatar", "Hips/Hand_L/Collider", "Hips/Hand_L/Collider", "Hips/Hand_R/Collider");
+            var first = root.Find("Hips/Hand_L").GetChild(0);
+            var second = root.Find("Hips/Hand_L").GetChild(1);
+            var created = root.Find("Hips/Hand_R/Collider");
+            var manual = new Dictionary<Transform, Transform>
+            {
+                [second] = created,
+                [first] = created,
+                [created] = first,
+            };
+
+            var map = MirrorMapper.Build(root, manual, new[] { second });
+
+            Assert.AreSame(created, map.Get(first).Target, "manual choices may still share a target");
+            Assert.AreEqual(MappingState.Manual, map.Get(first).State);
+            Assert.AreSame(first, map.Get(created).Target, "a manual choice wins over the remembered reverse pair");
+            Assert.AreEqual(MappingState.Manual, map.Get(created).State);
+        }
+
+        [Test]
+        public void RememberedPair_CanBeReplacedFromTheCreatedSide()
+        {
+            OtherSideCopy.ForgetPins();
+            try
+            {
+                var root = CreateHierarchy("Avatar", "Hips/Hand_L/Collider", "Hips/Hand_L/Collider", "Hips/Hand_R");
+                var left = root.Find("Hips/Hand_L");
+                var right = root.Find("Hips/Hand_R");
+                var source = left.GetChild(1);
+                var copy = new OtherSideCopy(source);
+                CopyExecutor.Execute(copy.Plan);
+                copy.KeepCreated(copy.Plan);
+                var created = right.GetChild(0);
+
+                var reverse = new OtherSideCopy(created);
+                reverse.CreateNew();
+                Assert.IsFalse(reverse.IsKept(source), "changing either end releases the old pair immediately");
+                Assert.IsFalse(reverse.IsKept(created), "the reverse side no longer uses the pair either");
+                Assert.IsNotNull(reverse.Created);
+                reverse.Rescan();
+                Assert.IsNotNull(reverse.Created, "the explicit choice survives a rescan");
+                CopyExecutor.Execute(reverse.Plan);
+                reverse.KeepCreated(reverse.Plan);
+                var replacement = left.GetChild(2);
+
+                OtherSideCopy.ReloadPins();
+                Assert.AreSame(replacement, new OtherSideCopy(created).Counterpart);
+                Assert.AreSame(created, new OtherSideCopy(replacement).Counterpart);
+                Assert.IsNotNull(new OtherSideCopy(source).Created,
+                    "the old source must not share the new pair's counterpart");
+            }
+            finally
+            {
+                OtherSideCopy.ForgetPins();
+            }
+        }
+
+        [Test]
         public void HumanoidBonesWithoutMarker_PairThroughTheDictionary()
         {
             var root = CreateHierarchy("Avatar", "Armature/Hips/UpperLeftArm", "Armature/Hips/UpperRightArm", "Body");

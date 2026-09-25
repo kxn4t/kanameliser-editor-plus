@@ -29,6 +29,9 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
             keys.AddRange(Values<BlockReason>()
                 .Where(r => r != BlockReason.None)
                 .Select(ComponentCopierStrings.BlockReasonKey));
+            keys.AddRange(Values<BlockReason>()
+                .Where(r => r != BlockReason.None)
+                .Select(ComponentCopierStrings.OtherSideBlockReasonKey));
             // Matching components are not listed
             keys.AddRange(Values<DiffKind>()
                 .Where(k => k != DiffKind.Match)
@@ -54,6 +57,34 @@ namespace Kanameliser.EditorPlus.Tests.ComponentCopierTests
                 var ids = new HashSet<string>(
                     MessageId.Matches(File.ReadAllText(file)).Cast<Match>().Select(m => m.Groups[1].Value));
                 missing.AddRange(EnumDerivedKeys().Where(k => !ids.Contains(k)).Select(k => $"{Path.GetFileName(file)}: {k}"));
+            }
+
+            Assert.IsEmpty(missing, string.Join("\n", missing));
+        }
+
+        /// <summary>The "Copy to Other Side" window names its keys in full, so they are read from its sources.</summary>
+        [Test]
+        public void EveryLanguage_HasTheKeysOfCopyToOtherSide()
+        {
+            string[] sources =
+            {
+                "Packages/net.kanameliser.editor-plus/Editor/ComponentCopier/CopyToOtherSideWindow.cs",
+                "Packages/net.kanameliser.editor-plus/Editor/ComponentCopier/Core/OtherSideCopy.cs",
+            };
+            var keys = sources
+                .SelectMany(path => Regex.Matches(File.ReadAllText(path), @"""(componentCopier\.[\w.:]+)""")
+                    .Cast<Match>()
+                    .Select(m => m.Groups[1].Value))
+                .Distinct()
+                .ToList();
+            Assert.That(keys, Has.Member("componentCopier.otherSide.noSide"));
+
+            var missing = new List<string>();
+            foreach (var file in Directory.GetFiles(LocalizationFolder, "*.po"))
+            {
+                var ids = new HashSet<string>(
+                    MessageId.Matches(File.ReadAllText(file)).Cast<Match>().Select(m => m.Groups[1].Value));
+                missing.AddRange(keys.Where(k => !ids.Contains(k)).Select(k => $"{Path.GetFileName(file)}: {k}"));
             }
 
             Assert.IsEmpty(missing, string.Join("\n", missing));

@@ -110,6 +110,22 @@ A copy to the other side stays inside the avatar, so references to the outside o
 Objects created on the other side, prefabs included, get the mirrored position and rotation, but a mesh keeps its shape: an asymmetric mesh ends up rotated, not mirrored.
 :::
 
+### Copy a single object to the other side {#copy-to-other-side}
+
+To bring just one object over to the other side, for example after moving a collider object while the outfit is on, pick **Copy to Other Side** from the right-click menu of a component header in the Inspector (the Transform's included) or of the object in the Hierarchy. A small window opens and copies the object's position and rotation, and the components on it, to the matching object on the other side.
+
+- **Other side**: the matching object is found by the same rules as the mapping above, and where it is shows below the field. If it is wrong, pick the object on the other side of the avatar in the field. If it is only a suggestion, press **Confirm** when it is right, or **Create new** when it is another object (the avatar's own one of the same name, ...); bones are never created, so a bone has no **Create new**. **Auto** goes back to the automatic result. When a parent without a settled counterpart keeps the object from being created, buttons to confirm the parent's suggestion or to create the parent anew (unless it is a bone) are shown
+- **Create on the other side**: when there is no matching object, one is created with the flipped name at the mirrored position, below the other side's parent (`Hand_R` for `Hand_L`, ...)
+- **What to copy**: the Transform and the components on the object. The Transform's position and rotation are mirrored, and its scale is set so that the size matches the source
+  - Opened from a component header, just that component starts out checked; from the Transform's header, just the Transform. Opened from the Hierarchy, everything starts out checked except the components that are not copied by default, such as renderers
+  - For a bone (one a mesh is skinned to, or one paired as a humanoid bone), the Transform starts out unchecked unless the window was opened from its header: the pose of a bone shapes the mesh, and the two sides of a rig need not be mirror images
+  - The active state, tag and layer of the object only follow the source when the object is created on the other side
+- Components that already exist on the other side are overwritten. References without a counterpart on the other side become None, and the window lists them. When the referenced object (or its parent) only has a suggestion, a button to confirm it is shown as well
+- Child objects are not copied. An empty object that a copied component refers to is created along with it when the other side lacks it, and the window lists it; a Prefab that is added arrives as a whole
+- **Apply** copies and closes the window (Undo is available). When a component could not be added, the window stays open and says how many
+
+Unlike **Copy to the other side** in the main window, this also moves an object that already exists on the other side to the mirrored position and rotation.
+
 ## Settings
 
 | Setting | Options | Default |
@@ -127,6 +143,8 @@ Objects created on the other side, prefabs included, get the mirrored position a
 When a prefab inside the source (a prefab bundling PhysBone settings, a hat directly below `Head`, ...) does not exist in the target, **the same prefab is instantiated in the target** instead of rebuilding its objects one by one.
 
 Every component inside it is copied, selected or not, and the values changed on the source instance carry over, as do objects and components you renamed or removed on the source instance. Components you uncheck are removed automatically once the prefab is instantiated, and so are components held back by **Skip the component**.
+
+When you map an object inside such a prefab by hand, the prefab counts as present in the target, in part at least, and is not added as a whole: that object goes to the counterpart you picked, and the objects without a counterpart are created one by one. To use existing objects for the other objects of the prefab too, map them in the Mapping section as well.
 
 ## Pre-check and diff check
 
@@ -161,3 +179,8 @@ The tool opens from any of these:
 - Right-click in the Hierarchy → `Kanameliser Editor Plus > Component Copier > Use as Source / Use as Target`
 - Right-click a Prefab in the Project view → `Kanameliser Editor Plus > Component Copier > Use as Source`
 - Inspector (right-click a component header) → `Kanameliser Editor Plus > Copy with Component Copier` (opens with just that component checked)
+
+The small window that copies a single object to the other side ([Copy a single object to the other side](#copy-to-other-side)) opens from these:
+
+- Inspector (right-click a component header, the Transform's included) → `Kanameliser Editor Plus > Copy to Other Side`
+- Right-click in the Hierarchy → `Kanameliser Editor Plus > Component Copier > Copy to Other Side`

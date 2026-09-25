@@ -855,3 +855,154 @@ msgstr "未解析，略過"
 #, csharp-format
 msgid "componentCopier.row.heldBack:tooltip"
 msgstr "{0} 個參照在複製目標中沒有對應物件，因此依設定略過此元件。"
+
+# ── Component Copier: Copy to Other Side ──
+
+msgid "componentCopier.otherSide.sourceGone"
+msgstr "複製來源物件不存在，可能已被刪除。"
+
+msgid "componentCopier.otherSide.sourceIsAsset"
+msgstr "此物件是資源。對資源的變更無法 Undo，請將其放入場景或在 Prefab 模式中開啟後再複製。"
+
+msgid "componentCopier.otherSide.noSide"
+msgstr "此物件位於中線上，因此沒有另一側。左右依物件或其父物件名稱中的左右標記（_L / _R、Left / Right、左 / 右）或 Humanoid 骨骼判定。"
+
+msgid "componentCopier.otherSide.confirm"
+msgstr "確認"
+
+#, csharp-format
+msgid "componentCopier.otherSide.confirm:tooltip"
+msgstr "將 {0} 設為對應物件"
+
+msgid "componentCopier.otherSide.reset"
+msgstr "恢復自動"
+
+msgid "componentCopier.otherSide.reset:tooltip"
+msgstr "撤銷在此指定或確認的所有對應物件，恢復為自動找到的對應物件"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.needsReview"
+msgstr "候選（{0}）。正確則請確認，否則請指定對應物件。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.suggestionUnused"
+msgstr "將隨 Prefab 新建，因此不使用候選 {0}。若要複製到 {0}，請確認。"
+
+msgid "componentCopier.otherSide.note.manual"
+msgstr "手動指定"
+
+msgid "componentCopier.otherSide.note.missing"
+msgstr "另一側沒有對應的物件。"
+
+msgid "componentCopier.otherSide.invalidCounterpart"
+msgstr "無法使用所指定的物件。請指定 Avatar 內左右任一側的物件（不能指定 Avatar 外或中線上的物件）。"
+
+msgid "componentCopier.otherSide.create"
+msgstr "在另一側建立"
+
+#, csharp-format
+msgid "componentCopier.otherSide.createdAt"
+msgstr "建立位置：{0}"
+
+msgid "componentCopier.otherSide.sameName"
+msgstr "已存在同名物件。若要複製到該物件，請在另一側欄位中指定。"
+
+msgid "componentCopier.otherSide.contents"
+msgstr "複製內容"
+
+msgid "componentCopier.otherSide.pose"
+msgstr "Transform（位置、旋轉、縮放）"
+
+msgid "componentCopier.otherSide.pose:tooltip"
+msgstr "位置與旋轉左右翻轉，縮放調整為與複製來源相同的大小"
+
+msgid "componentCopier.otherSide.pose.created:tooltip"
+msgstr "新建立的對應物件會放在左右翻轉後的位置"
+
+msgid "componentCopier.otherSide.pose.bone:tooltip"
+msgstr "骨骼的位置與旋轉會影響網格形狀，且左右骨架不一定對稱，因此骨骼預設不複製"
+
+msgid "componentCopier.otherSide.withPrefab:tooltip"
+msgstr "隨 Prefab 整體新增，因此無法在此視窗中排除。若要排除，請使用 Component Copier 視窗。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.unresolved"
+msgstr "{0} 的 {1} 將變為 None，因為 {2} 在另一側沒有對應物件。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.prefab"
+msgstr "將 {0} 作為 Prefab 新增，其中的元件也會全部複製。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.alsoCreated"
+msgstr "作為參照目標，也會建立 {0}。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.alsoCreatedPrefab"
+msgstr "作為參照目標，將 {0} 作為 Prefab 整體新增，其中的元件也會全部複製。"
+
+msgid "componentCopier.otherSide.upToDate"
+msgstr "另一側已是相同狀態。"
+
+msgid "componentCopier.otherSide.nothingSelected"
+msgstr "請選擇要複製的內容。"
+
+msgid "componentCopier.otherSide.blocked.hostNeedsReview"
+msgstr "在確定對應物件之前無法複製。"
+
+msgid "componentCopier.otherSide.blocked.hostUnmapped"
+msgstr "請開啟「在另一側建立」，或指定對應物件。"
+
+msgid "componentCopier.otherSide.blocked.boneMissing"
+msgstr "另一側沒有對應的骨骼。不會建立骨骼，請指定對應物件。"
+
+msgid "componentCopier.otherSide.blocked.unresolvedReference"
+msgstr "參照在另一側沒有對應物件，因此略過此元件。"
+
+msgid "componentCopier.otherSide.blocked.sameSide"
+msgstr "對應物件與複製來源位於同一側。直接複製會覆寫複製來源這一側，請指定另一側的物件。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentNeedsReview"
+msgstr "父物件 {0} 的對應物件尚未確認，因此無法建立。請確認候選，或直接指定另一側的物件。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentBoneMissing"
+msgstr "另一側沒有與 {0} 對應的骨骼，因此無法建立。不會建立骨骼，請直接指定另一側的物件。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.confirmParent"
+msgstr "將 {0} 的對應物件確認為 {1}"
+
+msgid "componentCopier.otherSide.createNew"
+msgstr "新建"
+
+msgid "componentCopier.otherSide.createNew:tooltip"
+msgstr "不使用候選，而是在另一側新建"
+
+#, csharp-format
+msgid "componentCopier.otherSide.location"
+msgstr "位置：{0}"
+
+#, csharp-format
+msgid "componentCopier.otherSide.note.suggestionInvalid"
+msgstr "候選 {0} 不在另一側，無法使用。請指定對應物件。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.partiallyApplied"
+msgstr "有 {0} 個元件無法新增，其餘已複製（可 Undo 復原）。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.unresolvedPending"
+msgstr "{0} 的 {1} 將變為 None，因為 {2} 的對應物件尚未確認。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.blocked.parentSuggestionInvalid"
+msgstr "父物件 {0} 的候選不在另一側，無法使用。請直接指定另一側的物件。"
+
+#, csharp-format
+msgid "componentCopier.otherSide.createNewParent"
+msgstr "新建 {0}"
+
+msgid "componentCopier.otherSide.note.paired"
+msgstr "先前套用時配對的物件"

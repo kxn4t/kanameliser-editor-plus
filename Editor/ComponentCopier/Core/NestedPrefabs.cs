@@ -26,7 +26,18 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         }
 
         /// <summary>
-        /// Lists the nested prefabs of the source that have no counterpart in the target.
+        /// True for the root of a nested prefab that the target lacks, which is brought over as a whole. A prefab of
+        /// which the user mapped an object by hand is in the target, in part at least: its objects go where the map
+        /// says, and the missing ones are created one by one like any other object.
+        /// </summary>
+        public static bool IsMissing(Transform transform, TransformMap map)
+        {
+            return GetPrefabAsset(transform, map.SourceRoot) != null && !map.TryResolve(transform, out _) &&
+                   !map.HasManualMappingWithin(transform);
+        }
+
+        /// <summary>
+        /// Lists the nested prefabs of the source that have no counterpart in the target, see <see cref="IsMissing"/>.
         /// Only the outermost ones are returned: a prefab inside a missing prefab arrives with it.
         /// </summary>
         /// <param name="scope">
@@ -38,11 +49,8 @@ namespace Kanameliser.EditorPlus.ComponentCopier
             var result = new List<Transform>();
             if (scope == null || scope == map.SourceRoot) Visit(map.SourceRoot);
             // Inside a missing prefab, the outer prefab is what arrives
-            else if (!Hierarchy.AnyAncestorBelow(scope, map.SourceRoot, IsMissing)) VisitChild(scope);
+            else if (!Hierarchy.AnyAncestorBelow(scope, map.SourceRoot, t => IsMissing(t, map))) VisitChild(scope);
             return result;
-
-            bool IsMissing(Transform transform) =>
-                GetPrefabAsset(transform, map.SourceRoot) != null && !map.TryResolve(transform, out _);
 
             void Visit(Transform parent)
             {
@@ -52,7 +60,7 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
             void VisitChild(Transform child)
             {
-                if (IsMissing(child)) result.Add(child);
+                if (IsMissing(child, map)) result.Add(child);
                 else Visit(child);
             }
         }

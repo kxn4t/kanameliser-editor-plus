@@ -59,6 +59,12 @@ namespace Kanameliser.EditorPlus.ComponentCopier
         public MappingReason Reason;
         public List<MappingCandidate> Candidates = new();
 
+        /// <summary>
+        /// For a mapping made by hand: why the automatic rules would have mapped the source, see
+        /// <see cref="TransformMap.OfferAutomaticAnswers"/>. None otherwise.
+        /// </summary>
+        public MappingReason AutomaticReason;
+
         /// <summary>True when the mapping may be used without further user confirmation.</summary>
         public bool IsUsable =>
             Target != null && (State == MappingState.Confirmed || State == MappingState.Manual);
@@ -176,7 +182,28 @@ namespace Kanameliser.EditorPlus.ComponentCopier
 
         public IEnumerable<TransformMapping> All => mappings.Values;
 
-        public void Set(TransformMapping mapping) => mappings[mapping.Source] = mapping;
+        // The sources the user mapped to an object by hand, see HasManualMappingWithin. Found again after every change.
+        private List<Transform> manualSources;
+
+        public void Set(TransformMapping mapping)
+        {
+            mappings[mapping.Source] = mapping;
+            manualSources = null;
+        }
+
+        /// <summary>
+        /// True when the user mapped <paramref name="root"/>, or an object below it, to an object of the target by
+        /// hand. A nested prefab with such an object is in the target, in part at least, as the user said.
+        /// </summary>
+        /// <param name="excludedSource">Ignores the mapping that the caller is about to replace, if any.</param>
+        public bool HasManualMappingWithin(Transform root, Transform excludedSource = null)
+        {
+            manualSources ??= mappings.Values
+                .Where(m => m.State == MappingState.Manual && m.IsUsable)
+                .Select(m => m.Source)
+                .ToList();
+            return manualSources.Any(source => source != excludedSource && Hierarchy.IsInside(source, root));
+        }
 
         /// <summary>
         /// Records the pair of roots and the user's mappings, which come before every automatic rule. Manual
@@ -213,7 +240,9 @@ namespace Kanameliser.EditorPlus.ComponentCopier
                 var mapping = Get(source);
                 if (mapping == null || mapping.State != MappingState.Manual) continue;
 
-                mapping.Candidates = MappingCandidates.FromAutomatic(resolve(source));
+                var automatic = resolve(source);
+                mapping.Candidates = MappingCandidates.FromAutomatic(automatic);
+                mapping.AutomaticReason = automatic.Reason;
             }
         }
 
