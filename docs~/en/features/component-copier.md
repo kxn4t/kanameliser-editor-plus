@@ -11,7 +11,7 @@ Typical uses:
 
 1. Open `Tools > Kanameliser Editor Plus > Component Copier` from the menu
 2. Set **Source** to the object that holds the settings (a Hierarchy object, a Prefab instance, or a Prefab asset in the Project view all work; the components below it are listed)
-   - To copy to the other side of the same hierarchy, turn on **Copy to the other side** (step 4 then asks for a direction instead of an object; see [Copy to the other side](#mirror))
+   - To copy to the other side of the same hierarchy, turn on **Copy to the other side** (step 4 then asks for a direction instead of an object; see [Copy to the other side](#mirror) for details)
 3. Check the components to copy
 4. Set **Target** to the scene object that receives the settings (the objects of the source and the target are matched automatically; the `⇅` button swaps the source and the target)
 5. Look through the **Mapping** section and, where a row is marked to review (`?`) or unmapped (`✖`), pick the counterpart by hand as needed
@@ -28,7 +28,7 @@ A copy to the other side writes into the source itself, so with a Prefab asset a
 
 Once a source is set, the components below it are listed grouped by type or by object.
 
-- **Presets**: PhysBone, Contact, Constraint, MA (Modular Avatar), other tools (AAO, TTT, ..., whichever the source has), and All check a whole group at once
+- **Presets**: PhysBone, Contact, Constraint, MA (Modular Avatar), other tools (AAO, TTT, ..., whichever the source has), and All check or uncheck a whole group at once
 - **Search**: partial match on object paths and type names. Turn on the `.*` button for regular expressions (e.g. `Skirt|Hair`)
 - **Show others**: also offers the basic types that are hidden by default (Transform, Renderer, MeshFilter, Animator, VRCAvatarDescriptor, PipelineManager)
 - **Objects missing in the target**: at the end of the list, prefabs and empty objects (anchors, ...) that the target lacks. The ones a copied component needs are created automatically; the rest can be checked to add them too
@@ -55,7 +55,7 @@ When a component of the outfit refers to a bone or collider of the avatar, and t
 
 The toggle on the "References to the outside" group switches all of them at once, and each row offers "Keep as is".
 
-::: tip Put the outfits inside their avatars
+::: tip Work with the outfits inside their avatars
 When copying the components of an outfit, place both the source outfit and the target outfit inside their avatars first.
 References of components that tend to point at avatar objects, such as `MA Mesh Settings`, `MA Mesh Cutter`, or `MA Shape Changer`, are then redirected along with everything else.
 :::
@@ -76,7 +76,7 @@ There is a lot of detail below, but in short: positions, rotations, names and so
   - The End Offset, Gravity, and Force of a DynamicBone, and the Center of a DynamicBone Collider
   - The Center of Unity's Sphere / Capsule / Box Colliders
 
-  The positions and directions of other components (Unity's joints, ...) are copied as they are, without mirroring
+  The positions and directions of components not listed above (Unity's joints, ...) are copied as they are, without mirroring
 - **Names with a side**: the names and paths in the following settings are replaced with those of the other side
   - Contact tags (the standard ones such as `HandL` / `FingerIndexR`, and custom ones with a side marker such as `Tail_L`)
   - The Parameter of PhysBones and Contact Receivers (e.g. `Ear_L` → `Ear_R`)
@@ -91,7 +91,7 @@ There is a lot of detail below, but in short: positions, rotations, names and so
 
 These side markers are recognized. A trailing number such as `.001` or ` (1)` is kept as it is, and only the marker is flipped.
 
-| Form | Examples |
+| Pattern | Examples |
 | --- | --- |
 | A separator (`.` `_` `-` space) and `L` / `R` at the end | `Hand_L`, `Hand.R`, `hand-l` |
 | `L` / `R` and a separator at the start | `L_Hand`, `r.hand` |
@@ -102,7 +102,9 @@ These side markers are recognized. A trailing number such as `.001` or ` (1)` is
 Names without a separator such as `RibbonL` or `Leftribbon`, and names with two or more markers between separators, are left alone. Humanoid bone names in the armature such as `HandL`, `Leftarm`, or `UpperLeftArm` still get their side from the bone dictionary.
 
 ::: tip Mirroring follows the avatar
-Mapping and mirroring work within the avatar the source sits on. A collider of the outfit that refers to the avatar's `Hand_L` refers to `Hand_R` after copying. When the source is not inside an avatar, the outermost object with an Animator among the source and its parents is used instead (or the topmost parent when there is none).
+Mapping and mirroring work within the avatar the source sits on. A collider of the outfit that refers to the avatar's `Hand_L` refers to `Hand_R` after copying.
+
+When the source is not inside an avatar, the outermost object with an Animator among the source and its parents is used instead (or the topmost parent when there is none).  
 A copy to the other side stays inside the avatar, so references to the outside of it are kept as they are.
 :::
 
@@ -112,19 +114,31 @@ Objects created on the other side, prefabs included, get the mirrored position a
 
 ### Copy a single object to the other side {#copy-to-other-side}
 
-To bring just one object over to the other side, for example after moving a collider object while the outfit is on, pick **Copy to Other Side** from the right-click menu of a component header in the Inspector (the Transform's included) or of the object in the Hierarchy. A small window opens and copies the object's position and rotation, and the components on it, to the matching object on the other side.
+To bring just one object over to the other side, for example after adjusting a collider object while the outfit is on, pick **Copy to Other Side** from the right-click menu of a component header in the Inspector (the Transform's included) or of the object in the Hierarchy. A dedicated small window opens, from which the object's position and rotation, and the components attached to it, can be copied to the matching object on the other side.
 
-- **Other side**: the matching object is found by the same rules as the mapping above, and where it is shows below the field. If it is wrong, pick the object on the other side of the avatar in the field. If it is only a suggestion, press **Confirm** when it is right, or **Create new** when it is another object (the avatar's own one of the same name, ...); bones are never created, so a bone has no **Create new**. **Auto** goes back to the automatic result. When a parent without a settled counterpart keeps the object from being created, buttons to confirm the parent's suggestion or to create the parent anew (unless it is a bone) are shown
-- **Create on the other side**: when there is no matching object, one is created with the flipped name at the mirrored position, below the other side's parent (`Hand_R` for `Hand_L`, ...)
-- **What to copy**: the Transform and the components on the object. The Transform's position and rotation are mirrored, and its scale is set so that the size matches the source
-  - Opened from a component header, just that component starts out checked; from the Transform's header, just the Transform. Opened from the Hierarchy, everything starts out checked except the components that are not copied by default, such as renderers
-  - For a bone (one a mesh is skinned to, or one paired as a humanoid bone), the Transform starts out unchecked unless the window was opened from its header: the pose of a bone shapes the mesh, and the two sides of a rig need not be mirror images
-  - The active state, tag and layer of the object only follow the source when the object is created on the other side
-- Components that already exist on the other side are overwritten. References without a counterpart on the other side become None, and the window lists them. When the referenced object (or its parent) only has a suggestion, a button to confirm it is shown as well
-- Child objects are not copied. An empty object that a copied component refers to is created along with it when the other side lacks it, and the window lists it; a Prefab that is added arrives as a whole
-- **Apply** copies and closes the window (Undo is available). When a component could not be added, the window stays open and says how many
+- **Choosing the object on the other side**:
+  - The matching object is looked up automatically, and where it is shows below the field. If it is not the right one, pick the object on the other side of the avatar in the field by hand.
+  - If it is only a suggestion, press **Confirm** when it is right, or **Create new** when the suggestion is another object (the avatar's own object of the same name, ...). (Bones are never created, so a bone has no **Create new**.)
+  - When a parent without a settled counterpart keeps the object from being created, buttons to confirm the parent's suggestion or to create the parent anew (unless the parent is a bone) are shown.
+  - **Auto** goes back to the automatic result at any time.
+- **Creating it on the other side**: when there is no matching object on the other side, one is created below the other side's parent (e.g. `Hand_R` for `Hand_L`), with the flipped name at the mirrored position.
+- **Choosing what to copy**:
+  - The Transform (position and rotation) and the components can be picked for copying. The Transform's position and rotation are mirrored, and its scale is adjusted so that the size matches the source.
+  - **What starts out checked depends on where the window was opened from**:
+    - From a component header: just that component.
+    - From the Transform's header: just the Transform.
+    - From the Hierarchy: everything except the components that are not copied by default (renderers, ...).
+  - **The Transform of a bone**: the pose of a bone (one a mesh is skinned to, or a humanoid bone) shapes the mesh, and the two sides of a rig need not be perfect mirror images, so its Transform starts out unchecked unless the window was opened from the Transform's header.
+  - The active state, tag, and layer of the object follow the source only when the object is newly created on the other side.
+- **Components and references**:
+  - Components that already exist on the other side are overwritten.
+  - References without a counterpart on the other side are set to `None` and listed in the window. When the referenced object (or its parent) only has an unconfirmed suggestion, a button to confirm it right there is shown.
+- **Child objects**:
+  - Child objects are not copied as a rule. An empty object that a copied component refers to, however, is created along with it when the other side lacks it, and the window lists it (a Prefab that is added is instantiated as a whole).
+- **Apply**:
+  - **Apply** runs the copy and closes the window (Undo is available). When some components could not be added, the window stays open and shows how many.
 
-Unlike **Copy to the other side** in the main window, this also moves an object that already exists on the other side to the mirrored position and rotation.
+Unlike **Copy to the other side** in the main window, **this also moves an object that already exists on the other side to the mirrored position and rotation.**
 
 ## Settings
 
@@ -157,13 +171,13 @@ Before applying, the following is listed:
 - Unresolved references that will be cleared to None (or, depending on the setting, skipped) and the cause
 - References to the outside that are kept as they are
 - A warning when replacing (deleting) a component would break a reference from a component that is not part of the copy
-- For a copy to the other side: how many values are adapted to the other side, and the axis-dependent values that are copied as is
+- For a copy to the other side: how many values are adapted to the other side, and the axis-dependent values that are copied as is (and need checking)
 
 ### Diff check
 
 **Diff check only** compares the expected result of the copy with the current state without changing the scene. The same report is shown after applying, so the result can be checked by status:
 
-- Statuses: identical / value differs / reference differs / unresolved reference / missing in the target / only in the target
+- **Statuses**: identical / value differs / reference differs / unresolved reference / missing in the target / only in the target
 
 ## Notes
 
@@ -177,10 +191,10 @@ The tool opens from any of these:
 
 - Main menu: `Tools > Kanameliser Editor Plus > Component Copier`
 - Right-click in the Hierarchy → `Kanameliser Editor Plus > Component Copier > Use as Source / Use as Target`
-- Right-click a Prefab in the Project view → `Kanameliser Editor Plus > Component Copier > Use as Source`
-- Inspector (right-click a component header) → `Kanameliser Editor Plus > Copy with Component Copier` (opens with just that component checked)
+- Project view (right-click a Prefab) → `Kanameliser Editor Plus > Component Copier > Use as Source`
+- Inspector (right-click a component header) → `Kanameliser Editor Plus > Copy with Component Copier` (opens with just the chosen component checked)
 
-The small window that copies a single object to the other side ([Copy a single object to the other side](#copy-to-other-side)) opens from these:
+The window that copies a single object to the other side ([Copy a single object to the other side](#copy-to-other-side)) opens from these:
 
 - Inspector (right-click a component header, the Transform's included) → `Kanameliser Editor Plus > Copy to Other Side`
 - Right-click in the Hierarchy → `Kanameliser Editor Plus > Component Copier > Copy to Other Side`
