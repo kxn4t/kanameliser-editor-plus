@@ -2,6 +2,8 @@
 
 Copies the components of an outfit or avatar (PhysBone, Contact, Constraint, Modular Avatar, ...) to another outfit or avatar. It does more than copy values: **the object references inside the components (bones, colliders, constraint sources, ...) are redirected to the corresponding objects of the target automatically.**
 
+![Overview of Component Copier: components are copied even when object names differ](/images/component-copier/overview-en.png)
+
 Typical uses:
 
 - Carry PhysBone and Modular Avatar settings over to an updated version of the same outfit, or to the version made for another avatar
@@ -43,6 +45,8 @@ MA Mesh Settings can be copied with its references, but the Anchor Override and 
 
 Objects of the source and the target are matched automatically by **path, name, and a dictionary of humanoid bone names** (`Hips` and `Hip`, `UpperArm_L` and `Left arm`, ...). Suffixes added to avoid name clashes, such as `Armature.1` or `.001`, and a common prefix or suffix on one side are recognized and compensated for as well.
 
+![Mapping examples: matched by the humanoid bone dictionary and suffix/prefix handling; similar names become candidates](/images/component-copier/matching-en.png)
+
 - **Ambiguous matches**: matches by similar names are never applied automatically; they are offered as suggestions
 - **Bones and other objects**: bones (the transforms used by SkinnedMeshRenderers) and other objects are told apart and matched separately
 - **Missing bones**: bones missing in the target are not created. A component on such a bone is **blocked**, so map it by hand in the Mapping section
@@ -52,6 +56,8 @@ Objects of the source and the target are matched automatically by **path, name, 
 ### References to the outside
 
 When a component of the outfit refers to a bone or collider of the avatar, and the target sits below another avatar, **the reference is redirected to the corresponding object of the target avatar automatically.** Without a counterpart, the original reference is kept.
+
+![A reference to the avatar's collider is redirected to the collider of the target avatar](/images/component-copier/outside-reference-en.png)
 
 The toggle on the "References to the outside" group switches all of them at once, and each row offers "Keep as is".
 
@@ -65,6 +71,8 @@ References of components that tend to point at avatar objects, such as `MA Mesh 
 The components of one side of the source (the left half, ...) can be copied to the other side of the same hierarchy. Turn on **Copy to the other side** between the source and the target: the target field turns into a choice of direction (`L → R` / `R → L`), and only the components of the chosen side are listed. When the source itself sits on one side (`Hand_L`, ...), that side is picked for you. Switching it on or off or changing the direction keeps the checks of the components that stay listed. Picking a target, or opening the window with **Copy with Component Copier** on a component of an object on the middle line, turns **Copy to the other side** off.
 
 There is a lot of detail below, but in short: positions, rotations, names and so on are flipped to the other side for you. The few values that cannot be flipped automatically, such as those that depend on the bone axes, are listed in the pre-check, so check them after copying.
+
+![Values after copying to the other side: position and rotation are mirrored and the side marker in the parameter is swapped](/images/component-copier/mirror-en.png)
 
 - **Sides**: an object belongs to the side of the outermost side marker in the names of the object and its parents (`Hand_L/Ribbon_R` is on the left). A name without a marker also counts when it is a humanoid bone name in the armature, judged through the bone dictionary. Components on objects on the middle line such as `Hips` or `Head` have no other side and are not listed (PhysBones gathered on one object in the middle cannot be copied this way)
 - **Mapping**: objects are paired by the side marker of their name and by the side of their humanoid bone. Objects on the middle line such as `Hips` or `Spine` are their own counterpart, so references to them stay as they are. An object without a marker pairs with the same-name object below the counterpart of its parent (`Hand_L/Collider` → `Hand_R/Collider`)
@@ -116,6 +124,8 @@ Objects created on the other side, prefabs included, get the mirrored position a
 
 To bring just one object over to the other side, for example after adjusting a collider object while the outfit is on, pick **Copy to Other Side** from the right-click menu of a component header in the Inspector (the Transform's included) or of the object in the Hierarchy. A dedicated small window opens, from which the object's position and rotation, and the components attached to it, can be copied to the matching object on the other side.
 
+![Right-click a component header in the Inspector and choose Copy to Other Side](/images/component-copier/copy-to-other-side-menu.png)
+
 - **Choosing the object on the other side**:
   - The matching object is looked up automatically, and where it is shows below the field. If it is not the right one, pick the object on the other side of the avatar in the field by hand.
   - If it is only a suggestion, press **Confirm** when it is right, or **Create new** when the suggestion is another object (the avatar's own object of the same name, ...). (Bones are never created, so a bone has no **Create new**.)
@@ -155,6 +165,8 @@ Unlike **Copy to the other side** in the main window, **this also moves an objec
 ## Nested prefabs
 
 When a prefab inside the source (a prefab bundling PhysBone settings, a hat directly below `Head`, ...) does not exist in the target, **the same prefab is instantiated in the target** instead of rebuilding its objects one by one.
+
+![Prefabs missing in the target are added as the same prefab](/images/component-copier/nested-prefab-en.png)
 
 Every component inside it is copied, selected or not, and the values changed on the source instance carry over, as do objects and components you renamed or removed on the source instance. Components you uncheck are removed automatically once the prefab is instantiated, and so are components held back by **Skip the component**.
 
