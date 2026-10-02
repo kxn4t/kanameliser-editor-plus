@@ -9,6 +9,8 @@ Automatically generates color change menus using Modular Avatar's material contr
 1. Select color variation prefabs → Right-click → `Copy Color Variants` (multiple selection supported)
 2. Select target outfit → Right-click → `Create Color Menu` (this item appears after copying)
 
+![Workflow: copy the color variant prefabs, then run Create Color Menu on the outfit](/images/ma-material-helper/workflow-en.png)
+
 If you are unsure of the steps, open `[How to Create Color Menu]` from the right-click menu at any time to review the workflow and see a list of the currently copied objects.
 
 A "Color Menu" with numbered color variations (Color1, Color2, etc.) is automatically created. `Create Color Menu` generates Material Setter components per slot (**recommended** for most cases).
@@ -41,9 +43,13 @@ Mesh A:
 
 Material Swap can only replace "Material X" with one material, so both slots end up with the same result. Material Setter can specify per slot, allowing each to change to a different material.
 
+![Changing the same material to different colors per slot: Material Setter handles it, Material Swap does not](/images/ma-material-helper/setter-vs-swap-en.png)
+
 ## Material Slot Remapping
 
 When an outfit is converted to fit another avatar (e.g. with auto-fitting tools), a renderer's material slot order can change, so an index-based color setup ends up on the wrong slots. Add a remapping component to the converted outfit and point it at the original outfit to fix this.
+
+![Material Slot Remapping maps the reordered slots of a converted outfit back to the original](/images/ma-material-helper/slot-remapping-en.png)
 
 ### Usage
 

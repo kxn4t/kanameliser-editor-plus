@@ -9,6 +9,8 @@ Modular Avatar のマテリアル制御コンポーネントを使った色変�
 1. カラーバリエーション Prefab を選択 → 右クリック → `Copy Color Variants`（複数選択可）
 2. ターゲットの衣装を選択 → 右クリック → `Create Color Menu`（コピー後に表示されます）
 
+![色変更メニュー作成の流れ。カラバリ Prefab をコピーして、衣装で Create Color Menu を実行](/images/ma-material-helper/workflow-ja.png)
+
 手順が分からなくなったときは、右クリックメニューの `[How to Create Color Menu]` を開くと、手順の説明とコピー済みオブジェクトの一覧をいつでも確認できます。
 
 番号付きカラーバリエーション（Color1、Color2など）を含む「Color Menu」が自動作成されます。`Create Color Menu` はMaterial Setterをスロット単位で生成します（ほとんどのケースで**推奨**）。
@@ -41,9 +43,13 @@ Modular Avatar のマテリアル制御コンポーネントを使った色変�
 
 Material Swap は「マテリアルX」を1つのマテリアルにしか置き換えられないため、両スロットが同じ結果になります。Material Setter ならスロット単位で異なるマテリアルを指定できます。
 
+![同じマテリアルをスロットごとに別の色にする場合、Material Setter は対応できるが Material Swap は同じ色になる](/images/ma-material-helper/setter-vs-swap-ja.png)
+
 ## Material Slot Remapping
 
 衣装を別アバター向けに変換（自動調整ツールなど）すると、レンダラーのマテリアルスロット順が変わり、インデックスベースの色変更設定がずれることがあります。変換後の衣装にリマッピングコンポーネントを追加し、元の衣装を指定することで補正できます。
+
+![変換でスロット順が変わった衣装を、元の衣装との対応付けで補正する Material Slot Remapping](/images/ma-material-helper/slot-remapping-ja.png)
 
 ### 使い方
 
