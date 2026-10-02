@@ -10,6 +10,8 @@ AAO's Trace and Optimize currently skips meshes with material replacement animat
 
 However, when merging manually, slots sharing the same material are combined into a single slot, so a color change that targets only one of the meshes can end up applying to the merged partners as well. Preventing this requires unchecking "Merge" for the affected materials, and finding out which materials are affected means reviewing every Material Setter / Material Swap in the avatar. This feature automates that analysis and setup.
 
+![Not merged vs. plain merge vs. Color Menu Safe: a plain merge also changes the color of the other mesh](/images/color-menu-safe-merge/background-en.png)
+
 ## Usage
 
 1. Select the meshes to merge (SkinnedMeshRenderer / MeshRenderer, multiple selection)

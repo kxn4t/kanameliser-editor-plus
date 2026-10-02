@@ -9,6 +9,8 @@ Copy & paste FBX import settings between FBX assets in the Project window. When 
 
 Pasting to multiple FBX files at once is supported. Files whose settings already match the copied ones are skipped without reimporting, so mixing in already-configured files costs no extra time.
 
+![Paste one FBX's settings into several FBX files at once; files without changes are skipped](/images/fbx-settings-copier/overview-en.png)
+
 ## What Is Copied
 
 | Tab | Copied settings |
