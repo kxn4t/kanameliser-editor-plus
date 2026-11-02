@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Open Imported Folder** — After a .unitypackage import, the Project window now opens the folder the import added, ignoring files that went into folders which existed before the import (a shop's shared folder, for instance). Can be turned off from `Tools > Kanameliser Editor Plus > [Settings] > Open Imported Folder`.
+
+---
+
+### 追加
+
+- **Open Imported Folder** — unitypackage のインポート後、インポートされたフォルダーを Project ウィンドウで自動的に開くようにしました。ショップ共通の素材フォルダーのように、インポート前からあるフォルダーへ入ったファイルは無視してフォルダーを決めます。`Tools > Kanameliser Editor Plus > [Settings] > Open Imported Folder` でオフにできます。
+
 ## [1.2.1] - 2026-09-25
 
 ### Added

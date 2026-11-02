@@ -23,6 +23,9 @@ features:
   - title: Toggle Objects Active
     details: Quickly toggle between GameObject active state and EditorOnly tag with Ctrl+G.
     link: /en/features/toggle-objects-active
+  - title: Open Imported Folder
+    details: Opens the folder a .unitypackage import added in the Project window as soon as the import finishes.
+    link: /en/features/open-imported-folder
   - title: Material Copier
     details: Copy & paste materials between GameObjects with matching names.
     link: /en/features/material-copier

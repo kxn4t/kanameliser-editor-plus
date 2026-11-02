@@ -42,6 +42,12 @@ GameObjectのアクティブ状態とEditorOnlyタグをすばやく切り替え
 
 ショートカット: `Ctrl+G`
 
+### Open Imported Folder
+
+unitypackage のインポートが終わると、インポートされたフォルダーを Project ウィンドウで自動的に開きます。ショップ共通の素材フォルダーのように、インポート前からあるフォルダーへ入ったファイルは無視してフォルダーを決めます。
+
+表示切替: `Tools > Kanameliser Editor Plus > [Settings] > Open Imported Folder`
+
 ### Component Manager
 
 選択したオブジェクトとその子オブジェクトの全コンポーネントを一覧表示します。

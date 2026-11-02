@@ -11,6 +11,7 @@ const sidebarJa = [
     items: [
       { text: 'Mesh Info Display', link: '/features/mesh-info-display' },
       { text: 'Toggle Objects Active', link: '/features/toggle-objects-active' },
+      { text: 'Open Imported Folder', link: '/features/open-imported-folder' },
       { text: 'Component Manager', link: '/features/component-manager' },
       { text: 'Component Copier', link: '/features/component-copier' },
       { text: 'Material Copier', link: '/features/material-copier' },
@@ -32,6 +33,7 @@ const sidebarEn = [
     items: [
       { text: 'Mesh Info Display', link: '/en/features/mesh-info-display' },
       { text: 'Toggle Objects Active', link: '/en/features/toggle-objects-active' },
+      { text: 'Open Imported Folder', link: '/en/features/open-imported-folder' },
       { text: 'Component Manager', link: '/en/features/component-manager' },
       { text: 'Component Copier', link: '/en/features/component-copier' },
       { text: 'Material Copier', link: '/en/features/material-copier' },

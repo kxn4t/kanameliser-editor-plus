@@ -42,6 +42,12 @@ Quickly toggle between GameObject active state and EditorOnly tag.
 
 Shortcut: `Ctrl+G`
 
+### Open Imported Folder
+
+Opens the folder a .unitypackage import added in the Project window as soon as the import finishes, so a new outfit or tool does not have to be hunted down. Files that landed in folders which existed before the import (a shop's shared folder, for instance) are ignored when the folder is picked.
+
+Toggle: `Tools > Kanameliser Editor Plus > [Settings] > Open Imported Folder`
+
 ### Component Manager
 
 Lists all components on selected objects and their children.
