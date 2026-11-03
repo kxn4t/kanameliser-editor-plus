@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-03
+
 ### Added
 
 - **Open Imported Folder** — After a .unitypackage import, the Project window now opens the folder the import added, ignoring files that went into folders which existed before the import (a shop's shared folder, for instance). Can be turned off from `Tools > Kanameliser Editor Plus > [Settings] > Open Imported Folder`.
