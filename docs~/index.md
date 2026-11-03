@@ -23,6 +23,9 @@ features:
   - title: Toggle Objects Active
     details: GameObjectのアクティブ状態とEditorOnlyタグをCtrl+Gですばやく切り替え。
     link: /features/toggle-objects-active
+  - title: Open Imported Folder
+    details: unitypackage のインポート後、インポートされたフォルダーを Project ウィンドウで自動的に開く。
+    link: /features/open-imported-folder
   - title: Material Copier
     details: 同名オブジェクト間でマテリアルをコピー＆ペースト。
     link: /features/material-copier
